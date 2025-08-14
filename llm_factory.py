@@ -1,0 +1,53 @@
+from typing import Optional, Dict, Any
+from llm_interface import LLMInterface
+
+class LLMFactory:
+    """Factory class for creating LLM instances based on model name/version."""
+    
+    @staticmethod
+    def create_llm(
+        model_name: str, 
+        name: str, 
+        system_prompt: Optional[str] = None,
+        **kwargs
+    ) -> LLMInterface:
+        """
+        Create an LLM instance based on the model name.
+        
+        Args:
+            model_name: The model identifier (e.g., "claude-3-5-sonnet-20241022", "gpt-4")
+            name: Display name for this LLM instance
+            system_prompt: Optional system prompt
+            **kwargs: Additional model-specific parameters
+            
+        Returns:
+            LLMInterface instance
+        """
+        # Normalize model name to determine provider
+        model_lower = model_name.lower()
+        
+        if "claude" in model_lower:
+            from claude_llm import ClaudeLLM
+            return ClaudeLLM(name, system_prompt, model_name, **kwargs)
+        elif "gpt" in model_lower or "openai" in model_lower:
+            from openai_llm import OpenAILLM
+            return OpenAILLM(name, system_prompt, model_name, **kwargs)
+        else:
+            raise ValueError(f"Unsupported model: {model_name}")
+    
+    @staticmethod
+    def get_supported_models() -> Dict[str, list]:
+        """Get a dictionary of supported model providers and their models."""
+        return {
+            "claude": [
+                "claude-3-5-sonnet-20241022",
+                "claude-3-opus-20240229", 
+                "claude-3-sonnet-20240229",
+                "claude-3-haiku-20240307"
+            ],
+            "openai": [
+                "gpt-4",
+                "gpt-4-turbo",
+                "gpt-3.5-turbo"
+            ]
+        }

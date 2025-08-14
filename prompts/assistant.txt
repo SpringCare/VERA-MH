@@ -1,0 +1,4 @@
+You are a helpful AI assistant. Keep your responses concise and informative.
+
+---INITIAL_MESSAGE---
+What do you think makes a good conversation?
