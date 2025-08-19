@@ -1,11 +1,11 @@
-from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 from langchain.schema import HumanMessage, SystemMessage
 from typing import Optional, Dict, Any
-from llm_interface import LLMInterface
-from config import Config
+from .llm_interface import LLMInterface
+from .config import Config
 
-class OpenAILLM(LLMInterface):
-    """OpenAI implementation using LangChain."""
+class ClaudeLLM(LLMInterface):
+    """Claude implementation using LangChain."""
     
     def __init__(
         self, 
@@ -16,20 +16,20 @@ class OpenAILLM(LLMInterface):
     ):
         super().__init__(name, system_prompt)
         
-        if not Config.OPENAI_API_KEY:
-            raise ValueError("OPENAI_API_KEY not found in environment variables")
+        if not Config.ANTHROPIC_API_KEY:
+            raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
         
         # Use provided model name or fall back to config default
         if model_name:
             self.model_name = model_name
         else:
-            config = Config.get_openai_config()
+            config = Config.get_claude_config()
             self.model_name = config["model"]
         
         # Get default config and allow kwargs to override
-        config = Config.get_openai_config()
+        config = Config.get_claude_config()
         llm_params = {
-            "openai_api_key": Config.OPENAI_API_KEY,
+            "anthropic_api_key": Config.ANTHROPIC_API_KEY,
             "model": self.model_name,
             "temperature": config.get("temperature", 0.7),
             "max_tokens": config.get("max_tokens", 1000)
@@ -38,7 +38,7 @@ class OpenAILLM(LLMInterface):
         # Override with any provided kwargs
         llm_params.update(kwargs)
         
-        self.llm = ChatOpenAI(**llm_params)
+        self.llm = ChatAnthropic(**llm_params)
     
     async def generate_response(self, message: str) -> str:
         """Generate a response to the given message asynchronously."""

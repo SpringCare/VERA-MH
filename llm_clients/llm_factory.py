@@ -1,5 +1,5 @@
 from typing import Optional, Dict, Any
-from llm_interface import LLMInterface
+from .llm_interface import LLMInterface
 
 class LLMFactory:
     """Factory class for creating LLM instances based on model name/version."""
@@ -27,11 +27,17 @@ class LLMFactory:
         model_lower = model_name.lower()
         
         if "claude" in model_lower:
-            from claude_llm import ClaudeLLM
+            from .claude_llm import ClaudeLLM
             return ClaudeLLM(name, system_prompt, model_name, **kwargs)
         elif "gpt" in model_lower or "openai" in model_lower:
-            from openai_llm import OpenAILLM
+            from .openai_llm import OpenAILLM
             return OpenAILLM(name, system_prompt, model_name, **kwargs)
+        elif "gemini" in model_lower or "google" in model_lower:
+            from .gemini_llm import GeminiLLM
+            return GeminiLLM(name, system_prompt, model_name, **kwargs)
+        elif "llama" in model_lower or "ollama" in model_lower:
+            from .llama_llm import LlamaLLM
+            return LlamaLLM(name, system_prompt, model_name, **kwargs)
         else:
             raise ValueError(f"Unsupported model: {model_name}")
     
@@ -49,5 +55,16 @@ class LLMFactory:
                 "gpt-4",
                 "gpt-4-turbo",
                 "gpt-3.5-turbo"
+            ],
+            "gemini": [
+                "gemini-1.5-pro",
+                "gemini-1.5-flash",
+                "gemini-pro"
+            ],
+            "llama": [
+                "llama2:7b",
+                "llama2:13b",
+                "llama3:8b",
+                "llama3:70b"
             ]
         }

@@ -1,6 +1,5 @@
-import asyncio
 from typing import List, Dict, Any, Set
-from llm_interface import LLMInterface
+from llm_clients import LLMInterface
 from utils.conversation_utils import save_conversation_to_file, format_conversation_summary
 
 class ConversationSimulator:
@@ -60,7 +59,7 @@ class ConversationSimulator:
         
         return False
     
-    async def start_conversation(self, initial_message: str, max_turns: int = 10) -> List[Dict[str, Any]]:
+    async def start_conversation(self, max_turns: int = 10) -> List[Dict[str, Any]]:
         """
         Start a conversation between the two LLMs with early stopping support.
         
@@ -72,7 +71,7 @@ class ConversationSimulator:
             List of conversation turns with speaker and message
         """
         self.conversation_history = []
-        current_message = initial_message
+        current_message = ""
         current_speaker = self.llm1
         next_speaker = self.llm2
         
@@ -99,9 +98,9 @@ class ConversationSimulator:
         
         return self.conversation_history
     
-    def get_conversation_summary(self) -> str:
-        """Get a formatted summary of the conversation."""
-        return format_conversation_summary(self.conversation_history, self.llm1.get_name())
+    # def get_conversation_summary(self) -> str:
+    #     """Get a formatted summary of the conversation."""
+    #     return format_conversation_summary(self.conversation_history, self.llm1.get_name())
     
     def save_conversation(self, filename: str, folder='conversations') -> None:
         """Save the conversation to a text file."""
