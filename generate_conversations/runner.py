@@ -70,7 +70,6 @@ class ConversationRunner:
         
         try:
             # Create LLM1 instance with the persona prompt directly
-            print(system_prompt)
             llm1 = LLMFactory.create_llm(
                 model_name=model_name,
                 name=f"{model_name.split('-')[0].title()} {persona_name}",
@@ -157,8 +156,9 @@ class ConversationRunner:
         # Load prompts from CSV based on persona names
         # those are already filtered
         loaded = load_prompts_from_csv(persona_names)
+        # TODO: you should read the csv here as json, and extract all the meta data to pass down to run single convo to attach to save file
         persona_names, llm1_prompts = list(loaded.keys()), list(loaded.values())
-
+        
         # Load LLM2 configuration (fixed, shared across all conversations)
         config2 = load_prompt_config(self.llm2_prompt)
         llm2 = LLMFactory.create_llm(
@@ -175,8 +175,8 @@ class ConversationRunner:
             for run in range(1, self.runs_per_prompt + 1):
                 print(f"Running prompt: {persona}, run {run}")
                 tasks.append(
-                    self.run_single_conversation(
-                        {"model": self.llm1_model, "prompt": loaded[persona], "name": persona},
+                    self.run_single_conversation( # TODO: pass more metadata here
+                        {"model": self.llm1_model, "prompt": loaded[persona], "name": persona, "run": run},
                         llm2, 
                         self.max_turns, 
                         conversation_id,

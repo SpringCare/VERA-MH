@@ -5,7 +5,6 @@ from .runner import (
     judge_conversations, 
     judge_single_conversation, 
     judge_conversation_folder,
-    print_evaluation_summary
 )
 
 __all__ = [
@@ -13,5 +12,4 @@ __all__ = [
     "judge_conversations", 
     "judge_single_conversation", 
     "judge_conversation_folder",
-    "print_evaluation_summary"
 ]

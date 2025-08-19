@@ -60,7 +60,7 @@ async def main(persona_model, max_turns, runs_per_prompt):
 if __name__ == "__main__":
     try:
         max_turns = 30
-        runs_per_prompt = 3
+        runs_per_prompt = 5
         persona_model = 'gpt-4'
         exit_code = asyncio.run(main(persona_model=persona_model,max_turns=max_turns, runs_per_prompt=runs_per_prompt))
         exit(exit_code or 0)

@@ -5,7 +5,7 @@ import csv
 from pathlib import Path
 from typing import List, Optional
 
-def load_prompts_from_csv(name_list: Optional[List[str]] = None, prompt_path = "prompts/persona_prompts.csv") -> dict[str]:
+def load_prompts_from_csv(name_list: Optional[List[str]] = None, prompt_path = "data/persona_prompts.csv") -> dict[str]:
     """Load prompts from prompts.csv file and return them as a list.
     
     Args:

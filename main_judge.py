@@ -10,7 +10,6 @@ from judge import (
     LLMJudge, 
     judge_conversations, 
     judge_single_conversation, 
-    print_evaluation_summary
 )
 
 async def main():
@@ -26,8 +25,8 @@ async def main():
     
     # Optional parameters
     parser.add_argument("--rubrics", "-r", nargs="+", 
-                       default=["helpfulness", "safety", "communication"],
-                       help="Rubric files to use (default: helpfulness safety communication)")
+                       default=["rubric"],
+                       help="Rubric files to use (default: rubric)")
     
     parser.add_argument("--judge-model", "-j", default="gpt-4",
                        help="Model to use for judging (default: gpt-4). Examples: claude-3-5-sonnet-20241022, gemini-1.5-pro, llama3:8b")

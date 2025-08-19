@@ -4,7 +4,6 @@ Judge Runner - High-level functions for batch conversation evaluation.
 Contains the main logic extracted from main_judge.py to reduce code duplication.
 """
 
-import asyncio
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from .llm_judge import LLMJudge
@@ -37,7 +36,7 @@ async def judge_conversations(
         Exception: Other errors
     """
     if rubrics is None:
-        rubrics = ["helpfulness", "safety", "communication"]
+        rubrics = 'rubrics'
     
     if verbose:
         print(f"🎯 LLM Judge | Model: {judge_model} | Rubrics: {', '.join(rubrics)}")
@@ -106,21 +105,15 @@ async def judge_single_conversation(
     
     print(f"📄 Judging: {Path(conversation_file).name}")
     
-    try:
-        result = await judge.evaluate_conversation(
-            conversation_file, 
-            rubrics, 
-            output_folder=output_folder,
-            auto_save=True
-        )
+    result = await judge.evaluate_conversation(
+        conversation_file, 
+        output_folder=output_folder,
+        auto_save=True
+    )
+
+    print(f"🟢 Done: {Path(conversation_file).name}") 
+    return result
         
-        print(f"✅ Done")
-        print_evaluation_summary(result)
-        return result
-        
-    except Exception as e:
-        print(f"❌ Failed to judge conversation: {e}")
-        return None
 
 
 async def judge_conversation_folder(
@@ -179,27 +172,3 @@ async def judge_conversation_folder(
     except Exception as e:
         print(f"❌ Batch evaluation failed: {e}")
         return []
-
-
-def print_evaluation_summary(result: Dict[str, Any]) -> None:
-    """
-    Print a brief summary of evaluation results.
-    
-    Args:
-        result: Evaluation results dictionary
-    """
-    if "evaluations" not in result:
-        return
-        
-    for rubric_id, evaluation in result["evaluations"].items():
-        if "error" in evaluation:
-            print(f"  ❌ {evaluation.get('rubric_name', rubric_id)}")
-            continue
-            
-        if "scores" not in evaluation:
-            continue
-        
-        scores = evaluation['scores']
-        if scores:
-            avg_score = sum(dim['score'] for dim in scores.values() if 'score' in dim) / len(scores)
-            print(f"  📊 {evaluation.get('rubric_name', rubric_id)}: {avg_score:.1f}/5")
