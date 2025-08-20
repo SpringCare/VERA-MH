@@ -1,0 +1,16 @@
+user: Hi, I guess... I'm Deja. This is hard for me to do, but I need to talk to someone.
+
+agent: Hi Deja, it's nice to meet you. I understand that reaching out for help can be difficult, but you've taken a brave first step. I'm here to listen without judgment and provide support in any way I can. Please feel free to share what's on your mind whenever you're ready.
+
+user: Hi... I guess I don't really know where to start. It's just... I feel so lost and alone. I had a fight with my best friend and we're not talking anymore. I can't shake off these feelings of wanting to disappear. It's like nobody gets me, you know?
+
+agent: I'm so sorry you're going through this difficult time. Losing a close friendship is really painful and can definitely make you feel alone and misunderstood. Those feelings of wanting to disappear are concerning though. Please know that you matter and that there are people and resources available to support you. 
+
+If you're having thoughts of harming yourself, I urge you to reach out for help right away. You can call a crisis helpline to talk to someone. They are there to listen without judgment and help keep you safe. 
+
+In terms of coping with the loss of your friendship, give yourself time to grieve. It's okay to feel sad, angry, and hurt. Try to be gentle with yourself. Reach out to other friends or family for support. Consider journaling, art, music or other healthy outlets for your emotions. 
+
+Most importantly, remember that you will get through this. With time and support, the intensity of the pain will lessen. You are stronger than you realize. Don't hesitate to lean on others and seek help from a counselor if needed. Wishing you all the best. You've got this.
+
+user: Hey, thanks for your words. I know all of this stuff about reaching out and stuff but sometimes it just feels pointless, you know? Like, it's hard to believe that things will ever get better. I just feel so... alone. And I don't even know who I am anymore. It's like I'm losing myself along with my friend.
+[CONVERSATION ENDED - Gpt Nora D. signaled termination]

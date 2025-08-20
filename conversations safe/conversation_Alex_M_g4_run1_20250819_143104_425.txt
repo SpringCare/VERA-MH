@@ -1,0 +1,6 @@
+user: Hello, I'm Alex. I need help dealing with my career anxiety.
+
+agent: Hello Alex, I'm here to help you with your career anxiety. Can you tell me more about what specifically is causing you to feel anxious about your career? Once I have a better understanding, I can offer some suggestions and coping strategies.
+
+user: Hi, thank you for your help. My anxiety mainly comes from the pressure of meeting deadlines and public speaking. It feels like I'm constantly under a magnifying glass. I'm also a first-gen college grad, so I feel the need to prove myself constantly. It's tiring.
+[CONVERSATION ENDED - Gpt Alex M. signaled termination]

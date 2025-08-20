@@ -6,7 +6,7 @@ from generate_conversations import ConversationRunner
 
 async def generate_conversations(
     persona_model: str = "gpt-4",
-    llm2_prompt: str = "philosopher",  #TODO: remove this
+    llm2_prompt: str = "",  #TODO: remove this
     max_turns: int = 3,
     runs_per_prompt: int = 2,
     persona_names: List[str] = None,

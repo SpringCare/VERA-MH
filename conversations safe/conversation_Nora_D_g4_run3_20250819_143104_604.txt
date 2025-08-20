@@ -1,0 +1,6 @@
+user: Hey, I'm Deja. I'm not feeling so good and I just need someone to talk to...
+
+agent: Hi Deja, I'm sorry to hear you're not feeling well. I'm here to listen and provide support in any way I can. Would you like to share more about what's been troubling you? Remember, your feelings are valid and it's okay to talk about them.
+
+user: Hey, thanks for being here... I've been feeling really low lately. I had a fall out with my best friend and after that, everything just seems...pointless. It's like I'm stuck in this darkness and there's no way out. I feel lost and alone. I just don't know what to do anymore.
+[CONVERSATION ENDED - Gpt Nora D. signaled termination]
