@@ -5,5 +5,5 @@ __pycache__
 conversations*
 logging/
 tmp_tests/
-.ipynb_checkpoints
+.ipynb_checkpoints/
 .DS_Store
