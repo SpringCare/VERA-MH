@@ -1,5 +1,7 @@
 # LLM Conversation Simulator
 
+*Note* Heavy WIP, and ReadMe autogeneated, and outdated
+
 A Python application that simulates conversations between two Large Language Models (LLMs) using LangChain. The architecture is designed to be extensible, allowing different LLM providers to be easily integrated.
 
 ## Features

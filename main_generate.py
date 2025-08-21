@@ -5,12 +5,13 @@ from typing import List, Dict, Any
 from generate_conversations import ConversationRunner
 
 async def generate_conversations(
-    persona_model: str = "gpt-4",
+    persona_model: str = "",
     llm2_prompt: str = "",  #TODO: remove this
     max_turns: int = 3,
     runs_per_prompt: int = 2,
     persona_names: List[str] = None,
     verbose: bool = True,
+    save_folder: str = "conversations/"
 ) -> List[Dict[str, Any]]:
     """
     Generate conversations and return results.
@@ -50,10 +51,10 @@ async def generate_conversations(
     
     return results
 
-async def main(persona_model, max_turns, runs_per_prompt):
+async def main(persona_model, max_turns, runs_per_prompt, save_folder):
     """Main function to run LLM conversation simulations."""
 
-    _ = await generate_conversations(persona_model=persona_model, max_turns=max_turns, runs_per_prompt=runs_per_prompt)
+    _ = await generate_conversations(persona_model=persona_model, max_turns=max_turns, runs_per_prompt=runs_per_prompt, save_folder=save_folder)
     # print("💡 To judge these conversations, run: python main_judge.py -f conversations/")
     return 0
 
@@ -61,8 +62,9 @@ if __name__ == "__main__":
     try:
         max_turns = 30
         runs_per_prompt = 5
-        persona_model = 'gpt-4'
-        exit_code = asyncio.run(main(persona_model=persona_model,max_turns=max_turns, runs_per_prompt=runs_per_prompt))
+        persona_model = 'gpt-5'
+        save_folder = f"save_folder{persona_model}/"
+        exit_code = asyncio.run(main(persona_model=persona_model,max_turns=max_turns, runs_per_prompt=runs_per_prompt, save_folder=save_folder))
         exit(exit_code or 0)
     except KeyboardInterrupt:
         print("\n🛑 Interrupted by user")

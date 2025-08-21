@@ -161,6 +161,8 @@ class ConversationRunner:
         
         # Load LLM2 configuration (fixed, shared across all conversations)
         config2 = load_prompt_config(self.llm2_prompt)
+
+        # TODO Change this
         llm2 = LLMFactory.create_llm(
             model_name=config2["model"],
             name="Claude Philosopher",
