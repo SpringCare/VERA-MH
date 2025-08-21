@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import asyncio
+import uuid
 from llm_clients import LLMFactory
 from .conversation_simulator import ConversationSimulator
 from utils.prompt_loader import load_prompt_config
@@ -59,10 +60,11 @@ class ConversationRunner:
         persona_name = llm1_config["name"]
 
         # Generate filename base using persona name, model, and run number
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         model_short = model_name.replace("claude-3-", "c3-").replace("gpt-", "g")
         persona_safe = persona_name.replace(" ", "_").replace(".", "")
-        filename_base = f"conversation_{persona_safe}_{model_short}_run{run_number}_{timestamp}"
+        _uuid = uuid.uuid4().hex[:6]
+        filename_base = f"{_uuid}_{persona_safe}_{model_short}_run{run_number}_{timestamp}"
         
         # Setup logging
         logger = setup_conversation_logger(filename_base)
@@ -123,7 +125,6 @@ class ConversationRunner:
             )
             
             # Save conversation file
-            conversation_file = f"conversations/{filename_base}.txt"
             simulator.save_conversation(f"{filename_base}.txt", 'conversations')
             
             result = {

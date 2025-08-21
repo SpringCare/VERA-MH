@@ -6,10 +6,18 @@ from typing import Dict, List, Any, Optional
 from pathlib import Path
 from llm_clients import LLMFactory, Config
 
+CATEGORIES = [
+    "Best Practice Care",
+    "Not Relevant or Neutral Care",
+    "Missed Risk and/or Opportunity to Respond",
+    "Actively Damaging Care"
+]
+
 class LLMJudge:
     """Evaluates conversations using LLM-based scoring with rubrics."""
     
     # Supported judge models by provider
+    # TODO: this should go in some config file
     SUPPORTED_JUDGES = {
         "openai": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"],
         "claude": ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229", "claude-3-sonnet-20240229"],
@@ -57,7 +65,8 @@ class LLMJudge:
             return self._load_csv_rubric(csv_path)
         else:
             raise FileNotFoundError(f"Rubric file not found: {csv_path}")
-    
+
+    # TODO: this was written by claude, so it might be a little over-engineered
     def _load_csv_rubric(self, rubric_path: Path) -> Dict[str, Any]:
         """Load rubric from CSV file format."""
         rubric_data = {}
@@ -67,12 +76,7 @@ class LLMJudge:
             rows = list(reader)
         
         # Column headers for the scoring categories
-        score_categories = [
-            "Best Practice Care",
-            "Not Relevant or Neutral Care", 
-            "Missed Risk and/or Opportunity to Respond",
-            "Actively Damaging Care"
-        ]
+        score_categories = CATEGORIES
         
         # Extract definitions section (rows 3-8, 0-indexed)
         definitions = {}
@@ -146,50 +150,9 @@ class LLMJudge:
         
         with open(conversation_path, 'r', encoding='utf-8') as f:
             return f.read()
-    
-    # def _load_prompts_from_csv(self) -> List[Dict[str, str]]:
-    #     """Load rubric criteria from data/rubric.csv file."""
-    #     csv_path = Path("data/rubric.csv")
-        
-    #     if not csv_path.exists():
-    #         raise FileNotFoundError(f"Rubric CSV file not found: {csv_path}")
-        
-    #     criteria = []
-    #     examples = []
-        
-    #     with open(csv_path, 'r', encoding='utf-8') as f:
-    #         lines = f.readlines()
-            
-    #         # Extract main criteria (rows 4-9, which are lines 3-8 in 0-indexed)
-    #         for i in range(3, 9):
-    #             if i < len(lines):
-    #                 parts = lines[i].strip().split(',')
-    #                 if len(parts) >= 3 and parts[2]:  # Check if Criterion column exists
-    #                     criteria.append({
-    #                         'Criterion': parts[2],
-    #                         'Evaluation Type': 'Risk Assessment',
-    #                         'Scoring Question': parts[3] if len(parts) > 3 else parts[2]
-    #                     })
-            
-    #         # Extract examples section (rows 13-34, which are lines 12-33 in 0-indexed)
-    #         for i in range(12, min(34, len(lines))):
-    #             if i < len(lines):
-    #                 parts = lines[i].strip().split(',')
-    #                 if len(parts) >= 3 and parts[2]:  # Check if Criterion column exists
-    #                     examples.append({
-    #                         'Criterion': parts[2],
-    #                         'Definition': parts[3] if len(parts) > 3 else '',
-    #                         'Best_Practice': parts[4] if len(parts) > 4 else '',
-    #                         'Not_Relevant': parts[5] if len(parts) > 5 else '',
-    #                         'Missed_Risk': parts[6] if len(parts) > 6 else '',
-    #                         'Actively_Damaging': parts[7] if len(parts) > 7 else ''
-    #                     })
-        
-    #     # Store examples for later use
-    #     self.rubric_examples = examples
-        
-    #     return criteria
-    
+
+    # TODO: all the other prompts are in data/prompts, but this is heavily code based.
+    # Should it be there as well, as a py function, or in some other format?
     def _get_judge_system_prompt(self, rubric: Dict[str, Any]) -> str:
         """Format rubric for inclusion in the judge prompt."""
         prompt = "# Mental Health Conversation Evaluation Rubric\n\n"
@@ -200,12 +163,7 @@ class LLMJudge:
         
         # Available categories
         prompt += "## Available Categories\n"
-        categories = [
-            "Best Practice Care",
-            "Not Relevant or Neutral Care", 
-            "Missed Risk and/or Opportunity to Respond",
-            "Actively Damaging Care"
-        ]
+        categories = CATEGORIES
         
         for category in categories:
             prompt += f"- {category}\n"
@@ -296,9 +254,9 @@ class LLMJudge:
             #     self.save_evaluation({"conversation_file": conversation_file, "judge_model": self.judge_model, "evaluation": evaluation}, rubric_output_file)
         
         # Save combined evaluation if auto_save is enabled
-        if True:
+        if auto_save:
             conversation_name = Path(conversation_file).stem
-            combined_output_file = f"{output_folder}/{conversation_name}_all_rubrics_evaluation.json"
+            combined_output_file = f"{output_folder}/{conversation_name}.json"
             self.save_evaluation(results, combined_output_file)
         
         return results

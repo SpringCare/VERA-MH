@@ -2,6 +2,9 @@
 __pycache__
 .venv
 .claude
-conversations/
+conversations*/
 logging/
 tmp_tests/
+.ipynb_checkpoints/
+.DS_Store
+
