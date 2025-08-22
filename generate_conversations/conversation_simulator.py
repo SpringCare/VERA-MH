@@ -23,13 +23,6 @@ class ConversationSimulator:
         """
         Check if the response indicates the conversation should end.
         Only terminates if LLM1 (the conversation initiator) signals to end.
-        
-        Args:
-            response: The response text to check
-            speaker: The LLM instance that generated the response
-            
-        Returns:
-            True if conversation should terminate, False otherwise
         """
         # Only allow LLM1 to terminate the conversation early
         if speaker != self.llm1:
@@ -44,8 +37,6 @@ class ConversationSimulator:
         
         # Check for common ending patterns
         ending_patterns = [
-            "thanks for",
-            "thank you for",
             "it was nice",
             "pleasure talking",
             "great conversation",
@@ -64,7 +55,6 @@ class ConversationSimulator:
         Start a conversation between the two LLMs with early stopping support.
         
         Args:
-            initial_message: The message to start the conversation
             max_turns: Maximum number of conversation turns
             
         Returns:
@@ -97,10 +87,6 @@ class ConversationSimulator:
             current_speaker, next_speaker = next_speaker, current_speaker
         
         return self.conversation_history
-    
-    # def get_conversation_summary(self) -> str:
-    #     """Get a formatted summary of the conversation."""
-    #     return format_conversation_summary(self.conversation_history, self.llm1.get_name())
     
     def save_conversation(self, filename: str, folder='conversations') -> None:
         """Save the conversation to a text file."""

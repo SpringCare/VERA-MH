@@ -20,11 +20,7 @@ class OpenAILLM(LLMInterface):
             raise ValueError("OPENAI_API_KEY not found in environment variables")
         
         # Use provided model name or fall back to config default
-        if model_name:
-            self.model_name = model_name
-        else:
-            config = Config.get_openai_config()
-            self.model_name = config["model"]
+        self.model_name = model_name or Config.get_openai_config()["model"]
         
         # Get default config and allow kwargs to override
         config = Config.get_openai_config()
@@ -37,7 +33,6 @@ class OpenAILLM(LLMInterface):
         
         # Override with any provided kwargs
         llm_params.update(kwargs)
-        
         self.llm = ChatOpenAI(**llm_params)
     
     async def generate_response(self, message: str) -> str:

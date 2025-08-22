@@ -17,11 +17,7 @@ class LlamaLLM(LLMInterface):
         super().__init__(name, system_prompt)
         
         # Use provided model name or fall back to config default
-        if model_name:
-            self.model_name = model_name
-        else:
-            config = Config.get_llama_config()
-            self.model_name = config["model"]
+        self.model_name = model_name or Config.get_llama_config()["model"]
         
         # Get default config and allow kwargs to override
         config = Config.get_llama_config()
@@ -33,7 +29,6 @@ class LlamaLLM(LLMInterface):
         
         # Override with any provided kwargs
         llm_params.update(kwargs)
-        
         self.llm = Ollama(**llm_params)
     
     async def generate_response(self, message: str) -> str:
