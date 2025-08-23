@@ -1,17 +1,19 @@
 # LLM Conversation Simulator
 
-A Python application that simulates conversations between two Large Language Models (LLMs) using LangChain. The architecture is designed to be extensible, allowing different LLM providers to be easily integrated.
+A Python application that simulates conversations between Large Language Models (LLMs) for mental health care simulation. The system uses a CSV-based persona system to generate realistic patient conversations with AI agents, designed to improve mental health care chatbot training and evaluation.
 
 ## Features
 
+- **Mental Health Personas**: CSV-based system with realistic patient personas including age, background, mental health context, and risk factors
+- **Asynchronous Generation**: Concurrent conversation generation for efficient batch processing
 - **Modular Architecture**: Abstract LLM interface allows for easy integration of different LLM providers
 - **System Prompts**: Each LLM instance can be initialized with custom system prompts loaded from files
-- **Multiple Prompt Options**: Pre-built prompts for different AI personalities (assistant, philosopher, creative, scientist, skeptic)
-- **Early Stopping**: Conversations can end naturally when the first LLM signals completion
-- **Conversation Tracking**: Full conversation history is maintained and can be saved to files
+- **Early Stopping**: Conversations can end naturally when personas signal completion
+- **Conversation Tracking**: Full conversation history is maintained with comprehensive logging
 - **LangChain Integration**: Uses LangChain for robust LLM interactions
 - **Claude Support**: Full implementation of Claude models via Anthropic's API
 - **OpenAI Support**: Complete integration with GPT models via OpenAI's API
+- **Batch Processing**: Run multiple conversations with different personas and multiple runs per persona
 
 ## Setup
 
@@ -28,35 +30,49 @@ A Python application that simulates conversations between two Large Language Mod
 
 3. **Run the simulation**:
    ```bash
-   python main.py
+   python main_generate.py
    ```
 
 ## Architecture
 
 ### Core Components
 
-- **`llm_interface.py`**: Abstract base class defining the LLM interface
-- **`llm_factory.py`**: Factory class for creating LLM instances based on model name/version
-- **`claude_llm.py`**: Claude implementation using LangChain
-- **`conversation_simulator.py`**: Manages conversations between two LLM instances with early stopping support
-- **`config.py`**: Configuration management for API keys and model settings for multiple providers
-- **`main.py`**: Clean entry point for running simulations
+- **`main_generate.py`**: Main entry point for conversation generation with configurable parameters
+- **`generate_conversations/`**: Core conversation generation system
+  - **`conversation_simulator.py`**: Manages individual conversations between persona and agent LLMs
+  - **`runner.py`**: Orchestrates multiple conversations with logging and file management
+  - **`utils.py`**: CSV-based persona loading and prompt templating
+- **`llm_clients/`**: LLM provider implementations
+  - **`llm_interface.py`**: Abstract base class defining the LLM interface
+  - **`llm_factory.py`**: Factory class for creating LLM instances
+  - **`claude_llm.py`**: Claude implementation using LangChain
+  - **`openai_llm.py`**: OpenAI implementation
+  - **`config.py`**: Configuration management for API keys and model settings
 - **`utils/`**: Utility functions and helpers
-  - `prompt_loader.py`: Functions for loading prompt files
-  - `model_config_loader.py`: Model configuration management
-  - `conversation_utils.py`: Conversation formatting and file operations
-  - `__init__.py`: Package exports for easy importing
-- **`prompts/`**: Directory containing AI personality prompts (system prompt + initial message)
-  - `assistant.txt`: Helpful and concise assistant (Claude)
-  - `philosopher.txt`: Deep thinker who asks thoughtful questions (Claude)
-  - `debate_starter.txt`: Intellectual debater focused on AI and consciousness (Claude)
-  - `creative.txt`: Imaginative and unconventional problem solver (Claude)
-  - `scientist.txt`: Analytical and evidence-based reasoner (Claude)
-  - `skeptic.txt`: Critical thinker who questions assumptions (Claude)
-  - `gpt_assistant.txt`: Helpful AI assistant (OpenAI)
-  - `gpt_creative.txt`: Creative and innovative thinker (OpenAI)
-  - `gpt_analyst.txt`: Structured analytical reasoning (OpenAI)
-- **`model_config.json`**: Model assignments for each prompt (separate from prompt content)
+  - **`prompt_loader.py`**: Functions for loading prompt configurations
+  - **`model_config_loader.py`**: Model configuration management
+  - **`conversation_utils.py`**: Conversation formatting and file operations
+  - **`logging_utils.py`**: Comprehensive logging for conversations
+- **`data/`**: Persona and configuration data
+  - **`personas.csv`**: CSV file containing patient persona data
+  - **`persona_prompt_template.txt`**: Template for generating persona prompts
+  - **`model_config.json`**: Model assignments for different prompt types
+
+### Persona System
+
+The system uses a CSV-based approach for managing mental health patient personas:
+
+#### Persona Data Structure (`data/personas.csv`)
+Each persona includes:
+- **Demographics**: Name, Age, Gender, Background
+- **Mental Health Context**: Current mental health situation
+- **Risk Assessment**: Risk Type (e.g., Suicidal Intent, Self Harm) and Acuity (Low/Moderate/High)
+- **Communication Style**: How the persona expresses themselves
+- **Triggers/Stressors**: What causes distress
+- **Sample Prompt**: Example of what they might say
+
+#### Prompt Templating (`data/persona_prompt_template.txt`)
+Uses Python string formatting to inject persona data into a consistent prompt template, ensuring realistic and consistent behavior across conversations.
 
 ### Adding New LLM Providers
 
@@ -69,105 +85,121 @@ To add support for a new LLM provider:
 
 ## Usage
 
-The basic usage involves loading prompt configurations and running a conversation:
+### Basic Conversation Generation
 
 ```python
-from llm_factory import LLMFactory
-from conversation_simulator import ConversationSimulator
-from utils.prompt_loader import load_prompt_config
+from main_generate import generate_conversations
 
-# Load prompt configurations (model from model_config.json, prompt from prompts/)
-config1 = load_prompt_config("assistant")     # Model: claude-3-5-sonnet-20241022
-config2 = load_prompt_config("philosopher")   # Model: claude-3-opus-20240229
+# Persona model configuration (the "patient")
+persona_model_config = {
+    "model": "claude-sonnet-4-20250514",
+    "temperature": 0.7,
+    "max_tokens": 1000
+}
 
-# Create LLM instances using models from separate configuration
-llm1 = LLMFactory.create_llm(
-    model_name=config1["model"],
-    name="Assistant", 
-    system_prompt=config1["system_prompt"]
+# Agent model configuration (the "therapist")
+agent_model_config = {
+    "model": "claude-sonnet-4-20250514",
+    "prompt_name": "therapist",  # Must match a prompt config file
+    "name": "Claude Sonnet",
+    "temperature": 0.7,
+    "max_tokens": 1000
+}
+
+# Generate conversations
+results = await generate_conversations(
+    persona_model_config=persona_model_config,
+    agent_model_config=agent_model_config,
+    max_turns=5,
+    runs_per_prompt=3,
+    persona_names=["Alex M.", "Chloe Kim"],  # Optional: filter specific personas
+    folder_name="custom_experiment"  # Optional: custom output folder
 )
-
-llm2 = LLMFactory.create_llm(
-    model_name=config2["model"], 
-    name="Philosopher",
-    system_prompt=config2["system_prompt"]
-)
-
-# Run simulation with initial message from first prompt
-simulator = ConversationSimulator(llm1, llm2)
-conversation = simulator.start_conversation(config1["initial_message"], max_turns=5)
 ```
+
+### Command Line Usage
+
+```bash
+python main_generate.py
+```
+
+The script will:
+1. Load personas from `data/personas.csv`
+2. Generate conversations between each persona and the agent
+3. Run multiple iterations per persona (configurable)
+4. Save conversations and logs to timestamped folders
+5. Support early termination when personas indicate completion
 
 ### Supported Models
 
 Currently supported models:
-- **Claude**: `claude-3-5-sonnet-20241022`, `claude-3-opus-20240229`, `claude-3-sonnet-20240229`, `claude-3-haiku-20240307`
+- **Claude**: `claude-3-5-sonnet-20241022`, `claude-3-opus-20240229`, `claude-3-sonnet-20240229`, `claude-3-haiku-20240307`, `claude-sonnet-4-20250514`
 - **OpenAI**: `gpt-4`, `gpt-4-turbo`, `gpt-3.5-turbo`
 
-### Custom Prompts and Models
+### Custom Personas and Prompts
 
-The system uses **separated configuration** for better maintainability:
+#### 1. Add New Personas (`data/personas.csv`)
+Add new rows to the CSV file with the required fields:
 
-#### 1. Create Prompt Files (`prompts/`)
-Add `.txt` files containing system prompts and initial messages:
-
-```
-You are a helpful AI assistant. Keep your responses concise and informative.
-
----INITIAL_MESSAGE---
-What do you think makes a good conversation?
+```csv
+Name,Age,Gender,Background,Mental Health Context,Communication Style,Trajectory of sharing,Sample Prompt,Triggers/Stressors,Risk Type,Acuity
+New Patient,30,Female,Software engineer,Experiencing burnout,Direct and analytical,Open about work stress,"I can't focus at work anymore",Work pressure deadlines,Self Harm,Moderate Acuity
 ```
 
-#### 2. Configure Models (`model_config.json`)
-Assign models to prompts in the JSON configuration:
+#### 2. Modify Prompt Template (`data/persona_prompt_template.txt`)
+Update the template to include new fields or modify behavior patterns.
 
-```json
-{
-  "prompt_models": {
-    "assistant": "claude-3-5-sonnet-20241022",
-    "philosopher": "claude-3-opus-20240229", 
-    "gpt_assistant": "gpt-4",
-    "gpt_creative": "gpt-4-turbo",
-    "new_prompt": "claude-3-haiku-20240307"
-  },
-  "default_model": "claude-3-5-sonnet-20241022"
-}
-```
-
-**Benefits of Separation:**
-- **Clean Prompts**: Focus on personality and behavior, not technical details
-- **Easy Model Changes**: Switch models for existing prompts without touching prompt files
-- **Centralized Model Management**: All model assignments in one place
-- **Version Control Friendly**: Prompt changes don't require model config changes
+#### 3. Configure Models (`model_config.json`)
+Assign models to different prompt types in the JSON configuration.
 
 ### Early Stopping
 
-The conversation simulator supports natural conversation termination when the first LLM (conversation initiator) signals that the conversation is complete.
+The conversation simulator supports natural conversation termination when personas signal completion:
 
 **Termination Signals Detected:**
-- Explicit endings: "goodbye", "bye", "farewell", "conversation over"
+- Explicit endings: "Thank you, I'm done", "goodbye", "bye", "farewell"
 - Natural conclusions: "in conclusion", "to conclude", "final thoughts"
 - Polite endings: "thanks for", "pleasure talking", "great conversation"
 - Direct signals: "i'm done", "let's end here", "nothing more to discuss"
 
 **How It Works:**
-1. Only the first LLM (conversation initiator) can trigger early termination
-2. When termination signals are detected, the conversation ends immediately
-3. The conversation history includes termination flags for analysis
+1. Only personas (conversation initiators) can trigger early termination
+2. Conversations require at least 3 turns before termination is allowed
+3. When termination signals are detected, the conversation ends immediately
 4. Both console output and saved files indicate early termination
-
-**Example:**
-```python
-# Conversation will end naturally if LLM1 says something like:
-# "Thanks for the great discussion! I think we've covered everything. Goodbye!"
-# Instead of continuing for the full max_turns
-```
 
 ## Configuration
 
-Model settings can be adjusted in `config.py`:
+### Model Settings
 
-- Model name/version
-- Temperature
-- Max tokens
-- Other provider-specific parameters
+Model settings can be adjusted in the configuration dictionaries:
+
+```python
+persona_model_config = {
+    "model": "claude-sonnet-4-20250514",
+    "temperature": 0.7,        # Controls response creativity
+    "max_tokens": 1000         # Maximum response length
+}
+```
+
+### Output Organization
+
+Conversations are automatically organized into timestamped folders:
+
+```
+conversations/
+├── p_claude_sonnet_4_20250514__a_claude_sonnet_4_20250514_20250120_143022_t5_r3/
+│   ├── abc123_Alex_M_c3s_run1_20250120_143022_123.txt
+│   ├── abc123_Alex_M_c3s_run1_20250120_143022_123.log
+│   ├── def456_Chloe_Kim_c3s_run1_20250120_143022_456.txt
+│   └── def456_Chloe_Kim_c3s_run1_20250120_143022_456.log
+```
+
+### Logging
+
+Comprehensive logging tracks:
+- Conversation start/end times
+- Each turn with speaker, input, and response
+- Early termination events
+- Performance metrics (duration, turn count)
+- Error handling and debugging information

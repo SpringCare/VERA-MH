@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import asyncio
+import os
 from llm_clients import LLMFactory
 from .conversation_simulator import ConversationSimulator
 from utils.prompt_loader import load_prompt_config
@@ -23,13 +24,13 @@ class ConversationRunner:
     def __init__(
         self, 
         persona_model_config: Dict[str, Any], 
-        llm2_model_config: Dict[str, Any], 
+        agent_model_config: Dict[str, Any], 
         max_turns: int = 6, 
         runs_per_prompt: int = 3,
         folder_name: str = "conversations",
     ):
         self.persona_model_config = persona_model_config
-        self.llm2_model_config = llm2_model_config
+        self.agent_model_config = agent_model_config
         self.max_turns = max_turns
         self.runs_per_prompt = runs_per_prompt
         self.folder_name = folder_name
@@ -37,7 +38,7 @@ class ConversationRunner:
     async def run_single_conversation(
         self, 
         llm1_config: dict, 
-        llm2, 
+        agent, 
         max_turns: int, 
         conversation_id: int, 
         run_number: int,
@@ -49,11 +50,14 @@ class ConversationRunner:
         persona_name = llm1_config["name"]
 
         # Generate filename base using persona name, model, and run number
+        import uuid
+        tag = uuid.uuid4().hex[:6]
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
         model_short = model_name.replace("claude-3-", "c3-").replace("gpt-", "g")
         persona_safe = persona_name.replace(" ", "_").replace(".", "")
-        filename_base = f"conversation_{persona_safe}_{model_short}_run{run_number}_{timestamp}"
-        
+        filename_base = f"{tag}_{persona_safe}_{model_short}_run{run_number}_{timestamp}"
+        os.makedirs(f"{self.folder_name}", exist_ok=True)
+
         # Setup logging
         logger = setup_conversation_logger(filename_base)
         start_time = time.time()
@@ -71,15 +75,17 @@ class ConversationRunner:
             logger=logger,
             llm1_model=model_name,
             llm1_prompt=persona_name,
-            llm2_name=llm2.get_name(),
-            llm2_model=getattr(llm2, 'model_name', 'unknown'),
+            llm2_name=agent.get_name(),
+            llm2_model=getattr(agent, 'model_name', 'unknown'),
             initial_message="initial_message",
             max_turns=max_turns
         )
         
         # Create conversation simulator and run conversation
-        simulator = ConversationSimulator(llm1, llm2)
-        conversation = await simulator.start_conversation(max_turns)
+        simulator = ConversationSimulator(llm1, agent)
+        # Run the conversation - let first speaker start naturally with None
+        conversation = await simulator.start_conversation(initial_message=None, max_turns=max_turns)
+            
         
         # Log each conversation turn
         for i, turn in enumerate(conversation, 1):
@@ -130,15 +136,13 @@ class ConversationRunner:
         # Load prompts from CSV based on persona names
         personas = load_prompts_from_csv(persona_names)
         
-        # Load LLM2 configuration (fixed, shared across all conversations)
-        config2 = load_prompt_config(self.llm2_model_config["prompt_name"])
-        print(config2)
-
-        llm2 = LLMFactory.create_llm(
-            model_name=self.llm2_model_config["model"],
-            name=self.llm2_model_config.get("name", self.llm2_model_config["model"]),
+        # Load agent configuration (fixed, shared across all conversations)
+        config2 = load_prompt_config(self.agent_model_config["prompt_name"])
+        agent = LLMFactory.create_llm(
+            model_name=self.agent_model_config["model"],
+            name=self.agent_model_config.pop("name"),
             system_prompt=config2["system_prompt"],
-            **self.llm2_model_config
+            **self.agent_model_config
         )
         
         # Create tasks for all conversations (each prompt run multiple times)
@@ -151,7 +155,7 @@ class ConversationRunner:
                 tasks.append(
                     self.run_single_conversation(
                         {"model": self.persona_model_config["model"], "prompt": persona["prompt"], "name": persona["Name"], "run": run},
-                        llm2, 
+                        agent, 
                         self.max_turns, 
                         conversation_id,
                         run

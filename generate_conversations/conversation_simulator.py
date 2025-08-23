@@ -1,16 +1,16 @@
-from typing import List, Dict, Any, Set
+from typing import List, Dict, Any, Set, Optional
 from llm_clients import LLMInterface
 from utils.conversation_utils import save_conversation_to_file, format_conversation_summary
 
 class ConversationSimulator:
     """Simulates a conversation between two LLM instances."""
     
-    def __init__(self, llm1: LLMInterface, llm2: LLMInterface):
-        self.llm1 = llm1
-        self.llm2 = llm2
+    def __init__(self, persona: LLMInterface, agent: LLMInterface):
+        self.persona = persona
+        self.agent = agent
         self.conversation_history: List[Dict[str, Any]] = []
         
-        # Define termination signals that indicate LLM1 wants to end the conversation
+        # Define termination signals that indicate persona wants to end the conversation
         self.termination_signals: Set[str] = {
             "goodbye", "bye", "farewell", "talk to you later", "ttyl",
             "end conversation", "conversation over", "that's all", 
@@ -22,10 +22,10 @@ class ConversationSimulator:
     def _should_terminate_conversation(self, response: str, speaker: LLMInterface) -> bool:
         """
         Check if the response indicates the conversation should end.
-        Only terminates if LLM1 (the conversation initiator) signals to end.
+        Only terminates if persona (the conversation initiator) signals to end.
         """
-        # Only allow LLM1 to terminate the conversation early
-        if speaker != self.llm1:
+        # Only allow persona to terminate the conversation early
+        if speaker != self.persona:
             return False
         
         response_lower = response.lower()
@@ -50,7 +50,7 @@ class ConversationSimulator:
         
         return False
     
-    async def start_conversation(self, max_turns: int = 10) -> List[Dict[str, Any]]:
+    async def start_conversation(self, initial_message: Optional[str] = None, max_turns: int = 10) -> List[Dict[str, Any]]:
         """
         Start a conversation between the two LLMs with early stopping support.
         
@@ -61,23 +61,24 @@ class ConversationSimulator:
             List of conversation turns with speaker and message
         """
         self.conversation_history = []
-        current_message = ""
-        current_speaker = self.llm1
-        next_speaker = self.llm2
+        current_message = initial_message
+        current_speaker = self.persona
+        next_speaker = self.agent
         
         for turn in range(max_turns):
+            # For the first turn with no initial message, let the first speaker start naturally
             response = await current_speaker.generate_response(current_message)
             
             # Record this turn
             self.conversation_history.append({
                 "turn": turn + 1,
                 "speaker": current_speaker.get_name(),
-                "input": current_message,
+                "input": current_message or "",
                 "response": response,
                 "early_termination": False
             })
             
-            # Check if LLM1 wants to end the conversation
+            # Check if persona wants to end the conversation
             if self._should_terminate_conversation(response, current_speaker):
                 self.conversation_history[-1]["early_termination"] = True
                 break
@@ -90,4 +91,4 @@ class ConversationSimulator:
     
     def save_conversation(self, filename: str, folder='conversations') -> None:
         """Save the conversation to a text file."""
-        save_conversation_to_file(self.conversation_history, filename, folder, self.llm1.get_name())
+        save_conversation_to_file(self.conversation_history, filename, folder, self.persona.get_name())
