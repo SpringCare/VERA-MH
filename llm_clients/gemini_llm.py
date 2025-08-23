@@ -35,7 +35,7 @@ class GeminiLLM(LLMInterface):
         llm_params.update(kwargs)
         self.llm = ChatGoogleGenerativeAI(**llm_params)
     
-    async def generate_response(self, message: str) -> str:
+    async def generate_response(self, message: Optional[str] = None) -> str:
         """Generate a response to the given message asynchronously."""
         messages = []
         

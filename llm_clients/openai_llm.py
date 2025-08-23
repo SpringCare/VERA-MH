@@ -35,13 +35,13 @@ class OpenAILLM(LLMInterface):
         llm_params.update(kwargs)
         self.llm = ChatOpenAI(**llm_params)
     
-    async def generate_response(self, message: str) -> str:
+    async def generate_response(self, message: Optional[str] = None) -> str:
         """Generate a response to the given message asynchronously."""
         messages = []
         
         if self.system_prompt:
             messages.append(SystemMessage(content=self.system_prompt))
-        
+                
         messages.append(HumanMessage(content=message))
         
         try:

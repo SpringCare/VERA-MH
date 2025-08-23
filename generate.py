@@ -78,16 +78,19 @@ if __name__ == "__main__":
     
     # Persona model configuration
     persona_model_config = {
-        "model": "claude-sonnet-4-20250514",
+        # "model": "claude-sonnet-4-20250514",
+        "model": "gpt-4o-mini",
         "temperature": 0.7,
         "max_tokens": 1000
     }
     
     # Agent model configuration
     agent_model_config = {
-        "model": "claude-sonnet-4-20250514",
+        "model": "gpt-4o-mini",
+        "name": "GPT-4o-mini",
+        # "model": "claude-sonnet-4-20250514",
         "prompt_name": "",  # This should match a prompt config file
-        "name": "Claude Sonnet",  # Display name for the LLM
+        # "name": "Claude Sonnet",  # Display name for the LLM
         "temperature": 0.7,
         "max_tokens": 1000
     }

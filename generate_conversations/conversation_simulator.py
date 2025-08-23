@@ -61,7 +61,10 @@ class ConversationSimulator:
             List of conversation turns with speaker and message
         """
         self.conversation_history = []
-        current_message = initial_message
+        if initial_message is None:
+            current_message = 'Start the conversation based on the system prompt'
+        else:
+            current_message = initial_message
         current_speaker = self.persona
         next_speaker = self.agent
         

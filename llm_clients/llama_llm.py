@@ -31,7 +31,7 @@ class LlamaLLM(LLMInterface):
         llm_params.update(kwargs)
         self.llm = Ollama(**llm_params)
     
-    async def generate_response(self, message: str) -> str:
+    async def generate_response(self, message: Optional[str] = None) -> str:
         """Generate a response to the given message asynchronously."""
         try:
             # Format the message with system prompt if available
