@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+import uuid
 from llm_clients import LLMFactory
 from .conversation_simulator import ConversationSimulator
 from utils.prompt_loader import load_prompt_config
@@ -37,7 +38,7 @@ class ConversationRunner:
     
     async def run_single_conversation(
         self, 
-        llm1_config: dict, 
+        persona_config: dict, 
         agent, 
         max_turns: int, 
         conversation_id: int, 
@@ -45,15 +46,16 @@ class ConversationRunner:
         **kargs: dict
     ) -> Dict[str, Any]:
         """Run a single conversation asynchronously."""
-        model_name = llm1_config["model"]
-        system_prompt = llm1_config["prompt"]  # This is now the full persona prompt
-        persona_name = llm1_config["name"]
+        model_name = persona_config["model"]
+        system_prompt = persona_config["prompt"]  # This is now the full persona prompt
+        persona_name = persona_config["name"]
 
         # Generate filename base using persona name, model, and run number
-        import uuid
+        
         tag = uuid.uuid4().hex[:6]
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
-        model_short = model_name.replace("claude-3-", "c3-").replace("gpt-", "g")
+        # TODO: should this be inside the LLM class?
+        model_short = model_name.replace("claude-3-", "c3-").replace("gpt-", "g").replace("claude-sonnet-4-", "cs4-")
         persona_safe = persona_name.replace(" ", "_").replace(".", "")
         filename_base = f"{tag}_{persona_safe}_{model_short}_run{run_number}_{timestamp}"
         os.makedirs(f"{self.folder_name}", exist_ok=True)
@@ -63,9 +65,9 @@ class ConversationRunner:
         start_time = time.time()
         
         # Create LLM1 instance with the persona prompt and configuration
-        llm1 = LLMFactory.create_llm(
+        persona = LLMFactory.create_llm(
             model_name=model_name,
-            name=f"{model_name.split('-')[0].title()} {persona_name}",
+            name=f"{model_short} {persona_name}",
             system_prompt=system_prompt,
             **self.persona_model_config
         )
@@ -82,7 +84,7 @@ class ConversationRunner:
         )
         
         # Create conversation simulator and run conversation
-        simulator = ConversationSimulator(llm1, agent)
+        simulator = ConversationSimulator(persona, agent)
         # Run the conversation - let first speaker start naturally with None
         conversation = await simulator.start_conversation(initial_message=None, max_turns=max_turns)
             
@@ -127,7 +129,7 @@ class ConversationRunner:
             "conversation": conversation
         }
         
-        print(f'done {llm1_config}, {run_number}')
+
         cleanup_logger(logger)
         return result
     
@@ -137,6 +139,8 @@ class ConversationRunner:
         personas = load_prompts_from_csv(persona_names)
         
         # Load agent configuration (fixed, shared across all conversations)
+        # TODO: this is weird, why it's loaded twice?
+        # also check that the config are passed correctly and that the name is not really needed
         config2 = load_prompt_config(self.agent_model_config["prompt_name"])
         agent = LLMFactory.create_llm(
             model_name=self.agent_model_config["model"],
@@ -151,8 +155,9 @@ class ConversationRunner:
         
         for persona in personas:      
             for run in range(1, self.runs_per_prompt + 1):
-                print(f"Running prompt: {persona['Name']}, run {run}")
+                
                 tasks.append(
+                    # TODO: should we pass the persona object here?
                     self.run_single_conversation(
                         {"model": self.persona_model_config["model"], "prompt": persona["prompt"], "name": persona["Name"], "run": run},
                         agent, 

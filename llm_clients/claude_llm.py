@@ -42,10 +42,7 @@ class ClaudeLLM(LLMInterface):
         if self.system_prompt:
             messages.append(SystemMessage(content=self.system_prompt))
         
-        # Handle None message by providing a default starter message
-        if message is None:
-            message = "Hello! How are you today?"
-        
+       
         messages.append(HumanMessage(content=message))
         
         try:
