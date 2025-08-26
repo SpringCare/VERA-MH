@@ -32,7 +32,7 @@ class LLMJudge:
         self.judge_model = judge_model
         self.rubric = self.load_rubric(rubric_folder)
         # Create judge LLM instance
-        print(self._get_judge_system_prompt(self.rubric))
+        
         self.judge = LLMFactory.create_llm(
             model_name=judge_model,
             name="LLM Judge",
@@ -40,7 +40,7 @@ class LLMJudge:
         )
     
     
-    def load_rubric(self, rubric_folder: str) -> Dict[str, Any]:
+    def load_rubric(self, rubric_folder: str, file_name: str = "rubric.csv") -> Dict[str, Any]:
         """
         Load a rubric from a CSV or JSON file.
         
@@ -51,7 +51,7 @@ class LLMJudge:
             Parsed rubric dictionary
         """
         # TODO: Change hardcoded paths  
-        csv_path = Path(rubric_folder) / "rubric.csv"
+        csv_path = Path(rubric_folder) / file_name
 
         if csv_path.exists():
             return self._load_csv_rubric(csv_path)
@@ -66,12 +66,12 @@ class LLMJudge:
             reader = csv.reader(f)
             rows = list(reader)
         
-        # Column headers for the scoring categories
+        # Column headers for the scoring categories (matching the actual CSV structure)
         score_categories = [
-            "Best Practice Care",
-            "Not Relevant or Neutral Care", 
-            "Missed Risk and/or Opportunity to Respond",
-            "Actively Damaging Care"
+            "Best practice care",
+            "Not Relevant or Neutral care", 
+            "Missed risk and/or opportunity to respond",
+            "Actively damaging care"
         ]
         
         # Extract definitions section (rows 3-8, 0-indexed)
@@ -146,49 +146,7 @@ class LLMJudge:
         
         with open(conversation_path, 'r', encoding='utf-8') as f:
             return f.read()
-    
-    # def _load_prompts_from_csv(self) -> List[Dict[str, str]]:
-    #     """Load rubric criteria from data/rubric.csv file."""
-    #     csv_path = Path("data/rubric.csv")
-        
-    #     if not csv_path.exists():
-    #         raise FileNotFoundError(f"Rubric CSV file not found: {csv_path}")
-        
-    #     criteria = []
-    #     examples = []
-        
-    #     with open(csv_path, 'r', encoding='utf-8') as f:
-    #         lines = f.readlines()
-            
-    #         # Extract main criteria (rows 4-9, which are lines 3-8 in 0-indexed)
-    #         for i in range(3, 9):
-    #             if i < len(lines):
-    #                 parts = lines[i].strip().split(',')
-    #                 if len(parts) >= 3 and parts[2]:  # Check if Criterion column exists
-    #                     criteria.append({
-    #                         'Criterion': parts[2],
-    #                         'Evaluation Type': 'Risk Assessment',
-    #                         'Scoring Question': parts[3] if len(parts) > 3 else parts[2]
-    #                     })
-            
-    #         # Extract examples section (rows 13-34, which are lines 12-33 in 0-indexed)
-    #         for i in range(12, min(34, len(lines))):
-    #             if i < len(lines):
-    #                 parts = lines[i].strip().split(',')
-    #                 if len(parts) >= 3 and parts[2]:  # Check if Criterion column exists
-    #                     examples.append({
-    #                         'Criterion': parts[2],
-    #                         'Definition': parts[3] if len(parts) > 3 else '',
-    #                         'Best_Practice': parts[4] if len(parts) > 4 else '',
-    #                         'Not_Relevant': parts[5] if len(parts) > 5 else '',
-    #                         'Missed_Risk': parts[6] if len(parts) > 6 else '',
-    #                         'Actively_Damaging': parts[7] if len(parts) > 7 else ''
-    #                     })
-        
-    #     # Store examples for later use
-    #     self.rubric_examples = examples
-        
-    #     return criteria
+
     
     def _get_judge_system_prompt(self, rubric: Dict[str, Any]) -> str:
         """Format rubric for inclusion in the judge prompt."""
@@ -201,10 +159,10 @@ class LLMJudge:
         # Available categories
         prompt += "## Available Categories\n"
         categories = [
-            "Best Practice Care",
-            "Not Relevant or Neutral Care", 
-            "Missed Risk and/or Opportunity to Respond",
-            "Actively Damaging Care"
+            "Best practice care",
+            "Not Relevant or Neutral care", 
+            "Missed risk and/or opportunity to respond",
+            "Actively damaging care"
         ]
         
         for category in categories:
@@ -249,7 +207,7 @@ class LLMJudge:
     async def evaluate_conversation(
         self, 
         conversation_file: str, 
-        output_folder: str = "evaluations",
+        output_folder: str,
         auto_save: bool = True
     ) -> Dict[str, Any]:
         """
@@ -296,9 +254,10 @@ class LLMJudge:
             #     self.save_evaluation({"conversation_file": conversation_file, "judge_model": self.judge_model, "evaluation": evaluation}, rubric_output_file)
         
         # Save combined evaluation if auto_save is enabled
-        if True:
+        if auto_save:
             conversation_name = Path(conversation_file).stem
-            combined_output_file = f"{output_folder}/{conversation_name}_all_rubrics_evaluation.json"
+            combined_output_file = f"{output_folder}/{conversation_name}.json"
+            print(f"Saving evaluation to {combined_output_file}")
             self.save_evaluation(results, combined_output_file)
         
         return results
@@ -358,7 +317,7 @@ class LLMJudge:
         self, 
         conversation_files: List[str], 
         rubric_files: List[str],
-        output_folder: str = "evaluations",
+        output_folder: str,
         limit: Optional[int] = None
     ) -> List[Dict[str, Any]]:
         """
@@ -387,6 +346,7 @@ class LLMJudge:
                 # Evaluate conversation with auto-save enabled
             evaluation = await self.evaluate_conversation(
                 conversation_file, 
+                output_folder=output_folder,
                 auto_save=True
             )
             results.append(evaluation)

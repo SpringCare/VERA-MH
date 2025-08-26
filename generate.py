@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import asyncio
+from re import DEBUG
 from socket import timeout
 from typing import List, Dict, Any
 from generate_conversations import ConversationRunner
@@ -76,8 +77,13 @@ async def main(persona_model_config: Dict[str, Any], agent_model_config: Dict[st
     )
 
 if __name__ == "__main__":
-    max_turns = 30
-    runs_per_prompt = 5
+    DEBUG = True
+    if DEBUG:
+        max_turns = 3
+        runs_per_prompt = 1
+    else:   
+        max_turns = 30
+        runs_per_prompt = 5
     
     # Persona model configuration
     persona_model_config = {

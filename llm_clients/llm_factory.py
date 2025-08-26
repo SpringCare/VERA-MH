@@ -25,7 +25,7 @@ class LLMFactory:
         """
         # Normalize model name to determine provider
         model_lower = model_name.lower()
-        print(f"creating llm with {model_name}", system_prompt)
+        print(f"creating llm with {model_name}")
         
         # Filter out non-model-specific parameters
         model_params = {k: v for k, v in kwargs.items() 

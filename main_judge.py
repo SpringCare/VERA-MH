@@ -12,65 +12,66 @@ from judge import (
     judge_single_conversation, 
 )
 
-async def main():
+async def main(conversation_folder: str, rubric_folder: str, rubric_file: str, judge_model: str, limit: int, output_root: str):
     """Main function for judging conversations."""
     
-    parser = argparse.ArgumentParser(description="Judge existing LLM conversations using rubrics")
+    # parser = argparse.ArgumentParser(description="Judge existing LLM conversations using rubrics")
     
-    # Required: source of conversations
-    source_group = parser.add_mutually_exclusive_group(required=True)
-    source_group.add_argument("--conversation", "-c", help="Single conversation file to judge")
-    source_group.add_argument("--folder", "-f", default="conversations", 
-                            help="Folder containing conversation files (default: conversations)")
+    # # Required: source of conversations
+    # source_group = parser.add_mutually_exclusive_group(required=True)
+    # source_group.add_argument("--conversation", "-c", help="Single conversation file to judge")
+    # source_group.add_argument("--folder", "-f", default="conversations", 
+    #                         help="Folder containing conversation files (default: conversations)")
     
-    # Optional parameters
-    parser.add_argument("--rubrics", "-r", nargs="+", 
-                       default=["rubric"],
-                       help="Rubric files to use (default: rubric)")
+    # # Optional parameters
+    # parser.add_argument("--rubrics", "-r", nargs="+", 
+    #                    default=["rubric"],
+    #                    help="Rubric files to use (default: rubric)")
     
-    parser.add_argument("--judge-model", "-j", default="gpt-4",
-                       help="Model to use for judging (default: gpt-4). Examples: claude-3-5-sonnet-20241022, gemini-1.5-pro, llama3:8b")
+    # parser.add_argument("--judge-model", "-j", default="gpt-4",
+    #                    help="Model to use for judging (default: gpt-4). Examples: claude-3-5-sonnet-20241022, gemini-1.5-pro, llama3:8b")
     
-    parser.add_argument("--limit", "-l", type=int,
-                       help="Limit number of conversations to judge (for debugging)")
+    # parser.add_argument("--limit", "-l", type=int,
+    #                    help="Limit number of conversations to judge (for debugging)")
     
-    parser.add_argument("--output", "-o", default="evaluations",
-                       help="Output folder for evaluation results (default: evaluations)")
+    # parser.add_argument("--output", "-o", default="evaluations",
+    #                    help="Output folder for evaluation results (default: evaluations)")
     
-    args = parser.parse_args()
+    # args = parser.parse_args()
     
-    print(f"🎯 LLM Judge | Model: {args.judge_model} | Rubrics: {', '.join(args.rubrics)}")
+    print(f"🎯 LLM Judge | Model: {judge_model} | Rubrics: {', '.join(rubric_file)}")
     
-    try:
-        # Initialize judge
-        judge = LLMJudge(judge_model=args.judge_model)
-        
-        if args.conversation:
-            # Judge single conversation
-            await judge_single_conversation(judge, args.conversation, args.rubrics, args.output)
-        else:
-            # Judge all conversations in folder using the function from judge package
-            await judge_conversations(
-                conversation_folder=args.folder,
-                rubrics=args.rubrics,
-                judge_model=args.judge_model,
-                output_folder=args.output,
-                limit=args.limit,
-                verbose=True
-            )
+
+    # Initialize judge
+    # judge = LLMJudge(judge_model=judge_model)
+    
+    # if args.conversation:
+    #     # Judge single conversation
+    #     await judge_single_conversation(judge, args.conversation, args.rubrics, args.output)
+    # else:
+        # Judge all conversations in folder using the function from judge package
+    await judge_conversations(
+            conversation_folder=conversation_folder,
+            rubrics=[rubric_file],
+            judge_model=judge_model,
+            output_root=output_root,
+            limit=limit,
+            verbose=True
+        )
             
-    except ValueError as e:
-        print(f"\n❌ Configuration Error: {e}")
-        print("Make sure you have the required API keys configured in .env file")
-        return 1
-    except Exception as e:
-        print(f"\n❌ Error: {e}")
-        return 1
+
 
 if __name__ == "__main__":
-    try:
-        exit_code = asyncio.run(main())
-        exit(exit_code or 0)
-    except KeyboardInterrupt:
-        print("\n🛑 Interrupted by user")
-        exit(1)
+    conversation_folder = "conversations/p_claude_sonnet_4_20250514__a_claude_sonnet_4_20250514_20250822_172711_t30_r5/"
+    
+    # TODO: just one file?
+    rubric_folder = "data"
+    rubric_file = "rubric.csv"
+    judge_model = "claude-sonnet-4-20250514"
+    limit = None
+    output_root = "evaluations"
+    
+    asyncio.run(main(conversation_folder, rubric_folder, rubric_file, judge_model, limit, output_root))
+
+
+
