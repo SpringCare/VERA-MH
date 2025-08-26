@@ -8,7 +8,8 @@
     "skeptic": "claude-3-5-sonnet-20241022",
     "gpt_assistant": "gpt-4",
     "gpt_creative": "gpt-4-turbo",
-    "gpt_analyst": "gpt-3.5-turbo"
+    "gpt_analyst": "gpt-3.5-turbo",
+    "claude-sonnet-4-20250514": "claude-sonnet-4-20250514"
   },
   "default_model": "claude-3-5-sonnet-20241022"
 }
