@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Set, Optional
 from llm_clients import LLMInterface
-from utils.conversation_utils import save_conversation_to_file, format_conversation_summary
+from utils.conversation_utils import save_conversation_to_file
 
 class ConversationSimulator:
     """Simulates a conversation between two LLM instances."""
@@ -94,4 +94,6 @@ class ConversationSimulator:
     
     def save_conversation(self, filename: str, folder='conversations') -> None:
         """Save the conversation to a text file."""
-        save_conversation_to_file(self.conversation_history, filename, folder, self.persona.get_name())
+
+        # TODO: why is this two functions
+        save_conversation_to_file(self.conversation_history, filename, folder, self.llm1.get_name())

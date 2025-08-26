@@ -12,7 +12,7 @@ from .llm_judge import LLMJudge
 async def judge_conversations(
     conversation_folder: str = "conversations",
     rubrics: List[str] = None,
-    judge_model: str = "gpt-4",
+    judge_model: str,
     output_folder: str = "evaluations",
     limit: Optional[int] = None,
     verbose: bool = True

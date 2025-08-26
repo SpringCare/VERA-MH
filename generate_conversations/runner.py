@@ -51,7 +51,6 @@ class ConversationRunner:
         persona_name = persona_config["name"]
 
         # Generate filename base using persona name, model, and run number
-        
         tag = uuid.uuid4().hex[:6]
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
         # TODO: should this be inside the LLM class?
@@ -71,7 +70,7 @@ class ConversationRunner:
             system_prompt=system_prompt,
             **self.persona_model_config
         )
-        
+
         # Log conversation start
         log_conversation_start(
             logger=logger,

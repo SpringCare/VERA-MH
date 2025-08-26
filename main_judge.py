@@ -43,6 +43,7 @@ async def main():
     
     try:
         # Initialize judge
+        1/0 
         judge = LLMJudge(judge_model=args.judge_model)
         
         if args.conversation:

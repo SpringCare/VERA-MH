@@ -11,8 +11,7 @@ from .llm_judge import LLMJudge
 
 async def evaluate_single_conversation(
     conversation_file: str, 
-    rubric_files: list, 
-    judge_model: str = "gpt-4"
+    judge_model: str 
 ):
     """Evaluate a single conversation and print results."""
     
@@ -21,31 +20,17 @@ async def evaluate_single_conversation(
     try:
         print(f"Evaluating: {conversation_file}")
         
-        evaluation = await judge.evaluate_conversation(conversation_file, rubric_files)
         
-        # Print brief results
-        print_evaluation_results(evaluation)
+        _ = await judge.evaluate_conversation(conversation_file)
         
     except Exception as e:
         print(f"Error: {e}")
 
-def print_evaluation_results(evaluation: dict):
-    """Print evaluation results in a readable format."""
-    
-    for rubric_id, result in evaluation["evaluations"].items():
-        if "error" in result:
-            print(f"❌ {result.get('rubric_name', rubric_id)}: Error")
-            continue
-        
-        if "scores" in result:
-            scores = result["scores"]
-            avg_score = sum(dim['score'] for dim in scores.values() if 'score' in dim) / len(scores)
-            print(f"📊 {result.get('rubric_name', rubric_id)}: {avg_score:.1f}/5")
 
 async def batch_evaluate_conversations(
     conversation_folder: str, 
     rubric_files: list, 
-    judge_model: str = "gpt-4",
+    judge_model: str,
     limit: int = None
 ):
     """Evaluate all conversations in a folder."""
