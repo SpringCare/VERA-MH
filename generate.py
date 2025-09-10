@@ -45,7 +45,8 @@ async def generate_conversations(
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         persona_meta = persona_model_config["model"].replace("-", "_").replace(".", "_")
         agent_meta = agent_model_config["model"].replace("-", "_").replace(".", "_")
-        folder_name = f"conversations/p_{persona_meta}__a_{agent_meta}_{timestamp}_t{max_turns}_r{runs_per_prompt}_{extra_run_params}"
+        run_id = f'p_{persona_meta}__a_{agent_meta}_{timestamp}_t{max_turns}_r{runs_per_prompt}_{extra_run_params}'
+        folder_name = f"conversations/{run_id}"
         os.makedirs(folder_name, exist_ok=True)
     
     # Configuration
@@ -55,6 +56,7 @@ async def generate_conversations(
         max_turns=max_turns,
         runs_per_prompt=runs_per_prompt,
         folder_name=folder_name,
+        run_id=run_id,
     )
     
     # Run conversations
@@ -80,7 +82,7 @@ if __name__ == "__main__":
     DEBUG = True
     if DEBUG:
         max_turns = 3
-        runs_per_prompt = 1
+        runs_per_prompt = 3
     else:   
         max_turns = 30
         runs_per_prompt = 5
@@ -88,7 +90,7 @@ if __name__ == "__main__":
     # Persona model configuration
     persona_model_config = {
         # "model": "claude-sonnet-4-20250514",
-        "model": "gpt-5",
+        "model": "gpt-4o",
         "temperature": 0.7,
         "max_tokens": 1000, 
         "timeout":1000, # shoudl be seconds
@@ -97,8 +99,8 @@ if __name__ == "__main__":
     
     # Agent model configuration
     agent_model_config = {
-        "model": "gpt-5",
-        "name": "GPT-5",
+        "model": "gpt-4o",
+        "name": "GPT-4o",
        
         "prompt_name": "",  # This should match a prompt config file
         # "name": "Claude Sonnet",  # Display name for the LLM
@@ -110,7 +112,8 @@ if __name__ == "__main__":
     # Optional: specify custom folder name
     # folder_name = "custom_experiment_name"
     
-    exit_code = asyncio.run(main(
+    # note: we are discarding the results, becuase they get saved to file
+    _ = asyncio.run(main(
         persona_model_config=persona_model_config,
         agent_model_config=agent_model_config,
         max_turns=max_turns, 
@@ -118,4 +121,4 @@ if __name__ == "__main__":
         extra_run_params={k: v for k, v in persona_model_config.items() if k not in ["model", "temperature", "max_tokens"]},
         folder_name=None,  # Will use default format
     ))
-    exit(exit_code or 0)
+    

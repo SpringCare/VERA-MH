@@ -86,15 +86,6 @@ class Config:
     }
     
     @classmethod
-    def get_model_config(cls, model_name: str) -> Dict[str, Any]:
-        """Get configuration for a specific model."""
-        return cls.MODELS_CONFIG.get(model_name, {
-            "provider": "unknown",
-            "temperature": 0.7,
-            "max_tokens": 1000
-        })
-    
-    @classmethod
     def get_claude_config(cls) -> Dict[str, Any]:
         """Legacy method for backward compatibility."""
         return {

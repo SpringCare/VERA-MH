@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 
 class LLMInterface(ABC):
     """Abstract base class for LLM implementations."""
@@ -9,8 +9,12 @@ class LLMInterface(ABC):
         self.system_prompt = system_prompt or ""
     
     @abstractmethod
-    async def generate_response(self, message: Optional[str] = None) -> str:
-        """Generate a response to the given message asynchronously."""
+    async def generate_response(self, message: Optional[str] = None) -> Tuple[str, Dict[str, Any]]:
+        """Generate a response to the given message asynchronously.
+        
+        Returns:
+            Tuple of (response_text, metadata_dict)
+        """
         pass
     
     @abstractmethod

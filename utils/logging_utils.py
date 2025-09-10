@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 from typing import Optional
 
-def setup_conversation_logger(log_filename: str, log_folder: str = "logging") -> logging.Logger:
+def setup_conversation_logger(log_filename: str, run_id: str, log_folder: str = "logging", level=logging.INFO) -> logging.Logger:
     """
     Set up a logger for a specific conversation.
     
@@ -18,19 +18,20 @@ def setup_conversation_logger(log_filename: str, log_folder: str = "logging") ->
     """
     # Ensure log folder exists
     os.makedirs(log_folder, exist_ok=True)
-    
     # Create unique logger name to avoid conflicts
-    logger_name = f"conversation_{log_filename}"
+    logger_name = f"{log_filename}"
+    
     logger = logging.getLogger(logger_name)
     
     # Clear any existing handlers to avoid duplicates
     logger.handlers.clear()
     
     # Set logging level
-    logger.setLevel(logging.INFO)
+    logger.setLevel(level)
     
     # Create file handler
-    log_file_path = os.path.join(log_folder, f"{log_filename}.log")
+    log_file_path = os.path.join(log_folder, run_id, f"{log_filename}.log")
+    os.makedirs(os.path.join(log_folder, run_id), exist_ok=True)
     file_handler = logging.FileHandler(log_file_path, mode='w', encoding='utf-8')
     
     # Create formatter
@@ -45,8 +46,9 @@ def setup_conversation_logger(log_filename: str, log_folder: str = "logging") ->
     
     return logger
 
+# TODO: This should print all the llm1 and 2 settings
 def log_conversation_start(logger: logging.Logger, llm1_model: str, llm1_prompt: str, 
-                          llm2_name: str, llm2_model: str, initial_message: str, max_turns: int):
+                          llm2_name: str, llm2_model: str, initial_message: str, max_turns: int, logging: dict = {}):
     """Log conversation initialization details."""
     logger.info("=" * 60)
     logger.info("CONVERSATION STARTED")
@@ -63,14 +65,17 @@ def log_conversation_start(logger: logging.Logger, llm1_model: str, llm1_prompt:
     logger.info("=" * 60)
 
 def log_conversation_turn(logger: logging.Logger, turn_number: int, speaker: str, 
-                         input_message: str, response: str, early_termination: bool = False):
+                         input_message: str, response: str, early_termination: bool = False, logging: dict = {}):
     """Log individual conversation turn."""
     logger.info(f"TURN {turn_number} - {speaker}")
     logger.info(f"Input: {input_message}")
     logger.info(f"Response: {response}")
+    logger.info(f"response_id: {logging.get('response_id')}")
+    logger.info(f"logging: {logging}")
     if early_termination:
         logger.warning(f"EARLY TERMINATION detected by {speaker}")
     logger.info("-" * 40)
+    
 
 def log_conversation_end(logger: logging.Logger, total_turns: int, early_termination: bool, 
                         total_time: Optional[float] = None):

@@ -25,7 +25,6 @@ class LLMFactory:
         """
         # Normalize model name to determine provider
         model_lower = model_name.lower()
-        print(f"creating llm with {model_name}")
         
         # Filter out non-model-specific parameters
         model_params = {k: v for k, v in kwargs.items() 
@@ -46,30 +45,3 @@ class LLMFactory:
         else:
             raise ValueError(f"Unsupported model: {model_name}")
     
-    @staticmethod
-    def get_supported_models() -> Dict[str, list]:
-        """Get a dictionary of supported model providers and their models."""
-        return {
-            "claude": [
-                "claude-3-5-sonnet-20241022",
-                "claude-3-opus-20240229", 
-                "claude-3-sonnet-20240229",
-                "claude-3-haiku-20240307"
-            ],
-            "openai": [
-                "gpt-4",
-                "gpt-4-turbo",
-                "gpt-3.5-turbo"
-            ],
-            "gemini": [
-                "gemini-1.5-pro",
-                "gemini-1.5-flash",
-                "gemini-pro"
-            ],
-            "llama": [
-                "llama2:7b",
-                "llama2:13b",
-                "llama3:8b",
-                "llama3:70b"
-            ]
-        }

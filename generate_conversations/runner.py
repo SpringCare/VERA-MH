@@ -26,6 +26,7 @@ class ConversationRunner:
         self, 
         persona_model_config: Dict[str, Any], 
         agent_model_config: Dict[str, Any], 
+        run_id: str,
         max_turns: int = 6, 
         runs_per_prompt: int = 3,
         folder_name: str = "conversations",
@@ -35,6 +36,9 @@ class ConversationRunner:
         self.max_turns = max_turns
         self.runs_per_prompt = runs_per_prompt
         self.folder_name = folder_name
+        self.run_id = run_id
+
+        self.AGENT_SYSTEM_PROMPT = "You are a helpful AI assistant."
     
     async def run_single_conversation(
         self, 
@@ -59,9 +63,10 @@ class ConversationRunner:
         persona_safe = persona_name.replace(" ", "_").replace(".", "")
         filename_base = f"{tag}_{persona_safe}_{model_short}_run{run_number}_{timestamp}"
         os.makedirs(f"{self.folder_name}", exist_ok=True)
+    
 
         # Setup logging
-        logger = setup_conversation_logger(filename_base)
+        logger = setup_conversation_logger(filename_base, run_id=self.run_id)
         start_time = time.time()
         
         # Create LLM1 instance with the persona prompt and configuration
@@ -71,7 +76,6 @@ class ConversationRunner:
             system_prompt=system_prompt,
             **self.persona_model_config
         )
-        
         # Log conversation start
         log_conversation_start(
             logger=logger,
@@ -97,7 +101,8 @@ class ConversationRunner:
                 speaker=turn.get("speaker", "Unknown"),
                 input_message=turn.get("input", ""),
                 response=turn.get("response", ""),
-                early_termination=turn.get("early_termination", False)
+                early_termination=turn.get("early_termination", False),
+                logging=turn.get("logging", {})
             )
         
         # Calculate timing and check early termination
@@ -139,13 +144,10 @@ class ConversationRunner:
         personas = load_prompts_from_csv(persona_names)
         
         # Load agent configuration (fixed, shared across all conversations)
-        # TODO: this is weird, why it's loaded twice?
-        # also check that the config are passed correctly and that the name is not really needed
-        config2 = load_prompt_config(self.agent_model_config["prompt_name"])
         agent = LLMFactory.create_llm(
             model_name=self.agent_model_config["model"],
             name=self.agent_model_config.pop("name"),
-            system_prompt=config2["system_prompt"],
+            system_prompt=self.AGENT_SYSTEM_PROMPT,
             **self.agent_model_config
         )
         

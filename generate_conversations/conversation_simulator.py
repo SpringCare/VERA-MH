@@ -1,6 +1,8 @@
 from typing import List, Dict, Any, Set, Optional
 from llm_clients import LLMInterface
 from utils.conversation_utils import save_conversation_to_file, format_conversation_summary
+import time
+from datetime import datetime
 
 class ConversationSimulator:
     """Simulates a conversation between two LLM instances."""
@@ -37,7 +39,7 @@ class ConversationSimulator:
         
         # Check for common ending patterns
         ending_patterns = [
-            "it was nice",
+            # "it was nice",
             "pleasure talking",
             "great conversation",
             "good chat",
@@ -69,8 +71,27 @@ class ConversationSimulator:
         next_speaker = self.agent
         
         for turn in range(max_turns):
-            # For the first turn with no initial message, let the first speaker start naturally
+            # Record start time for this turn
+            turn_start_time = time.time()
+            
+            # Generate response
             response = await current_speaker.generate_response(current_message)
+            
+            # Calculate turn duration
+            # turn_duration = time.time() - turn_start_time
+            
+            # Create comprehensive logging information
+            # logging_info = {
+            #     "timestamp": datetime.now().isoformat(),
+            #     "turn_duration_seconds": round(turn_duration, 3),
+            #     "model_name": getattr(current_speaker, 'model_name', 'unknown'),
+            #     "provider": self._get_provider_type(current_speaker),
+            #     "input_length": len(current_message) if current_message else 0,
+            #     "output_length": len(response),
+            #     "response_id": None,  # Will be populated by individual providers
+            #     "usage": {},  # Will be populated by individual providers
+            #     "metadata": {}  # Will be populated by individual providers
+            # }
             
             # Record this turn
             self.conversation_history.append({
@@ -78,7 +99,8 @@ class ConversationSimulator:
                 "speaker": current_speaker.get_name(),
                 "input": current_message or "",
                 "response": response,
-                "early_termination": False
+                "early_termination": False,
+                "logging": current_speaker.get_last_response_metadata()
             })
             
             # Check if persona wants to end the conversation
