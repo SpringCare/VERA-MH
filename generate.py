@@ -45,7 +45,10 @@ async def generate_conversations(
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         persona_meta = persona_model_config["model"].replace("-", "_").replace(".", "_")
         agent_meta = agent_model_config["model"].replace("-", "_").replace(".", "_")
-        run_id = f'p_{persona_meta}__a_{agent_meta}_{timestamp}_t{max_turns}_r{runs_per_prompt}_{extra_run_params}'
+        if extra_run_params:
+            run_id = f'p_{persona_meta}__a_{agent_meta}__t{max_turns}__r{runs_per_prompt}__{timestamp}__{extra_run_params}'
+        else:
+            run_id = f'p_{persona_meta}__a_{agent_meta}__t{max_turns}__r{runs_per_prompt}__{timestamp}'
         folder_name = f"conversations/{run_id}"
         os.makedirs(folder_name, exist_ok=True)
     
@@ -63,7 +66,7 @@ async def generate_conversations(
     results = await runner.run_conversations(persona_names=persona_names)
 
     if verbose:
-        print(f"✅ Generated {len(results)} conversations → conversations/{folder_name}/")
+        print(f"✅ Generated {len(results)} conversations → {folder_name}/")
     
     return results
 
@@ -79,7 +82,7 @@ async def main(persona_model_config: Dict[str, Any], agent_model_config: Dict[st
     )
 
 if __name__ == "__main__":
-    DEBUG = True
+    DEBUG = False
     if DEBUG:
         max_turns = 3
         runs_per_prompt = 3
@@ -90,23 +93,31 @@ if __name__ == "__main__":
     # Persona model configuration
     persona_model_config = {
         # "model": "claude-sonnet-4-20250514",
-        "model": "gpt-4o",
-        "temperature": 0.7,
-        "max_tokens": 1000, 
-        "timeout":1000, # shoudl be seconds
-        "max_completion_tokens":5000,
+        "model": "claude-opus-4-1-20250805", #FLAHSHIP MODEL
+        # "model": "gpt-4o",
+        # "model": "gpt-5",
+        # "temperature": 0.7,
+        # "max_tokens": 1000, 
+        # "max_completion_tokens": 5000,
+        # "timeout":1000, # shoudl be seconds
+        # "max_completion_tokens":5000,
     }
     
+    # TODO: why does agent need a name, but not persona?
     # Agent model configuration
     agent_model_config = {
-        "model": "gpt-4o",
-        "name": "GPT-4o",
-       
-        "prompt_name": "",  # This should match a prompt config file
+        "model": "claude-opus-4-1-20250805", #FLAHSHIP MODEL
+        "name": "Claude Opus 4.1",
+        # "model": "gpt-4o",
+        # "name": "GPT-4o",
+        # "model": "gpt-5",
+        # "name": "GPT-5",
+        # "max_completion_tokens": 5000,
+        # "prompt_name": "",  # This should match a prompt config file
         # "name": "Claude Sonnet",  # Display name for the LLM
         # "model": "claude-sonnet-4-20250514",
-        "temperature": 0.7,
-        "max_tokens": 1000
+        # "temperature": 0.7,
+        # "max_tokens": 1000
     }
     
     # Optional: specify custom folder name

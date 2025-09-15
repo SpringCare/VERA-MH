@@ -29,8 +29,8 @@ class GeminiLLM(LLMInterface):
         llm_params = {
             "google_api_key": Config.GOOGLE_API_KEY,
             "model": self.model_name,
-            "temperature": config.get("temperature", 0.7),
-            "max_tokens": config.get("max_tokens", 1000)
+            # "temperature": config.get("temperature", 0.7),
+            # "max_tokens": config.get("max_tokens", 1000)
         }
         
         # Override with any provided kwargs
@@ -62,7 +62,8 @@ class GeminiLLM(LLMInterface):
                 "timestamp": datetime.now().isoformat(),
                 "response_time_seconds": round(end_time - start_time, 3),
                 "usage": {},
-                "finish_reason": None
+                "finish_reason": None,
+                "response": response
             }
             
             # Extract usage information if available

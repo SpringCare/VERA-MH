@@ -1,7 +1,5 @@
 # Utils package for LLM conversation simulator
 
-# from .prompt_loader import load_meta_prompt, load_prompt_config
-from .prompt_loader import load_prompt_config
 from .model_config_loader import load_model_config, get_model_for_prompt
 from .conversation_utils import (
     generate_conversation_filename,
@@ -10,8 +8,6 @@ from .conversation_utils import (
 )
 
 __all__ = [
-    # "load_meta_prompt",
-    "load_prompt_config",
     "load_model_config",
     "get_model_for_prompt",
     "generate_conversation_filename",

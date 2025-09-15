@@ -4,6 +4,7 @@ import logging
 import os
 from datetime import datetime
 from typing import Optional
+from llm_clients import LLMInterface
 
 def setup_conversation_logger(log_filename: str, run_id: str, log_folder: str = "logging", level=logging.INFO) -> logging.Logger:
     """
@@ -47,20 +48,26 @@ def setup_conversation_logger(log_filename: str, run_id: str, log_folder: str = 
     return logger
 
 # TODO: This should print all the llm1 and 2 settings
-def log_conversation_start(logger: logging.Logger, llm1_model: str, llm1_prompt: str, 
-                          llm2_name: str, llm2_model: str, initial_message: str, max_turns: int, logging: dict = {}):
+def log_conversation_start(logger: logging.Logger, llm1_model_str: str, llm1_prompt: str, 
+                          llm2_name: str, llm2_model_str: str, initial_message: str, max_turns: int, 
+                          llm1_model: LLMInterface, llm2_model: LLMInterface, logging: dict = {}):
     """Log conversation initialization details."""
+
     logger.info("=" * 60)
     logger.info("CONVERSATION STARTED")
     logger.info("=" * 60)
     logger.info(f"LLM1 Configuration:")
-    logger.info(f"  - Model: {llm1_model}")
+    logger.info(f"  - Model: {llm1_model_str}")
     logger.info(f"  - Prompt: {llm1_prompt}")
+    logger.info(f"Configuration, temperature: {llm1_model.temperature}")
+    logger.info(f"Configuration, max_tokens: {llm1_model.max_tokens}")
     logger.info(f"LLM2 Configuration:")
     logger.info(f"  - Name: {llm2_name}")
-    logger.info(f"  - Model: {llm2_model}")
+    logger.info(f"  - Model: {llm2_model_str}")
+    logger.info(f"Configuration, temperature: {llm2_model.temperature}")
+    logger.info(f"Configuration, max_tokens: {llm2_model.max_tokens}")
     logger.info(f"Conversation Settings:")
-    logger.info(f"  - Initial Message: {initial_message}")
+    # logger.info(f"  - Initial Message: {initial_message}")
     logger.info(f"  - Max Turns: {max_turns}")
     logger.info("=" * 60)
 
