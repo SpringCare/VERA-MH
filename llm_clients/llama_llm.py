@@ -1,6 +1,5 @@
 from langchain_community.llms import Ollama
-from langchain.schema import HumanMessage, SystemMessage
-from typing import Optional, Dict, Any
+from typing import Optional
 from .llm_interface import LLMInterface
 from .config import Config
 

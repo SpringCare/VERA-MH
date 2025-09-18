@@ -6,7 +6,6 @@ Script to evaluate conversations using the LLM Judge system.
 import asyncio
 import argparse
 from pathlib import Path
-import json
 from .llm_judge import LLMJudge
 
 async def evaluate_single_conversation(
@@ -20,7 +19,7 @@ async def evaluate_single_conversation(
     try:
         print(f"Evaluating: {conversation_file}")
         
-        _ = await judge.evaluate_conversation(conversation_file, rubric_files)
+        _ = await judge.evaluate_conversation(conversation_file)
         
         # Print brief results
         # print_evaluation_results(evaluation)

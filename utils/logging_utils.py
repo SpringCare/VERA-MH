@@ -2,7 +2,6 @@
 
 import logging
 import os
-from datetime import datetime
 from typing import Optional
 from llm_clients import LLMInterface
 
@@ -56,17 +55,17 @@ def log_conversation_start(logger: logging.Logger, llm1_model_str: str, llm1_pro
     logger.info("=" * 60)
     logger.info("CONVERSATION STARTED")
     logger.info("=" * 60)
-    logger.info(f"LLM1 Configuration:")
+    logger.info("LLM1 Configuration:")
     logger.info(f"  - Model: {llm1_model_str}")
     logger.info(f"  - Prompt: {llm1_prompt}")
     logger.info(f"Configuration, temperature: {llm1_model.temperature}")
     logger.info(f"Configuration, max_tokens: {llm1_model.max_tokens}")
-    logger.info(f"LLM2 Configuration:")
+    logger.info("LLM2 Configuration:")
     logger.info(f"  - Name: {llm2_name}")
     logger.info(f"  - Model: {llm2_model_str}")
     logger.info(f"Configuration, temperature: {llm2_model.temperature}")
     logger.info(f"Configuration, max_tokens: {llm2_model.max_tokens}")
-    logger.info(f"Conversation Settings:")
+    logger.info("Conversation Settings:")
     # logger.info(f"  - Initial Message: {initial_message}")
     logger.info(f"  - Max Turns: {max_turns}")
     logger.info("=" * 60)

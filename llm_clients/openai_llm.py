@@ -25,7 +25,6 @@ class OpenAILLM(LLMInterface):
         self.model_name = model_name or Config.get_openai_config()["model"]
         
         # Get default config and allow kwargs to override
-        config = Config.get_openai_config()
         llm_params = {
             "openai_api_key": Config.OPENAI_API_KEY,
             "model": self.model_name,

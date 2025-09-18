@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import asyncio
-from socket import timeout
 from typing import List, Dict, Any
 from generate_conversations import ConversationRunner
 from datetime import datetime
@@ -81,8 +80,9 @@ async def main(persona_model_config: Dict[str, Any], agent_model_config: Dict[st
     )
 
 if __name__ == "__main__":
-    DEBUG = False
+    DEBUG = True
     if DEBUG:
+        print("DEBUG MODE")
         max_turns = 3
         runs_per_prompt = 3
     else:   
@@ -91,8 +91,8 @@ if __name__ == "__main__":
     
     # Persona model configuration
     persona_model_config = {
-        # "model": "claude-sonnet-4-20250514",
-        "model": "claude-opus-4-1-20250805", #FLAHSHIP MODEL
+        "model": "claude-sonnet-4-20250514",
+        # "model": "claude-opus-4-1-20250805", #FLAHSHIP MODEL
         # "model": "gpt-4o",
         # "model": "gpt-5",
         # "temperature": 0.7,
@@ -105,16 +105,16 @@ if __name__ == "__main__":
     # TODO: why does agent need a name, but not persona?
     # Agent model configuration
     agent_model_config = {
-        "model": "claude-opus-4-1-20250805", #FLAHSHIP MODEL
-        "name": "Claude Opus 4.1",
+        # "model": "claude-opus-4-1-20250805", #FLAHSHIP MODEL
+        # "name": "Claude Opus 4.1",
         # "model": "gpt-4o",
         # "name": "GPT-4o",
         # "model": "gpt-5",
         # "name": "GPT-5",
         # "max_completion_tokens": 5000,
         # "prompt_name": "",  # This should match a prompt config file
-        # "name": "Claude Sonnet",  # Display name for the LLM
-        # "model": "claude-sonnet-4-20250514",
+        "name": "Claude Sonnet",  # Display name for the LLM
+        "model": "claude-sonnet-4-20250514",
         # "temperature": 0.7,
         # "max_tokens": 1000
     }

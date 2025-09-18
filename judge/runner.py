@@ -57,9 +57,9 @@ async def batch_evaluate_with_individual_judges(
 
 
 async def judge_conversations(
+    judge_model: str,
     conversation_folder: str = "conversations",
     rubrics: List[str] = ["rubric.csv"],
-    judge_model: str = "gpt-4",
     output_root: str = "evaluations",
     limit: Optional[int] = None,
     verbose: bool = True,

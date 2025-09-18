@@ -5,11 +5,8 @@ This script is completely separate from conversation generation.
 """
 
 import asyncio
-import argparse
 from judge import (
-    LLMJudge, 
     judge_conversations, 
-    judge_single_conversation, 
 )
 
 async def main(conversation_folder: str, rubric_folder: str, rubric_file: str, judge_model: str, limit: int, output_root: str):
@@ -62,7 +59,7 @@ async def main(conversation_folder: str, rubric_folder: str, rubric_file: str, j
 
 
 if __name__ == "__main__":
-    conversation_folder = "conversations/p_gpt_5__a_gpt_5__t30__r5__20250915_102113__{'max_completion_tokens': 5000}"
+    conversation_folder = "conversations/p_claude_sonnet_4_20250514__a_claude_sonnet_4_20250514__t3__r3__20250918_122822"
     
     # TODO: just one file?
     rubric_folder = "data"

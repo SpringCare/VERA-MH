@@ -6,9 +6,8 @@ Extracts UUID (first 6 chars of filename) and evaluation fields.
 
 import json
 import csv
-import os
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 def extract_uuid_from_filename(filename: str) -> str:
     """Extract the first 6 characters as UUID from filename."""
@@ -27,7 +26,7 @@ def get_evaluation_fields(data: Dict[str, Any]) -> Dict[str, str]:
     """Extract evaluation fields from JSON data."""
     evaluations = data.get('evaluations', {})
     if not evaluations:
-        print(f"Warning: No evaluations found in data")
+        print("Warning: No evaluations found in data")
         return {}
     return evaluations
 
@@ -156,7 +155,7 @@ def test_conversion(input_dir: str, csv_file: str):
                 print(f"  CSV:  {csv_row[field]}")
                 errors += 1
     
-    print(f"\nTest Results:")
+    print("\nTest Results:")
     print(f"Total files processed: {total_files}")
     print(f"Total errors found: {errors}")
     

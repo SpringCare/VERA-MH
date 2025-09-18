@@ -25,7 +25,6 @@ class ClaudeLLM(LLMInterface):
         self.model_name = model_name or Config.get_claude_config()["model"]
         
         # Get default config and allow kwargs to override
-        config = Config.get_claude_config()
         llm_params = {
             "anthropic_api_key": Config.ANTHROPIC_API_KEY,
             "model": self.model_name,

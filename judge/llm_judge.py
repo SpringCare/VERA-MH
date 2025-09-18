@@ -1,12 +1,9 @@
 """LLM Judge for evaluating conversations based on rubrics."""
 
-import json
-import csv
-import re
 import pandas as pd
 from typing import Dict, List, Any, Optional
 from pathlib import Path
-from llm_clients import LLMFactory, Config
+from llm_clients import LLMFactory
 
 CATEGORIES = [
     "Best Practice Care",
@@ -27,7 +24,7 @@ class LLMJudge:
         "llama": ["llama3:8b", "llama3:70b", "llama2:13b"]
     }
     
-    def __init__(self, judge_model: str = "gpt-4", rubric_folder: str = "data"):
+    def __init__(self, judge_model: str, rubric_folder: str = "data"):
         """
         Initialize the LLM Judge.
         
@@ -183,7 +180,6 @@ class LLMJudge:
         results = await self._evaluate_with_rubric(conversation, self.rubric)
         
         # Save combined evaluation if auto_save is enabled
-        if auto_save:
         if auto_save:
             conversation_name = Path(conversation_file).stem
             combined_output_file = f"{output_folder}/{conversation_name}.csv"

@@ -1,8 +1,7 @@
 from typing import List, Dict, Any, Set, Optional
 from llm_clients import LLMInterface
-from utils.conversation_utils import save_conversation_to_file, format_conversation_summary
+from utils.conversation_utils import save_conversation_to_file
 import time
-from datetime import datetime
 
 class ConversationSimulator:
     """Simulates a conversation between two LLM instances."""
@@ -18,7 +17,8 @@ class ConversationSimulator:
             "end conversation", "conversation over", "that's all", 
             "nothing more to discuss", "i'm done", "let's end here",
             "conversation complete", "wrapping up", "final thoughts",
-            "concluding", "to conclude", "in conclusion"
+            "concluding", "to conclude", 
+            # "in conclusion"
         }
     
     def _should_terminate_conversation(self, response: str, speaker: LLMInterface) -> bool:
@@ -118,4 +118,4 @@ class ConversationSimulator:
         """Save the conversation to a text file."""
 
         # TODO: why is this two functions
-        save_conversation_to_file(self.conversation_history, filename, folder, self.llm1.get_name())
+        save_conversation_to_file(self.conversation_history, filename, folder, self.persona.get_name())

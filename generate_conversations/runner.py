@@ -11,7 +11,6 @@ from utils.logging_utils import (
     log_conversation_start, 
     log_conversation_turn, 
     log_conversation_end, 
-    log_error, 
     cleanup_logger
 )
 from datetime import datetime

@@ -11,7 +11,6 @@ This script:
 4. Ensures each folder has the same amount of files
 """
 
-import os
 import shutil
 import random
 from pathlib import Path
@@ -102,12 +101,12 @@ def distribute_files(source_folder, num_copies=3, num_folders=5):
                 print(f"  {j+1:2d}. {file.name}")
                 file_index += 1
     
-    print(f"\nDistribution complete!")
+    print("\nDistribution complete!")
     print(f"Files distributed across {num_folders} folders")
     print(f"Each file appears exactly {num_copies} times")
     print(f"Output location: {base_folder}")
     
-    print(f"\nFiles per folder:")
+    print("\nFiles per folder:")
     for folder in folders:
         folder_name = folder.name
         count = folder_file_counts[folder_name]
@@ -127,7 +126,7 @@ def main():
     print(f"Number of files found: {file_count}")
     
     if file_count > 0:
-        print(f"Files to distribute:")
+        print("Files to distribute:")
         for i, file in enumerate(files, 1):
             print(f"  {i:2d}. {file.name}")
         
@@ -135,10 +134,10 @@ def main():
         num_copies = 3  # Each file appears 3 times total
         num_folders = 5  # Create 5 numbered folders
         
-        print(f"\nConfiguration:")
+        print("\nConfiguration:")
         print(f"  - Each file will appear {num_copies} times total")
         print(f"  - Files will be distributed across {num_folders} folders")
-        print(f"  - Each folder will have the same amount of files")
+        print("  - Each folder will have the same amount of files")
         
         print("\nStarting distribution...")
         distribute_files(seed_folder, num_copies=num_copies, num_folders=num_folders)
