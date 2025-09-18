@@ -39,7 +39,7 @@ async def main(conversation_folder: str, rubric_folder: str, rubric_file: str, j
     
     # args = parser.parse_args()
     
-    print(f"🎯 LLM Judge | Model: {judge_model} | Rubrics: {', '.join(rubric_file)}")
+    # print(f"🎯 LLM Judge | Model: {judge_model} | Rubrics: {', '.join(rubric_file)}")
     
 
     # Initialize judge
@@ -62,12 +62,12 @@ async def main(conversation_folder: str, rubric_folder: str, rubric_file: str, j
 
 
 if __name__ == "__main__":
-    conversation_folder = "conversations/p_claude_sonnet_4_20250514__a_claude_sonnet_4_20250514_20250822_172711_t30_r5/"
+    conversation_folder = "conversations/p_gpt_5__a_gpt_5__t30__r5__20250915_102113__{'max_completion_tokens': 5000}"
     
     # TODO: just one file?
     rubric_folder = "data"
     rubric_file = "rubric.csv"
-    judge_model = "claude-sonnet-4-20250514"
+    judge_model = "claude-opus-4-1-20250805"
     limit = None
     output_root = "evaluations"
     

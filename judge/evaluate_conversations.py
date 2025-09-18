@@ -21,26 +21,26 @@ async def evaluate_single_conversation(
     try:
         print(f"Evaluating: {conversation_file}")
         
-        evaluation = await judge.evaluate_conversation(conversation_file, rubric_files)
+        _ = await judge.evaluate_conversation(conversation_file, rubric_files)
         
         # Print brief results
-        print_evaluation_results(evaluation)
+        # print_evaluation_results(evaluation)
         
     except Exception as e:
         print(f"Error: {e}")
 
-def print_evaluation_results(evaluation: dict):
-    """Print evaluation results in a readable format."""
+# def print_evaluation_results(evaluation: dict):
+#     """Print evaluation results in a readable format."""
     
-    for rubric_id, result in evaluation["evaluations"].items():
-        if "error" in result:
-            print(f"❌ {result.get('rubric_name', rubric_id)}: Error")
-            continue
+#     for rubric_id, result in evaluation["evaluations"].items():
+#         if "error" in result:
+#             print(f"❌ {result.get('rubric_name', rubric_id)}: Error")
+#             continue
         
-        if "scores" in result:
-            scores = result["scores"]
-            avg_score = sum(dim['score'] for dim in scores.values() if 'score' in dim) / len(scores)
-            print(f"📊 {result.get('rubric_name', rubric_id)}: {avg_score:.1f}/5")
+#         if "scores" in result:
+#             scores = result["scores"]
+#             avg_score = sum(dim['score'] for dim in scores.values() if 'score' in dim) / len(scores)
+#             print(f"📊 {result.get('rubric_name', rubric_id)}: {avg_score:.1f}/5")
 
 async def batch_evaluate_conversations(
     conversation_folder: str, 
@@ -81,70 +81,70 @@ async def batch_evaluate_conversations(
         print(f"✅ Completed {len(results)} evaluations → evaluations/")
         
         # Create summary report
-        create_summary_report(results, "evaluations/summary_report.json")
+        # create_summary_report(results, "evaluations/summary_report.json")
         
     except Exception as e:
         print(f"Error in batch evaluation: {e}")
 
-def create_summary_report(evaluations: list, output_file: str):
-    """Create a summary report of all evaluations."""
+# def create_summary_report(evaluations: list, output_file: str):
+#     """Create a summary report of all evaluations."""
     
-    summary = {
-        "total_conversations": len(evaluations),
-        "judge_model": evaluations[0]["judge_model"] if evaluations else "unknown",
-        "rubric_summaries": {},
-        "conversation_summaries": []
-    }
+#     summary = {
+#         "total_conversations": len(evaluations),
+#         "judge_model": evaluations[0]["judge_model"] if evaluations else "unknown",
+#         "rubric_summaries": {},
+#         "conversation_summaries": []
+#     }
     
-    # Aggregate scores by rubric and dimension
-    rubric_scores = {}
+#     # Aggregate scores by rubric and dimension
+#     rubric_scores = {}
     
-    for evaluation in evaluations:
-        conv_summary = {
-            "conversation_file": evaluation["conversation_file"],
-            "rubric_scores": {}
-        }
+#     for evaluation in evaluations:
+#         conv_summary = {
+#             "conversation_file": evaluation["conversation_file"],
+#             "rubric_scores": {}
+#         }
         
-        for rubric_id, result in evaluation["evaluations"].items():
-            if "scores" not in result:
-                continue
+#         for rubric_id, result in evaluation["evaluations"].items():
+#             if "scores" not in result:
+#                 continue
             
-            if rubric_id not in rubric_scores:
-                rubric_scores[rubric_id] = {}
+#             if rubric_id not in rubric_scores:
+#                 rubric_scores[rubric_id] = {}
             
-            conv_rubric_scores = {}
+#             conv_rubric_scores = {}
             
-            for dim_id, dim_result in result["scores"].items():
-                if "score" in dim_result:
-                    score = dim_result["score"]
-                    conv_rubric_scores[dim_id] = score
+#             for dim_id, dim_result in result["scores"].items():
+#                 if "score" in dim_result:
+#                     score = dim_result["score"]
+#                     conv_rubric_scores[dim_id] = score
                     
-                    if dim_id not in rubric_scores[rubric_id]:
-                        rubric_scores[rubric_id][dim_id] = []
+#                     if dim_id not in rubric_scores[rubric_id]:
+#                         rubric_scores[rubric_id][dim_id] = []
                     
-                    rubric_scores[rubric_id][dim_id].append(score)
+#                     rubric_scores[rubric_id][dim_id].append(score)
             
-            conv_summary["rubric_scores"][rubric_id] = conv_rubric_scores
+#             conv_summary["rubric_scores"][rubric_id] = conv_rubric_scores
         
-        summary["conversation_summaries"].append(conv_summary)
+#         summary["conversation_summaries"].append(conv_summary)
     
-    # Calculate averages
-    for rubric_id, dimensions in rubric_scores.items():
-        rubric_summary = {}
-        for dim_id, scores in dimensions.items():
-            if scores:
-                rubric_summary[dim_id] = {
-                    "average": round(sum(scores) / len(scores), 2),
-                    "min": min(scores),
-                    "max": max(scores),
-                    "count": len(scores)
-                }
-        summary["rubric_summaries"][rubric_id] = rubric_summary
+#     # Calculate averages
+#     for rubric_id, dimensions in rubric_scores.items():
+#         rubric_summary = {}
+#         for dim_id, scores in dimensions.items():
+#             if scores:
+#                 rubric_summary[dim_id] = {
+#                     "average": round(sum(scores) / len(scores), 2),
+#                     "min": min(scores),
+#                     "max": max(scores),
+#                     "count": len(scores)
+#                 }
+#         summary["rubric_summaries"][rubric_id] = rubric_summary
     
-    # Save summary
-    Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(summary, f, indent=2, ensure_ascii=False)
+#     # Save summary
+#     Path(output_file).parent.mkdir(parents=True, exist_ok=True)
+#     with open(output_file, 'w', encoding='utf-8') as f:
+#         json.dump(summary, f, indent=2, ensure_ascii=False)
     
 
 async def main():

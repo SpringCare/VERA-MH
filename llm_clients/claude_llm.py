@@ -62,7 +62,8 @@ class ClaudeLLM(LLMInterface):
                 "timestamp": datetime.now().isoformat(),
                 "response_time_seconds": round(end_time - start_time, 3),
                 "usage": {},
-                "stop_reason": None
+                "stop_reason": None,
+                "response": response
             }
             
             # Extract usage information if available
@@ -94,7 +95,6 @@ class ClaudeLLM(LLMInterface):
                 "timestamp": datetime.now().isoformat(),
                 "error": str(e),
                 "usage": {},
-                "response": response
             }
             return f"Error generating response: {str(e)}"
     

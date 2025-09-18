@@ -1,0 +1,3 @@
+- standardize how patient and agent and judge info are represented
+- better logging system
+- why async judges are not async?
