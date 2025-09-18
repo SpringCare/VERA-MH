@@ -8,10 +8,18 @@ from typing import Dict, List, Any, Optional
 from pathlib import Path
 from llm_clients import LLMFactory, Config
 
+CATEGORIES = [
+    "Best Practice Care",
+    "Not Relevant or Neutral Care",
+    "Missed Risk and/or Opportunity to Respond",
+    "Actively Damaging Care"
+]
+
 class LLMJudge:
     """Evaluates conversations using LLM-based scoring with rubrics."""
     
     # Supported judge models by provider
+    # TODO: this should go in some config file
     SUPPORTED_JUDGES = {
         "openai": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"],
         "claude": ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229", "claude-3-sonnet-20240229"],
@@ -175,6 +183,7 @@ class LLMJudge:
         results = await self._evaluate_with_rubric(conversation, self.rubric)
         
         # Save combined evaluation if auto_save is enabled
+        if auto_save:
         if auto_save:
             conversation_name = Path(conversation_file).stem
             combined_output_file = f"{output_folder}/{conversation_name}.csv"

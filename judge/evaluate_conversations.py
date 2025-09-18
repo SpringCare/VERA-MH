@@ -11,8 +11,7 @@ from .llm_judge import LLMJudge
 
 async def evaluate_single_conversation(
     conversation_file: str, 
-    rubric_files: list, 
-    judge_model: str = "gpt-4"
+    judge_model: str 
 ):
     """Evaluate a single conversation and print results."""
     
@@ -45,7 +44,7 @@ async def evaluate_single_conversation(
 async def batch_evaluate_conversations(
     conversation_folder: str, 
     rubric_files: list, 
-    judge_model: str = "gpt-4",
+    judge_model: str,
     limit: int = None
 ):
     """Evaluate all conversations in a folder."""
