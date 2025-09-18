@@ -5,7 +5,6 @@ import os
 import uuid
 from llm_clients import LLMFactory
 from .conversation_simulator import ConversationSimulator
-from utils.prompt_loader import load_prompt_config
 from .utils import load_prompts_from_csv
 from utils.logging_utils import (
     setup_conversation_logger, 
@@ -26,6 +25,7 @@ class ConversationRunner:
         self, 
         persona_model_config: Dict[str, Any], 
         agent_model_config: Dict[str, Any], 
+        run_id: str,
         max_turns: int = 6, 
         runs_per_prompt: int = 3,
         folder_name: str = "conversations",
@@ -35,6 +35,9 @@ class ConversationRunner:
         self.max_turns = max_turns
         self.runs_per_prompt = runs_per_prompt
         self.folder_name = folder_name
+        self.run_id = run_id
+
+        self.AGENT_SYSTEM_PROMPT = self.agent_model_config.get("system_prompt", "You are a helpful AI assistant.")
     
     async def run_single_conversation(
         self, 
@@ -52,15 +55,17 @@ class ConversationRunner:
 
         # Generate filename base using persona name, model, and run number
         tag = uuid.uuid4().hex[:6]
+        # TODO: consider removing timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
         # TODO: should this be inside the LLM class?
         model_short = model_name.replace("claude-3-", "c3-").replace("gpt-", "g").replace("claude-sonnet-4-", "cs4-")
         persona_safe = persona_name.replace(" ", "_").replace(".", "")
-        filename_base = f"{tag}_{persona_safe}_{model_short}_run{run_number}_{timestamp}"
+        filename_base = f"{tag}_{persona_safe}_{model_short}_run{run_number}"
         os.makedirs(f"{self.folder_name}", exist_ok=True)
+    
 
         # Setup logging
-        logger = setup_conversation_logger(filename_base)
+        logger = setup_conversation_logger(filename_base, run_id=self.run_id)
         start_time = time.time()
         
         # Create LLM1 instance with the persona prompt and configuration
@@ -74,12 +79,14 @@ class ConversationRunner:
         # Log conversation start
         log_conversation_start(
             logger=logger,
-            llm1_model=model_name,
+            llm1_model_str=model_name,
             llm1_prompt=persona_name,
             llm2_name=agent.get_name(),
-            llm2_model=getattr(agent, 'model_name', 'unknown'),
-            initial_message="initial_message",
-            max_turns=max_turns
+            llm2_model_str=getattr(agent, 'model_name', 'unknown'),
+            initial_message="",
+            max_turns=max_turns,
+            llm1_model=persona,
+            llm2_model=agent,
         )
         
         # Create conversation simulator and run conversation
@@ -96,7 +103,8 @@ class ConversationRunner:
                 speaker=turn.get("speaker", "Unknown"),
                 input_message=turn.get("input", ""),
                 response=turn.get("response", ""),
-                early_termination=turn.get("early_termination", False)
+                early_termination=turn.get("early_termination", False),
+                logging=turn.get("logging", {})
             )
         
         # Calculate timing and check early termination
@@ -138,13 +146,10 @@ class ConversationRunner:
         personas = load_prompts_from_csv(persona_names)
         
         # Load agent configuration (fixed, shared across all conversations)
-        # TODO: this is weird, why it's loaded twice?
-        # also check that the config are passed correctly and that the name is not really needed
-        config2 = load_prompt_config(self.agent_model_config["prompt_name"])
         agent = LLMFactory.create_llm(
             model_name=self.agent_model_config["model"],
             name=self.agent_model_config.pop("name"),
-            system_prompt=config2["system_prompt"],
+            system_prompt=self.AGENT_SYSTEM_PROMPT,
             **self.agent_model_config
         )
         
@@ -152,7 +157,8 @@ class ConversationRunner:
         tasks = []
         conversation_id = 1
         
-        for persona in personas:      
+        for persona in personas:
+
             for run in range(1, self.runs_per_prompt + 1):
                 
                 tasks.append(
