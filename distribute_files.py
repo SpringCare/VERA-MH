@@ -2,6 +2,8 @@
 """
 File Distribution Script
 
+Used to take a seed folder containing transpcripts and copy them to new folders to facilitte provider reivew.
+
 This script:
 1. Counts files in the seed folder
 2. Distributes files across numbered folders
