@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import asyncio
-from re import DEBUG
 from socket import timeout
 from typing import List, Dict, Any
 from generate_conversations import ConversationRunner
