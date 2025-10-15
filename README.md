@@ -2,7 +2,9 @@
 
 This is the main repo for VERA-MH (Validation of Ethical and Responsible AI in Mental Health).
 
-This code should be considered a work in progress (including this documentation), and the main avenue to offer feedback. There are many quirks of the current structure, which will be simplified and streamlined.
+This code should be considered a work in progress (including this documentation), and the main avenue to offer feedback. 
+We value every interaction that follows the [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
+There are many quirks of the current structure, which will be simplified and streamlined.
 
 There are two main entry points:
 
