@@ -182,7 +182,6 @@ class LLMJudge:
 
 
         results = await self._evaluate_with_rubric(conversation, self.rubric)
-        print("CF", conversation_file)
         # Save combined evaluation if auto_save is enabled
         if auto_save:
             conversation_name = Path(conversation_file).stem
@@ -226,8 +225,6 @@ class LLMJudge:
         # TODO: output_file should be without the extenention, and should be added by the sep
         output_path = Path(output_file)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        print("OF", output_file)
-        print("OP", output_path)
         with open(output_path, 'w', encoding='utf-8') as f:
         # Write the raw response line by line
             lines = evaluation.strip().split('\n')

@@ -2,19 +2,19 @@
 
 This is the main repo for VERA-MH (Validation of Ethical and Responsible AI in Mental Health).
 
-This code should be considered a work in progress (including this documentation), and the main avenue to offer feedback.
+This code should be considered a work in progress (including this documentation), and the main avenue to offer feedback. There are many quirks of the current structure, which will be simplified and streamlined.
 
 There are two main entry points:
 
-- _generate.py_: is the main file to generate conversations, and store them in `convrersations`
-- _judege.py_: to judge existing conversations (usually stored in `convrersations`). The result of the evaluation is usually stored in `evaluations`
+- _generate.py_: is the main file to generate conversations, and store them in `conversations`
+- _judege.py_: to judge existing conversations (usually stored in `conversations`). The result of the evaluation is usually stored in `evaluations`
 
 Most of the interesting data is contained in the `data` folder, specifically:
 - _personas.csv_ has the data for the personas
 - *personas_prompt_template.txt* has the meta-prompt for the user-agent
-- _rubric.csv_ is the clinically developed rurbic
+- _rubric.csv_ is the clinically developed rubric
 
-The code to create a the judge prompt will be moved to the data folder, but is currently the function `_get_judge_system_prompt` in `judge/llm_judge.py`.
+The code to create the judge prompt will be moved to the data folder, but is currently the function `_get_judge_system_prompt` in `judge/llm_judge.py`.
 
 
 
