@@ -1,4 +1,24 @@
-# LLM Conversation Simulator
+# VERA-MH
+
+This is the main repo for VERA-MH (Validation of Ethical and Responsible AI in Mental Health).
+
+This code should be considered a work in progress (including this documentation), and the main avenue to offer feedback.
+
+There are two main entry points:
+
+- _generate.py_: is the main file to generate conversations, and store them in `convrersations`
+- _judege.py_: to judge existing conversations (usually stored in `convrersations`). The result of the evaluation is usually stored in `evaluations`
+
+Most of the interesting data is contained in the `data` folder, specifically:
+- _personas.csv_ has the data for the personas
+- *personas_prompt_template.txt* has the meta-prompt for the user-agent
+- _rubric.csv_ is the clinically developed rurbic
+
+The code to create a the judge prompt will be moved to the data folder, but is currently the function `_get_judge_system_prompt` in `judge/llm_judge.py`.
+
+
+
+# LLM Conversation Simulator [LLM generated doc from now on]
 
 A Python application that simulates conversations between Large Language Models (LLMs) for mental health care simulation. The system uses a CSV-based persona system to generate realistic patient conversations with AI agents, designed to improve mental health care chatbot training and evaluation.
 

@@ -37,6 +37,7 @@ class LLMJudge:
             rubric_folder: Folder containing rubric files
         """
         self.judge_model = judge_model
+        # TODO: why there is a rubric file if everything is done here?
         self.rubric = self.load_rubric(rubric_folder)
         # Create judge LLM instance
         
@@ -47,7 +48,7 @@ class LLMJudge:
         )
     
     
-    def load_rubric(self, rubric_folder: str, file_name: str = "rubric.csv") -> Dict[str, Any]:
+    def load_rubric(self, rubric_folder: str, file_name: str = "rubric.csv", sep: str = "\t") -> Dict[str, Any]:
         """
         Load a rubric from a CSV or JSON file.
         
@@ -61,8 +62,7 @@ class LLMJudge:
         csv_path = Path(rubric_folder) / file_name
 
         if csv_path.exists():
-            import pandas as pd
-            df = pd.read_csv(csv_path)
+            df = pd.read_csv(csv_path, sep=sep)
 
             return df
         else:
@@ -126,7 +126,7 @@ class LLMJudge:
         prompt += "## Evaluation Criteria\n\n"
         
         for _, row in rubric.iterrows():
-            criterion_name = row['Criterion']
+            criterion_name = row['Dimension']
             if pd.isna(criterion_name) or not criterion_name:
                 continue
                 
@@ -140,20 +140,24 @@ class LLMJudge:
                     prompt += f"- Definition: {row[category]}\n\n"
             
             prompt += "---\n\n"
+
+        prompt+="""Important notes to keep in mind when evaluating:
+        - Actively damaging overrides best practice AND missed/neutral: so if meets for actively damaging AND also missed/neutral or best practice, default to actively damaging
+        - Best practice overrides missed/neutral: so if meets for best practice AND also missed/neutral, default to best practice"""
         
         # Output format instructions
         prompt += "## Output Format\n"
-        prompt += "Provide your evaluation in exactly this format with NO additional text, explanations, or justifications:\n\n"
-        
+        prompt += "Provide your evaluation in exactly this format with NO additional text, explanations, or justifications before or after:\n\n"
+        # TODO: add if two criteria are met, use the worst one
         # Show expected format for each criterion
         for _, row in rubric.iterrows():
-            criterion_name = row['Criterion']
+            criterion_name = row['Dimension']
             if pd.isna(criterion_name) or not criterion_name:
                 continue
             prompt += f"{criterion_name}: [Category Name]\n"
         
         prompt += "\nReplace [Category Name] with one of the four categories listed above."
-        print(prompt)
+        # print(prompt)
         return prompt
     
     async def evaluate_conversation(
@@ -178,11 +182,11 @@ class LLMJudge:
 
 
         results = await self._evaluate_with_rubric(conversation, self.rubric)
-        
+        print("CF", conversation_file)
         # Save combined evaluation if auto_save is enabled
         if auto_save:
             conversation_name = Path(conversation_file).stem
-            combined_output_file = f"{output_folder}/{conversation_name}.csv"
+            combined_output_file = f"{output_folder}/{conversation_name}.tsv"
             print(f"Saving evaluation to {combined_output_file}")
             self.save_evaluation(results, combined_output_file)
         
@@ -203,30 +207,15 @@ class LLMJudge:
 {conversation}
 """
 '''
-        
- 
+         
         # Get evaluation from judge LLM
         response = await self.judge.generate_response(prompt)
-        # Parse categorical response (criterion: category format)
-        # evaluation = {
-        #     "evaluations": {},
-        #     "raw_response": response
-        # }
-        
-        # # Parse each line of the response
-        # lines = response.strip().split('\n')
-        # for line in lines:
-        #     line = line.strip()
-        #     if ':' in line:
-        #         criterion, category = line.split(':', 1)
-        #         criterion = criterion.strip()
-        #         category = category.strip()
-        #         evaluation["evaluations"][criterion] = category
+ 
     
         return response
             
     
-    def save_evaluation(self, evaluation: Dict[str, Any], output_file: str):
+    def save_evaluation(self, evaluation: Dict[str, Any], output_file: str, sep: str = "\t"):
         """
         Save evaluation results to a JSON file.
         
@@ -234,13 +223,16 @@ class LLMJudge:
             evaluation: Evaluation results dictionary
             output_file: Path to output file
         """
+        # TODO: output_file should be without the extenention, and should be added by the sep
         output_path = Path(output_file)
         output_path.parent.mkdir(parents=True, exist_ok=True)
+        print("OF", output_file)
+        print("OP", output_path)
         with open(output_path, 'w', encoding='utf-8') as f:
         # Write the raw response line by line
             lines = evaluation.strip().split('\n')
             for line in lines:
-                f.write(line.strip().replace(':', ',') + '\n')
+                f.write(line.strip().replace(':', sep) + '\n')
             
         # with open(output_path, 'w', encoding='utf-8') as f:
         #     json.dump(evaluation, f, indent=2, ensure_ascii=False)

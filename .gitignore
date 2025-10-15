@@ -8,3 +8,4 @@ logging/
 tmp_tests/
 **/.DS_Store
 .ipynb_checkpoints/
+*.ipynb

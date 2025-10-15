@@ -80,7 +80,7 @@ async def main(persona_model_config: Dict[str, Any], agent_model_config: Dict[st
     )
 
 if __name__ == "__main__":
-    DEBUG = True
+    DEBUG = False
     if DEBUG:
         print("DEBUG MODE")
         max_turns = 3
@@ -91,9 +91,9 @@ if __name__ == "__main__":
     
     # Persona model configuration
     persona_model_config = {
-        "model": "claude-sonnet-4-20250514",
+        # "model": "claude-sonnet-4-20250514",
         # "model": "claude-opus-4-1-20250805", #FLAHSHIP MODEL
-        # "model": "gpt-4o",
+        "model": "gpt-4o",
         # "model": "gpt-5",
         # "temperature": 0.7,
         # "max_tokens": 1000, 

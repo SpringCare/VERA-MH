@@ -59,7 +59,7 @@ async def main(conversation_folder: str, rubric_folder: str, rubric_file: str, j
 
 
 if __name__ == "__main__":
-    conversation_folder = "conversations/p_claude_sonnet_4_20250514__a_claude_sonnet_4_20250514__t3__r3__20250918_122822"
+    conversation_folder = "conversations/p_gpt_5__a_gpt_5__t30__r5__20250915_102113__{'max_completion_tokens' 5000}"
     
     # TODO: just one file?
     rubric_folder = "data"
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     judge_model = "claude-opus-4-1-20250805"
     limit = None
     output_root = "evaluations"
-    
+    print("Running judge on", conversation_folder)
     asyncio.run(main(conversation_folder, rubric_folder, rubric_file, judge_model, limit, output_root))
 
 

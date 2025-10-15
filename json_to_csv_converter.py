@@ -169,10 +169,10 @@ def test_conversion(input_dir: str, csv_file: str):
 def main():
     """Main function to run the conversion."""
     # Input directory (the evaluations folder)
-    input_directory = "evaluations/j_claude-sonnet-4-20250514_20250825_142901_627__p_claude_sonnet_4_20250514__a_claude_sonnet_4_20250514_20250822_172711_t30_r5"
+    input_directory = "evaluations/j_claude-opus-4-1-20250805_20251006_103501_930__seed/"
     
     # Output CSV file
-    output_csv = "evaluations_output.csv"
+    output_csv = "j_claude-opus-4-1-20250805_20251006_103501_930__seed.csv"
     
     print(f"Converting JSON files from: {input_directory}")
     print(f"Output CSV: {output_csv}")

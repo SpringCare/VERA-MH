@@ -58,7 +58,7 @@ async def batch_evaluate_with_individual_judges(
 
 async def judge_conversations(
     judge_model: str,
-    conversation_folder: str = "conversations",
+    conversation_folder: str,
     rubrics: List[str] = ["rubric.csv"],
     output_root: str = "evaluations",
     limit: Optional[int] = None,
@@ -114,6 +114,11 @@ async def judge_conversations(
     
     # Convert to strings
     conversation_file_paths = [str(f) for f in conversation_files]
+
+    print("conversation_file_paths", len(conversation_file_paths))
+    import pprint
+    pprint.pprint(sorted(conversation_file_paths))
+
     
     # Run batch evaluation with individual judges
     results = await batch_evaluate_with_individual_judges(
