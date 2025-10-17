@@ -9,7 +9,7 @@ There are many quirks of the current structure, which will be simplified and str
 There are two main entry points:
 
 - _generate.py_: is the main file to generate conversations, and store them in `conversations`
-- _judege.py_: to judge existing conversations (usually stored in `conversations`). The result of the evaluation is usually stored in `evaluations`
+- _judge.py_: to judge existing conversations (usually stored in `conversations`). The result of the evaluation is usually stored in `evaluations`
 
 Most of the interesting data is contained in the `data` folder, specifically:
 - _personas.csv_ has the data for the personas
