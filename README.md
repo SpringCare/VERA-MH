@@ -1,6 +1,6 @@
 # VERA-MH
 
-This is the main repo for VERA-MH (Validation of Ethical and Responsible AI in Mental Health).
+This is the main repo for [VERA-MH](https://arxiv.org/abs/2510.15297) (Validation of Ethical and Responsible AI in Mental Health).
 
 This code should be considered a work in progress (including this documentation), and the main avenue to offer feedback. 
 We value every interaction that follows the [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
