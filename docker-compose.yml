@@ -1,0 +1,8 @@
+services:
+  vera-mh:
+    build: .
+    env_file: .env
+    volumes:
+      - ./conversations:/app/conversations
+      - ./evaluations:/app/evaluations
+      - ./logging:/app/logging
