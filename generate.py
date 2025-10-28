@@ -84,9 +84,9 @@ if __name__ == "__main__":
     if DEBUG:
         print("DEBUG MODE")
         max_turns = 3
-        runs_per_prompt = 3
+        runs_per_prompt = 1
     else:   
-        max_turns = 30
+        max_turns = 35
         runs_per_prompt = 5
     
     # Persona model configuration
@@ -95,7 +95,7 @@ if __name__ == "__main__":
         # "model": "claude-opus-4-1-20250805", #FLAHSHIP MODEL
         "model": "gpt-4o",
         # "model": "gpt-5",
-        # "temperature": 0.7,
+        # "temperature": 2,
         # "max_tokens": 1000, 
         # "max_completion_tokens": 5000,
         # "timeout":1000, # shoudl be seconds
