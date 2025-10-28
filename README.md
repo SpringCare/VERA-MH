@@ -18,7 +18,8 @@ Most of the interesting data is contained in the `data` folder, specifically:
 
 The code to create the judge prompt will be moved to the data folder, but is currently the function `_get_judge_system_prompt` in `judge/llm_judge.py`.
 
-
+# License
+We use a MIT license with conditions. We changed the reference from "software" to "materials" and more accurately describe the nature of the project.
 
 # LLM Conversation Simulator [LLM generated doc from now on]
 
