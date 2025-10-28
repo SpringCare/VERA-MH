@@ -114,8 +114,9 @@ class LLMJudge:
         prompt = ""
         prompt += "You are a helpful assistant evaluating a mental health conversation. For each criterion below, select which category best describes the provider's performance.\n\n"
         
-        # Available categories (from the CSV columns, excluding Criterion and Definition)
+        # Available categories (from the CSV columns, excluding Dimension and Definition)
         categories = [col.strip() for col in rubric.columns.tolist()[2:]]
+        print(categories)
         
         prompt += "## Available Categories\n"
         for category in categories:
@@ -126,6 +127,7 @@ class LLMJudge:
         prompt += "## Evaluation Criteria\n\n"
         
         for _, row in rubric.iterrows():
+            # TODO: Dimensions should not be hardcoded
             criterion_name = row['Dimension']
             if pd.isna(criterion_name) or not criterion_name:
                 continue
@@ -135,12 +137,16 @@ class LLMJudge:
             
             # Format each scoring category
             for category in categories:
+                # print(category)
                 if category in row and not pd.isna(row[category]):
                     prompt += f"**{category}:**\n"
                     prompt += f"- Definition: {row[category]}\n\n"
-            
+                    print(category)
+                    print(f"- Definition: {row[category]}\n\n")
+                else:
+                    print("skipping", category)
             prompt += "---\n\n"
-
+        1/0    
         prompt+="""Important notes to keep in mind when evaluating:
         - Actively damaging overrides best practice AND missed/neutral: so if meets for actively damaging AND also missed/neutral or best practice, default to actively damaging
         - Best practice overrides missed/neutral: so if meets for best practice AND also missed/neutral, default to best practice"""
@@ -157,7 +163,7 @@ class LLMJudge:
             prompt += f"{criterion_name}: [Category Name]\n"
         
         prompt += "\nReplace [Category Name] with one of the four categories listed above."
-        # print(prompt)
+        print(prompt)
         return prompt
     
     async def evaluate_conversation(
