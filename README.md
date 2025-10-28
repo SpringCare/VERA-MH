@@ -2,7 +2,7 @@
 
 This is the main repo for [VERA-MH](https://arxiv.org/abs/2510.15297) (Validation of Ethical and Responsible AI in Mental Health).
 
-This code should be considered a work in progress (including this documentation), and the main avenue to offer feedback. 
+This code should be considered a work in progress (including this documentation), and the main avenue to offer feedback.
 We value every interaction that follows the [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
 There are many quirks of the current structure, which will be simplified and streamlined.
 
@@ -52,14 +52,14 @@ A Python application that simulates conversations between Large Language Models 
 
 3. **Run the simulation**:
    ```bash
-   python main_generate.py
+   python generate.py
    ```
 
 ## Architecture
 
 ### Core Components
 
-- **`main_generate.py`**: Main entry point for conversation generation with configurable parameters
+- **`generate.py`**: Main entry point for conversation generation with configurable parameters
 - **`generate_conversations/`**: Core conversation generation system
   - **`conversation_simulator.py`**: Manages individual conversations between persona and agent LLMs
   - **`runner.py`**: Orchestrates multiple conversations with logging and file management
@@ -110,7 +110,7 @@ To add support for a new LLM provider:
 ### Basic Conversation Generation
 
 ```python
-from main_generate import generate_conversations
+from generate import generate_conversations
 
 # Persona model configuration (the "patient")
 persona_model_config = {
@@ -142,7 +142,7 @@ results = await generate_conversations(
 ### Command Line Usage
 
 ```bash
-python main_generate.py
+python generate.py
 ```
 
 The script will:

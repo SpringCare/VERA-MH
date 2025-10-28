@@ -1,0 +1,5 @@
+[project]
+name = "vera-mh"
+version = "0.1.0"
+description = "Validation of Ethical and Responsible AI in Mental Health"
+requires-python = ">=3.11"
