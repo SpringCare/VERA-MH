@@ -86,18 +86,18 @@ if __name__ == "__main__":
         max_turns = 3
         runs_per_prompt = 1
     else:   
-        max_turns = 35
-        runs_per_prompt = 5
+        max_turns = 25
+        runs_per_prompt = 1
     
     # Persona model configuration
     persona_model_config = {
         # "model": "claude-sonnet-4-20250514",
         # "model": "claude-opus-4-1-20250805", #FLAHSHIP MODEL
-        "model": "gpt-4o",
-        # "model": "gpt-5",
+        # "model": "gpt-4",
+        "model": "gpt-5",
         # "temperature": 2,
         # "max_tokens": 1000, 
-        # "max_completion_tokens": 5000,
+        "max_completion_tokens": 5000,
         # "timeout":1000, # shoudl be seconds
         # "max_completion_tokens":5000,
     }
@@ -107,14 +107,14 @@ if __name__ == "__main__":
     agent_model_config = {
         # "model": "claude-opus-4-1-20250805", #FLAHSHIP MODEL
         # "name": "Claude Opus 4.1",
-        # "model": "gpt-4o",
-        # "name": "GPT-4o",
+        "model": "gpt-4",
+        "name": "GPT-4",
         # "model": "gpt-5",
         # "name": "GPT-5",
         # "max_completion_tokens": 5000,
         # "prompt_name": "",  # This should match a prompt config file
-        "name": "Claude Sonnet",  # Display name for the LLM
-        "model": "claude-sonnet-4-20250514",
+        # "name": "Claude Sonnet",  # Display name for the LLM
+        # "model": "claude-sonnet-4-20250514",
         # "temperature": 0.7,
         # "max_tokens": 1000
     }
@@ -128,6 +128,7 @@ if __name__ == "__main__":
         agent_model_config=agent_model_config,
         max_turns=max_turns, 
         runs_per_prompt=runs_per_prompt,
+        # TODO: add extra run params for agent model
         extra_run_params={k: v for k, v in persona_model_config.items() if k not in ["model", "temperature", "max_tokens"]},
         folder_name=None,  # Will use default format
     ))
