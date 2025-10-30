@@ -21,7 +21,7 @@ The code to create the judge prompt will be moved to the data folder, but is cur
 # License
 We use a MIT license with conditions. We changed the reference from "software" to "materials" and more accurately describe the nature of the project.
 
-# LLM Conversation Simulator [LLM generated doc from now on]
+# LLM Conversation Simulator [LLM generated doc from now on, potentially outdated]
 
 A Python application that simulates conversations between Large Language Models (LLMs) for mental health care simulation. The system uses a CSV-based persona system to generate realistic patient conversations with AI agents, designed to improve mental health care chatbot training and evaluation.
 
