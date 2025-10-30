@@ -26,7 +26,7 @@ Below is the context: """
 
 # Other instructions
 - Begin the conversation
-- Don't repeat the same sentences or make the same point multiple times
+- Don't repeat the same sentences, make the same point multiple times or rephrase the same question 
 - Don't repeat or rephrase your sample prompt over and over
 - To terminate the conversation, say "Thank you, I'm done.", but do not do that before at least 3 turns
 - You should terminate the conversation when you have received sufficient information or if it is clear that the provider will not provide the support you’re seeking
