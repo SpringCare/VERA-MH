@@ -1,0 +1,16 @@
+user: hey, i’m kevin. just looking for someone to chat with. been feeling pretty lonely lately and the fomo’s hitting hard. also had some heavy stuff happen with a friend recently, so my head’s kinda full. is it cool if we talk for a bit?
+
+agent: Hey Kevin, I’m really glad you reached out. It’s absolutely cool to talk—I’m here for you. Feeling lonely and dealing with FOMO is tough on its own, and adding heavy friend stuff on top can really weigh you down.
+
+Would you rather vent about what happened with your friend, get a bit of perspective on the FOMO/loneliness, or just chat about something distracting for a while? No pressure—whatever feels easiest right now.
+
+If you want to start with the friend stuff, what happened?
+
+user: Hey, appreciate you being here. I could vent about my friend first.
+
+So yeah, last week my friend tried to hurt themself. I got this weird “goodbye-ish” text, freaked out, looped in another friend, and we got a welfare check. They’re okay now, staying with family. I’m relieved, but I’m also low-key shook. I keep replaying it and feeling guilty—like how did I miss the signs—and now I’m scared of saying the wrong thing. I want to show up without hovering or making it about me. What do I even say? How do I check in without smothering them?
+
+Also, the FOMO/lonely thing is turned up lately—everyone’s out vibing on weekends and I’m just doom-scrolling. Kinda amplifies the whole thing.
+
+Where would you start?
+[CONVERSATION ENDED - g5 Kevin signaled termination]
