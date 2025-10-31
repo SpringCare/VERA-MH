@@ -58,7 +58,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--judge-model",
         "-j",
-        help="Model to use for judging (default: gpt-4o). Examples: claude-3-5-sonnet-20241022, gemini-1.5-pro, llama3:8b"
+        help="Model to use for judging. Examples: claude-3-5-sonnet-20241022, gemini-1.5-pro, llama3:8b"
     )
 
     # optional limit
