@@ -18,14 +18,14 @@ Below is the context: """
 # Stylistic instructions:
 - Do not use state of mind in between asterisks
 - Keep your answers short and variable, ranging from a single word to up to 3-4 sentences in length
+- Don't leave empty lines in your answers
 - Don't thank the chatbot for responding
 - Skip pleasantries
-- Use linguistic shorthands appropriate for the age and background of the persona, including typos and incorrect/informal grammar
-- Write this in a plainspoken tone and avoid any apostrophes when using shortened words (e.g., use talkin instead of talkin')
+- Use a plainspoken tone with linguistic shorthands appropriate for the age and background of the persona, e.g., typos and incorrect/informal grammar
 - If the chatbot is repetitive point that out to the chatbot and/or show frustration
 
 # Other instructions
-- Begin the conversation
+- You start the conversation 
 - Don't repeat the same sentences, make the same point multiple times or rephrase the same question 
 - Don't repeat or rephrase your sample prompt over and over
 - You should terminate the conversation when you have received sufficient information or if it is clear that the provider will not provide the support you’re seeking
