@@ -14,6 +14,8 @@ async def main(args):
     """Main async entrypoint for judging conversations."""
     print(f"🎯 LLM Judge | Model: {args.judge_model} | Rubrics: {', '.join(args.rubrics)}")
 
+    #TODO: this judge is used to the single convo case
+    # make the API so that it's consisten with one or multi-convo case
     judge = LLMJudge(judge_model=args.judge_model)
 
     if args.conversation:
@@ -58,7 +60,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--judge-model",
         "-j",
-        help="Model to use for judging (default: gpt-4o). Examples: claude-3-5-sonnet-20241022, gemini-1.5-pro, llama3:8b"
+        help="Model to use for judging. Examples: claude-3-5-sonnet-20241022, gemini-1.5-pro, llama3:8b"
     )
 
     # optional limit
