@@ -68,6 +68,7 @@ async def main(
         
         run_id = f'p_{persona_info}__a_{agent_info}__t{max_turns}__r{runs_per_prompt}__{timestamp}'
         folder_name = f"{folder_name}/{run_id}"
+        # TODO: do we want to give a message if the folder already exists?
         os.makedirs(folder_name, exist_ok=True)
     
     # Configuration
@@ -87,7 +88,6 @@ async def main(
         print(f"✅ Generated {len(results)} conversations → {folder_name}/")
     
     return results
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate LLM conversations")
@@ -119,11 +119,6 @@ if __name__ == "__main__":
         type=parse_key_value_list,
     )
 
-    parser.add_argument(
-        "--debug",
-        "-d",
-        help="Debug mode"
-    )
     parser.add_argument(
         "--runs",
         "-r",
@@ -160,6 +155,7 @@ if __name__ == "__main__":
         "model": args.user_agent,
         **args.user_agent_extra_params,
     }
+
     agent_model_config = {
         "model": args.provider_agent,
         # TODO: why does agent need a name, but not persona?
@@ -167,23 +163,15 @@ if __name__ == "__main__":
         **args.provider_agent_extra_params,
     }
 
-    DEBUG = args.debug
-    if DEBUG:
-        print("DEBUG MODE")
-        max_turns = 3
-        runs_per_prompt = 1
-    else:   
-        max_turns = args.turns
-        runs_per_prompt = args.runs
-
+    # TODO: Do the run id here, so that it can be printed when starting
     # Note: we are discarding the results, becuase they are saved to file
     _ = asyncio.run(main(
         persona_model_config=persona_model_config,
         agent_model_config=agent_model_config,
-        max_turns=max_turns, 
-        runs_per_prompt=runs_per_prompt,
-        persona_extra_run_params={k: v for k, v in persona_model_config.items() if k not in ["model", "model_name", "temperature", "max_tokens"]},
-        agent_extra_run_params={k: v for k, v in agent_model_config.items() if k not in ["model", "model_name", "temperature", "max_tokens"]},
+        max_turns=args.turns, 
+        runs_per_prompt=args.runs,
+        persona_extra_run_params={k: v for k, v in persona_model_config.items() if k not in ["model", "model_name", "name", "temperature", "max_tokens"]},
+        agent_extra_run_params={k: v for k, v in agent_model_config.items() if k not in ["model", "model_name", "name", "temperature", "max_tokens"]},
         folder_name=args.folder_name,  
     ))
     
