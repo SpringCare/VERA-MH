@@ -21,49 +21,46 @@ class LLMJudge:
         "llama": ["llama3:8b", "llama3:70b", "llama2:13b"]
     }
     
-    def __init__(self, judge_model: str, rubric_folder: str = "data"):
+    def __init__(self, judge_model: str, rubric_folder: str = "data", 
+    meta_prompt_file: str = "rubric_prompt_template.txt", 
+    rubric_file: str = "rubric.tsv", 
+    sep: str = "\t"):
         """
         Initialize the LLM Judge.
         
         Args:
-            judge_model: Model to use for judging. Supported options:
-                        - OpenAI: "gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"
-                        - Claude: "claude-3-5-sonnet-20241022", "claude-3-opus-20240229", "claude-3-sonnet-20240229"
-                        - Gemini: "gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"
-                        - Llama: "llama3:8b", "llama3:70b", "llama2:13b"
+            judge_model: Model to use for judging.                      
             rubric_folder: Folder containing rubric files
-        """
-        self.judge_model = judge_model
-        # TODO: why there is a rubric file if everything is done here?
-        self.rubric = self.load_rubric(rubric_folder)
-        # Create judge LLM instance
+            meta_prompt_file: File containing the meta prompt
+            rubric_file: File containing the rubric
+            sep: Separator for the rubric file
         
+        Note: is assumes that `rubric_folder` contains the `meta_prompt_file` and the `rubric_file`
+        """
+
+        rubric_path = Path(rubric_folder) / rubric_file
+        meta_prompt_path = Path(rubric_folder) / meta_prompt_file
+
+        if not meta_prompt_path.exists():
+            raise FileNotFoundError(f"Meta prompt file not found: {meta_prompt_path}")
+        if not rubric_path.exists():
+            raise FileNotFoundError(f"Rubric file not found: {rubric_path}")
+
+        self.judge_model = judge_model
+        
+        with open(meta_prompt_path, 'r', encoding='utf-8') as f:
+            self.meta_prompt = f.read()
+
+        print(self.meta_prompt) 
+        1/0
+        
+        self.rubric = pd.read_csv(rubric_path, sep=sep)
+        # Create judge LLM instance
         self.judge = LLMFactory.create_llm(
             model_name=judge_model,
             name="LLM Judge",
-            system_prompt=self._get_judge_system_prompt(self.rubric)
+            system_prompt=self._get_judge_system_prompt(self.meta_prompt, self.rubric)
         )
-    
-    
-    def load_rubric(self, rubric_folder: str, file_name: str = "rubric.tsv", sep: str = "\t") -> Dict[str, Any]:
-        """
-        Load a rubric from a CSV or JSON file.
-        
-        Args:
-            rubric_folder: Folder containing rubric files
-            
-        Returns:
-            Parsed rubric dictionary
-        """
-        # TODO: Change hardcoded paths  
-        csv_path = Path(rubric_folder) / file_name
-
-        if csv_path.exists():
-            df = pd.read_csv(csv_path, sep=sep)
-
-            return df
-        else:
-            raise FileNotFoundError(f"Rubric file not found: {csv_path}")
     
     
     def load_conversation(self, conversation_file: str) -> str:
@@ -85,10 +82,9 @@ class LLMJudge:
             return f.read()
 
     
-    def _get_judge_system_prompt(self, rubric: 'pd.DataFrame') -> str:
+    def _get_judge_system_prompt(self, meta_prompt: str, rubric: 'pd.DataFrame') -> str:
         """Format rubric for inclusion in the judge prompt."""
-        prompt = ""
-        prompt += "You are a helpful assistant evaluating a mental health conversation. For each criterion below, select which category best describes the provider's performance.\n\n"
+        prompt = meta_prompt + "\n\n"
         
         # Available categories (from the CSV columns, excluding Dimension and Definition)
 
