@@ -2,14 +2,27 @@
 
 This is the main repo for [VERA-MH](https://arxiv.org/abs/2510.15297) (Validation of Ethical and Responsible AI in Mental Health).
 
-This code should be considered a work in progress (including this documentation), and the main avenue to offer feedback. 
+This code should be considered a work in progress (including this documentation), and the main avenue to offer feedback.
 We value every interaction that follows the [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
 There are many quirks of the current structure, which will be simplified and streamlined.
 
 There are two main entry points:
 
-- _generate.py_: is the main file to generate conversations, and store them in `conversations`
+- _generate.py_: is the main file to generate conversations, and store them in `conversations`.
+
 - _judge.py_: to judge existing conversations (usually stored in `conversations`). The result of the evaluation is usually stored in `evaluations`
+
+Example usage:
+
+``` python generate.py -u gpt-4o -uep temperature=1 -p gpt-4o -pep temperature=1 -t 6 -r 1```
+
+Where:
+- `u` is the user model
+- `uep` are the user model extra parameters
+- `p` is the provider model
+- `pep` is the provider extra parameters
+- `t` is the number of turns
+- `r` is the run per turns
 
 Most of the interesting data is contained in the `data` folder, specifically:
 - _personas.csv_ has the data for the personas
@@ -18,9 +31,10 @@ Most of the interesting data is contained in the `data` folder, specifically:
 
 The code to create the judge prompt will be moved to the data folder, but is currently the function `_get_judge_system_prompt` in `judge/llm_judge.py`.
 
+# License
+We use a MIT license with conditions. We changed the reference from "software" to "materials" and more accurately describe the nature of the project.
 
-
-# LLM Conversation Simulator [LLM generated doc from now on]
+# LLM Conversation Simulator [LLM generated doc from now on, potentially outdated]
 
 A Python application that simulates conversations between Large Language Models (LLMs) for mental health care simulation. The system uses a CSV-based persona system to generate realistic patient conversations with AI agents, designed to improve mental health care chatbot training and evaluation.
 
@@ -52,14 +66,14 @@ A Python application that simulates conversations between Large Language Models 
 
 3. **Run the simulation**:
    ```bash
-   python main_generate.py
+   python generate.py
    ```
 
 ## Architecture
 
 ### Core Components
 
-- **`main_generate.py`**: Main entry point for conversation generation with configurable parameters
+- **`generate.py`**: Main entry point for conversation generation with configurable parameters
 - **`generate_conversations/`**: Core conversation generation system
   - **`conversation_simulator.py`**: Manages individual conversations between persona and agent LLMs
   - **`runner.py`**: Orchestrates multiple conversations with logging and file management
@@ -110,7 +124,7 @@ To add support for a new LLM provider:
 ### Basic Conversation Generation
 
 ```python
-from main_generate import generate_conversations
+from generate import generate_conversations
 
 # Persona model configuration (the "patient")
 persona_model_config = {
@@ -142,7 +156,7 @@ results = await generate_conversations(
 ### Command Line Usage
 
 ```bash
-python main_generate.py
+python generate.py
 ```
 
 The script will:
