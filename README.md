@@ -29,10 +29,9 @@ The RFC-version are frozen in this [branch](https://github.com/SpringCare/VERA-M
    cp .env.example .env
    # Edit .env and add your API keys (e.g., OpenAI/Anthropic)
 
-2.5 (optional).  Create an LLM class for your agent.  (See guidance [here](docs/evaluating.MD))
-   ```
+3. (optional).  **Create an LLM class for your agent**: see guidance [here](docs/evaluating.MD)
 
-3. **Run the simulation**:
+4. **Run the simulation**:
    ```bash
    python generate.py -u gpt-4o -uep temperature=1 -p gpt-4o -pep temperature=1 -t 6 -r 1
    ```
