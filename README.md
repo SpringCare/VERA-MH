@@ -16,8 +16,8 @@ The RFC-version are frozen in this [branch](https://github.com/SpringCare/VERA-M
 # Getting started 
 0. **Create a venv**:
    ```bash
-   python -m venv
-   source .venv/bin/activate
+   python -m venv .
+   source bin/activate
    ```
 1. **Install dependencies**:
    ```bash
