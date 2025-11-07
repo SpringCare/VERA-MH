@@ -8,8 +8,11 @@ import os
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Dict, Any
-from .llm_judge import LLMJudge
+from .llm_judge import LLMJudge, DIMENSIONS
+import pandas as pd
 
+# In case this needs to be synced in the meta prompt for the judge
+EVALUATION_SEPARATOR = ":"
 
 async def batch_evaluate_with_individual_judges(
     conversation_file_paths: List[str],
@@ -51,7 +54,17 @@ async def batch_evaluate_with_individual_judges(
             output_folder=output_folder,
             auto_save=True
         )
-        results.append(evaluation)
+        # NOTE: We can't guarantee that the evalation always has the same format, so we need to enforce it
+        try:
+            evaluation_dict = {line.split(EVALUATION_SEPARATOR)[0].strip(): line.split(EVALUATION_SEPARATOR)[1].strip() for line in evaluation.strip().split('\n') if EVALUATION_SEPARATOR in line.strip()}
+        except Exception as e:
+            print(f"Error parsing evaluation: {e}")
+            print("the folloing string is malformed")
+            print(evaluation)
+            evaluation_dict = {}
+
+        
+        results.append({"filename": Path(conversation_file).name, **evaluation_dict})
     
     return results
 
@@ -63,7 +76,8 @@ async def judge_conversations(
     output_root: str = "evaluations",
     limit: Optional[int] = None,
     verbose: bool = True,
-    output_folder: Optional[str] = None
+    output_folder: Optional[str] = None,
+    save_aggregated_results: bool = True
 ) -> List[Dict[str, Any]]:
     """
     Judge conversations in a folder and return results.
@@ -88,9 +102,6 @@ async def judge_conversations(
         output_folder = f"{output_root}/j_{judge_model}_{timestamp}__{Path(conversation_folder).name}"
     
     os.makedirs(output_folder, exist_ok=True)
-    
-    if verbose:
-        print(f"🎯 LLM Judge | Model: {judge_model} | Rubrics: {', '.join(rubrics)}")
     
     # Check folder exists
     folder_path = Path(conversation_folder)
@@ -124,7 +135,9 @@ async def judge_conversations(
         output_folder,
         limit=limit
     )
-    
+    print(pd.DataFrame(results, columns=["filename"] + DIMENSIONS))
+    if save_aggregated_results:
+        pd.DataFrame(results, columns=["filename"] + DIMENSIONS).to_csv(f"{output_folder}/results.csv", index=False)
     if verbose:
         print(f"✅ Completed {len(results)} evaluations → {output_folder}/")
     
@@ -164,62 +177,3 @@ async def judge_single_conversation(
     print(f"🟢 Done: {Path(conversation_file).name}") 
     return result
         
-
-
-async def judge_conversation_folder(
-    judge_model: str, 
-    folder: str, 
-    rubrics: List[str], 
-    output_folder: str, 
-    limit: Optional[int] = None
-) -> List[Dict[str, Any]]:
-    """
-    Judge all conversations in a folder, creating individual LLMJudge instances.
-    
-    Args:
-        judge_model: Model to use for judging
-        folder: Folder containing conversation files
-        rubrics: List of rubric names to use
-        output_folder: Output folder for results
-        limit: Optional limit on number of files
-        
-    Returns:
-        List of evaluation results
-    """
-    folder_path = Path(folder)
-    if not folder_path.exists():
-        print(f"❌ Folder not found: {folder}")
-        return []
-    
-    # Find all conversation files
-    conversation_files = list(folder_path.glob("*.txt"))
-    if not conversation_files:
-        print(f"❌ No .txt files found in: {folder}")
-        return []
-    
-    total_found = len(conversation_files)
-    
-    if limit:
-        conversation_files = conversation_files[:limit]
-        print(f"🔍 Found {total_found} files, judging {limit} (debug mode)")
-    else:
-        print(f"🔍 Found {total_found} files to judge")
-    
-    # Convert to strings
-    conversation_file_paths = [str(f) for f in conversation_files]
-    
-    try:
-        results = await batch_evaluate_with_individual_judges(
-            conversation_file_paths,
-            rubrics,
-            judge_model,
-            output_folder,
-            limit=limit
-        )
-        
-        print(f"✅ Completed {len(results)} evaluations → {output_folder}/")
-        return results
-            
-    except Exception as e:
-        print(f"❌ Batch evaluation failed: {e}")
-        return []
