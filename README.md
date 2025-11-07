@@ -28,6 +28,8 @@ The RFC-version are frozen in this [branch](https://github.com/SpringCare/VERA-M
    ```bash
    cp .env.example .env
    # Edit .env and add your API keys (e.g., OpenAI/Anthropic)
+
+2.5 (optional).  Create an LLM class for your agent.  (See guidance [here](docs/evaluating.MD))
    ```
 
 3. **Run the simulation**:
@@ -123,15 +125,6 @@ Each persona includes:
 #### Prompt Templating (`data/persona_prompt_template.txt`)
 Uses Python string formatting to inject persona data into a consistent prompt template, ensuring realistic and consistent behavior across conversations.
 
-### Adding New LLM Providers
-
-To add support for a new LLM provider:
-
-1. Create a new class that inherits from `LLMInterface`
-2. Implement the required methods: `generate_response()` and `set_system_prompt()`
-3. Update the configuration as needed
-4. Use the new LLM class in your simulations
-
 ## Usage
 
 ### Basic Conversation Generation
@@ -179,11 +172,6 @@ The script will:
 4. Save conversations and logs to timestamped folders
 5. Support early termination when personas indicate completion
 
-### Supported Models
-
-Currently supported models:
-- **Claude**: `claude-3-5-sonnet-20241022`, `claude-3-opus-20240229`, `claude-3-sonnet-20240229`, `claude-3-haiku-20240307`, `claude-sonnet-4-20250514`
-- **OpenAI**: `gpt-4`, `gpt-4-turbo`, `gpt-3.5-turbo`
 
 ### Custom Personas and Prompts
 
