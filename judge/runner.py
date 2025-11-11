@@ -55,8 +55,9 @@ async def batch_evaluate_with_individual_judges(
             auto_save=True
         )
         # NOTE: We can't guarantee that the evalation always has the same format, so we need to enforce it
+        # TODO: maybe move this cleaning to the utils?
         try:
-            evaluation_dict = {line.split(EVALUATION_SEPARATOR)[0].strip(): line.split(EVALUATION_SEPARATOR)[1].strip() for line in evaluation.strip().split('\n') if EVALUATION_SEPARATOR in line.strip()}
+            evaluation_dict = {line.split(EVALUATION_SEPARATOR)[0].replace("-", "").replace("*", "").strip(): line.split(EVALUATION_SEPARATOR)[1].replace("-", "").replace("*", "").strip() for line in evaluation.strip().split('\n') if EVALUATION_SEPARATOR in line.strip()}
         except Exception as e:
             print(f"Error parsing evaluation: {e}")
             print("the folloing string is malformed")
@@ -64,8 +65,7 @@ async def batch_evaluate_with_individual_judges(
             evaluation_dict = {}
 
         
-        results.append({"filename": Path(conversation_file).name, **evaluation_dict})
-    
+        results.append({"filename": Path(conversation_file).name, **evaluation_dict, "run_id": Path(conversation_file).parent.name})
     return results
 
 
@@ -137,7 +137,7 @@ async def judge_conversations(
     )
     print(pd.DataFrame(results, columns=["filename"] + DIMENSIONS))
     if save_aggregated_results:
-        pd.DataFrame(results, columns=["filename"] + DIMENSIONS).to_csv(f"{output_folder}/results.csv", index=False)
+        pd.DataFrame(results, columns=["filename", "run_id"] + DIMENSIONS).to_csv(f"{output_folder}/results.csv", index=False)
     if verbose:
         print(f"✅ Completed {len(results)} evaluations → {output_folder}/")
     

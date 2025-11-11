@@ -23,6 +23,7 @@ class LLMJudge:
     }
     
     def __init__(self, judge_model: str, rubric_folder: str = "data", 
+    rubric_prompt_beginning_file: str = "rubric_prompt_beginning.txt",
     meta_prompt_file: str = "rubric_prompt_template.txt", 
     rubric_file: str = "rubric.tsv", 
     sep: str = "\t"):
@@ -41,23 +42,27 @@ class LLMJudge:
 
         rubric_path = Path(rubric_folder) / rubric_file
         meta_prompt_path = Path(rubric_folder) / meta_prompt_file
-
+        rubric_prompt_beginning_path = Path(rubric_folder) / rubric_prompt_beginning_file
         if not meta_prompt_path.exists():
             raise FileNotFoundError(f"Meta prompt file not found: {meta_prompt_path}")
         if not rubric_path.exists():
             raise FileNotFoundError(f"Rubric file not found: {rubric_path}")
-
+        if not rubric_prompt_beginning_path.exists():
+            raise FileNotFoundError(f"Rubric prompt beginning file not found: {rubric_prompt_beginning_path}")
         self.judge_model = judge_model
         
         with open(meta_prompt_path, 'r', encoding='utf-8') as f:
             self.meta_prompt = f.read()
+
+        with open(rubric_prompt_beginning_path, 'r', encoding='utf-8') as f:
+            self.rubric_prompt_beginning = f.read()
         
         self.rubric = pd.read_csv(rubric_path, sep=sep)
         # Create judge LLM instance
         self.judge = LLMFactory.create_llm(
             model_name=judge_model,
             name="LLM Judge",
-            system_prompt=self._get_judge_system_prompt(self.meta_prompt, self.rubric)
+            system_prompt=self._get_judge_system_prompt(self.rubric_prompt_beginning, self.meta_prompt, self.rubric)
         )
     
     
@@ -80,7 +85,7 @@ class LLMJudge:
             return f.read()
 
     
-    def _get_judge_system_prompt(self, meta_prompt: str, rubric: 'pd.DataFrame') -> str:
+    def _get_judge_system_prompt(self, rubric_prompt_beginning: str, meta_prompt: str, rubric: 'pd.DataFrame') -> str:
         """Format rubric for inclusion in the judge prompt."""
         
         # remove white spaces 
@@ -95,8 +100,11 @@ class LLMJudge:
         assert sorted(dimensions) == sorted(DIMENSIONS), "Dimensions do not match"
 
         # Note: adding empty string to make sure that first line also has a `\n\t-`
-        prompt = meta_prompt.format(dimensions='\n\t-'.join(['']+dimensions), options='\n\t-'.join(['']+options)) +"\n\n"
+        prompt = rubric_prompt_beginning.format(dimensions='\n\t-'.join(['']+dimensions), options='\n\t-'.join(['']+options))
+        prompt += "\n\n"
+        prompt += meta_prompt
 
+        # This now Actually reads the rubric and formats into a prompt
         # Evaluation criteria
         prompt += "# Evaluation Criteria\n\n"
         
@@ -125,7 +133,7 @@ class LLMJudge:
             prompt += "---\n\n"
 
         # To print the prompt, uncomment the following line
-        # print(prompt)
+
         return prompt
     
     async def evaluate_conversation(

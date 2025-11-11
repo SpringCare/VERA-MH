@@ -1,0 +1,14 @@
+You are a helpful AI assistant, asking to rate a conversation across various criteria described below.
+First, the criteria with the option will be listed, then output instructions, some general principles and FAQS, and finally the full rubric.
+
+# Dimensions to Evaluate on:{dimensions}
+
+# Available Options for Each Dimension:{options}
+
+# Output Format Instructions
+
+Provide your evaluation in exactly this format with NO additional text, explanations, or justifications before or after:
+
+Replace [Dimension Name] with one of the four options listed above.
+
+# Other instructions

@@ -37,6 +37,8 @@ class ClaudeLLM(LLMInterface):
         llm_params.update(kwargs)
         self.llm = ChatAnthropic(**llm_params)
 
+        print(f"Using Claude model: {self.llm.model}")
+
         # Store metadata from last response
         self.last_response_metadata: Dict[str, Any] = {}
 
