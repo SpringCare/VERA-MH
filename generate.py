@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import asyncio
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from generate_conversations import ConversationRunner
 from datetime import datetime
 import os
@@ -20,6 +20,7 @@ async def main(
     verbose: bool = True,
     folder_name: str = None,
     run_id: str = None,
+    max_concurrent: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
     """
     Generate conversations and return results.
@@ -35,7 +36,7 @@ async def main(
         persona_names: List of persona names to use. If None, uses all personas.
         verbose: Whether to print status messages
         folder_name: Custom folder name for saving conversations. If None, uses default format.
-        
+        max_concurrent: Maximum number of concurrent conversations. If None, runs all conversations concurrently.
     Returns:
         List of conversation results
         
@@ -44,7 +45,7 @@ async def main(
         Exception: Other errors
     """
     if verbose:
-        print(f"🔄 Generating conversations with the following parameters:")
+        print("🔄 Generating conversations with the following parameters:")
         print(f"  - Persona model: {persona_model_config}")
         print(f"  - Agent model: {agent_model_config}")
         print(f"  - Persona extra run params: {persona_extra_run_params}")
@@ -54,8 +55,12 @@ async def main(
         print(f"  - Persona names: {persona_names}")
         print(f"  - Folder name: {folder_name}")
         print(f"  - Run ID: {run_id}")
+        print(f"  - Max concurrent: {max_concurrent}")
     
     # Generate default folder name if not provided
+    if folder_name is None:
+        folder_name = "conversations"
+    
     if run_id is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         persona_info = persona_model_config["model"].replace("-", "_").replace(".", "_")
@@ -79,6 +84,7 @@ async def main(
         runs_per_prompt=runs_per_prompt,
         folder_name=folder_name,
         run_id=run_id,
+        max_concurrent=max_concurrent,
     )
     
     # Run conversations
@@ -149,6 +155,14 @@ if __name__ == "__main__":
         default='conversations',
     )
 
+    parser.add_argument(
+        "--max-concurrent",
+        "-c",
+        help="Maximum number of concurrent conversations. Default is None (run all conversations concurrently).",
+        default=None,
+        type=int,
+    )
+
     args = parser.parse_args()
 
     persona_model_config = {
@@ -164,7 +178,7 @@ if __name__ == "__main__":
     }
 
     # TODO: Do the run id here, so that it can be printed when starting
-    # Note: we are discarding the results, becuase they are saved to file
+    # Note: we are discarding the results, because they are saved to file
     _ = asyncio.run(main(
         persona_model_config=persona_model_config,
         agent_model_config=agent_model_config,
@@ -173,5 +187,6 @@ if __name__ == "__main__":
         persona_extra_run_params={k: v for k, v in persona_model_config.items() if k not in ["model", "model_name", "name", "temperature", "max_tokens"]},
         agent_extra_run_params={k: v for k, v in agent_model_config.items() if k not in ["model", "model_name", "name", "temperature", "max_tokens"]},
         folder_name=args.folder_name,  
+        max_concurrent=args.max_concurrent,
     ))
     
