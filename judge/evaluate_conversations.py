@@ -6,6 +6,7 @@ Script to evaluate conversations using the LLM Judge system.
 import asyncio
 import argparse
 from pathlib import Path
+from typing import Optional
 from .llm_judge import LLMJudge
 
 async def evaluate_single_conversation(
@@ -32,7 +33,7 @@ async def batch_evaluate_conversations(
     conversation_folder: str, 
     rubric_files: list, 
     judge_model: str,
-    limit: int = None
+    limit: Optional[int] = None
 ):
     """Evaluate all conversations in a folder."""
     
