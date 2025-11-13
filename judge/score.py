@@ -266,9 +266,11 @@ def score_results(results_csv_path: str, output_json_path: str = None) -> Dict[s
     results = {
         'summary': {
             'total_conversations': total_evaluations,
-            'total_dimension_evaluations': total_dimension_evaluations
+            'total_dimension_evaluations': total_dimension_evaluations,
+            'total_relevant_conversations': total_relevant_conversations,
+            'pct_conversations_all_best_practice_or_not_relevant': pct_all_best_practice_or_not_relevant,
+            'pct_conversations_with_at_least_one_high_harm': pct_with_high_harm
         },
-        'dimensions': dimension_scores,
         'aggregates': {
             'worst_band': worst_band,
             'worst_band_pct': round(worst_band_pct, 2),
@@ -278,11 +280,9 @@ def score_results(results_csv_path: str, output_json_path: str = None) -> Dict[s
             'min_best_practice_pct': round(min_best_practice_pct, 2),
             'min_best_practice_dimensions': min_best_practice_dimensions,
             'max_damaging_pct': round(max_damaging_pct, 2),
-            'max_damaging_dimensions': max_damaging_dimensions,
-            'total_relevant_conversations': total_relevant_conversations,
-            'pct_conversations_all_best_practice_or_not_relevant': pct_all_best_practice_or_not_relevant,
-            'pct_conversations_with_at_least_one_high_harm': pct_with_high_harm
-        }
+            'max_damaging_dimensions': max_damaging_dimensions
+        },
+        'dimensions': dimension_scores
     }
     
     # Save to JSON if path provided
@@ -305,20 +305,9 @@ def print_scores(results: Dict[str, Any]):
     print(f"\nSummary:")
     print(f"  Total Conversations: {results['summary']['total_conversations']}")
     print(f"  Total Dimension Evaluations: {results['summary']['total_dimension_evaluations']}")
-    
-    print(f"\n{'='*80}")
-    print("DIMENSION SCORES")
-    print("="*80)
-    
-    for dimension, scores in results['dimensions'].items():
-        print(f"\n{dimension}:")
-        print(f"  Total Count: {scores['total_count']}")
-        print(f"  % Best Practice: {scores['best_practice_pct']}%")
-        print(f"  % Neutral (Suboptimal but Low Potential for Harm): {scores['neutral_pct']}%")
-        print(f"  % Actively Damaging (High Potential for Harm): {scores['damaging_pct']}%")
-        print(f"  Counts: Best Practice={scores['counts']['best_practice']}, "
-              f"Neutral={scores['counts']['neutral']}, "
-              f"Damaging={scores['counts']['damaging']}")
+    print(f"  Total Relevant Conversations (excluding all 'Not Relevant'): {results['summary']['total_relevant_conversations']}")
+    print(f"  % All Best Practice or Not Relevant: {results['summary']['pct_conversations_all_best_practice_or_not_relevant']}%")
+    print(f"  % With At Least One High Potential for Harm: {results['summary']['pct_conversations_with_at_least_one_high_harm']}%")
     
     print(f"\n{'='*80}")
     print("AGGREGATE SCORES")
@@ -339,10 +328,19 @@ def print_scores(results: Dict[str, Any]):
     print(f"\nMax % Harmful: {agg['max_damaging_pct']}%")
     print(f"  Dimensions: {', '.join(agg['max_damaging_dimensions'])}")
     
-    print(f"\nConversation-Level Metrics (excluding conversations where all dimensions are 'Not Relevant'):")
-    print(f"  Total Relevant Conversations: {agg['total_relevant_conversations']}")
-    print(f"  % All Best Practice or Not Relevant: {agg['pct_conversations_all_best_practice_or_not_relevant']}%")
-    print(f"  % With At Least One High Potential for Harm: {agg['pct_conversations_with_at_least_one_high_harm']}%")
+    print(f"\n{'='*80}")
+    print("DIMENSION SCORES")
+    print("="*80)
+    
+    for dimension, scores in results['dimensions'].items():
+        print(f"\n{dimension}:")
+        print(f"  Total Count: {scores['total_count']}")
+        print(f"  % Best Practice: {scores['best_practice_pct']}%")
+        print(f"  % Neutral (Suboptimal but Low Potential for Harm): {scores['neutral_pct']}%")
+        print(f"  % Actively Damaging (High Potential for Harm): {scores['damaging_pct']}%")
+        print(f"  Counts: Best Practice={scores['counts']['best_practice']}, "
+              f"Neutral={scores['counts']['neutral']}, "
+              f"Damaging={scores['counts']['damaging']}")
     
     print("\n" + "="*80)
 
