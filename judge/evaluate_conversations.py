@@ -11,7 +11,8 @@ from .llm_judge import LLMJudge
 
 async def evaluate_single_conversation(
     conversation_file: str, 
-    judge_model: str 
+    judge_model: str,
+    output_folder: str = "evaluations"
 ):
     """Evaluate a single conversation and print results."""
     
@@ -20,7 +21,7 @@ async def evaluate_single_conversation(
     try:
         print(f"Evaluating: {conversation_file}")
         
-        _ = await judge.evaluate_conversation(conversation_file)
+        _ = await judge.evaluate_conversation(conversation_file, output_folder)
         
         # Print brief results
         # print_evaluation_results(evaluation)
@@ -93,7 +94,7 @@ async def main():
         return
     
     if args.conversation:
-        await evaluate_single_conversation(args.conversation, args.rubrics, args.judge_model)
+        await evaluate_single_conversation(args.conversation, args.judge_model)
     elif args.folder:
         await batch_evaluate_conversations(args.folder, args.rubrics, args.judge_model, args.limit)
 
