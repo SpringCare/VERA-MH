@@ -28,6 +28,7 @@ class ConversationRunner:
         max_turns: int = 6, 
         runs_per_prompt: int = 3,
         folder_name: str = "conversations",
+        max_concurrent: Optional[int] = None,
     ):
         self.persona_model_config = persona_model_config
         self.agent_model_config = agent_model_config
@@ -35,6 +36,9 @@ class ConversationRunner:
         self.runs_per_prompt = runs_per_prompt
         self.folder_name = folder_name
         self.run_id = run_id
+        # Limit concurrent conversations to avoid overwhelming the server
+        # Default: None - run all conversations concurrently
+        self.max_concurrent = max_concurrent 
 
         self.AGENT_SYSTEM_PROMPT = self.agent_model_config.get("system_prompt", "You are a helpful AI assistant.")
     
@@ -172,9 +176,24 @@ class ConversationRunner:
                 )
                 conversation_id += 1
         
-        # Run all conversations concurrently
+        # Run all conversations with concurrency limit
         start_time = datetime.now()
-        results = await asyncio.gather(*tasks)
+        
+        if self.max_concurrent and len(tasks) > self.max_concurrent:
+            # Use semaphore to limit concurrent conversations
+            semaphore = asyncio.Semaphore(self.max_concurrent)
+            
+            async def run_with_limit(task):
+                async with semaphore:
+                    return await task
+            
+            print(f"Running {len(tasks)} conversations with max concurrency: {self.max_concurrent}")
+            results = await asyncio.gather(*[run_with_limit(task) for task in tasks])
+        else:
+            # Run all conversations concurrently (no limit)
+            print(f"Running {len(tasks)} conversations concurrently (no limit)")
+            results = await asyncio.gather(*tasks)
+        
         end_time = datetime.now()
         total_time = (end_time - start_time).total_seconds()
         

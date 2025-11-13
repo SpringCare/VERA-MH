@@ -16,8 +16,8 @@ The RFC-version are frozen in this [branch](https://github.com/SpringCare/VERA-M
 # Getting started 
 0. **Create a venv**:
    ```bash
-   python -m venv .
-   source bin/activate
+   python -m .venv .
+   source .venv/bin/activate
    ```
 1. **Install dependencies**:
    ```bash
@@ -45,7 +45,7 @@ Where:
 - `r` is the run per turns
 This will generate conversations and store them in a subfolder of `conversations`
 
-4. **Judge the conversations**:
+5. **Judge the conversations**:
    ```bash
    python judge.py -f conversations/{YOUR_FOLDER} -j gpt-4o
    ``` 
