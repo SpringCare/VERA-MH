@@ -43,6 +43,8 @@ Where:
 - `pep` is the provider extra parameters
 - `t` is the number of turns
 - `r` is the run per turns
+- `f` is the folder name (defaults to conversations and a subfolder named based on other paramters and datetime)
+- `c` is the maximum concurrent conversations to run (defaults to None, but try this if the provider you're testing times out)
 This will generate conversations and store them in a subfolder of `conversations`
 
 5. **Judge the conversations**:
