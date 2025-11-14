@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Judge Runner - High-level functions for batch conversation evaluation.
 Contains the main logic extracted from main_judge.py to reduce code duplication.
@@ -41,7 +40,6 @@ async def batch_evaluate_with_individual_judges(
     results = []
     total_files = len(conversation_file_paths)
 
-    iterative = True
     
     for i, conversation_file in enumerate(conversation_file_paths, 1):
         print(f"📄 ({i}/{total_files}) {Path(conversation_file).name}")
@@ -49,8 +47,19 @@ async def batch_evaluate_with_individual_judges(
         
         # Create a new LLMJudge instance for this conversation
         judge = LLMJudge(judge_model=judge_model)
+        flow=True
+        iterative = False
+        # TODO: CHANGE HERE
+        if flow:
+            print("Evaluating with question flow")
+            evaluation = await judge.evaluate_conversation_question_flow(
+                conversation_file, 
+                output_folder=output_folder,
+                auto_save=True,
+                verbose=True
+            )
         
-        if iterative:
+        elif iterative:
             print("Evaluating iteratively")
             evaluation = await judge.evaluate_conversation_iterative(
                 conversation_file, 
@@ -65,6 +74,8 @@ async def batch_evaluate_with_individual_judges(
                 output_folder=output_folder,
                 auto_save=True
             )
+
+
         # NOTE: We can't guarantee that the evalation always has the same format, so we need to enforce it
         # TODO: maybe move this cleaning to the utils?
         try:
