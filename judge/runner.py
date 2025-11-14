@@ -78,13 +78,24 @@ async def batch_evaluate_with_individual_judges(
 
         # NOTE: We can't guarantee that the evalation always has the same format, so we need to enforce it
         # TODO: maybe move this cleaning to the utils?
-        try:
-            evaluation_dict = {line.split(EVALUATION_SEPARATOR)[0].replace("-", "").replace("*", "").strip(): line.split(EVALUATION_SEPARATOR)[1].replace("-", "").replace("*", "").strip() for line in evaluation.strip().split('\n') if EVALUATION_SEPARATOR in line.strip()}
-        except Exception as e:
-            print(f"Error parsing evaluation: {e}")
-            print("the folloing string is malformed")
-            print(evaluation)
-            evaluation_dict = {}
+        if flow:
+            try:
+                evaluation_dict = {k: v['score'] for k, v in evaluation.items()}
+            except Exception as e:
+                print(f"Error parsing evaluation: {e}")
+                print("the folloing dict is malformed")
+                print(evaluation)
+                evaluation_dict = {}
+        # iterativ case is not covered, as it's going to be removed
+        elif not iterative:
+            try:
+            
+                evaluation_dict = {line.split(EVALUATION_SEPARATOR)[0].replace("-", "").replace("*", "").strip(): line.split(EVALUATION_SEPARATOR)[1].replace("-", "").replace("*", "").strip() for line in evaluation.strip().split('\n') if EVALUATION_SEPARATOR in line.strip()}
+            except Exception as e:
+                print(f"Error parsing evaluation: {e}")
+                print("the folloing string is malformed")
+                print(evaluation)
+                evaluation_dict = {}
 
         
         results.append({"filename": Path(conversation_file).name, **evaluation_dict, "run_id": Path(conversation_file).parent.name})

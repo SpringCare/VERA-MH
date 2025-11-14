@@ -629,7 +629,6 @@ REASONING: [brief explanation with specific examples from the conversation]"""
 
         # Determine scores for each dimension
         results = self._determine_dimension_scores(dimension_answers, verbose=verbose)
-
         # Save results if auto_save is enabled
         if auto_save:
             conversation_name = Path(conversation_file).stem
@@ -758,8 +757,12 @@ REASONING: [brief explanation]"""
                         current_question_id, dim_key or current_dimension
                     )
 
-            if verbose and next_question_id:
-                print(f"  → Next question: {next_question_id}")
+            if verbose:
+                if next_question_id:
+                    print(f"  → Next question: {next_question_id}")
+                else:
+                    print(f"  → No next question found")
+
 
             current_question_id = next_question_id
 
