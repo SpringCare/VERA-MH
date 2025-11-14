@@ -67,8 +67,8 @@ class LLMJudge:
             self.rubric_20 = pd.read_csv(rubric_20_path, sep=sep)
             self.question_flow_data = self._parse_question_flow_rubric(self.rubric_20)
             print(f"Loaded question-flow rubric with {len(self.question_flow_data)} questions")
-            import json
-            print(json.dumps(self.question_flow_data, indent=4))
+            # import json
+            # print(json.dumps(self.question_flow_data, indent=4))
         else:
             self.rubric_20 = None
             self.question_flow_data = None
@@ -568,7 +568,8 @@ REASONING: [Brief explanation with specific examples from the conversation]"""
         output_folder: str,
         auto_save: bool = True,
         verbose: bool = False,
-        start_question_id: str = "8"
+        # TODO: remove this
+        start_question_id: Optional[str] = None
     ) -> Dict[str, Dict[str, str]]:
         """
         Evaluate conversation using question-flow rubric (rubric_20.tsv).
@@ -618,6 +619,8 @@ REASONING: [brief explanation with specific examples from the conversation]"""
 
         # Track answers for scoring
         dimension_answers = {}
+
+        start_question_id = "4"
 
         # Evaluate using question flow
         await self._evaluate_question_flow(
