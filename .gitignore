@@ -10,3 +10,4 @@ tmp_tests/
 .ipynb_checkpoints/
 *.ipynb
 CLAUDE.md
+.vscode

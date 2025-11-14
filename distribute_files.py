@@ -21,7 +21,7 @@ def count_files(folder_path):
     folder = Path(folder_path)
     if not folder.exists():
         print(f"Error: Folder {folder_path} does not exist")
-        return 0
+        return 0, []
     
     # Count only text files, excluding system files
     files = [f for f in folder.iterdir() if f.is_file() and not f.name.startswith('.')]

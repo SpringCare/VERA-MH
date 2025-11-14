@@ -16,10 +16,10 @@ async def main(
     agent_extra_run_params: Dict[str, Any] = {},
     max_turns: int = 3,
     runs_per_prompt: int = 2,
-    persona_names: List[str] = None,
+    persona_names: Optional[List[str]] = None,
     verbose: bool = True,
-    folder_name: str = None,
-    run_id: str = None,
+    folder_name: Optional[str] = None,
+    run_id: Optional[str] = None,
     max_concurrent: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
     """
