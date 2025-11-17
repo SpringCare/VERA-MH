@@ -12,6 +12,7 @@ and outputs to console and JSON file.
 import pandas as pd
 import json
 import argparse
+import re
 from pathlib import Path
 from typing import Dict, Any
 import matplotlib.pyplot as plt
@@ -28,6 +29,56 @@ OPTION_MAP = {
 }
 
 REVERSE_OPTION_MAP = {v: k for k, v in OPTION_MAP.items()}
+
+
+def extract_model_names_from_path(results_csv_path: str) -> Dict[str, str]:
+    """
+    Extract all three model names from the evaluation directory path.
+
+    Directory format: j_{judge}__p_{persona}__a_{agent}__t{max_turns}__r{runs}__{timestamp}
+
+    Args:
+        results_csv_path: Path to results.csv file
+
+    Returns:
+        Dictionary with 'judge', 'persona', and 'agent' keys, or 'Unknown' if not found
+    """
+    path = Path(results_csv_path)
+    dir_name = path.parent.name
+    
+    result = {
+        'judge': 'Unknown',
+        'persona': 'Unknown',
+        'agent': 'Unknown'
+    }
+    
+    # Extract judge model: j_{judge}__p_...
+    # Note: judge name may include a timestamp like _20251112_171754_380
+    if dir_name.startswith('j_'):
+        parts = dir_name.split('__p_', 1)
+        if len(parts) > 0:
+            judge_part = parts[0][2:]  # Remove 'j_' prefix
+            # Remove timestamp pattern (YYYYMMDD_HHMMSS_milliseconds or similar)
+            # Look for pattern starting with underscore followed by 8 digits (date)
+            # Remove timestamp: _YYYYMMDD_HHMMSS_... or _YYYYMMDD_...
+            judge_part = re.sub(r'_\d{8}.*$', '', judge_part)
+            result['judge'] = judge_part.replace('_', ' ').strip()
+    
+    # Extract persona model: ...__p_{persona}__a_...
+    if '__p_' in dir_name:
+        parts = dir_name.split('__p_')
+        if len(parts) > 1:
+            persona_part = parts[1].split('__a_')[0]
+            result['persona'] = persona_part.replace('_', ' ').strip()
+    
+    # Extract agent model: ...__a_{agent}__t...
+    if '__a_' in dir_name:
+        parts = dir_name.split('__a_')
+        if len(parts) > 1:
+            agent_part = parts[1].split('__t')[0]
+            result['agent'] = agent_part.replace('_', ' ').strip()
+    
+    return result
 
 
 def build_dataframe_from_tsv_files(evaluations_dir: Path) -> pd.DataFrame:
@@ -265,8 +316,14 @@ def score_results(results_csv_path: str, output_json_path: str = None) -> Dict[s
         pct_all_best_practice_or_not_relevant = 0.0
         pct_with_high_harm = 0.0
     
+    # Extract all model names from directory path
+    model_names = extract_model_names_from_path(results_csv_path)
+    
     # Build results dictionary
     results = {
+        'judge_model': model_names['judge'],
+        'persona_model': model_names['persona'],
+        'agent_model': model_names['agent'],
         'summary': {
             'total_conversations': total_evaluations,
             'total_dimension_evaluations': total_dimension_evaluations,
@@ -304,6 +361,14 @@ def print_scores(results: Dict[str, Any]):
     print("\n" + "="*80)
     print("EVALUATION SCORES")
     print("="*80)
+    
+    # Print model names if available
+    judge_model = results.get('judge_model', 'Unknown')
+    persona_model = results.get('persona_model', 'Unknown')
+    agent_model = results.get('agent_model', 'Unknown')
+    print(f"\nJudge Model: {judge_model}")
+    print(f"Persona Model: {persona_model}")
+    print(f"Agent Model: {agent_model}")
     
     print(f"\nSummary:")
     print(f"  Total Conversations: {results['summary']['total_conversations']}")
@@ -356,6 +421,14 @@ def create_visualizations(results: Dict[str, Any], output_path: Path):
         results: Dictionary containing all scores
         output_path: Path to save the visualization (PDF or PNG)
     """
+    # Extract model names for title
+    judge_model = results.get('judge_model', 'Unknown')
+    persona_model = results.get('persona_model', 'Unknown')
+    agent_model = results.get('agent_model', 'Unknown')
+    
+    # Create title with all three model names
+    title = f'Judge: {judge_model} | Persona: {persona_model} | Agent: {agent_model}'
+    
     # Define shared color scheme (muted colors)
     muted_red = '#c44e52'      # High Potential for Harm
     muted_yellow = '#f0db5b'   # Neutral
@@ -365,7 +438,9 @@ def create_visualizations(results: Dict[str, Any], output_path: Path):
     # Create figure with two subplots stacked vertically
     # Use gridspec to control relative sizes - pie chart smaller, bar chart larger
     from matplotlib import gridspec
-    fig = plt.figure(figsize=(12, 12))
+    fig = plt.figure(figsize=(8, 12))
+    # Add overall title with all model names
+    fig.suptitle(title, fontsize=14, fontweight='bold', y=0.98)
     gs = gridspec.GridSpec(2, 1, height_ratios=[1, 2], hspace=0.3)
     ax1 = fig.add_subplot(gs[0])  # Pie chart (smaller)
     ax2 = fig.add_subplot(gs[1])  # Bar chart (larger)
@@ -423,7 +498,7 @@ def create_visualizations(results: Dict[str, Any], output_path: Path):
     ax2.set_xlim(0, 100)
     # Position legend in the blank area to the left of "Detects Risk"
     # Adjust x and y values to fine-tune position in the blank space
-    ax2.legend(loc='upper left', bbox_to_anchor=(-0.35, 1.0), fontsize=10, frameon=True)
+    ax2.legend(loc='upper left', bbox_to_anchor=(-0.55, 1.0), fontsize=10, frameon=True)
     ax2.grid(axis='x', alpha=0.3, linestyle='--')
     
     # Add percentage labels on bars
