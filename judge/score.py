@@ -14,6 +14,9 @@ import json
 import argparse
 from pathlib import Path
 from typing import Dict, Any
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
 from .llm_judge import DIMENSIONS
 
 # Map option names to shorter keys for analysis
@@ -345,6 +348,108 @@ def print_scores(results: Dict[str, Any]):
     print("\n" + "="*80)
 
 
+def create_visualizations(results: Dict[str, Any], output_path: Path):
+    """
+    Create visualizations: pie chart for overall percentages and stacked bar chart for dimension breakdown.
+    
+    Args:
+        results: Dictionary containing all scores
+        output_path: Path to save the visualization (PDF or PNG)
+    """
+    # Define shared color scheme (muted colors)
+    muted_red = '#c44e52'      # High Potential for Harm
+    muted_yellow = '#f0db5b'   # Neutral
+    muted_green = '#6b9e78'    # Best Practice
+    colors = [muted_red, muted_yellow, muted_green]
+    
+    # Create figure with two subplots stacked vertically
+    # Use gridspec to control relative sizes - pie chart smaller, bar chart larger
+    from matplotlib import gridspec
+    fig = plt.figure(figsize=(12, 12))
+    gs = gridspec.GridSpec(2, 1, height_ratios=[1, 2], hspace=0.3)
+    ax1 = fig.add_subplot(gs[0])  # Pie chart (smaller)
+    ax2 = fig.add_subplot(gs[1])  # Bar chart (larger)
+    
+    # Extract aggregate data for pie chart
+    agg = results['aggregates']
+    pie_labels = ['High Potential for Harm', 'Neutral', 'Best Practice']
+    pie_sizes = [
+        agg['overall_damaging_pct'],
+        agg['overall_neutral_pct'],
+        agg['overall_best_practice_pct']
+    ]
+    
+    # Create pie chart
+    _, _, autotexts = ax1.pie(
+        pie_sizes,
+        labels=pie_labels,
+        colors=colors,
+        autopct='%1.1f%%',
+        startangle=90,
+        textprops={'fontsize': 10}
+    )
+    ax1.set_title('Overall Rating Distribution', fontsize=14, fontweight='bold', pad=20)
+    
+    # Enhance pie chart text
+    for autotext in autotexts:
+        autotext.set_color('white')
+        autotext.set_fontweight('bold')
+    
+    # Prepare data for stacked bar chart
+    dimensions = list(results['dimensions'].keys())
+    # Reverse order so "Detects Risk" is at the top
+    dimensions = dimensions[::-1]
+    best_practice_pcts = [results['dimensions'][dim]['best_practice_pct'] for dim in dimensions]
+    neutral_pcts = [results['dimensions'][dim]['neutral_pct'] for dim in dimensions]
+    damaging_pcts = [results['dimensions'][dim]['damaging_pct'] for dim in dimensions]
+    
+    # Create horizontal stacked bar chart
+    y_pos = range(len(dimensions))
+    height = 0.6
+    
+    ax2.barh(y_pos, best_practice_pcts, height, label='Best Practice', color=muted_green, left=0)
+    ax2.barh(y_pos, neutral_pcts, height, left=best_practice_pcts, 
+            label='Neutral', color=muted_yellow)
+    ax2.barh(y_pos, damaging_pcts, height, 
+            left=[best_practice_pcts[i] + neutral_pcts[i] for i in range(len(dimensions))],
+            label='High Potential for Harm', color=muted_red)
+    
+    # Format horizontal stacked bar chart
+    ax2.set_xlabel('Percentage (%)', fontsize=12, fontweight='bold')
+    ax2.set_ylabel('Dimension', fontsize=12, fontweight='bold')
+    ax2.set_title('Rating Breakdown by Dimension', fontsize=14, fontweight='bold', pad=20)
+    ax2.set_yticks(y_pos)
+    ax2.set_yticklabels(dimensions, fontsize=9, ha='right')
+    ax2.set_xlim(0, 100)
+    # Position legend in the blank area to the left of "Detects Risk"
+    # Adjust x and y values to fine-tune position in the blank space
+    ax2.legend(loc='upper left', bbox_to_anchor=(-0.35, 1.0), fontsize=10, frameon=True)
+    ax2.grid(axis='x', alpha=0.3, linestyle='--')
+    
+    # Add percentage labels on bars
+    for i, (bp, neu, dmg) in enumerate(zip(best_practice_pcts, neutral_pcts, damaging_pcts)):
+        # Only show label if segment is large enough (>5%)
+        if bp > 5:
+            ax2.text(bp/2, i, f'{bp:.1f}%', ha='center', va='center', 
+                    fontsize=8, fontweight='bold', color='white')
+        if neu > 5:
+            ax2.text(bp + neu/2, i, f'{neu:.1f}%', ha='center', va='center',
+                    fontsize=8, fontweight='bold', color='white')
+        if dmg > 5:
+            ax2.text(bp + neu + dmg/2, i, f'{dmg:.1f}%', ha='center', va='center',
+                    fontsize=8, fontweight='bold', color='white')
+    
+    # Adjust layout to prevent label cutoff, leaving space for legend on the left
+    plt.tight_layout(rect=[0.18, 0, 1, 1])
+    
+    # Save figure
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    print(f"📊 Visualizations saved to: {output_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Score evaluation results from judge/runner.py output"
@@ -423,6 +528,13 @@ def main():
         json_path = Path(args.results_csv).parent / "scores.json"
     
     print(f"\n✅ Scores saved to: {json_path}")
+    
+    # Create visualizations
+    viz_path = Path(args.results_csv).parent / "scores_visualization.png"
+    try:
+        create_visualizations(results, viz_path)
+    except Exception as e:
+        print(f"⚠️  Warning: Could not create visualizations: {e}")
     
     return 0
 
