@@ -47,55 +47,32 @@ async def batch_evaluate_with_individual_judges(
         
         # Create a new LLMJudge instance for this conversation
         judge = LLMJudge(judge_model=judge_model)
-        flow=True
-        iterative = False
-        # TODO: CHANGE HERE
-        if flow:
-            print("Evaluating with question flow")
-            evaluation = await judge.evaluate_conversation_question_flow(
-                conversation_file, 
-                output_folder=output_folder,
-                auto_save=True,
-                verbose=True
-            )
         
-        elif iterative:
-            print("Evaluating iteratively")
-            evaluation = await judge.evaluate_conversation_iterative(
-                conversation_file, 
-                output_folder=output_folder,
-                auto_save=True,
-                verbose=True
-            )
-        else:
-        # Evaluate conversation with auto-save enabled
-            evaluation = await judge.evaluate_conversation(
-                conversation_file, 
-                output_folder=output_folder,
-                auto_save=True
-            )
-
-
+        evaluation = await judge.evaluate_conversation_question_flow(
+            conversation_file, 
+            output_folder=output_folder,
+            auto_save=True,
+            verbose=True
+        )
         # NOTE: We can't guarantee that the evalation always has the same format, so we need to enforce it
         # TODO: maybe move this cleaning to the utils?
-        if flow:
-            try:
-                evaluation_dict = {k: v['score'] for k, v in evaluation.items()}
-            except Exception as e:
-                print(f"Error parsing evaluation: {e}")
-                print("the folloing dict is malformed")
-                print(evaluation)
-                evaluation_dict = {}
-        # iterativ case is not covered, as it's going to be removed
-        elif not iterative:
-            try:
-            
-                evaluation_dict = {line.split(EVALUATION_SEPARATOR)[0].replace("-", "").replace("*", "").strip(): line.split(EVALUATION_SEPARATOR)[1].replace("-", "").replace("*", "").strip() for line in evaluation.strip().split('\n') if EVALUATION_SEPARATOR in line.strip()}
-            except Exception as e:
-                print(f"Error parsing evaluation: {e}")
-                print("the folloing string is malformed")
-                print(evaluation)
-                evaluation_dict = {}
+
+            # evaluation shape: {dimension: {"score": str, "reasoning": str, "yes_question_id": str, "yes_reasoning": str}}
+        try:
+            evaluation_dict = {}
+            for dimension, values in evaluation.items():
+                # Add score for this dimension
+                evaluation_dict[dimension] = values['score']
+                # Add yes question ID for this dimension (empty if no Yes answer)
+                evaluation_dict[f"{dimension}_yes_question_id"] = values.get('yes_question_id', '')
+                # Add yes reasoning for this dimension (empty if no Yes answer)
+                evaluation_dict[f"{dimension}_yes_reasoning"] = values.get('yes_reasoning', '')
+        except Exception as e:
+            print(f"Error parsing evaluation: {e}")
+            print("the folloing dict is malformed")
+            print(evaluation)
+            evaluation_dict = {}
+
 
         
         results.append({"filename": Path(conversation_file).name, **evaluation_dict, "run_id": Path(conversation_file).parent.name})
@@ -170,7 +147,8 @@ async def judge_conversations(
     )
     print(pd.DataFrame(results, columns=["filename"] + DIMENSIONS))
     if save_aggregated_results:
-        pd.DataFrame(results, columns=["filename", "run_id"] + DIMENSIONS).to_csv(f"{output_folder}/results.csv", index=False)
+        columns = ["filename", "run_id"] + list(results[0].keys())
+        pd.DataFrame(results, columns=columns).to_csv(f"{output_folder}/results.csv", index=False)
     if verbose:
         print(f"✅ Completed {len(results)} evaluations → {output_folder}/")
     
