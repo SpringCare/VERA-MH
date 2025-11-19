@@ -1,7 +1,7 @@
 """Utilities for conversation management and file operations."""
 
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 def generate_conversation_filename(prefix: str = "conversation") -> str:
     """
@@ -16,7 +16,7 @@ def generate_conversation_filename(prefix: str = "conversation") -> str:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return f"{prefix}_{timestamp}.txt"
 
-def save_conversation_to_file(conversation_history: List[Dict[str, Any]], filename: str, folder: str, llm1_name: str = None) -> None:
+def save_conversation_to_file(conversation_history: List[Dict[str, Any]], filename: str, folder: str, llm1_name: Optional[str] = None) -> None:
     """
     Save conversation history to a text file.
     
@@ -30,7 +30,7 @@ def save_conversation_to_file(conversation_history: List[Dict[str, Any]], filena
     with open(f"{folder}/{filename}", 'w', encoding='utf-8') as f:
         f.write(summary)
 
-def format_conversation_summary(conversation_history: List[Dict[str, Any]], llm1_name: str = None) -> str:
+def format_conversation_summary(conversation_history: List[Dict[str, Any]], llm1_name: Optional[str] = None) -> str:
     """
     Format conversation history into a readable summary.
     

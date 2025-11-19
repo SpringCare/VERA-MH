@@ -95,7 +95,7 @@ def log_conversation_end(logger: logging.Logger, total_turns: int, early_termina
         logger.info(f"Duration: {total_time:.2f} seconds")
     logger.info("=" * 60)
 
-def log_error(logger: logging.Logger, error_message: str, exception: Exception = None):
+def log_error(logger: logging.Logger, error_message: str, exception: Optional[Exception] = None):
     """Log error information."""
     logger.error(f"ERROR: {error_message}")
     if exception:
