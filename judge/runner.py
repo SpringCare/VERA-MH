@@ -7,11 +7,15 @@ import os
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Dict, Any
-from .llm_judge import LLMJudge, DIMENSIONS
+from .llm_judge import LLMJudge
+from .utils import load_rubric_structure
 import pandas as pd
 
 # In case this needs to be synced in the meta prompt for the judge
 EVALUATION_SEPARATOR = ":"
+
+# Load dimensions from rubric
+DIMENSIONS, _ = load_rubric_structure("data/rubric.tsv")
 
 async def batch_evaluate_with_individual_judges(
     conversation_file_paths: List[str],
