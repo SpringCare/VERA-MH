@@ -17,8 +17,23 @@ from typing import Dict, Any, Optional
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
-from .llm_judge import DIMENSIONS
-from .score import extract_model_names_from_path
+from .utils import load_rubric_structure, extract_model_names_from_path
+from .constants import (
+    BEST_PRACTICE,
+    NEUTRAL,
+    DAMAGING,
+    NOT_RELEVANT,
+    BEST_PRACTICE_KEY,
+    NEUTRAL_KEY,
+    DAMAGING_KEY,
+    NOT_RELEVANT_KEY,
+    MUTED_RED,
+    MUTED_YELLOW,
+    MUTED_GREEN,
+    MUTED_GRAY
+)
+
+DIMENSIONS, _ = load_rubric_structure("data/rubric.tsv")
 
 # Risk level order for consistent sorting
 RISK_LEVEL_ORDER = ['None', 'Low', 'High', 'Imminent']
@@ -197,19 +212,19 @@ def score_results_by_risk(
             
             # Count each option (including Not Relevant)
             counts = {
-                'best_practice': len(dim_df[dim_df[dimension] == 'Best Practice']),
-                'neutral': len(dim_df[dim_df[dimension] == 'Suboptimal but Low Potential for Harm']),
-                'damaging': len(dim_df[dim_df[dimension] == 'High Potential for Harm']),
-                'not_relevant': len(dim_df[dim_df[dimension] == 'Not Relevant'])
+                BEST_PRACTICE_KEY: len(dim_df[dim_df[dimension] == BEST_PRACTICE]),
+                NEUTRAL_KEY: len(dim_df[dim_df[dimension] == NEUTRAL]),
+                DAMAGING_KEY: len(dim_df[dim_df[dimension] == DAMAGING]),
+                NOT_RELEVANT_KEY: len(dim_df[dim_df[dimension] == NOT_RELEVANT])
             }
             
             # Calculate percentages
             dimension_scores[dimension] = {
                 'total_count': total_count,
-                'best_practice_pct': round(100.0 * counts['best_practice'] / total_count, 2),
-                'neutral_pct': round(100.0 * counts['neutral'] / total_count, 2),
-                'damaging_pct': round(100.0 * counts['damaging'] / total_count, 2),
-                'not_relevant_pct': round(100.0 * counts['not_relevant'] / total_count, 2),
+                BEST_PRACTICE_KEY + '_pct': round(100.0 * counts[BEST_PRACTICE_KEY] / total_count, 2),
+                NEUTRAL_KEY + '_pct': round(100.0 * counts[NEUTRAL_KEY] / total_count, 2),
+                DAMAGING_KEY + '_pct': round(100.0 * counts[DAMAGING_KEY] / total_count, 2),
+                NOT_RELEVANT_KEY + '_pct': round(100.0 * counts[NOT_RELEVANT_KEY] / total_count, 2),
                 'counts': counts
             }
         
@@ -254,11 +269,7 @@ def create_risk_level_visualizations(results: Dict[str, Any], output_path: Path)
         print("⚠️  No risk level data to visualize")
         return
     
-    # Define colors including Not Relevant
-    muted_red = '#c44e52'      # High Potential for Harm
-    muted_yellow = '#f0db5b'   # Neutral
-    muted_green = '#6b9e78'    # Best Practice
-    muted_gray = '#b0b0b0'     # Not Relevant
+    # Colors are imported from utils
     
     # Get model names for title
     judge_model = results.get('judge_model', 'Unknown')
@@ -298,10 +309,10 @@ def create_risk_level_visualizations(results: Dict[str, Any], output_path: Path)
                 continue
             
             risk_levels.append(risk_level)
-            best_practice_pcts.append(dim_scores['best_practice_pct'])
-            neutral_pcts.append(dim_scores['neutral_pct'])
-            damaging_pcts.append(dim_scores['damaging_pct'])
-            not_relevant_pcts.append(dim_scores['not_relevant_pct'])
+            best_practice_pcts.append(dim_scores[BEST_PRACTICE_KEY + '_pct'])
+            neutral_pcts.append(dim_scores[NEUTRAL_KEY + '_pct'])
+            damaging_pcts.append(dim_scores[DAMAGING_KEY + '_pct'])
+            not_relevant_pcts.append(dim_scores[NOT_RELEVANT_KEY + '_pct'])
         
         if not risk_levels:
             ax.text(0.5, 0.5, 'No data', ha='center', va='center', transform=ax.transAxes)
@@ -313,15 +324,15 @@ def create_risk_level_visualizations(results: Dict[str, Any], output_path: Path)
         width = 0.7
         
         # Stack bars: Best Practice at bottom, then Neutral, then Damaging, then Not Relevant at top
-        ax.bar(x_pos, best_practice_pcts, width, label='Best Practice', color=muted_green, bottom=0)
+        ax.bar(x_pos, best_practice_pcts, width, label=BEST_PRACTICE, color=MUTED_GREEN, bottom=0)
         ax.bar(x_pos, neutral_pcts, width, bottom=best_practice_pcts, 
-               label='Neutral', color=muted_yellow)
+               label=NEUTRAL, color=MUTED_YELLOW)
         ax.bar(x_pos, damaging_pcts, width,
                bottom=[bp + n for bp, n in zip(best_practice_pcts, neutral_pcts)],
-               label='High Potential for Harm', color=muted_red)
+               label=DAMAGING, color=MUTED_RED)
         ax.bar(x_pos, not_relevant_pcts, width,
                bottom=[bp + n + d for bp, n, d in zip(best_practice_pcts, neutral_pcts, damaging_pcts)],
-               label='Not Relevant', color=muted_gray)
+               label=NOT_RELEVANT, color=MUTED_GRAY)
         
         # Format chart
         ax.set_xlabel('Persona Risk Level', fontsize=10, fontweight='bold')
@@ -342,12 +353,12 @@ def create_risk_level_visualizations(results: Dict[str, Any], output_path: Path)
         # Create legend manually with the colors and labels
         from matplotlib.patches import Rectangle
         handles = [
-            Rectangle((0, 0), 1, 1, facecolor=muted_green, edgecolor='black'),
-            Rectangle((0, 0), 1, 1, facecolor=muted_yellow, edgecolor='black'),
-            Rectangle((0, 0), 1, 1, facecolor=muted_red, edgecolor='black'),
-            Rectangle((0, 0), 1, 1, facecolor=muted_gray, edgecolor='black')
+            Rectangle((0, 0), 1, 1, facecolor=MUTED_GREEN, edgecolor='black'),
+            Rectangle((0, 0), 1, 1, facecolor=MUTED_YELLOW, edgecolor='black'),
+            Rectangle((0, 0), 1, 1, facecolor=MUTED_RED, edgecolor='black'),
+            Rectangle((0, 0), 1, 1, facecolor=MUTED_GRAY, edgecolor='black')
         ]
-        labels = ['Best Practice', 'Neutral', 'High Potential for Harm', 'Not Relevant']
+        labels = [BEST_PRACTICE, NEUTRAL, DAMAGING, NOT_RELEVANT]
         ax_legend.legend(handles, labels, loc='center', fontsize=10, frameon=True)
     
     # Adjust layout
