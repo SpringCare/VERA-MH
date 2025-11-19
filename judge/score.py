@@ -460,7 +460,13 @@ def create_visualizations(results: Dict[str, Any], output_path: Path):
     ax2.set_xlim(0, 100)
     # Position legend in the blank area to the left of "Detects Risk"
     # Adjust x and y values to fine-tune position in the blank space
-    ax2.legend(loc='upper left', bbox_to_anchor=(-0.55, 1.0), fontsize=10, frameon=True)
+    # Shift legend up so its bottom is aligned with the top of the chart
+    ax2.legend(
+        loc='lower left',
+        bbox_to_anchor=(-0.55, 1.02),  # y=1.02 aligns bottom of legend with top of axes
+        fontsize=10,
+        frameon=True
+    )
     ax2.grid(axis='x', alpha=0.3, linestyle='--')
     
     # Add percentage labels on bars
