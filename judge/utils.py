@@ -3,7 +3,7 @@
 import pandas as pd
 import re
 from pathlib import Path
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 
 
 def load_rubric_structure(rubric_path: str, sep: str = "\t") -> Tuple[List[str], List[str]]:
@@ -87,3 +87,28 @@ def extract_model_names_from_path(path_input: str) -> Dict[str, str]:
             result['agent'] = agent_part.replace('_', ' ').strip()
     
     return result
+
+
+def extract_persona_name_from_filename(filename: str) -> Optional[str]:
+    """
+    Extract persona name from TSV filename.
+    
+    Filename format: {hash}_{persona_name}_{model}_run{number}_iterative.tsv
+    Example: 1a84d1_Brian_g4o_run3_iterative.tsv -> "Brian"
+    
+    Args:
+        filename: TSV filename (with or without extension)
+        
+    Returns:
+        Persona name or None if not found
+    """
+    # Format: {hash}_{persona}_{model}_run{number} or {hash}_{persona}_{model}_run{number}_iterative.tsv
+    try:
+        parts = filename.split('_')
+        if len(parts) >= 2:
+            # Return just the persona name (index 1), not the list
+            return parts[1]
+        return None
+    except Exception as e:
+        print(f"Error extracting persona name from filename {filename}: {e}")
+        return None
