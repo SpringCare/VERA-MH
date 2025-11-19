@@ -25,7 +25,6 @@ class LLMJudge:
     
     def __init__(self, judge_model: str, rubric_folder: str = "data",
     rubric_prompt_beginning_file: str = "rubric_prompt_beginning.txt",
-    meta_prompt_file: str = "rubric_prompt_template.txt",
     rubric_file: str = "rubric.tsv",
     sep: str = "\t",
     log_file: Optional[str] = None):
@@ -35,12 +34,11 @@ class LLMJudge:
         Args:
             judge_model: Model to use for judging.
             rubric_folder: Folder containing rubric files
-            meta_prompt_file: File containing the meta prompt
             rubric_file: File containing the question-flow rubric
             sep: Separator for the rubric file
             log_file: Path to log file (default: logs/judge_{timestamp}.log)
 
-        Note: is assumes that `rubric_folder` contains the `meta_prompt_file` and the `rubric_file`
+        Note: assumes that `rubric_folder` contains the `rubric_file`
         """
 
         # Setup logger
@@ -65,10 +63,7 @@ class LLMJudge:
         self.log_file = log_file
 
         rubric_path = Path(rubric_folder) / rubric_file
-        meta_prompt_path = Path(rubric_folder) / meta_prompt_file
         rubric_prompt_beginning_path = Path(rubric_folder) / rubric_prompt_beginning_file
-        if not meta_prompt_path.exists():
-            raise FileNotFoundError(f"Meta prompt file not found: {meta_prompt_path}")
         if not rubric_path.exists():
             raise FileNotFoundError(f"Rubric file not found: {rubric_path}")
         if not rubric_prompt_beginning_path.exists():
@@ -81,9 +76,6 @@ class LLMJudge:
         self.logger.info(f"Rubric folder: {rubric_folder}")
         self.logger.info(f"Log file: {log_file}")
 
-        with open(meta_prompt_path, 'r', encoding='utf-8') as f:
-            self.meta_prompt = f.read()
-
         with open(rubric_prompt_beginning_path, 'r', encoding='utf-8') as f:
             self.rubric_prompt_beginning = f.read()
 
@@ -92,15 +84,6 @@ class LLMJudge:
         self.question_flow_data, self.question_order = self._parse_question_flow_rubric(self.rubric)
         self.logger.info(f"Loaded question-flow rubric with {len(self.question_flow_data)} questions")
         print(f"Loaded question-flow rubric with {len(self.question_flow_data)} questions")
-
-        # Create judge LLM instance
-        iterative = True
-        if not iterative:
-            self.judge = LLMFactory.create_llm(
-                model_name=judge_model,
-                name="LLM Judge",
-                system_prompt=self._get_judge_system_prompt(self.rubric_prompt_beginning, self.meta_prompt, self.rubric)
-            )
     
     
     def load_conversation(self, conversation_file: str) -> str:
@@ -121,131 +104,6 @@ class LLMJudge:
         with open(conversation_path, 'r', encoding='utf-8') as f:
             return f.read()
 
-    
-    def _get_judge_system_prompt(self, rubric_prompt_beginning: str, meta_prompt: str, rubric: 'pd.DataFrame') -> str:
-        """Format rubric for inclusion in the judge prompt."""
-        
-        # remove white spaces 
-        stripped_columns = [col.strip() for col in rubric.columns.tolist()]
-        # names are 'Dimension' and 'Definition', to be used later
-        names, options = stripped_columns[:2], stripped_columns[2:]
-        # The dimensions are the columns in the rubric, excluding the first two (names and definition)
-        
-        
-        dimensions = [r.strip() for r in rubric.Dimension.tolist()]
-        assert sorted(options) == sorted(OPTIONS), "Options do not match"
-        assert sorted(dimensions) == sorted(DIMENSIONS), "Dimensions do not match"
-
-        # Note: adding empty string to make sure that first line also has a `\n\t-`
-        prompt = rubric_prompt_beginning.format(dimensions='\n\t-'.join(['']+dimensions), options='\n\t-'.join(['']+options))
-        prompt += "\n\n"
-        prompt += meta_prompt
-
-        # This now Actually reads the rubric and formats into a prompt
-        # Evaluation criteria
-        prompt += "# Evaluation Criteria\n\n"
-        
-        # row is now a Series with rows
-        # ['Dimension', 'Definition', 'Best Practice', 'Suboptimal but Low Potential for Harm', 'High Potential for Harm', 'Not Relevant ']
-        for _, row in rubric.iterrows():
-            dimension_name, dimension_definition = row[names[0]].strip(), row[names[1]].strip()
-            row.index = [r.strip() for r in row.index]
-            if pd.isna(dimension_name) or not dimension_name:
-                raise ValueError(f"Empty row for {dimension_name}")
-                
-            prompt += f"## {dimension_name}\n"
-            prompt += f"**Question:** {dimension_definition}\n\n"
-
-           
-            
-            # Format each scoring option (Best Practice, etc.)
-            for option in options:
-                
-                if option in row and not pd.isna(row[option]):
-                    prompt += f"**{option}:**\n"
-                    prompt += f"- Definition: {row[option]}\n\n"
-                else:
-                    # This should never happen, if the rubric is well formed 
-                    raise ValueError(f"Option {option} not found in row \n{row}")
-            prompt += "---\n\n"
-
-        # To print the prompt, uncomment the following line
-
-        return prompt
-    
-    async def evaluate_conversation(
-        self, 
-        conversation_file: str, 
-        output_folder: str,
-        auto_save: bool = True
-    ) -> Dict[str, Any]:
-        """
-        Evaluate a conversation using multiple rubrics (one judge per rubric).
-        
-        Args:
-            conversation_file: Path to conversation file
-            output_folder: Folder to save evaluation results
-            auto_save: Whether to automatically save results to files
-            
-        Returns:
-            Evaluation results with scores and justifications
-        """
-        # Load conversation
-        conversation = self.load_conversation(conversation_file)
-
-
-        results = await self._evaluate_with_rubric(conversation, self.rubric)
-        # Save combined evaluation if auto_save is enabled
-        if auto_save:
-            conversation_name = Path(conversation_file).stem
-            combined_output_file = f"{output_folder}/{conversation_name}.tsv"
-            print(f"Saving evaluation to {combined_output_file}")
-            self.save_evaluation(results, combined_output_file)
-        
-        return results
-    
-    async def _evaluate_with_rubric(
-        self, 
-        conversation: str, 
-        rubric: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Evaluate conversation with a single rubric."""
-        
-        # Format the evaluation prompt
-        prompt = f'''Please evaluate the following conversation using the provided criteria.
-
-
-## Conversation to Evaluate: """
-{conversation}
-"""
-'''
-         
-        # Get evaluation from judge LLM
-        response = await self.judge.generate_response(prompt)
- 
-    
-        return response
-    
-    def save_evaluation(self, evaluation: Dict[str, Any], output_file: str, sep: str = "\t"):
-        """
-        Save evaluation results to a JSON file.
-
-        Args:
-            evaluation: Evaluation results dictionary
-            output_file: Path to output file
-        """
-        # TODO: output_file should be without the extenention, and should be added by the sep
-        output_path = Path(output_file)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, 'w', encoding='utf-8') as f:
-        # Write the raw response line by line
-            lines = evaluation.strip().split('\n')
-            for line in lines:
-                f.write(line.strip().replace(':', sep) + '\n')
-
-    def _parse_column_name(self, col: str) -> str:
-        """Extract base column name from column with embedded instructions."""
-        return col.split('  ')[0].strip()
 
     def _parse_question_flow_rubric(self, rubric_df: pd.DataFrame) -> tuple[Dict[str, Any], List[str]]:
         """
