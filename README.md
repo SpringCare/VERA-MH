@@ -6,15 +6,35 @@ This code should be considered a work in progress (including this documentation)
 We value every interaction that follows the [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
 There are many quirks of the current structure, which will be simplified and streamlined.
 
-There are two main entry points:
+# What happens during the RFC
+We have an open [Request For Comment](https://4so24.share.hsforms.com/2gKComtOTS7K9-23uI9hQSQ) (RFC) in which we are gathering feedback on both clinical and technical levels.
 
-- _generate.py_: is the main file to generate conversations, and store them in `conversations`.
+During the RFC, we keep iterating on our both the code and the clincal side, that get merged into main from time to time. The idea is that by downloading and running the code, you are able to directly use the latest version.
 
-- _judge.py_: to judge existing conversations (usually stored in `conversations`). The result of the evaluation is usually stored in `evaluations`
+The RFC-version are frozen in this [branch](https://github.com/SpringCare/VERA-MH/tree/RFC), with the [rubric](https://github.com/SpringCare/VERA-MH/blob/RFC/data/rubric.tsv), [personas](https://github.com/SpringCare/VERA-MH/blob/RFC/data/personas.tsv) and [persona meta prompt](https://github.com/SpringCare/VERA-MH/blob/RFC/data/persona_prompt_template.txt) in the [data](https://github.com/SpringCare/VERA-MH/tree/RFC/data) folder.
 
-Example usage:
+# Getting started 
+0. **Create a venv**:
+   ```bash
+   python -m .venv .
+   source .venv/bin/activate
+   ```
+1. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-``` python generate.py -u gpt-4o -uep temperature=1 -p gpt-4o -pep temperature=1 -t 6 -r 1```
+2. **Set up environment variables**:
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your API keys (e.g., OpenAI/Anthropic)
+
+3. (optional).  **Create an LLM class for your agent**: see guidance [here](docs/evaluating.MD)
+
+4. **Run the simulation**:
+   ```bash
+   python generate.py -u gpt-4o -uep temperature=1 -p gpt-4o -pep temperature=1 -t 6 -r 1
+   ```
 
 Where:
 - `u` is the user model
@@ -23,16 +43,29 @@ Where:
 - `pep` is the provider extra parameters
 - `t` is the number of turns
 - `r` is the run per turns
+- `f` is the folder name (defaults to conversations and a subfolder named based on other paramters and datetime)
+- `c` is the maximum concurrent conversations to run (defaults to None, but try this if the provider you're testing times out)
+This will generate conversations and store them in a subfolder of `conversations`
 
-Most of the interesting data is contained in the `data` folder, specifically:
+5. **Judge the conversations**:
+   ```bash
+   python judge.py -f conversations/{YOUR_FOLDER} -j gpt-4o
+   ``` 
+
+Where
+- `f` points to the folder with the conversations
+- `j` is the flag for selecting the judge model
+
+Most of the interesting data is contained in the [`data`](data) folder, specifically:
 - _personas.csv_ has the data for the personas
 - *personas_prompt_template.txt* has the meta-prompt for the user-agent
 - _rubric.csv_ is the clinically developed rubric
+- *rubric_prompt_template.txt* for the judge meta prompt
 
-The code to create the judge prompt will be moved to the data folder, but is currently the function `_get_judge_system_prompt` in `judge/llm_judge.py`.
 
 # License
 We use a MIT license with conditions. We changed the reference from "software" to "materials" and more accurately describe the nature of the project.
+
 
 # LLM Conversation Simulator [LLM generated doc from now on, potentially outdated]
 
@@ -51,23 +84,6 @@ A Python application that simulates conversations between Large Language Models 
 - **OpenAI Support**: Complete integration with GPT models via OpenAI's API
 - **Batch Processing**: Run multiple conversations with different personas and multiple runs per persona
 
-## Setup
-
-1. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Set up environment variables**:
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your Anthropic API key
-   ```
-
-3. **Run the simulation**:
-   ```bash
-   python generate.py
-   ```
 
 ## Architecture
 
@@ -109,15 +125,6 @@ Each persona includes:
 
 #### Prompt Templating (`data/persona_prompt_template.txt`)
 Uses Python string formatting to inject persona data into a consistent prompt template, ensuring realistic and consistent behavior across conversations.
-
-### Adding New LLM Providers
-
-To add support for a new LLM provider:
-
-1. Create a new class that inherits from `LLMInterface`
-2. Implement the required methods: `generate_response()` and `set_system_prompt()`
-3. Update the configuration as needed
-4. Use the new LLM class in your simulations
 
 ## Usage
 
@@ -166,11 +173,6 @@ The script will:
 4. Save conversations and logs to timestamped folders
 5. Support early termination when personas indicate completion
 
-### Supported Models
-
-Currently supported models:
-- **Claude**: `claude-3-5-sonnet-20241022`, `claude-3-opus-20240229`, `claude-3-sonnet-20240229`, `claude-3-haiku-20240307`, `claude-sonnet-4-20250514`
-- **OpenAI**: `gpt-4`, `gpt-4-turbo`, `gpt-3.5-turbo`
 
 ### Custom Personas and Prompts
 
