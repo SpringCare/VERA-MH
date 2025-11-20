@@ -55,13 +55,14 @@ class ConversationSimulator:
         
         return False
     
-    async def start_conversation(self, initial_message: Optional[str] = None, max_turns: int = 10) -> List[Dict[str, Any]]:
+    async def start_conversation(self, initial_message: Optional[str] = None, max_turns: int = 10, max_total_words: Optional[int] = None) -> List[Dict[str, Any]]:
         """
         Start a conversation between the two LLMs with early stopping support.
-        
+
         Args:
             max_turns: Maximum number of conversation turns
-            
+            max_total_words: Optional maximum total words across all responses
+
         Returns:
             List of conversation turns with speaker and message
         """
@@ -72,30 +73,19 @@ class ConversationSimulator:
             current_message = initial_message
         current_speaker = self.persona
         next_speaker = self.agent
-        
+
+        total_words = 0
+
         for turn in range(max_turns):
             # Record start time for this turn
             turn_start_time = time.time()
             
             # Generate response
             response = await current_speaker.generate_response(current_message)
-            
-            # Calculate turn duration
-            # turn_duration = time.time() - turn_start_time
-            
-            # Create comprehensive logging information
-            # logging_info = {
-            #     "timestamp": datetime.now().isoformat(),
-            #     "turn_duration_seconds": round(turn_duration, 3),
-            #     "model_name": getattr(current_speaker, 'model_name', 'unknown'),
-            #     "provider": self._get_provider_type(current_speaker),
-            #     "input_length": len(current_message) if current_message else 0,
-            #     "output_length": len(response),
-            #     "response_id": None,  # Will be populated by individual providers
-            #     "usage": {},  # Will be populated by individual providers
-            #     "metadata": {}  # Will be populated by individual providers
-            # }
-            
+
+            # Update total word count
+            total_words += len(response.split())
+
             # Record this turn
             self.conversation_history.append({
                 "turn": turn + 1,
@@ -105,10 +95,14 @@ class ConversationSimulator:
                 "early_termination": False,
                 "logging": current_speaker.get_last_response_metadata()
             })
-            
+
             # Check if persona wants to end the conversation
             if self._should_terminate_conversation(response, current_speaker):
                 self.conversation_history[-1]["early_termination"] = True
+                break
+
+            # Check if we've reached the maximum total words
+            if max_total_words is not None and total_words >= max_total_words:
                 break
             
             # Switch speakers and use the response as the next input

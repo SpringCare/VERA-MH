@@ -21,13 +21,14 @@ class ConversationRunner:
     """Handles running LLM conversations with logging and file management."""
     
     def __init__(
-        self, 
-        persona_model_config: Dict[str, Any], 
-        agent_model_config: Dict[str, Any], 
+        self,
+        persona_model_config: Dict[str, Any],
+        agent_model_config: Dict[str, Any],
         run_id: str,
-        max_turns: int = 6, 
+        max_turns: int = 6,
         runs_per_prompt: int = 3,
         folder_name: str = "conversations",
+        max_total_words: Optional[int] = None,
     ):
         self.persona_model_config = persona_model_config
         self.agent_model_config = agent_model_config
@@ -35,6 +36,7 @@ class ConversationRunner:
         self.runs_per_prompt = runs_per_prompt
         self.folder_name = folder_name
         self.run_id = run_id
+        self.max_total_words = max_total_words
 
         self.AGENT_SYSTEM_PROMPT = self.agent_model_config.get("system_prompt", "You are a helpful AI assistant.")
     
@@ -91,7 +93,7 @@ class ConversationRunner:
         # Create conversation simulator and run conversation
         simulator = ConversationSimulator(persona, agent)
         # Run the conversation - let first speaker start naturally with None
-        conversation = await simulator.start_conversation(initial_message=None, max_turns=max_turns)
+        conversation = await simulator.start_conversation(initial_message=None, max_turns=max_turns, max_total_words=self.max_total_words)
             
         
         # Log each conversation turn

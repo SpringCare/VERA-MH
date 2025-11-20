@@ -39,6 +39,10 @@ class ClaudeLLM(LLMInterface):
 
         print(f"Using Claude model: {self.llm.model}")
 
+        # Store configuration parameters for logging
+        self.temperature = getattr(self.llm, "temperature", None)
+        self.max_tokens = getattr(self.llm, "max_tokens", None)
+
         # Store metadata from last response
         self.last_response_metadata: Dict[str, Any] = {}
 

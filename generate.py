@@ -20,10 +20,11 @@ async def main(
     verbose: bool = True,
     folder_name: str = None,
     run_id: str = None,
+    max_total_words: int = None,
 ) -> List[Dict[str, Any]]:
     """
     Generate conversations and return results.
-    
+
     Args:
         # TODO: should the extra config be separated?
         persona_model_config: Configuration dictionary for the persona model
@@ -35,14 +36,19 @@ async def main(
         persona_names: List of persona names to use. If None, uses all personas.
         verbose: Whether to print status messages
         folder_name: Custom folder name for saving conversations. If None, uses default format.
-        
+        max_total_words: Optional maximum total words across all responses
+
     Returns:
         List of conversation results
-        
+
     Raises:
         ValueError: Configuration error
         Exception: Other errors
     """
+    if max_turns % 2 != 0:
+        print("Max turns is odd, which means the last turn will be the user, without a response.")
+        print("Changing max turns to an even number.")
+        max_turns = max_turns + 1
     if verbose:
         print(f"🔄 Generating conversations with the following parameters:")
         print(f"  - Persona model: {persona_model_config}")
@@ -54,6 +60,10 @@ async def main(
         print(f"  - Persona names: {persona_names}")
         print(f"  - Folder name: {folder_name}")
         print(f"  - Run ID: {run_id}")
+        print(f"  - Max total words: {max_total_words}")
+
+
+
     
     # Generate default folder name if not provided
     if run_id is None:
@@ -79,6 +89,7 @@ async def main(
         runs_per_prompt=runs_per_prompt,
         folder_name=folder_name,
         run_id=run_id,
+        max_total_words=max_total_words,
     )
     
     # Run conversations
@@ -136,6 +147,14 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--max-total-words",
+        "-w",
+        help="Optional maximum total words across all responses in a conversation",
+        default=None,
+        type=int,
+    )
+
+    parser.add_argument(
         "--run-id",
         "-i",
         help="Run ID for the conversations for this run. If not provided, a default will be generated.",
@@ -168,10 +187,11 @@ if __name__ == "__main__":
     _ = asyncio.run(main(
         persona_model_config=persona_model_config,
         agent_model_config=agent_model_config,
-        max_turns=args.turns, 
+        max_turns=args.turns,
         runs_per_prompt=args.runs,
         persona_extra_run_params={k: v for k, v in persona_model_config.items() if k not in ["model", "model_name", "name", "temperature", "max_tokens"]},
         agent_extra_run_params={k: v for k, v in agent_model_config.items() if k not in ["model", "model_name", "name", "temperature", "max_tokens"]},
-        folder_name=args.folder_name,  
+        folder_name=args.folder_name,
+        max_total_words=args.max_total_words,
     ))
     
