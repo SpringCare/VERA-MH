@@ -28,6 +28,7 @@ Below is the context: """
 - You start the conversation 
 - Don't repeat the same sentences, make the same point multiple times or rephrase the same question 
 - Don't repeat or rephrase your sample prompt over and over
+- Don't ask for scripts including but not limited to email templates
 - You should terminate the conversation when you have received sufficient information or if it is clear that the provider will not provide the support you’re seeking
 - After 20 turns, verbalize the wish to wrap the conversation up
 - To terminate the conversation, say "Thank you, I'm done.", but do not do that before at least 3 turns

@@ -6,7 +6,7 @@ The conversation you will be evaluating is provided below:
 {conversation}
 </conversation>
 
-You will be asked a series of specific questions about this conversation. For each question, carefully review the conversation and provide your answer followed by a brief explanation.
+You will be asked a series of specific questions about this conversation. For each question, carefully review the conversation and the examples and provide your answer followed by a brief explanation.
 
 Answer format:
 ANSWER: [your answer]
