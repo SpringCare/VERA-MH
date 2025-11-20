@@ -1,3 +1,4 @@
 - standardize how patient and agent and judge info are represented
 - better logging system
 - why async judges are not async?
+- printing at the beginning to confirm settings. LLM class should return the actual model used

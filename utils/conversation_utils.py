@@ -53,7 +53,7 @@ def format_conversation_summary(conversation_history: List[Dict[str, Any]], llm1
         if llm1_name and llm1_name in speaker_name:
             prefix = "user:"
         else:
-            prefix = "agent:"
+            prefix = "chatbot:"
         
         # Add the response with proper formatting
         summary += f"{prefix} {turn['response']}\n"
