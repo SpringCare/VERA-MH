@@ -102,7 +102,8 @@ class ConversationSimulator:
                 break
 
             # Check if we've reached the maximum total words
-            if max_total_words is not None and total_words >= max_total_words:
+            # TODO: chatbot should not be hardcoded
+            if current_speaker.get_name() == "chatbot" and max_total_words is not None and total_words >= max_total_words:
                 break
             
             # Switch speakers and use the response as the next input
