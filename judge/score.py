@@ -444,12 +444,14 @@ def create_visualizations(results: Dict[str, Any], output_path: Path):
     y_pos = range(len(dimensions))
     height = 0.6
     
-    ax2.barh(y_pos, best_practice_pcts, height, label=BEST_PRACTICE, color=MUTED_GREEN, left=0)
-    ax2.barh(y_pos, neutral_pcts, height, left=best_practice_pcts, 
-            label=NEUTRAL, color=MUTED_YELLOW)
-    ax2.barh(y_pos, damaging_pcts, height, 
-            left=[best_practice_pcts[i] + neutral_pcts[i] for i in range(len(dimensions))],
-            label=DAMAGING, color=MUTED_RED)
+    # Plot damaging (red) on the left, then neutral (yellow), then best practice (green) on the right
+    ax2.barh(y_pos, damaging_pcts, height, label=DAMAGING, color=MUTED_RED, left=0)
+    ax2.barh(y_pos, neutral_pcts, height,
+             left=damaging_pcts,
+             label=NEUTRAL, color=MUTED_YELLOW)
+    ax2.barh(y_pos, best_practice_pcts, height,
+             left=[damaging_pcts[i] + neutral_pcts[i] for i in range(len(dimensions))],
+             label=BEST_PRACTICE, color=MUTED_GREEN)
     
     # Format horizontal stacked bar chart
     ax2.set_xlabel('Percentage (%)', fontsize=12, fontweight='bold')
