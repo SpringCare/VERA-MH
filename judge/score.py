@@ -472,16 +472,20 @@ def create_visualizations(results: Dict[str, Any], output_path: Path):
     ax2.grid(axis='x', alpha=0.3, linestyle='--')
     
     # Add percentage labels on bars
+    # Bars are stacked: damaging (left), neutral (middle), best_practice (right)
     for i, (bp, neu, dmg) in enumerate(zip(best_practice_pcts, neutral_pcts, damaging_pcts)):
         # Only show label if segment is large enough (>5%)
-        if bp > 5:
-            ax2.text(bp/2, i, f'{bp:.1f}%', ha='center', va='center', 
-                    fontsize=8, fontweight='bold', color='white')
-        if neu > 5:
-            ax2.text(bp + neu/2, i, f'{neu:.1f}%', ha='center', va='center',
-                    fontsize=8, fontweight='bold', color='white')
+        # Damaging (red) is on the left, starting at 0
         if dmg > 5:
-            ax2.text(bp + neu + dmg/2, i, f'{dmg:.1f}%', ha='center', va='center',
+            ax2.text(dmg/2, i, f'{dmg:.1f}%', ha='center', va='center',
+                    fontsize=8, fontweight='bold', color='white')
+        # Neutral (yellow) is in the middle, starting at dmg
+        if neu > 5:
+            ax2.text(dmg + neu/2, i, f'{neu:.1f}%', ha='center', va='center',
+                    fontsize=8, fontweight='bold', color='white')
+        # Best practice (green) is on the right, starting at dmg + neu
+        if bp > 5:
+            ax2.text(dmg + neu + bp/2, i, f'{bp:.1f}%', ha='center', va='center', 
                     fontsize=8, fontweight='bold', color='white')
     
     # Adjust layout to prevent label cutoff, leaving space for legend on the left
@@ -762,6 +766,27 @@ def create_risk_level_visualizations(results: Dict[str, Any], output_path: Path)
         ax.bar(x_pos, not_relevant_pcts, width,
                bottom=[bp + n + d for bp, n, d in zip(best_practice_pcts, neutral_pcts, damaging_pcts)],
                label=NOT_RELEVANT, color=MUTED_GRAY)
+        
+        # Add percentage labels on bars
+        # Bars are stacked vertically: Best Practice (bottom), Neutral, Damaging, Not Relevant (top)
+        for i, (bp, neu, dmg, nr) in enumerate(zip(best_practice_pcts, neutral_pcts, damaging_pcts, not_relevant_pcts)):
+            # Only show label if segment is large enough (>5%)
+            # Best Practice (green) is at the bottom
+            if bp > 5:
+                ax.text(i, bp/2, f'{bp:.1f}%', ha='center', va='center',
+                        fontsize=7, fontweight='bold', color='white')
+            # Neutral (yellow) is above Best Practice
+            if neu > 5:
+                ax.text(i, bp + neu/2, f'{neu:.1f}%', ha='center', va='center',
+                        fontsize=7, fontweight='bold', color='white')
+            # Damaging (red) is above Neutral
+            if dmg > 5:
+                ax.text(i, bp + neu + dmg/2, f'{dmg:.1f}%', ha='center', va='center',
+                        fontsize=7, fontweight='bold', color='white')
+            # Not Relevant (gray) is at the top
+            if nr > 5:
+                ax.text(i, bp + neu + dmg + nr/2, f'{nr:.1f}%', ha='center', va='center',
+                        fontsize=7, fontweight='bold', color='white')
         
         # Format chart
         ax.set_xlabel('Persona Risk Level', fontsize=10, fontweight='bold')
