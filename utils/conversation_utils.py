@@ -1,7 +1,7 @@
 """Utilities for conversation management and file operations."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import List, Dict, Any, Optional
 
 
 def generate_conversation_filename(prefix: str = "conversation") -> str:
@@ -63,7 +63,7 @@ def format_conversation_summary(
         if llm1_name and llm1_name in speaker_name:
             prefix = "user:"
         else:
-            prefix = "agent:"
+            prefix = "chatbot:"
 
         # Add the response with proper formatting
         summary += f"{prefix} {turn['response']}\n"
