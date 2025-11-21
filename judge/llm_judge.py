@@ -19,20 +19,28 @@ class LLMJudge:
         "llama": ["llama3:8b", "llama3:70b", "llama2:13b"]
     }
     
-    def __init__(self, judge_model: str, rubric_folder: str = "data",
-    rubric_prompt_beginning_file: str = "rubric_prompt_beginning.txt",
-    rubric_file: str = "rubric.tsv",
-    sep: str = "\t",
-    log_file: Optional[str] = None):
+    def __init__(
+        self, 
+        judge_model: str,
+        conversation_file: str,
+        rubric_folder: str = "data",
+        rubric_prompt_beginning_file: str = "rubric_prompt_beginning.txt",
+        rubric_file: str = "rubric.tsv",
+        sep: str = "\t",
+        log_file: Optional[str] = None,
+        verbose: bool = False
+    ):
         """
         Initialize the LLM Judge.
 
         Args:
             judge_model: Model to use for judging.
+            conversation_file: Path to conversation file to evaluate.
             rubric_folder: Folder containing rubric files
             rubric_file: File containing the question-flow rubric
             sep: Separator for the rubric file
             log_file: Path to log file (default: logs/judge_{timestamp}.log)
+            verbose: Whether to print verbose output during initialization
 
         Note: assumes that `rubric_folder` contains the `rubric_file`
         """
@@ -86,6 +94,11 @@ class LLMJudge:
         self.logger.info(f"Loaded question-flow rubric with {len(self.question_flow_data)} questions")
         self.logger.info(f"Loaded dimensions: {self.dimensions}")
         print(f"Loaded question-flow rubric with {len(self.question_flow_data)} questions")
+        
+        # Create evaluator with conversation context
+        self.conversation_file = conversation_file
+        conversation = self.load_conversation(conversation_file)
+        self.evaluator = self._create_evaluator(conversation, conversation_file, verbose)
     
     
     def load_conversation(self, conversation_file: str) -> str:
@@ -106,7 +119,60 @@ class LLMJudge:
         with open(conversation_path, 'r', encoding='utf-8') as f:
             return f.read()
 
+    async def evaluate_conversation_question_flow(
+        self,
+        conversation_file: str,
+        output_folder: str,
+        auto_save: bool = True,
+        verbose: bool = False,
+        start_question_id: Optional[str] = None
+    ) -> Dict[str, Dict[str, str]]:
+        """
+        Evaluate conversation using question-flow rubric.
 
+        Main evaluation flow:
+        1. Navigate through questions until END/ASSIGN_END or completion
+        2. Calculate dimension scores from collected answers
+        3. Save results if requested
+
+        Args:
+            conversation_file: Path to conversation file
+            output_folder: Folder to save evaluation results
+            auto_save: Whether to automatically save results to files
+            verbose: Whether to print progress information
+            start_question_id: Question ID to start with (default: "4")
+
+        Returns:
+            Dictionary with dimension names as keys and evaluation results as values
+            Format: {dimension: {"score": str, "reasoning": str, ...}}
+        """
+        if self.question_flow_data is None:
+            raise ValueError("Question flow rubric not loaded. Check rubric file exists.")
+
+        # Validate that the conversation_file matches the one used in initialization
+        if conversation_file != self.conversation_file:
+            raise ValueError(
+                f"Conversation file mismatch. Judge initialized with '{self.conversation_file}', "
+                f"but evaluation requested for '{conversation_file}'. Create a new LLMJudge instance for each conversation."
+            )
+
+        # Step 1: Navigate through questions and collect answers
+        start_question_id = start_question_id or "4"
+        dimension_answers = {}
+
+        not_relevant_question_id = await self._ask_all_questions(
+            self.evaluator, start_question_id, dimension_answers, verbose
+        )
+
+        # Step 2: Calculate final scores
+        results = self._calculate_results(not_relevant_question_id, dimension_answers, verbose)
+
+        # Step 3: Log and save results
+        self._log_final_results(results)
+        if auto_save:
+            self._save_results(conversation_file, output_folder, results, verbose)
+
+        return results
 
     def _extract_reasoning(self, response: str, verbose: bool = True) -> str:
         """Extract reasoning portion from LLM response."""
@@ -136,58 +202,7 @@ class LLMJudge:
                 reasoning = result['reasoning'].replace('\n', ' ').replace('\t', ' ')
                 f.write(f"{dimension}{sep}{score}{sep}{reasoning}\n")
 
-    async def evaluate_conversation_question_flow(
-        self,
-        conversation_file: str,
-        output_folder: str,
-        auto_save: bool = True,
-        verbose: bool = False,
-        start_question_id: Optional[str] = None
-    ) -> Dict[str, Dict[str, str]]:
-        """
-        Evaluate conversation using question-flow rubric.
-
-        Main evaluation flow:
-        1. Load conversation and set up evaluator
-        2. Navigate through questions until END/ASSIGN_END or completion
-        3. Calculate dimension scores from collected answers
-        4. Save results if requested
-
-        Args:
-            conversation_file: Path to conversation file
-            output_folder: Folder to save evaluation results
-            auto_save: Whether to automatically save results to files
-            verbose: Whether to print progress information
-            start_question_id: Question ID to start with (default: "4")
-
-        Returns:
-            Dictionary with dimension names as keys and evaluation results as values
-            Format: {dimension: {"score": str, "reasoning": str, ...}}
-        """
-        if self.question_flow_data is None:
-            raise ValueError("Question flow rubric not loaded. Check rubric.tsv exists.")
-
-        # Step 1: Set up evaluation
-        conversation = self.load_conversation(conversation_file)
-        evaluator = self._create_evaluator(conversation, conversation_file, verbose)
-
-        # Step 2: Navigate through questions and collect answers
-        start_question_id = start_question_id or "4"
-        dimension_answers = {}
-
-        not_relevant_question_id = await self._ask_all_questions(
-            evaluator, start_question_id, dimension_answers, verbose
-        )
-
-        # Step 3: Calculate final scores
-        results = self._calculate_results(not_relevant_question_id, dimension_answers, verbose)
-
-        # Step 4: Log and save results
-        self._log_final_results(results)
-        if auto_save:
-            self._save_results(conversation_file, output_folder, results, verbose)
-
-        return results
+    
 
     def _create_evaluator(self, conversation: str, conversation_file: str, verbose: bool):
         """Create and configure the LLM evaluator with conversation context."""
