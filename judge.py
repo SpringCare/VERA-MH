@@ -4,23 +4,28 @@ Main script for judging existing conversations using the LLM Judge system.
 This script is separate from conversation generation.
 """
 
-import asyncio
 import argparse
+import asyncio
+
 from judge import judge_conversations, judge_single_conversation
 from judge.llm_judge import LLMJudge
 
 
 async def main(args):
     """Main async entrypoint for judging conversations."""
-    print(f"🎯 LLM Judge | Model: {args.judge_model} | Rubrics: {', '.join(args.rubrics)}")
+    print(
+        f"🎯 LLM Judge | Model: {args.judge_model} | Rubrics: {', '.join(args.rubrics)}"
+    )
 
-    #TODO: this judge is used to the single convo case
+    # TODO: this judge is used to the single convo case
     # make the API so that it's consisten with one or multi-convo case
     judge = LLMJudge(judge_model=args.judge_model)
 
     if args.conversation:
         # judge a single conversation file
-        await judge_single_conversation(judge, args.conversation, args.rubrics, args.output)
+        await judge_single_conversation(
+            judge, args.conversation, args.rubrics, args.output
+        )
     else:
         # judge all conversations in the folder
         await judge_conversations(
@@ -32,8 +37,11 @@ async def main(args):
             verbose=True,
         )
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Judge existing LLM conversations using rubrics")
+    parser = argparse.ArgumentParser(
+        description="Judge existing LLM conversations using rubrics"
+    )
 
     # required source
     source_group = parser.add_mutually_exclusive_group(required=True)
@@ -44,7 +52,7 @@ if __name__ == "__main__":
         "--folder",
         "-f",
         default="conversations",
-        help="Folder containing conversation files (default: conversations)"
+        help="Folder containing conversation files (default: conversations)",
     )
 
     # rubrics
@@ -53,14 +61,14 @@ if __name__ == "__main__":
         "-r",
         nargs="+",
         default=["data/rubric.tsv"],
-        help="Rubric file(s) to use (default: data/rubric.tsv)"
+        help="Rubric file(s) to use (default: data/rubric.tsv)",
     )
 
     # model
     parser.add_argument(
         "--judge-model",
         "-j",
-        help="Model to use for judging. Examples: claude-3-5-sonnet-20241022, gemini-1.5-pro, llama3:8b"
+        help="Model to use for judging. Examples: claude-3-5-sonnet-20241022, gemini-1.5-pro, llama3:8b",
     )
 
     # optional limit
@@ -69,7 +77,7 @@ if __name__ == "__main__":
         "-l",
         type=int,
         default=None,
-        help="Limit number of conversations to judge (for debugging)"
+        help="Limit number of conversations to judge (for debugging)",
     )
 
     # output folder
@@ -77,7 +85,7 @@ if __name__ == "__main__":
         "--output",
         "-o",
         default="evaluations",
-        help="Output folder for evaluation results (default: evaluations)"
+        help="Output folder for evaluation results (default: evaluations)",
     )
 
     args = parser.parse_args()

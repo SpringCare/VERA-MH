@@ -1,8 +1,8 @@
 import ast
 
+
 def parse_key_value_list(arg):
-    """Helper function to parse a list of key-value pairs into a dictionary.
-    """
+    """Helper function to parse a list of key-value pairs into a dictionary."""
     d = {}
     for pair in arg.split(","):
         key, value = pair.split("=", 1)

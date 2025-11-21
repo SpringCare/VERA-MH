@@ -1,0 +1,16 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: sync-claude-to-agents
+        name: Sync CLAUDE.md to AGENTS.md
+        entry: .pre-commit-scripts/sync-claude-to-agents.sh
+        language: script
+        files: ^CLAUDE\.md$
+        pass_filenames: false
