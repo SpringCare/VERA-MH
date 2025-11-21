@@ -756,36 +756,36 @@ def create_risk_level_visualizations(results: Dict[str, Any], output_path: Path)
         x_pos = range(len(risk_levels))
         width = 0.7
         
-        # Stack bars: Best Practice at bottom, then Neutral, then Damaging, then Not Relevant at top
-        ax.bar(x_pos, best_practice_pcts, width, label=BEST_PRACTICE, color=MUTED_GREEN, bottom=0)
-        ax.bar(x_pos, neutral_pcts, width, bottom=best_practice_pcts, 
+        # Stack bars: Damaging (red) at bottom, then Neutral (yellow), then Best Practice (green), then Not Relevant (gray) at top
+        ax.bar(x_pos, damaging_pcts, width, label=DAMAGING, color=MUTED_RED, bottom=0)
+        ax.bar(x_pos, neutral_pcts, width, bottom=damaging_pcts, 
                label=NEUTRAL, color=MUTED_YELLOW)
-        ax.bar(x_pos, damaging_pcts, width,
-               bottom=[bp + n for bp, n in zip(best_practice_pcts, neutral_pcts)],
-               label=DAMAGING, color=MUTED_RED)
+        ax.bar(x_pos, best_practice_pcts, width,
+               bottom=[d + n for d, n in zip(damaging_pcts, neutral_pcts)],
+               label=BEST_PRACTICE, color=MUTED_GREEN)
         ax.bar(x_pos, not_relevant_pcts, width,
-               bottom=[bp + n + d for bp, n, d in zip(best_practice_pcts, neutral_pcts, damaging_pcts)],
+               bottom=[d + n + bp for d, n, bp in zip(damaging_pcts, neutral_pcts, best_practice_pcts)],
                label=NOT_RELEVANT, color=MUTED_GRAY)
         
         # Add percentage labels on bars
-        # Bars are stacked vertically: Best Practice (bottom), Neutral, Damaging, Not Relevant (top)
-        for i, (bp, neu, dmg, nr) in enumerate(zip(best_practice_pcts, neutral_pcts, damaging_pcts, not_relevant_pcts)):
+        # Bars are stacked vertically: Damaging (red, bottom), Neutral (yellow), Best Practice (green), Not Relevant (gray, top)
+        for i, (dmg, neu, bp, nr) in enumerate(zip(damaging_pcts, neutral_pcts, best_practice_pcts, not_relevant_pcts)):
             # Only show label if segment is large enough (>5%)
-            # Best Practice (green) is at the bottom
-            if bp > 5:
-                ax.text(i, bp/2, f'{bp:.1f}%', ha='center', va='center',
-                        fontsize=7, fontweight='bold', color='white')
-            # Neutral (yellow) is above Best Practice
-            if neu > 5:
-                ax.text(i, bp + neu/2, f'{neu:.1f}%', ha='center', va='center',
-                        fontsize=7, fontweight='bold', color='white')
-            # Damaging (red) is above Neutral
+            # Damaging (red) is at the bottom
             if dmg > 5:
-                ax.text(i, bp + neu + dmg/2, f'{dmg:.1f}%', ha='center', va='center',
+                ax.text(i, dmg/2, f'{dmg:.1f}%', ha='center', va='center',
+                        fontsize=7, fontweight='bold', color='white')
+            # Neutral (yellow) is above Damaging
+            if neu > 5:
+                ax.text(i, dmg + neu/2, f'{neu:.1f}%', ha='center', va='center',
+                        fontsize=7, fontweight='bold', color='white')
+            # Best Practice (green) is above Neutral
+            if bp > 5:
+                ax.text(i, dmg + neu + bp/2, f'{bp:.1f}%', ha='center', va='center',
                         fontsize=7, fontweight='bold', color='white')
             # Not Relevant (gray) is at the top
             if nr > 5:
-                ax.text(i, bp + neu + dmg + nr/2, f'{nr:.1f}%', ha='center', va='center',
+                ax.text(i, dmg + neu + bp + nr/2, f'{nr:.1f}%', ha='center', va='center',
                         fontsize=7, fontweight='bold', color='white')
         
         # Format chart
@@ -805,14 +805,15 @@ def create_risk_level_visualizations(results: Dict[str, Any], output_path: Path)
         ax_legend.axis('off')  # Turn off axes
         
         # Create legend manually with the colors and labels
+        # Order: bottom to top (Damaging, Neutral, Best Practice, Not Relevant)
         from matplotlib.patches import Rectangle
         handles = [
-            Rectangle((0, 0), 1, 1, facecolor=MUTED_GREEN, edgecolor='black'),
-            Rectangle((0, 0), 1, 1, facecolor=MUTED_YELLOW, edgecolor='black'),
             Rectangle((0, 0), 1, 1, facecolor=MUTED_RED, edgecolor='black'),
+            Rectangle((0, 0), 1, 1, facecolor=MUTED_YELLOW, edgecolor='black'),
+            Rectangle((0, 0), 1, 1, facecolor=MUTED_GREEN, edgecolor='black'),
             Rectangle((0, 0), 1, 1, facecolor=MUTED_GRAY, edgecolor='black')
         ]
-        labels = [BEST_PRACTICE, NEUTRAL, DAMAGING, NOT_RELEVANT]
+        labels = [DAMAGING, NEUTRAL, BEST_PRACTICE, NOT_RELEVANT]
         ax_legend.legend(handles, labels, loc='center', fontsize=10, frameon=True)
     
     # Adjust layout
