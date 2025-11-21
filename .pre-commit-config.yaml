@@ -5,3 +5,12 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: sync-claude-to-agents
+        name: Sync CLAUDE.md to AGENTS.md
+        entry: bash -c 'cp CLAUDE.md AGENTS.md && git add AGENTS.md'
+        language: system
+        files: ^CLAUDE\.md$
+        pass_filenames: false
