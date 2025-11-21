@@ -34,6 +34,7 @@ cp .env.example .env  # Add your API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY)
 - **Linting**: `ruff check .` (lint with auto-fix: `ruff check --fix .`)
 - **Pre-commit**: `pre-commit install` (auto-run checks on commit)
 - All configuration in `pyproject.toml`
+- **📖 See**: `docs/pre-commit-hooks.md` for detailed pre-commit documentation
 
 ## Testing
 - No formal test suite yet (prototype phase)
@@ -75,6 +76,7 @@ pytest --cov         # Run with coverage
 
 ## Documentation Reference
 - **Setup & Architecture**: See `README.md`
+- **Pre-commit Hooks**: See `docs/pre-commit-hooks.md`
 - **Custom LLM Providers**: See `docs/evaluating.MD`
 - **Usage Examples**: See `README.md` → "Usage" section
 - **Model Configuration**: See `README.md` → "Models" section
