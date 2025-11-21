@@ -1,5 +1,8 @@
 # VERA-MH
 
+[![CI](https://github.com/SpringCare/VERA-MH/workflows/CI/badge.svg)](https://github.com/SpringCare/VERA-MH/actions/workflows/ci.yml)
+[![Docker](https://github.com/SpringCare/VERA-MH/workflows/Docker%20Build%20Validation/badge.svg)](https://github.com/SpringCare/VERA-MH/actions/workflows/docker.yml)
+
 This is the main repo for [VERA-MH](https://arxiv.org/abs/2510.15297) (Validation of Ethical and Responsible AI in Mental Health).
 
 This code should be considered a work in progress (including this documentation), and the main avenue to offer feedback.
@@ -13,25 +16,32 @@ During the RFC, we keep iterating on our both the code and the clincal side, tha
 
 The RFC-version are frozen in this [branch](https://github.com/SpringCare/VERA-MH/tree/RFC), with the [rubric](https://github.com/SpringCare/VERA-MH/blob/RFC/data/rubric.tsv), [personas](https://github.com/SpringCare/VERA-MH/blob/RFC/data/personas.tsv) and [persona meta prompt](https://github.com/SpringCare/VERA-MH/blob/RFC/data/persona_prompt_template.txt) in the [data](https://github.com/SpringCare/VERA-MH/tree/RFC/data) folder.
 
-# Getting started 
-0. **Create a venv**:
+# Getting started
+0. **Install uv** (if not already installed):
    ```bash
-   python -m .venv .
-   source .venv/bin/activate
+   pip install uv
    ```
-1. **Install dependencies**:
+
+1. **Set up environment and install dependencies**:
    ```bash
-   pip install -r requirements.txt
+   uv sync
+   source .venv/bin/activate  # Windows: .venv\Scripts\activate
    ```
 
 2. **Set up environment variables**:
    ```bash
    cp .env.example .env
    # Edit .env and add your API keys (e.g., OpenAI/Anthropic)
+   ```
 
-3. (optional).  **Create an LLM class for your agent**: see guidance [here](docs/evaluating.MD)
+3. **(Optional) Install pre-commit hooks** for automatic code formatting/linting:
+   ```bash
+   pre-commit install
+   ```
 
-4. **Run the simulation**:
+4. **(Optional) Create an LLM class for your agent**: see guidance [here](docs/evaluating.MD)
+
+5. **Run the simulation**:
    ```bash
    python generate.py -u gpt-4o -uep temperature=1 -p gpt-4o -pep temperature=1 -t 6 -r 1
    ```
@@ -47,7 +57,7 @@ Where:
 - `c` is the maximum concurrent conversations to run (defaults to None, but try this if the provider you're testing times out)
 This will generate conversations and store them in a subfolder of `conversations`
 
-5. **Judge the conversations**:
+6. **Judge the conversations**:
    ```bash
    python judge.py -f conversations/{YOUR_FOLDER} -j gpt-4o
    ``` 

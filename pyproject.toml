@@ -3,6 +3,46 @@ name = "vera-mh"
 version = "0.1.0"
 description = "Validation of Ethical and Responsible AI in Mental Health"
 requires-python = ">=3.11"
+dependencies = [
+    "langchain>=0.1.0",
+    "langchain-anthropic>=0.1.0",
+    "langchain-openai>=0.1.0",
+    "langchain-google-genai>=1.0.0",
+    "langchain-community>=0.1.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "pandas>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pyright>=1.1.0",
+    "ruff>=0.3.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "pre-commit>=3.0.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pyright>=1.1.0",
+    "ruff>=0.3.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "pre-commit>=3.0.0",
+]
 
 [tool.pyright]
 typeCheckingMode = "basic"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]  # pycodestyle, pyflakes, isort
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
