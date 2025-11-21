@@ -50,7 +50,7 @@ async def batch_evaluate_with_individual_judges(
       
         
         # Create a new LLMJudge instance for this conversation
-        judge = LLMJudge(judge_model=judge_model)
+        judge = LLMJudge(judge_model=judge_model, conversation_file=conversation_file)
         
         evaluation = await judge.evaluate_conversation_question_flow(
             conversation_file, 
@@ -91,7 +91,8 @@ async def judge_conversations(
     limit: Optional[int] = None,
     verbose: bool = True,
     output_folder: Optional[str] = None,
-    save_aggregated_results: bool = True
+    save_aggregated_results: bool = True,
+    filename: Optional[str] = 'results.csv'
 ) -> List[Dict[str, Any]]:
     """
     Judge conversations in a folder and return results.
@@ -139,7 +140,6 @@ async def judge_conversations(
     
     # Convert to strings
     conversation_file_paths = [str(f) for f in conversation_files]
-
    
     # Run batch evaluation with individual judges
     results = await batch_evaluate_with_individual_judges(
@@ -149,10 +149,10 @@ async def judge_conversations(
         output_folder,
         limit=limit
     )
-    print(pd.DataFrame(results, columns=["filename"] + DIMENSIONS))
+    
     if save_aggregated_results:
         columns = ["filename", "run_id"] + list(results[0].keys())
-        pd.DataFrame(results, columns=columns).to_csv(f"{output_folder}/results.csv", index=False)
+        pd.DataFrame(results, columns=columns).to_csv(f"{output_folder}/filename", index=False)
     if verbose:
         print(f"✅ Completed {len(results)} evaluations → {output_folder}/")
     
@@ -183,7 +183,7 @@ async def judge_single_conversation(
     
     print(f"📄 Judging: {Path(conversation_file).name}")
     
-    result = await judge.evaluate_conversation(
+    result = await judge.evaluate_conversation_question_flow(
         conversation_file, 
         output_folder=output_folder,
         auto_save=True

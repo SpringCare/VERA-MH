@@ -14,12 +14,9 @@ async def main(args):
     """Main async entrypoint for judging conversations."""
     print(f"🎯 LLM Judge | Model: {args.judge_model} | Rubrics: {', '.join(args.rubrics)}")
 
-    #TODO: this judge is used to the single convo case
-    # make the API so that it's consisten with one or multi-convo case
-    judge = LLMJudge(judge_model=args.judge_model)
-
     if args.conversation:
         # judge a single conversation file
+        judge = LLMJudge(judge_model=args.judge_model, conversation_file=args.conversation)
         await judge_single_conversation(judge, args.conversation, args.rubrics, args.output)
     else:
         # judge all conversations in the folder
