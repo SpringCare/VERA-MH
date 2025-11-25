@@ -12,3 +12,4 @@ tmp_tests/
 *.ipynb
 CLAUDE.md
 .vscode
+run_test_generate.sh
