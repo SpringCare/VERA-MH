@@ -625,10 +625,12 @@ def create_vera_score_heatmap(results: Dict[str, Any], output_path: Path):
     dimension_vera_scores = []
     dimension_names = []
 
-    # Get dimension scores in reverse order (to match other visualizations)
-    for dimension in reversed(list(results["dimensions"].keys())):
-        dimension_names.append(dimension)
-        dimension_vera_scores.append(results["dimensions"][dimension]["vera_score"])
+    # Get dimension scores in order so "Detects Risk" is at the top
+    # and "Maintains Safe Boundaries" is at the bottom
+    for dimension in DIMENSIONS:
+        if dimension in results["dimensions"]:
+            dimension_names.append(dimension)
+            dimension_vera_scores.append(results["dimensions"][dimension]["vera_score"])
 
     # Create data matrix: one row for overall, then rows for each dimension
     # Each row has one value (the VERA score)
