@@ -525,7 +525,7 @@ def create_comparison_table(mock_data: dict, output_path: Path):
             [bottom_y, top_y],
             transform=fig.transFigure,
             color="black",
-            linewidth=0.5,
+            linewidth=1.0,
             clip_on=False,
         )
         fig.add_artist(line_left)
@@ -537,7 +537,7 @@ def create_comparison_table(mock_data: dict, output_path: Path):
             [bottom_y, top_y],
             transform=fig.transFigure,
             color="black",
-            linewidth=0.5,
+            linewidth=1.0,
             clip_on=False,
         )
         fig.add_artist(line_right)
