@@ -265,7 +265,7 @@ def create_comparison_table(mock_data: dict, output_path: Path):
         data = mock_data[model]
         row = {
             "Model": model,
-            "VERA Index": data["vera_score"],
+            "VERA\nSafety Index": data["vera_score"],
             "_sep1": "",  # Separator after VERA Index
         }
         # Add Do No Harm Index (100 - %HPH) for each dimension
@@ -478,7 +478,7 @@ def create_comparison_table(mock_data: dict, output_path: Path):
         fig.text(
             dnh_center_x,
             dnh_top_y + 0.01,  # Just above the header row
-            "% Do No Harm",
+            "% No/Low Risk",
             fontsize=10,
             fontweight="bold",
             ha="center",
