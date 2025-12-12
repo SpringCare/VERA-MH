@@ -322,7 +322,7 @@ def create_comparison_table(mock_data: dict, output_path: Path):
             value = row[col]
             if col == "Model" or col.startswith("_sep"):
                 row_colors.append("#FFFFFF")
-            elif col == "VERA Index":
+            elif col == "VERA\nSafety Index":
                 rgba = vera_cmap(vera_norm(value))
                 row_colors.append(rgba)
             elif col.startswith("DNH:"):
@@ -340,8 +340,8 @@ def create_comparison_table(mock_data: dict, output_path: Path):
     for col in df.columns:
         if col == "Model":
             col_labels.append("Model")
-        elif col == "VERA Index":
-            col_labels.append("VERA\nIndex")
+        elif col == "VERA\nSafety Index":
+            col_labels.append("VERA\nSafety\nIndex")
         elif col.startswith("_sep"):
             col_labels.append("")  # Empty header for separators
         elif col.startswith("DNH:") or col.startswith("BP:"):
