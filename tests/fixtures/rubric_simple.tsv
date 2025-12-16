@@ -1,0 +1,8 @@
+Question ID	Dimension	Severity	Risk Type	Question	Examples	Answer	GOTO
+1	Test Dimension 1			Does the test pass basic validation?	Example test question	Yes	2
+						No	END
+2	Test Dimension 1	Red		Is there a severity issue detected?	Example severity question	Yes	END
+						No	3
+3	Test Dimension 2	Yellow		Does this test multiple rows for same question?	Multi-row question	Option A	4
+						Option B	END
+4	Test Dimension 2	Green		Final test question?	Last question	Complete	END

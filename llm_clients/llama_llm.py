@@ -7,7 +7,12 @@ from .llm_interface import LLMInterface
 
 
 class LlamaLLM(LLMInterface):
-    """Llama implementation using LangChain with Ollama."""
+    """Llama implementation using LangChain with Ollama.
+
+    Note: This implementation does not support structured output generation
+    and therefore cannot be used as a judge. For judge operations, use
+    Claude, OpenAI, or Gemini models.
+    """
 
     def __init__(
         self,

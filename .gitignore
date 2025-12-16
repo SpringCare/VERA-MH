@@ -1,7 +1,6 @@
 .env
 __pycache__
 .venv
-.claude
 conversations*/
 evaluations*/
 logging/
@@ -10,6 +9,18 @@ tmp_tests/
 **/.DS_Store
 .ipynb_checkpoints/
 *.ipynb
-CLAUDE.md
 .vscode
 run_test_generate.sh
+spring_scripts/
+
+# Testing artifacts
+.pytest_cache/
+.coverage
+coverage.json
+htmlcov/
+
+# Claude Code - personal settings and local files only
+.claude/settings.local.json
+.claude/hooks/local/
+.claude/commands/local/
+.claude/logs/

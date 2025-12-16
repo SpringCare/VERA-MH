@@ -1,15 +1,18 @@
 import time
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Type, TypeVar
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
+from pydantic import BaseModel
 
 from .config import Config
-from .llm_interface import LLMInterface
+from .llm_interface import JudgeLLM
+
+T = TypeVar("T", bound=BaseModel)
 
 
-class OpenAILLM(LLMInterface):
+class OpenAILLM(JudgeLLM):
     """OpenAI implementation using LangChain."""
 
     def __init__(
@@ -37,6 +40,18 @@ class OpenAILLM(LLMInterface):
 
         # Override with any provided kwargs
         llm_params.update(kwargs)
+
+        # Print configuration before creating LLM
+        print("Creating OpenAI LLM with parameters:")
+        print(f"  Model: {llm_params['model']}")
+        print(f"  Temperature: {llm_params.get('temperature', 'default')}")
+        print(f"  Max tokens: {llm_params.get('max_tokens', 'default')}")
+        extra_params = {
+            k: v for k, v in llm_params.items() if k not in ["model", "openai_api_key"]
+        }
+        if extra_params:
+            print(f"  Extra parameters: {extra_params}")
+
         self.llm = ChatOpenAI(**llm_params)
 
         # Store metadata from last response
@@ -59,7 +74,8 @@ class OpenAILLM(LLMInterface):
             # Extract metadata from response - capturing all available fields
             self.last_response_metadata = {
                 "response_id": getattr(response, "id", None),
-                "model": self.model_name,  # Will be updated from response_metadata if available
+                # Will be updated from response_metadata if available
+                "model": self.model_name,
                 "provider": "openai",
                 "timestamp": datetime.now().isoformat(),
                 "response_time_seconds": round(end_time - start_time, 3),
@@ -135,6 +151,63 @@ class OpenAILLM(LLMInterface):
                 "logprobs": None,
             }
             return f"Error generating response: {str(e)}"
+
+    async def generate_structured_response(
+        self, message: Optional[str], response_model: Type[T]
+    ) -> T:
+        """Generate a structured response using Pydantic model.
+
+        Args:
+            message: The prompt message
+            response_model: Pydantic model class to structure the response
+
+        Returns:
+            Instance of the response_model with structured data
+        """
+        messages = []
+
+        if self.system_prompt:
+            messages.append(SystemMessage(content=self.system_prompt))
+
+        messages.append(HumanMessage(content=message))
+
+        try:
+            # Create a structured LLM using with_structured_output
+            structured_llm = self.llm.with_structured_output(response_model)
+
+            start_time = time.time()
+            response = await structured_llm.ainvoke(messages)
+            end_time = time.time()
+
+            # Store basic metadata for structured responses
+            self.last_response_metadata = {
+                "response_id": None,
+                "model": self.model_name,
+                "provider": "openai",
+                "timestamp": datetime.now().isoformat(),
+                "response_time_seconds": round(end_time - start_time, 3),
+                "usage": {},
+                "structured_output": True,
+            }
+
+            # Ensure response is the correct type
+            if not isinstance(response, response_model):
+                raise ValueError(
+                    f"Response is not an instance of {response_model.__name__}"
+                )
+
+            return response  # type: ignore[return-value]
+        except Exception as e:
+            # Store error metadata
+            self.last_response_metadata = {
+                "response_id": None,
+                "model": self.model_name,
+                "provider": "openai",
+                "timestamp": datetime.now().isoformat(),
+                "error": str(e),
+                "usage": {},
+            }
+            raise RuntimeError(f"Error generating structured response: {str(e)}") from e
 
     def get_last_response_metadata(self) -> Dict[str, Any]:
         """Get metadata from the last response."""

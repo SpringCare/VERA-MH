@@ -1,0 +1,59 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(uv sync:*)",
+      "Bash(uv run:*)",
+      "Bash(uv pip list:*)",
+      "Bash(.venv/bin/pre-commit:*)",
+      "Bash(.venv/bin/ruff format .)",
+      "Bash(.venv/bin/ruff check --fix .)",
+      "Bash(.venv/bin/pyright:*)",
+      "Bash(.venv/bin/pytest:*)",
+      "Bash(python3 generate.py:*)",
+      "Bash(python3 judge.py:*)",
+      "Bash(python3 -m pytest:*)",
+      "Bash(pytest:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git show:*)",
+      "Bash(git grep:*)",
+      "Bash(git config:*)",
+      "Bash(git rebase:*)",
+      "Bash(git fetch:*)",
+      "Bash(git shortlog:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh api:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh --version:*)",
+      "Bash(gh pr create:*)",
+      "Bash(ls:*)",
+      "Bash(pwd)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(test:*)"
+    ],
+    "deny": [
+      "Bash(git restore:*)",
+      "Bash(sudo:*)",
+      "Bash(chmod:*)",
+      "Bash(chown:*)",
+      "Bash(rm -rf:*)",
+      "Bash(rm -fr:*)"
+    ],
+    "ask": [
+      "Bash(git reset --hard:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git clean -fd:*)",
+      "Bash(git checkout -- :*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}

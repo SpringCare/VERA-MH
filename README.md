@@ -60,18 +60,90 @@ This will generate conversations and store them in a subfolder of `conversations
 6. **Judge the conversations**:
    ```bash
    python judge.py -f conversations/{YOUR_FOLDER} -j gpt-4o
-   ``` 
+   ```
 
 Where
 - `f` points to the folder with the conversations
-- `j` is the flag for selecting the judge model
+- `j` is the flag for selecting the judge model(s)
+- `jep` are the judge model extra parameters (optional)
+
+### Using Extra Parameters
+
+Both `generate.py` and `judge.py` support extra parameters for fine-tuning model behavior:
+
+**Generate with temperature control:**
+```bash
+# Lower temperature (0.3) for more consistent responses
+python generate.py -u gpt-4o -uep temperature=0.3 -p claude-3-5-sonnet-20241022 -pep temperature=0.5 -t 6 -r 2
+
+# Higher temperature (1.0) with max tokens
+python generate.py -u gpt-4o -uep temperature=1,max_tokens=2000 -p gpt-4o -pep temperature=1 -t 6 -r 1
+```
+
+**Judge with custom parameters:**
+```bash
+# Use lower temperature for more consistent evaluation
+python judge.py -f conversations/my_experiment -j claude-3-5-sonnet-20241022 -jep temperature=0.3
+
+# Multiple parameters
+python judge.py -f conversations/my_experiment -j gpt-4o -jep temperature=0.5,max_tokens=1500
+```
+
+**Note:** Extra parameters are automatically included in the output folder names, making it easy to track experiments:
+- Generation: `conversations/p_gpt_4o_temp0.3__a_claude_3_5_sonnet_temp0.5__t6__r2__{timestamp}/`
+- Evaluation: `evaluations/j_claude_3_5_sonnet_temp0.3_{timestamp}__{conversation_folder}/`
+
+**Multiple judge models**: You can use multiple different judge models and/or multiple instances:
+```bash
+# Multiple different models
+python judge.py -f conversations/{YOUR_FOLDER} -j gpt-4o claude-sonnet-4-20250514
+
+# Multiple instances of the same model (for reliability testing)
+python judge.py -f conversations/{YOUR_FOLDER} -j gpt-4o:3
+
+# Combine both: different models with multiple instances
+python judge.py -f conversations/{YOUR_FOLDER} -j gpt-4o:2 claude-sonnet-4-20250514:3
+```
 
 Most of the interesting data is contained in the [`data`](data) folder, specifically:
 - _personas.csv_ has the data for the personas
 - *personas_prompt_template.txt* has the meta-prompt for the user-agent
 - _rubric.csv_ is the clinically developed rubric
-- *rubric_prompt_template.txt* for the judge meta prompt
+- *rubric_prompt_template.txt* for the judge meta prompt 
 
+
+# Using Claude Code
+
+This project is configured with [Claude Code](https://claude.ai/claude-code), Anthropic's CLI tool that helps with development tasks.
+
+## Quick Start
+
+If you have Claude Code installed, you can use these custom commands:
+
+**Development & Setup:**
+- `/setup-dev` - Set up complete development environment (includes test infrastructure)
+
+**Code Quality:**
+- `/format` - Run code formatting and linting (ruff + pyright)
+
+**Running VERA-MH:**
+- `/run-generator` - Interactive conversation generator
+- `/run-judge` - Interactive conversation evaluator
+
+**Testing:**
+- `/test` - Run test suite (with coverage by default)
+- `/fix-tests` - Fix failing tests iteratively, show branch-focused coverage
+- `/create-tests [module_path] [--layer=unit|integration|e2e]` - Create tests (focused: single module, or coverage analysis: find and fix gaps)
+
+**Git Workflow:**
+- `/create-commits` - Create logical, organized commits (with optional branch creation)
+- `/create-pr` - Create GitHub pull request with auto-generated summary
+
+## Configuration
+
+Team-shared configuration is in `.claude/settings.json`, which defines allowed operations without approval. Personal settings can be added to `.claude/settings.local.json` (not committed to git).
+
+For more details on custom commands and creating your own, see [`.claude/commands/README.md`](.claude/commands/README.md).
 
 # License
 We use a MIT license with conditions. We changed the reference from "software" to "materials" and more accurately describe the nature of the project.
@@ -83,16 +155,29 @@ A Python application that simulates conversations between Large Language Models 
 
 ## Features
 
+### Conversation Generation
 - **Mental Health Personas**: CSV-based system with realistic patient personas including age, background, mental health context, and risk factors
 - **Asynchronous Generation**: Concurrent conversation generation for efficient batch processing
 - **Modular Architecture**: Abstract LLM interface allows for easy integration of different LLM providers
 - **System Prompts**: Each LLM instance can be initialized with custom system prompts loaded from files
 - **Early Stopping**: Conversations can end naturally when personas signal completion
 - **Conversation Tracking**: Full conversation history is maintained with comprehensive logging
-- **LangChain Integration**: Uses LangChain for robust LLM interactions
-- **Claude Support**: Full implementation of Claude models via Anthropic's API
-- **OpenAI Support**: Complete integration with GPT models via OpenAI's API
 - **Batch Processing**: Run multiple conversations with different personas and multiple runs per persona
+
+### Conversation Evaluation
+- **LLM-based Judging**: Automated evaluation of conversations using LLM judges against clinical rubrics
+- **Structured Output**: Uses Pydantic models and LangChain's structured output for reliable, type-safe responses
+- **Question Flow Navigation**: Dynamic rubric navigation based on answers (with GOTO logic, END conditions, etc.)
+- **Dimension Scoring**: Evaluates conversations across multiple clinical dimensions (risk detection, resource provision, etc.)
+- **Severity Assessment**: Assigns severity levels (High/Medium/Low) based on rubric criteria
+- **Comprehensive Logging**: Detailed logs of all judge decisions and reasoning
+
+### LLM Provider Support
+- **LangChain Integration**: Uses LangChain for robust LLM interactions
+- **Claude Support**: Full implementation of Claude models via Anthropic's API with structured output
+- **OpenAI Support**: Complete integration with GPT models via OpenAI's API with structured output
+- **Gemini Support**: Google Gemini integration with structured output
+- **Llama Support**: Local Llama models via Ollama (limited structured output support)
 
 
 ## Architecture
@@ -100,15 +185,25 @@ A Python application that simulates conversations between Large Language Models 
 ### Core Components
 
 - **`generate.py`**: Main entry point for conversation generation with configurable parameters
+- **`judge.py`**: Main entry point for evaluating conversations using LLM judges
 - **`generate_conversations/`**: Core conversation generation system
   - **`conversation_simulator.py`**: Manages individual conversations between persona and agent LLMs
   - **`runner.py`**: Orchestrates multiple conversations with logging and file management
   - **`utils.py`**: CSV-based persona loading and prompt templating
-- **`llm_clients/`**: LLM provider implementations
+- **`judge/`**: Conversation evaluation system
+  - **`llm_judge.py`**: LLM-based judge for evaluating conversations against rubrics
+  - **`response_models.py`**: Pydantic models for structured LLM responses
+  - **`question_navigator.py`**: Navigates through rubric questions based on answers
+  - **`score.py`**: Scoring logic for dimension evaluation
+  - **`runner.py`**: Orchestrates judging of multiple conversations
+  - **`utils.py`**: Utility functions for rubric loading and processing
+- **`llm_clients/`**: LLM provider implementations with structured output support
   - **`llm_interface.py`**: Abstract base class defining the LLM interface
   - **`llm_factory.py`**: Factory class for creating LLM instances
-  - **`claude_llm.py`**: Claude implementation using LangChain
-  - **`openai_llm.py`**: OpenAI implementation
+  - **`claude_llm.py`**: Claude implementation using LangChain with structured output
+  - **`openai_llm.py`**: OpenAI implementation with structured output
+  - **`gemini_llm.py`**: Google Gemini implementation with structured output
+  - **`llama_llm.py`**: Llama implementation via Ollama
   - **`config.py`**: Configuration management for API keys and model settings
 - **`utils/`**: Utility functions and helpers
   - **`prompt_loader.py`**: Functions for loading prompt configurations
@@ -118,6 +213,9 @@ A Python application that simulates conversations between Large Language Models 
 - **`data/`**: Persona and configuration data
   - **`personas.csv`**: CSV file containing patient persona data
   - **`persona_prompt_template.txt`**: Template for generating persona prompts
+  - **`rubric.tsv`**: Clinical rubric for conversation evaluation
+  - **`rubric_prompt_beginning.txt`**: System prompt for the judge
+  - **`question_prompt.txt`**: Prompt template for asking rubric questions
   - **`model_config.json`**: Model assignments for different prompt types
 
 ### Persona System
@@ -135,6 +233,47 @@ Each persona includes:
 
 #### Prompt Templating (`data/persona_prompt_template.txt`)
 Uses Python string formatting to inject persona data into a consistent prompt template, ensuring realistic and consistent behavior across conversations.
+
+### Structured Output System
+
+The judge evaluation system uses **structured output** to ensure reliable and type-safe responses from LLMs:
+
+#### How It Works
+1. **Pydantic Models** ([judge/response_models.py](judge/response_models.py)): Define the structure of expected responses
+   ```python
+   class QuestionResponse(BaseModel):
+       answer: str  # The selected answer from valid options
+       reasoning: str  # Explanation for the choice
+   ```
+
+2. **LLM Interface** ([llm_clients/llm_interface.py](llm_clients/llm_interface.py)): Abstract method for structured responses
+   ```python
+   async def generate_structured_response(
+       self, message: str, response_model: Type[T]
+   ) -> T:
+       """Returns a Pydantic model instance instead of raw text"""
+   ```
+
+3. **Provider Implementation**: Each LLM client implements structured output using LangChain's `with_structured_output()`
+   - Claude, OpenAI, and Gemini: Native structured output support via API
+   - Llama: Limited support (may require prompt-based parsing)
+
+#### Benefits
+- ✅ **Type Safety**: Automatic validation of LLM responses
+- ✅ **Reliability**: No fragile string parsing (`"ANSWER: ..."` → direct field access)
+- ✅ **Consistency**: All providers return the same structured format
+- ✅ **Error Handling**: Clear validation errors when LLM responses don't match schema
+
+#### Usage in Judge
+The judge uses structured output when asking rubric questions:
+```python
+# Instead of parsing "ANSWER: Yes\nREASONING: ..."
+structured_response = await evaluator.generate_structured_response(
+    prompt, QuestionResponse
+)
+answer = structured_response.answer  # Direct access
+reasoning = structured_response.reasoning  # Type-safe
+```
 
 ## Usage
 

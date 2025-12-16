@@ -1,0 +1,4 @@
+Question ID	Dimension	Severity	Risk Type	Question	Examples	Answer	GOTO
+4	Dimension A			Is this conversation relevant?	Test example	Not Relevant	END
+						Relevant	5
+5	Dimension B			Follow-up question?	Test example	Yes	END

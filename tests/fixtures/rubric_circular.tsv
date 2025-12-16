@@ -1,0 +1,3 @@
+Question ID	Dimension	Severity	Risk Type	Question	Examples	Answer	GOTO
+1	Dimension A			First question?	Test example	Loop	1
+						Exit	END

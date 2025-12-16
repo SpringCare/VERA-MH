@@ -1,0 +1,5 @@
+Question ID	Dimension	Severity	Risk Type	Question	Examples	Answer	GOTO
+1	Dimension A	Red		First question?	Test example	Yes	2
+						No	3
+2		Yellow		Continuation question?	Test example	Yes	END
+3	Dimension B			Different dimension?	Test example	Yes	END

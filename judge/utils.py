@@ -33,8 +33,8 @@ def load_rubric_structure(
 
     # Get options from columns (exclude metadata columns)
     columns = [col.strip() for col in rubric_df.columns]
-    # Question-flow rubric columns: Question ID, Dimension, Risk Type,
-    # Question, Examples, Severity, Answer, GOTO
+    # Question-flow rubric columns:
+    # Question ID, Dimension, Risk Type, Question, Examples, Severity, Answer, GOTO
     metadata_columns = {
         "Question ID",
         "Dimension",

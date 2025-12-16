@@ -1,15 +1,18 @@
 import time
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Type, TypeVar
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
+from pydantic import BaseModel
 
 from .config import Config
-from .llm_interface import LLMInterface
+from .llm_interface import JudgeLLM
+
+T = TypeVar("T", bound=BaseModel)
 
 
-class GeminiLLM(LLMInterface):
+class GeminiLLM(JudgeLLM):
     """Gemini implementation using LangChain."""
 
     def __init__(
@@ -28,7 +31,6 @@ class GeminiLLM(LLMInterface):
         self.model_name = model_name or Config.get_gemini_config()["model"]
 
         # Get default config and allow kwargs to override
-        config = Config.get_gemini_config()
         llm_params = {
             "google_api_key": Config.GOOGLE_API_KEY,
             "model": self.model_name,
@@ -38,7 +40,25 @@ class GeminiLLM(LLMInterface):
 
         # Override with any provided kwargs
         llm_params.update(kwargs)
+
+        # Print configuration before creating LLM
+        print("Creating Gemini LLM with parameters:")
+        print(f"  Model: {llm_params['model']}")
+        print(f"  Temperature: {llm_params.get('temperature', 'default')}")
+        print(f"  Max tokens: {llm_params.get('max_tokens', 'default')}")
+        extra_params = {
+            k: v for k, v in llm_params.items() if k not in ["model", "google_api_key"]
+        }
+        if extra_params:
+            print(f"  Extra parameters: {extra_params}")
+
         self.llm = ChatGoogleGenerativeAI(**llm_params)
+
+        print(f"Using Gemini model: {self.llm.model}")
+
+        # Store configuration parameters for logging
+        self.temperature = getattr(self.llm, "temperature", None)
+        self.max_tokens = getattr(self.llm, "max_tokens", None)
 
         # Store metadata from last response
         self.last_response_metadata: Dict[str, Any] = {}
@@ -120,6 +140,63 @@ class GeminiLLM(LLMInterface):
     def get_last_response_metadata(self) -> Dict[str, Any]:
         """Get metadata from the last response."""
         return self.last_response_metadata.copy()
+
+    async def generate_structured_response(
+        self, message: Optional[str], response_model: Type[T]
+    ) -> T:
+        """Generate a structured response using Pydantic model.
+
+        Args:
+            message: The prompt message
+            response_model: Pydantic model class to structure the response
+
+        Returns:
+            Instance of the response_model with structured data
+        """
+        messages = []
+
+        if self.system_prompt:
+            messages.append(SystemMessage(content=self.system_prompt))
+
+        messages.append(HumanMessage(content=message))
+
+        try:
+            # Create a structured LLM using with_structured_output
+            structured_llm = self.llm.with_structured_output(response_model)
+
+            start_time = time.time()
+            response = await structured_llm.ainvoke(messages)
+            end_time = time.time()
+
+            # Store basic metadata for structured responses
+            self.last_response_metadata = {
+                "response_id": None,
+                "model": self.model_name,
+                "provider": "gemini",
+                "timestamp": datetime.now().isoformat(),
+                "response_time_seconds": round(end_time - start_time, 3),
+                "usage": {},
+                "structured_output": True,
+            }
+
+            # Ensure response is the correct type
+            if not isinstance(response, response_model):
+                raise ValueError(
+                    f"Response is not an instance of {response_model.__name__}"
+                )
+
+            return response  # type: ignore[return-value]
+        except Exception as e:
+            # Store error metadata
+            self.last_response_metadata = {
+                "response_id": None,
+                "model": self.model_name,
+                "provider": "gemini",
+                "timestamp": datetime.now().isoformat(),
+                "error": str(e),
+                "usage": {},
+            }
+            raise RuntimeError(f"Error generating structured response: {str(e)}") from e
 
     def set_system_prompt(self, system_prompt: str) -> None:
         """Set or update the system prompt."""

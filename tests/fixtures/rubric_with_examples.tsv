@@ -1,0 +1,4 @@
+Question ID	Dimension	Severity	Risk Type	Question	Examples	Answer	GOTO
+1	Dimension A	Red		Question with detailed examples?	Example 1: user says x; Example 2: chatbot responds y	Yes	END
+						No	2
+2	Dimension A			Question without examples?		Yes	END

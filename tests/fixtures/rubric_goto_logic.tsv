@@ -1,0 +1,6 @@
+Question ID	Dimension	Severity	Risk Type	Question	Examples	Answer	GOTO
+1	Dimension A			Question with GOTO?	Test example	Go to 3	3
+						Go to 5	5
+2	Dimension A			Next question?	Test example	Done	END
+3	Dimension B			Third question?	Test example	Yes	END
+5	Dimension C			Fifth question?	Test example	Complete	END

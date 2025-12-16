@@ -1,9 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Type, TypeVar
+
+from pydantic import BaseModel
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class LLMInterface(ABC):
-    """Abstract base class for LLM implementations."""
+    """Abstract base class for LLM implementations.
+
+    Provides basic text generation capabilities. All LLM implementations
+    must support basic text generation and system prompt management.
+    """
 
     def __init__(self, name: str, system_prompt: Optional[str] = None):
         self.name = name
@@ -43,3 +51,33 @@ class LLMInterface(ABC):
         raise AttributeError(
             f"'{self.__class__.__name__}' object has no attribute '{name}'"
         )
+
+
+class JudgeLLM(LLMInterface):
+    """Extended LLM interface that supports structured output generation.
+
+    This interface is required for LLM implementations that can be used
+    as judges, where structured output (using Pydantic models) is necessary
+    for reliable evaluation results.
+
+    Implementations: Claude, OpenAI, Gemini
+    Not supported by: Llama (via Ollama)
+    """
+
+    @abstractmethod
+    async def generate_structured_response(
+        self, message: Optional[str], response_model: Type[T]
+    ) -> T:
+        """Generate a structured response using Pydantic model.
+
+        Args:
+            message: The prompt message
+            response_model: Pydantic model class to structure the response
+
+        Returns:
+            Instance of the response_model with structured data
+
+        Raises:
+            RuntimeError: If structured output generation fails
+        """
+        pass

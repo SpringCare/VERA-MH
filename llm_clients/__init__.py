@@ -5,6 +5,6 @@ Provides unified interface for different LLM providers (OpenAI, Claude, Gemini, 
 
 from .config import Config
 from .llm_factory import LLMFactory
-from .llm_interface import LLMInterface
+from .llm_interface import JudgeLLM, LLMInterface
 
-__all__ = ["LLMInterface", "LLMFactory", "Config"]
+__all__ = ["LLMInterface", "JudgeLLM", "LLMFactory", "Config"]
