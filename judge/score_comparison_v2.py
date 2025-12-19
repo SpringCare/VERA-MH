@@ -355,7 +355,7 @@ def create_comparison_table(model_data: List[Dict[str, Any]], output_path: Path)
         for row_idx in range(n_rows + 1):  # +1 for header row
             cell = table[(row_idx, col_idx)]
             if col_name == "Model":
-                cell.set_width(0.1)  # Column for model names
+                cell.set_width(0.14)  # Column for model names
             elif col_name.startswith("_sep"):
                 cell.set_width(0.01)  # Narrow separator columns
                 cell.set_facecolor("#FFFFFF")
