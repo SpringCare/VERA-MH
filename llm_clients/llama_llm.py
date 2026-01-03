@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from langchain_community.llms import Ollama
 
@@ -40,6 +40,9 @@ class LlamaLLM(LLMInterface):
         llm_params.update(kwargs)
         self.llm = Ollama(**llm_params)
 
+        # Store metadata from last response
+        self.last_response_metadata: Dict[str, Any] = {}
+
     async def generate_response(self, message: Optional[str] = None) -> str:
         """Generate a response to the given message asynchronously."""
         try:
@@ -53,9 +56,28 @@ class LlamaLLM(LLMInterface):
             # Ollama doesn't have native async support in langchain-community
             # So we'll use the synchronous version
             response = self.llm.invoke(full_message)
+
+            # Store basic metadata
+            self.last_response_metadata = {
+                "model": self.model_name,
+                "provider": "llama",
+                "usage": {},
+            }
+
             return response
         except Exception as e:
+            # Store error metadata
+            self.last_response_metadata = {
+                "model": self.model_name,
+                "provider": "llama",
+                "error": str(e),
+                "usage": {},
+            }
             return f"Error generating response: {str(e)}"
+
+    def get_last_response_metadata(self) -> Dict[str, Any]:
+        """Get metadata from the last response."""
+        return self.last_response_metadata.copy()
 
     def set_system_prompt(self, system_prompt: str) -> None:
         """Set or update the system prompt."""

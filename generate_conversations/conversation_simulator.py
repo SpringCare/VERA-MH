@@ -6,10 +6,22 @@ from llm_clients import LLMInterface
 from utils.conversation_utils import save_conversation_to_file
 
 
-class ResponseWithScores(BaseModel):
-    """Model for multiple responses with confidence scores."""
+class ScoredResponse(BaseModel):
+    """A single response with its probability score."""
 
-    responses: List[Tuple[str, float]]
+    text: str
+    probability: float
+
+
+class ResponseWithScores(BaseModel):
+    """Model for multiple responses with confidence scores.
+
+    Note: Uses nested Pydantic model instead of List[Tuple[str, float]]
+    because OpenAI's structured output API doesn't support tuple types in
+    JSON schema. Tuples must be converted to objects with named fields.
+    """
+
+    responses: List[ScoredResponse]
 
 
 class ConversationSimulator:
@@ -71,7 +83,7 @@ class ConversationSimulator:
         max_turns: int,
         initial_message: Optional[str] = None,
         max_total_words: Optional[int] = None,
-        multiple_responses: bool = False,
+        multiple_responses: bool = True,
     ) -> List[Dict[str, Any]]:
         """
         Start a conversation between the two LLMs with early stopping support.
@@ -108,15 +120,29 @@ class ConversationSimulator:
                 current_speaker, "generate_structured_response"
             ):
                 # Generate multiple responses with scores
+                # Add instruction to generate multiple responses
+                multi_response_message = (
+                    f"{current_message}\n\n"
+                    "Please provide 5 diverse possible responses as a persona would, "
+                    "each with a probability score (0.0-1.0) indicating how likely "
+                    "that response is based on the persona's characteristics."
+                )
                 structured_response = (
                     await current_speaker.generate_structured_response(
-                        current_message, ResponseWithScores
+                        multi_response_message, ResponseWithScores
                     )
                 )
+                print(f"Structured response: {structured_response}")
                 # Select the response with the highest score
-                response, score = max(structured_response.responses, key=lambda x: x[1])
+                best_response = max(
+                    structured_response.responses, key=lambda x: x.probability
+                )
+                response = best_response.text
+                score = best_response.probability
                 # Store all responses in metadata for transparency
-                all_responses = structured_response.responses
+                all_responses = [
+                    (r.text, r.probability) for r in structured_response.responses
+                ]
             else:
                 # Generate single response (default behavior)
                 # Note: Despite interface definition, implementations return str

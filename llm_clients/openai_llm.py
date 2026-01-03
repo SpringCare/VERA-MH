@@ -136,7 +136,7 @@ class OpenAILLM(JudgeLLM):
                 # Store raw usage_metadata
                 self.last_response_metadata["raw_usage_metadata"] = dict(usage_meta)
 
-            return response.content
+            return response.content  # type: ignore[return-value]
         except Exception as e:
             # Store error metadata
             self.last_response_metadata = {

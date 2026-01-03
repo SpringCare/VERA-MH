@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Tuple, Type, TypeVar
+from typing import Any, Dict, Optional, Type, TypeVar
 
 from pydantic import BaseModel
 
@@ -18,13 +18,22 @@ class LLMInterface(ABC):
         self.system_prompt = system_prompt or ""
 
     @abstractmethod
-    async def generate_response(
-        self, message: Optional[str] = None
-    ) -> Tuple[str, Dict[str, Any]]:
+    async def generate_response(self, message: Optional[str] = None) -> str:
         """Generate a response to the given message asynchronously.
 
         Returns:
-            Tuple of (response_text, metadata_dict)
+            Response text as a string. Use get_last_response_metadata() to access
+            metadata from the last response.
+        """
+        pass
+
+    @abstractmethod
+    def get_last_response_metadata(self) -> Dict[str, Any]:
+        """Get metadata from the last response.
+
+        Returns:
+            Dictionary containing metadata such as model name, provider,
+            timestamp, token usage, and other provider-specific information.
         """
         pass
 
