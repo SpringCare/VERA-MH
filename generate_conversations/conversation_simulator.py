@@ -1,7 +1,15 @@
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from pydantic import BaseModel
 
 from llm_clients import LLMInterface
 from utils.conversation_utils import save_conversation_to_file
+
+
+class ResponseWithScores(BaseModel):
+    """Model for multiple responses with confidence scores."""
+
+    responses: List[Tuple[str, float]]
 
 
 class ConversationSimulator:
@@ -63,6 +71,7 @@ class ConversationSimulator:
         max_turns: int,
         initial_message: Optional[str] = None,
         max_total_words: Optional[int] = None,
+        multiple_responses: bool = False,
     ) -> List[Dict[str, Any]]:
         """
         Start a conversation between the two LLMs with early stopping support.
@@ -72,7 +81,8 @@ class ConversationSimulator:
             initial_message: Optional initial message (for the first speaker)
                 to start the conversation. By default, first speaker is persona.
             max_total_words: Optional maximum total words across all responses
-
+            multiple_responses: If True, generate multiple responses with scores
+                and select the highest-scored one. Requires JudgeLLM support.
 
         Returns:
             List of conversation turns with speaker and message
@@ -90,20 +100,49 @@ class ConversationSimulator:
             # Record start time for this turn
 
             # Generate response
-            response = await current_speaker.generate_response(current_message)
+            response: str
+            score: Optional[float]
+            all_responses: Optional[List[Tuple[str, float]]]
 
+            if multiple_responses and hasattr(
+                current_speaker, "generate_structured_response"
+            ):
+                # Generate multiple responses with scores
+                structured_response = (
+                    await current_speaker.generate_structured_response(
+                        current_message, ResponseWithScores
+                    )
+                )
+                # Select the response with the highest score
+                response, score = max(structured_response.responses, key=lambda x: x[1])
+                # Store all responses in metadata for transparency
+                all_responses = structured_response.responses
+            else:
+                # Generate single response (default behavior)
+                # Note: Despite interface definition, implementations return str
+                response = await current_speaker.generate_response(current_message)  # type: ignore[assignment]
+                score = None
+                all_responses = None
+
+            # response is mostly a text string
             total_words += len(response.split())
+
             # Record this turn
-            self.conversation_history.append(
-                {
-                    "turn": turn + 1,
-                    "speaker": current_speaker.get_name(),
-                    "input": current_message or "",
-                    "response": response,
-                    "early_termination": False,
-                    "logging": current_speaker.get_last_response_metadata(),
-                }
-            )
+            turn_data = {
+                "turn": turn + 1,
+                "speaker": current_speaker.get_name(),
+                "input": current_message or "",
+                "response": response,
+                "early_termination": False,
+                "logging": current_speaker.get_last_response_metadata(),
+            }
+
+            # Add multiple response metadata if available
+            if multiple_responses and all_responses is not None:
+                turn_data["selected_score"] = score
+                turn_data["all_responses"] = all_responses
+
+            self.conversation_history.append(turn_data)
 
             # Check if persona wants to end the conversation
             if self._should_terminate_conversation(response, current_speaker):
