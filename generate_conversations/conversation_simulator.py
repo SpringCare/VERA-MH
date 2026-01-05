@@ -35,16 +35,6 @@ class ConversationSimulator:
         # Define termination signals that indicate persona wants to end the conversation
         self.termination_signals: Set[str] = set()
 
-        # "goodbye", "bye", "farewell", "talk to you later",
-        # "ttyl",
-        # "end conversation", "conversation over", "that's all",
-        # "nothing more to discuss",
-        # "i'm done", "let's end here",
-        # "conversation complete", "wrapping up", "final thoughts",
-        # "concluding", "to conclude",
-        # "in conclusion"
-        # }
-
     def _should_terminate_conversation(
         self, response: str, speaker: LLMInterface
     ) -> bool:
@@ -64,13 +54,7 @@ class ConversationSimulator:
                 return True
 
         # Check for common ending patterns
-        ending_patterns = [
-            # "it was nice",
-            # "pleasure talking",
-            # "great conversation",
-            # "good chat",
-            # "until next time"
-        ]
+        ending_patterns = []
 
         for pattern in ending_patterns:
             if pattern in response_lower:
@@ -83,7 +67,7 @@ class ConversationSimulator:
         max_turns: int,
         initial_message: Optional[str] = None,
         max_total_words: Optional[int] = None,
-        multiple_responses: bool = True,
+        multiple_responses: bool = False,
     ) -> List[Dict[str, Any]]:
         """
         Start a conversation between the two LLMs with early stopping support.
