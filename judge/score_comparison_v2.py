@@ -36,20 +36,19 @@ DIMENSIONS, _ = load_rubric_structure("data/rubric.tsv")
 
 # Short dimension names for column headers
 DIMENSION_SHORT_NAMES = {
-    "Detects Risk": "Detects Risk",
-    "Probes Risk": "Probes Risk",
-    "Clarifies Risk": "Clarifies Risk",
-    "Provides Resources and Encourages Human Support": "Provides Resources",
-    "Collaborates and Validates Appropriately": "Collaborates",
-    "Maintains Safe Boundaries": "Safe Boundaries",
+    "Detects Risk": "Detects potential risk",
+    "Probes Risk": "Confirms risk",
+    "Clarifies Risk": "Confirms risk",
+    "Provides Resources and Encourages Human Support": "Guides to human support",
+    "Collaborates and Validates Appropriately": "Communicates effectively",
+    "Maintains Safe Boundaries": "Maintains safe boundaries",
 }
 
 # Discrete color scale
-COLOR_DARK_RED = "#870903"  # 0-24
-COLOR_LIGHT_RED = "#E90C00"  # 25-49
-COLOR_WHITE = "#F9DD9C"  # 50
-COLOR_LIGHT_GREEN = "#418B24"  # 51-75
-COLOR_DARK_GREEN = "#1A4734"  # 76-100
+COLOR_RED = "#DA4D2C"  # 0-24
+COLOR_ORANGE = "#EE9948"  # 25-49
+COLOR_YELLOW = "#F5C54D"  # 50-74
+COLOR_GREEN = "#79CD71"  # 75-100
 
 
 def get_color_for_score(score: float) -> str:
@@ -63,15 +62,13 @@ def get_color_for_score(score: float) -> str:
         Hex color string
     """
     if score < 25:
-        return COLOR_DARK_RED
+        return COLOR_RED
     elif score < 50:
-        return COLOR_LIGHT_RED
-    elif score == 50:
-        return COLOR_WHITE
-    elif score <= 75:
-        return COLOR_LIGHT_GREEN
+        return COLOR_ORANGE
+    elif score < 75:
+        return COLOR_YELLOW
     else:
-        return COLOR_DARK_GREEN
+        return COLOR_GREEN
 
 
 def calculate_dimension_scores(
@@ -299,20 +296,26 @@ def create_comparison_table(model_data: List[Dict[str, Any]], output_path: Path)
         elif col.startswith("VERA:"):
             dim_name = col.replace("VERA: ", "")
             # Add line breaks to wrap text
-            if dim_name == "Detects Risk":
-                col_labels.append("Detects\nRisk")
-            elif dim_name == "Probes Risk":
-                col_labels.append("Probes\nRisk")
-            elif dim_name == "Clarifies Risk":
-                col_labels.append("Clarifies\nRisk")
-            elif dim_name == "Provides Resources":
-                col_labels.append("Provides\nResources")
-            elif dim_name == "Collaborates":
-                col_labels.append("Collaborates")
-            elif dim_name == "Safe Boundaries":
-                col_labels.append("Safe\nBoundaries")
+            if dim_name == "Detects potential risk":
+                col_labels.append("Detects\npotential\nrisk")
+            elif dim_name == "Confirms risk":
+                col_labels.append("Confirms\nrisk")
+            elif dim_name == "Guides to human support":
+                col_labels.append("Guides to\nhuman\nsupport")
+            elif dim_name == "Communicates effectively":
+                col_labels.append("Communicates\neffectively")
+            elif dim_name == "Maintains safe boundaries":
+                col_labels.append("Maintains\nsafe\nboundaries")
             else:
-                col_labels.append(dim_name)
+                # Generic wrapping for unknown dimensions
+                words = dim_name.split()
+                if len(words) > 2:
+                    mid = len(words) // 2
+                    col_labels.append(
+                        " ".join(words[:mid]) + "\n" + " ".join(words[mid:])
+                    )
+                else:
+                    col_labels.append(dim_name)
         else:
             col_labels.append(col)
 
@@ -355,7 +358,7 @@ def create_comparison_table(model_data: List[Dict[str, Any]], output_path: Path)
         for row_idx in range(n_rows + 1):  # +1 for header row
             cell = table[(row_idx, col_idx)]
             if col_name == "Model":
-                cell.set_width(0.14)  # Column for model names
+                cell.set_width(0.18)  # Column for model names
             elif col_name.startswith("_sep"):
                 cell.set_width(0.01)  # Narrow separator columns
                 cell.set_facecolor("#FFFFFF")
@@ -389,7 +392,7 @@ def create_comparison_table(model_data: List[Dict[str, Any]], output_path: Path)
             elif col_name == "VERA\nSafety Index":
                 # Determine text color based on background
                 bg_color = cell_colors[row_idx - 1][col_idx]
-                if bg_color in [COLOR_DARK_RED, COLOR_DARK_GREEN]:
+                if bg_color in [COLOR_RED, COLOR_GREEN]:
                     text_color = "white"
                 else:
                     text_color = "black"
@@ -461,11 +464,10 @@ def create_comparison_table(model_data: List[Dict[str, Any]], output_path: Path)
     # Add color legend at the bottom
     # (color, number label, descriptive label)
     legend_items = [
-        (COLOR_DARK_RED, "0-24", "Least Safe"),
-        (COLOR_LIGHT_RED, "25-49", "Less Safe"),
-        (COLOR_WHITE, "50", "Neutral"),
-        (COLOR_LIGHT_GREEN, "51-75", "Safer"),
-        (COLOR_DARK_GREEN, "76-100", "Safest"),
+        (COLOR_RED, "0-24", "Unsafe"),
+        (COLOR_ORANGE, "25-49", "High risk"),
+        (COLOR_YELLOW, "50-74", "Moderate risk"),
+        (COLOR_GREEN, "75-100", "Safe"),
     ]
 
     # Position legend below the table, matching table width
@@ -495,11 +497,7 @@ def create_comparison_table(model_data: List[Dict[str, Any]], output_path: Path)
         fig.add_artist(rect)
 
         # Add number label in box - white text for dark colors and light red
-        text_color = (
-            "white"
-            if color in [COLOR_DARK_RED, COLOR_LIGHT_RED, COLOR_DARK_GREEN]
-            else "black"
-        )
+        text_color = "white" if color in [COLOR_RED] else "black"
         fig.text(
             box_x + box_width * 0.5,
             legend_y + 0.015,
