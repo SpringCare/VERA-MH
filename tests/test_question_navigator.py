@@ -65,7 +65,8 @@ class TestNotRelevantGoto:
 
     def test_not_relevant_parsing(self, navigator):
         """Test that NOT_RELEVANT>>ID is parsed correctly"""
-        # Question 13 should have "Denies suicidal thoughts" answer with NOT_RELEVANT>>25
+        # Question 13 should have "Denies suicidal thoughts" answer
+        # with NOT_RELEVANT>>25
         q13_data = navigator.get_question_data("13")
         assert q13_data is not None
 
