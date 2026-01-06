@@ -141,6 +141,57 @@ class GeminiLLM(JudgeLLM):
         """Get metadata from the last response."""
         return self.last_response_metadata.copy()
 
+    async def _generate_structured_via_json_parsing(
+        self, message: Optional[str], response_model: Type[T]
+    ) -> T:
+        """Fallback method for Gemini 3 that parses JSON from text response.
+
+        Args:
+            message: The prompt message
+            response_model: Pydantic model class to structure the response
+
+        Returns:
+            Instance of the response_model with structured data
+        """
+        import json
+        import re
+
+        # Add JSON formatting instruction to the message
+        json_message = (
+            f"{message}\n\n"
+            f"IMPORTANT: Respond with ONLY valid JSON matching this schema:\n"
+            f"{response_model.model_json_schema()}\n\n"
+            f"Do not include any text before or after the JSON."
+        )
+
+        # Use normal text generation
+        text_response = await self.generate_response(json_message)
+
+        # Try to extract JSON from the response
+        try:
+            # First, try to parse the whole response as JSON
+            parsed_data = json.loads(text_response)
+        except json.JSONDecodeError:
+            # If that fails, try to find JSON in code blocks
+            json_match = re.search(
+                r"```(?:json)?\s*(\{.*?\})\s*```", text_response, re.DOTALL
+            )
+            if json_match:
+                parsed_data = json.loads(json_match.group(1))
+            else:
+                # Try to find any JSON object in the text
+                json_match = re.search(r"\{.*\}", text_response, re.DOTALL)
+                if json_match:
+                    parsed_data = json.loads(json_match.group(0))
+                else:
+                    raise ValueError(
+                        f"Could not extract valid JSON from Gemini response. "
+                        f"Response: {text_response[:500]}"
+                    )
+
+        # Convert to Pydantic model
+        return response_model(**parsed_data)
+
     async def generate_structured_response(
         self, message: Optional[str], response_model: Type[T], max_retries: int = 3
     ) -> T:
@@ -155,10 +206,21 @@ class GeminiLLM(JudgeLLM):
             Instance of the response_model with structured data
 
         Note:
-            Gemini sometimes returns None due to MALFORMED_FUNCTION_CALL issues.
-            This method will retry up to max_retries times before failing.
+            Gemini 2.x models work reliably with structured output.
+            Gemini 3.x models have issues with LangChain's structured output
+            and will fall back to JSON text parsing.
             See: https://github.com/langchain-ai/langchain-google/issues/1207
         """
+        # Check if this is a Gemini 3.x model
+        is_gemini_3 = "gemini-3" in self.model_name.lower()
+
+        if is_gemini_3:
+            # Gemini 3 has issues with structured output, use JSON parsing fallback
+            return await self._generate_structured_via_json_parsing(
+                message, response_model
+            )
+
+        # Gemini 2.x and earlier use normal structured output path
         messages = []
 
         if self.system_prompt:
@@ -166,10 +228,14 @@ class GeminiLLM(JudgeLLM):
 
         messages.append(HumanMessage(content=message))
 
+        import asyncio
+
         last_error = None
         for attempt in range(max_retries):
             try:
                 # Create a structured LLM using with_structured_output
+                # Note: Keeping function_calling as default since json_schema
+                # may not be available in all langchain-google-genai versions
                 structured_llm = self.llm.with_structured_output(response_model)
 
                 start_time = time.time()
@@ -195,7 +261,12 @@ class GeminiLLM(JudgeLLM):
                         f"This is a known issue with Gemini's function calling. "
                     )
                     if attempt < max_retries - 1:
-                        print(f"WARNING: {error_msg}Retrying...")
+                        # Wait before retrying (exponential backoff)
+                        wait_time = 2**attempt
+                        print(
+                            f"WARNING: {error_msg}Waiting {wait_time}s before retry..."
+                        )
+                        await asyncio.sleep(wait_time)
                         continue
                     else:
                         raise ValueError(
