@@ -142,16 +142,22 @@ class GeminiLLM(JudgeLLM):
         return self.last_response_metadata.copy()
 
     async def generate_structured_response(
-        self, message: Optional[str], response_model: Type[T]
+        self, message: Optional[str], response_model: Type[T], max_retries: int = 3
     ) -> T:
         """Generate a structured response using Pydantic model.
 
         Args:
             message: The prompt message
             response_model: Pydantic model class to structure the response
+            max_retries: Maximum number of retries for None responses (default: 3)
 
         Returns:
             Instance of the response_model with structured data
+
+        Note:
+            Gemini sometimes returns None due to MALFORMED_FUNCTION_CALL issues.
+            This method will retry up to max_retries times before failing.
+            See: https://github.com/langchain-ai/langchain-google/issues/1207
         """
         messages = []
 
@@ -160,55 +166,100 @@ class GeminiLLM(JudgeLLM):
 
         messages.append(HumanMessage(content=message))
 
-        try:
-            # Create a structured LLM using with_structured_output
-            structured_llm = self.llm.with_structured_output(response_model)
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                # Create a structured LLM using with_structured_output
+                structured_llm = self.llm.with_structured_output(response_model)
 
-            start_time = time.time()
-            response = await structured_llm.ainvoke(messages)
-            end_time = time.time()
+                start_time = time.time()
+                response = await structured_llm.ainvoke(messages)
+                end_time = time.time()
 
-            # Store basic metadata for structured responses
-            self.last_response_metadata = {
-                "response_id": None,
-                "model": self.model_name,
-                "provider": "gemini",
-                "timestamp": datetime.now().isoformat(),
-                "response_time_seconds": round(end_time - start_time, 3),
-                "usage": {},
-                "structured_output": True,
-            }
+                # Store basic metadata for structured responses
+                self.last_response_metadata = {
+                    "response_id": None,
+                    "model": self.model_name,
+                    "provider": "gemini",
+                    "timestamp": datetime.now().isoformat(),
+                    "response_time_seconds": round(end_time - start_time, 3),
+                    "usage": {},
+                    "structured_output": True,
+                    "retry_attempt": attempt + 1,
+                }
 
-            # Ensure response is the correct type
-            # LangChain's Gemini integration may return dict instead of Pydantic
-            if isinstance(response, dict):
-                try:
-                    response = response_model(**response)
-                except Exception as conv_error:
+                # Handle None response (MALFORMED_FUNCTION_CALL from Gemini)
+                if response is None:
+                    error_msg = (
+                        f"Gemini returned None (attempt {attempt + 1}/{max_retries}). "
+                        f"This is a known issue with Gemini's function calling. "
+                    )
+                    if attempt < max_retries - 1:
+                        print(f"WARNING: {error_msg}Retrying...")
+                        continue
+                    else:
+                        raise ValueError(
+                            f"{error_msg}Max retries exceeded. "
+                            f"Message: {message[:200] if message else 'None'}..."
+                        )
+
+                # Ensure response is the correct type
+                # LangChain's Gemini integration may return dict instead of Pydantic
+                if isinstance(response, dict):
+                    try:
+                        response = response_model(**response)
+                    except Exception as conv_error:
+                        model_name = response_model.__name__
+                        raise ValueError(
+                            f"Failed to convert dict to {model_name}: "
+                            f"{conv_error}. Response: {response}"
+                        ) from conv_error
+                elif not isinstance(response, response_model):
                     model_name = response_model.__name__
+                    response_type = type(response)
                     raise ValueError(
-                        f"Failed to convert dict to {model_name}: "
-                        f"{conv_error}. Response: {response}"
-                    ) from conv_error
-            elif not isinstance(response, response_model):
-                model_name = response_model.__name__
-                response_type = type(response)
-                raise ValueError(
-                    f"Response is not an instance of {model_name}, got {response_type}"
-                )
+                        f"Response is not an instance of {model_name}, "
+                        f"got {response_type}"
+                    )
 
-            return response  # type: ignore[return-value]
-        except Exception as e:
-            # Store error metadata
-            self.last_response_metadata = {
-                "response_id": None,
-                "model": self.model_name,
-                "provider": "gemini",
-                "timestamp": datetime.now().isoformat(),
-                "error": str(e),
-                "usage": {},
-            }
-            raise RuntimeError(f"Error generating structured response: {str(e)}") from e
+                return response  # type: ignore[return-value]
+
+            except ValueError as e:
+                # If it's a None response error and we have retries left, continue
+                if "returned None" in str(e) and attempt < max_retries - 1:
+                    last_error = e
+                    continue
+                # Otherwise, re-raise
+                raise
+            except Exception as e:
+                # For other exceptions, store error and re-raise
+                self.last_response_metadata = {
+                    "response_id": None,
+                    "model": self.model_name,
+                    "provider": "gemini",
+                    "timestamp": datetime.now().isoformat(),
+                    "error": str(e),
+                    "usage": {},
+                    "retry_attempt": attempt + 1,
+                }
+                raise RuntimeError(
+                    f"Error generating structured response: {str(e)}"
+                ) from e
+
+        # If we exhausted all retries
+        self.last_response_metadata = {
+            "response_id": None,
+            "model": self.model_name,
+            "provider": "gemini",
+            "timestamp": datetime.now().isoformat(),
+            "error": str(last_error),
+            "usage": {},
+            "retry_attempts": max_retries,
+        }
+        raise RuntimeError(
+            f"Error generating structured response after {max_retries} retries: "
+            f"{str(last_error)}"
+        ) from last_error
 
     def set_system_prompt(self, system_prompt: str) -> None:
         """Set or update the system prompt."""
