@@ -116,7 +116,7 @@ class ConversationSimulator:
                         multi_response_message, ResponseWithScores
                     )
                 )
-                print(f"Structured response: {structured_response}")
+
                 # Select the response with the highest score
                 best_response = max(
                     structured_response.responses, key=lambda x: x.probability

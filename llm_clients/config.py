@@ -49,6 +49,16 @@ class Config:
             "max_tokens": 1000,
         },
         "gemini-pro": {"provider": "google", "temperature": 0.7, "max_tokens": 1000},
+        "gemini-3-pro-preview": {
+            "provider": "google",
+            "temperature": 0.7,
+            "max_tokens": 1000,
+        },
+        "gemini-2.5-flash": {
+            "provider": "google",
+            "temperature": 0.7,
+            "max_tokens": 1000,
+        },
         "llama2:7b": {
             "provider": "ollama",
             "temperature": 0.7,

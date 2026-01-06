@@ -180,9 +180,21 @@ class GeminiLLM(JudgeLLM):
             }
 
             # Ensure response is the correct type
-            if not isinstance(response, response_model):
+            # LangChain's Gemini integration may return dict instead of Pydantic
+            if isinstance(response, dict):
+                try:
+                    response = response_model(**response)
+                except Exception as conv_error:
+                    model_name = response_model.__name__
+                    raise ValueError(
+                        f"Failed to convert dict to {model_name}: "
+                        f"{conv_error}. Response: {response}"
+                    ) from conv_error
+            elif not isinstance(response, response_model):
+                model_name = response_model.__name__
+                response_type = type(response)
                 raise ValueError(
-                    f"Response is not an instance of {response_model.__name__}"
+                    f"Response is not an instance of {model_name}, got {response_type}"
                 )
 
             return response  # type: ignore[return-value]
