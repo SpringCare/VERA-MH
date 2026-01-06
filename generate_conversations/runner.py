@@ -68,8 +68,6 @@ class ConversationRunner:
 
         # Generate filename base using persona name, model, and run number
         tag = uuid.uuid4().hex[:6]
-        # TODO: consider removing timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
         # TODO: should this be inside the LLM class?
         model_short = (
             model_name.replace("claude-3-", "c3-")
@@ -167,7 +165,9 @@ class ConversationRunner:
     ) -> List[Dict[str, Any]]:
         """Run multiple conversations concurrently."""
         # Load prompts from CSV based on persona names
-        personas = load_prompts_from_csv(persona_names)
+        personas = load_prompts_from_csv(
+            persona_names, multiple_responses=self.multiple_responses
+        )
 
         # Load agent configuration (fixed, shared across all conversations)
         agent = LLMFactory.create_llm(
@@ -212,7 +212,8 @@ class ConversationRunner:
                     return await task
 
             print(
-                f"Running {len(tasks)} conversations with max concurrency: {self.max_concurrent}"
+                f"Running {len(tasks)} conversations with max concurrency: "
+                f"{self.max_concurrent}"
             )
             results = await asyncio.gather(*[run_with_limit(task) for task in tasks])
         else:
