@@ -124,7 +124,18 @@ class GeminiLLM(JudgeLLM):
                 # Store raw metadata
                 self.last_response_metadata["raw_metadata"] = dict(metadata)
 
-            return response.content
+            # Handle case where content is a list
+            # (some Gemini models return list of blocks)
+            content = response.content
+            if isinstance(content, list):
+                # Join text content from all blocks
+                content = "".join(
+                    block.get("text", str(block))
+                    if isinstance(block, dict)
+                    else str(block)
+                    for block in content
+                )
+            return content
         except Exception as e:
             # Store error metadata
             self.last_response_metadata = {
