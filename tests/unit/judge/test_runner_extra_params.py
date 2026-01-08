@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from judge.rubric_config import ConversationData
 from judge.runner import batch_evaluate_with_individual_judges, judge_conversations
 
 
@@ -13,11 +14,22 @@ class TestRunnerExtraParams:
     """Test that extra parameters are properly handled in runner functions."""
 
     @pytest.mark.asyncio
-    async def test_batch_evaluate_accepts_extra_params(self, tmp_path: Path):
+    async def test_batch_evaluate_accepts_extra_params(
+        self, tmp_path: Path, rubric_config_factory
+    ):
         """Test that batch_evaluate_with_individual_judges accepts extra params."""
-        # Create test conversation file
-        conv_file = tmp_path / "test_conv.txt"
-        conv_file.write_text("User: Hello\nAssistant: Hi!")
+        # Create test conversation
+        conversation = ConversationData(
+            content="User: Hello\nAssistant: Hi!",
+            metadata={
+                "filename": "test_conv.txt",
+                "run_id": "test",
+                "source_path": str(tmp_path / "test_conv.txt"),
+            },
+        )
+
+        # Load rubric config
+        rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
 
         extra_params = {"temperature": 0.7, "max_tokens": 1000}
 
@@ -36,10 +48,10 @@ class TestRunnerExtraParams:
             mock_judge_class.return_value = mock_judge
 
             results = await batch_evaluate_with_individual_judges(
-                conversation_file_paths=[str(conv_file)],
+                conversations=[conversation],
                 judge_models={"claude-3-7-sonnet": 1},
                 output_folder=str(tmp_path),
-                limit=None,
+                rubric_config=rubric_config,
                 max_concurrent=None,
                 per_judge=False,
                 judge_model_extra_params=extra_params,
@@ -53,10 +65,20 @@ class TestRunnerExtraParams:
             assert len(results) == 1
 
     @pytest.mark.asyncio
-    async def test_batch_evaluate_extra_params_defaults_to_none(self, tmp_path: Path):
+    async def test_batch_evaluate_extra_params_defaults_to_none(
+        self, tmp_path: Path, rubric_config_factory
+    ):
         """Test that extra params default to None when not provided."""
-        conv_file = tmp_path / "test_conv.txt"
-        conv_file.write_text("User: Hello\nAssistant: Hi!")
+        conversation = ConversationData(
+            content="User: Hello\nAssistant: Hi!",
+            metadata={
+                "filename": "test_conv.txt",
+                "run_id": "test",
+                "source_path": str(tmp_path / "test_conv.txt"),
+            },
+        )
+
+        rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
 
         with patch("judge.runner.LLMJudge") as mock_judge_class:
             mock_judge = MagicMock()
@@ -73,10 +95,10 @@ class TestRunnerExtraParams:
             mock_judge_class.return_value = mock_judge
 
             results = await batch_evaluate_with_individual_judges(
-                conversation_file_paths=[str(conv_file)],
+                conversations=[conversation],
                 judge_models={"claude-3-7-sonnet": 1},
                 output_folder=str(tmp_path),
-                limit=None,
+                rubric_config=rubric_config,
                 max_concurrent=None,
                 per_judge=False,
                 # No extra params provided
@@ -90,13 +112,21 @@ class TestRunnerExtraParams:
             assert len(results) == 1
 
     @pytest.mark.asyncio
-    async def test_judge_conversations_accepts_extra_params(self, tmp_path: Path):
+    async def test_judge_conversations_accepts_extra_params(
+        self, tmp_path: Path, rubric_config_factory
+    ):
         """Test that judge_conversations accepts and passes extra params."""
-        # Create conversation folder with test file
-        conv_folder = tmp_path / "conversations"
-        conv_folder.mkdir()
-        conv_file = conv_folder / "test_conv.txt"
-        conv_file.write_text("User: Hello\nAssistant: Hi!")
+        # Create test conversation
+        conversation = ConversationData(
+            content="User: Hello\nAssistant: Hi!",
+            metadata={
+                "filename": "test_conv.txt",
+                "run_id": "test",
+                "source_path": str(tmp_path / "test_conv.txt"),
+            },
+        )
+
+        rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
 
         extra_params = {"temperature": 0.5, "max_tokens": 500}
 
@@ -111,7 +141,8 @@ class TestRunnerExtraParams:
 
             results = await judge_conversations(
                 judge_models={"claude-3-7-sonnet": 1},
-                conversation_folder=str(conv_folder),
+                conversations=[conversation],
+                rubric_config=rubric_config,
                 output_root=str(tmp_path / "output"),
                 judge_model_extra_params=extra_params,
                 save_aggregated_results=False,
@@ -119,22 +150,28 @@ class TestRunnerExtraParams:
 
             # Verify batch function was called with extra params
             mock_batch.assert_called_once()
-            call_args = mock_batch.call_args[0]
-            # Arguments: conversation_file_paths, judge_models, output_folder,
-            #            limit, max_concurrent, per_judge, judge_model_extra_params
-            assert len(call_args) == 7
-            assert call_args[6] == extra_params  # judge_model_extra_params is 7th arg
+            # Function called as: batch_evaluate_with_individual_judges(
+            #   conversations, judge_models, output_folder, rubric_config,
+            #   max_concurrent, per_judge, judge_model_extra_params)
+            # extra_params is the 7th positional argument (index 6)
+            assert mock_batch.call_args.args[6] == extra_params
             assert len(results) == 1
 
     @pytest.mark.asyncio
     async def test_judge_conversations_extra_params_defaults_to_none(
-        self, tmp_path: Path
+        self, tmp_path: Path, rubric_config_factory
     ):
         """Test that extra params default to None in judge_conversations."""
-        conv_folder = tmp_path / "conversations"
-        conv_folder.mkdir()
-        conv_file = conv_folder / "test_conv.txt"
-        conv_file.write_text("User: Hello\nAssistant: Hi!")
+        conversation = ConversationData(
+            content="User: Hello\nAssistant: Hi!",
+            metadata={
+                "filename": "test_conv.txt",
+                "run_id": "test",
+                "source_path": str(tmp_path / "test_conv.txt"),
+            },
+        )
+
+        rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
 
         with patch("judge.runner.batch_evaluate_with_individual_judges") as mock_batch:
             mock_batch.return_value = [
@@ -147,7 +184,8 @@ class TestRunnerExtraParams:
 
             results = await judge_conversations(
                 judge_models={"claude-3-7-sonnet": 1},
-                conversation_folder=str(conv_folder),
+                conversations=[conversation],
+                rubric_config=rubric_config,
                 output_root=str(tmp_path / "output"),
                 save_aggregated_results=False,
                 # No extra params provided
@@ -155,22 +193,29 @@ class TestRunnerExtraParams:
 
             # Verify batch function was called with None for extra params
             mock_batch.assert_called_once()
-            call_args = mock_batch.call_args[0]
-            # Arguments: conversation_file_paths, judge_models, output_folder,
-            #            limit, max_concurrent, per_judge, judge_model_extra_params
-            assert len(call_args) == 7
-            assert call_args[6] is None  # judge_model_extra_params is 7th arg
+            # Check that judge_model_extra_params defaults to None (7th arg, index 6)
+            assert mock_batch.call_args.args[6] is None
             assert len(results) == 1
 
     @pytest.mark.asyncio
-    async def test_multiple_conversations_with_extra_params(self, tmp_path: Path):
+    async def test_multiple_conversations_with_extra_params(
+        self, tmp_path: Path, rubric_config_factory
+    ):
         """Test that extra params are used for all conversations in batch."""
-        # Create multiple conversation files
-        conv_files = []
-        for i in range(3):
-            conv_file = tmp_path / f"conv_{i}.txt"
-            conv_file.write_text(f"User: Hello {i}\nAssistant: Hi {i}!")
-            conv_files.append(str(conv_file))
+        # Create multiple conversations
+        conversations = [
+            ConversationData(
+                content=f"User: Hello {i}\nAssistant: Hi {i}!",
+                metadata={
+                    "filename": f"conv_{i}.txt",
+                    "run_id": f"test_{i}",
+                    "source_path": str(tmp_path / f"conv_{i}.txt"),
+                },
+            )
+            for i in range(3)
+        ]
+
+        rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
 
         extra_params = {"temperature": 0.8, "max_tokens": 2000}
 
@@ -189,10 +234,10 @@ class TestRunnerExtraParams:
             mock_judge_class.return_value = mock_judge
 
             results = await batch_evaluate_with_individual_judges(
-                conversation_file_paths=conv_files,
+                conversations=conversations,
                 judge_models={"claude-3-7-sonnet": 1},
                 output_folder=str(tmp_path),
-                limit=None,
+                rubric_config=rubric_config,
                 max_concurrent=None,
                 per_judge=False,
                 judge_model_extra_params=extra_params,
@@ -210,14 +255,24 @@ class TestRunnerExtraParams:
             assert len(results) == 3
 
     @pytest.mark.asyncio
-    async def test_extra_params_with_limit(self, tmp_path: Path):
-        """Test that extra params work correctly when limit is applied."""
-        # Create multiple conversation files
-        conv_files = []
-        for i in range(5):
-            conv_file = tmp_path / f"conv_{i}.txt"
-            conv_file.write_text(f"User: Hello {i}\nAssistant: Hi {i}!")
-            conv_files.append(str(conv_file))
+    async def test_extra_params_with_multiple_conversations(
+        self, tmp_path: Path, rubric_config_factory
+    ):
+        """Test that extra params work correctly with multiple conversations."""
+        # Create 5 conversations but we'll pass all
+        conversations = [
+            ConversationData(
+                content=f"User: Hello {i}\nAssistant: Hi {i}!",
+                metadata={
+                    "filename": f"conv_{i}.txt",
+                    "run_id": f"test_{i}",
+                    "source_path": str(tmp_path / f"conv_{i}.txt"),
+                },
+            )
+            for i in range(5)
+        ]
+
+        rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
 
         extra_params = {"temperature": 0.6}
 
@@ -236,21 +291,21 @@ class TestRunnerExtraParams:
             mock_judge_class.return_value = mock_judge
 
             results = await batch_evaluate_with_individual_judges(
-                conversation_file_paths=conv_files,
+                conversations=conversations,
                 judge_models={"claude-3-7-sonnet": 1},
                 output_folder=str(tmp_path),
-                limit=2,  # Only process first 2
+                rubric_config=rubric_config,
                 max_concurrent=None,
                 per_judge=False,
                 judge_model_extra_params=extra_params,
             )
 
-            # Should only create 2 judges (due to limit)
-            assert mock_judge_class.call_count == 2
+            # Should create 5 judges (one per conversation)
+            assert mock_judge_class.call_count == 5
 
             # Verify all calls included extra params
             for call in mock_judge_class.call_args_list:
                 call_kwargs = call[1]
                 assert call_kwargs["judge_model_extra_params"] == extra_params
 
-            assert len(results) == 2
+            assert len(results) == 5

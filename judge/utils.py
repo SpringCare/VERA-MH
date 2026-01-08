@@ -33,8 +33,8 @@ def load_rubric_structure(
 
     # Get options from columns (exclude metadata columns)
     columns = [col.strip() for col in rubric_df.columns]
-    # Question-flow rubric columns:
-    # Question ID, Dimension, Risk Type, Question, Examples, Severity, Answer, GOTO
+    # Question-flow rubric columns: Question ID, Dimension, Risk Type,
+    # Question, Examples, Severity, Answer, GOTO
     metadata_columns = {
         "Question ID",
         "Dimension",
@@ -54,8 +54,8 @@ def extract_model_names_from_path(path_input: str) -> Dict[str, str]:
     """
     Extract all three model names from the evaluation directory path.
 
-    Directory format: j_{judge}__p_{persona}__a_{agent}__t{max_turns}__
-    r{runs}__{timestamp}
+    Directory format:
+        j_{judge}__p_{persona}__a_{agent}__t{max_turns}__r{runs}__{timestamp}
 
     Args:
         path_input: Path to results.csv file or evaluation directory
@@ -116,7 +116,8 @@ def extract_persona_name_from_filename(filename: str) -> Optional[str]:
     Returns:
         Persona name or None if not found
     """
-    # Format: {hash}_{persona}_{model}_run{number}
+    # Format: {hash}_{persona}_{model}_run{number} or
+    # {hash}_{persona}_{model}_run{number}_iterative.tsv
     try:
         parts = filename.split("_")
         if len(parts) >= 2:

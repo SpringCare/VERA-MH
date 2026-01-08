@@ -7,19 +7,15 @@ import asyncio
 import os
 from asyncio import Queue
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
 from .llm_judge import LLMJudge
-from .utils import load_rubric_structure
+from .rubric_config import ConversationData, RubricConfig
 
 # In case this needs to be synced in the meta prompt for the judge
 EVALUATION_SEPARATOR = ":"
-
-# Load dimensions from rubric
-DIMENSIONS, _ = load_rubric_structure("data/rubric.tsv")
 
 
 def _parse_evaluation_to_dict(evaluation: Dict[str, Any]) -> Dict[str, Any]:
@@ -45,22 +41,24 @@ def _parse_evaluation_to_dict(evaluation: Dict[str, Any]) -> Dict[str, Any]:
 
 
 async def _evaluate_single_conversation_with_judge(
-    conversation_file: str,
+    conversation: "ConversationData",
     judge_model: str,
     judge_instance: int,
     judge_id: int,
     output_folder: str,
+    rubric_config: "RubricConfig",
     judge_model_extra_params: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Evaluate a single conversation with a single judge model instance.
 
     Args:
-        conversation_file: Path to conversation file
+        conversation: ConversationData with content and metadata
         judge_model: Model name to use for judging
         judge_instance: Instance number for this judge (1, 2, 3, ...)
         judge_id: Zero-based ID for this judge (0, 1, 2, ...)
         output_folder: Folder to save evaluation results
+        rubric_config: Pre-loaded rubric configuration
         judge_model_extra_params: Extra parameters for the judge model
 
     Returns:
@@ -68,11 +66,13 @@ async def _evaluate_single_conversation_with_judge(
         and all dimension scores
     """
     judge = LLMJudge(
-        judge_model=judge_model, judge_model_extra_params=judge_model_extra_params
+        judge_model=judge_model,
+        rubric_config=rubric_config,
+        judge_model_extra_params=judge_model_extra_params,
     )
 
     evaluation = await judge.evaluate_conversation_question_flow(
-        conversation_file,
+        conversation,
         output_folder=output_folder,
         auto_save=True,
         verbose=False,
@@ -90,8 +90,8 @@ async def _evaluate_single_conversation_with_judge(
         evaluation_dict = {}
 
     return {
-        "filename": Path(conversation_file).name,
-        "run_id": Path(conversation_file).parent.name,
+        "filename": conversation.metadata.get("filename", "unknown.txt"),
+        "run_id": conversation.metadata.get("run_id", "unknown"),
         "judge_model": judge_model,
         "judge_instance": judge_instance,
         "judge_id": judge_id,
@@ -100,37 +100,42 @@ async def _evaluate_single_conversation_with_judge(
 
 
 def _create_evaluation_jobs(
-    conversation_file_paths: List[str],
+    conversations: List[ConversationData],
     judge_models: Dict[str, int],
     output_folder: str,
+    rubric_config: RubricConfig,
     judge_model_extra_params: Optional[Dict[str, Any]] = None,
-) -> List[Tuple[str, str, int, int, str, Optional[Dict[str, Any]]]]:
+) -> List[
+    Tuple[ConversationData, str, int, int, str, RubricConfig, Optional[Dict[str, Any]]]
+]:
     """
     Create job tuples for all (conversation × judge × instance) combinations.
 
     Args:
-        conversation_file_paths: List of conversation file paths
+        conversations: List of ConversationData objects
         judge_models: Dict mapping model names to number of instances
         output_folder: Folder to save evaluation results
+        rubric_config: Pre-loaded rubric configuration
         judge_model_extra_params: Extra parameters for the judge model
 
     Returns:
         List of job tuples:
-        (conversation_file, judge_model, instance, judge_id, output_folder,
-        extra_params) where judge_id starts from 0 for each model type
+        (conversation, judge_model, instance, judge_id, output_folder,
+        rubric_config, extra_params) where judge_id starts from 0 for each model type
     """
     jobs = []
-    for conversation_file in conversation_file_paths:
+    for conversation in conversations:
         for judge_model, num_instances in judge_models.items():
             for instance in range(1, num_instances + 1):
                 judge_id = instance - 1  # Convert 1-based instance to 0-based judge_id
                 jobs.append(
                     (
-                        conversation_file,
+                        conversation,
                         judge_model,
                         instance,
                         judge_id,
                         output_folder,
+                        rubric_config,
                         judge_model_extra_params,
                     )
                 )
@@ -142,6 +147,7 @@ async def _worker(
     queue: Queue,
     results: List[Dict[str, Any]],
     total_jobs: int,
+    verbose_workers: bool = False,
 ):
     """
     Worker that processes evaluation jobs from the queue.
@@ -151,60 +157,104 @@ async def _worker(
         queue: Queue containing job tuples
         results: Shared list to append results to
         total_jobs: Total number of jobs for progress tracking
+        verbose_workers: Enable verbose logging for worker lifecycle
     """
+    import time
+    from datetime import datetime
+
+    job_count = 0
+
+    if verbose_workers:
+        start_time = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+        print(f"[Worker {worker_id}] Started at {start_time}")
+
     while True:
         try:
             job = queue.get_nowait()
         except asyncio.QueueEmpty:
             break
 
+        job_count += 1
+
         (
-            conversation_file,
+            conversation,
             judge_model,
             instance,
             judge_id,
             output_folder,
+            rubric_config,
             extra_params,
         ) = job
 
         completed = len(results)
-        print(
-            f"[Worker {worker_id}] ({completed + 1}/{total_jobs}) "
-            f"{Path(conversation_file).name} | {judge_model} "
-            f"(instance {instance}, id {judge_id})"
-        )
+        conversation_filename = conversation.metadata.get("filename", "unknown.txt")
+
+        if verbose_workers:
+            print(
+                f"[Worker {worker_id}] Processing: {conversation_filename} "
+                f"for {judge_model} (judge {instance})"
+            )
+            job_start = time.time()
+        else:
+            print(
+                f"[Worker {worker_id}] ({completed + 1}/{total_jobs}) "
+                f"{conversation_filename} | {judge_model} "
+                f"(instance {instance}, id {judge_id})"
+            )
 
         try:
             result = await _evaluate_single_conversation_with_judge(
-                conversation_file,
+                conversation,
                 judge_model,
                 instance,
                 judge_id,
                 output_folder,
+                rubric_config,
                 extra_params,
             )
             results.append(result)
+
+            if verbose_workers:
+                duration = time.time() - job_start
+                print(
+                    f"[Worker {worker_id}] Completed: {conversation_filename} "
+                    f"({duration:.1f}s)"
+                )
         except Exception as e:
             print(
                 f"[Worker {worker_id}] Failed to evaluate "
-                f"{Path(conversation_file).name} with {judge_model}: {e}"
+                f"{conversation_filename} with {judge_model}: {e}"
             )
 
         queue.task_done()
 
+    if verbose_workers:
+        print(f"[Worker {worker_id}] Finished. Processed {job_count} jobs.")
+
 
 async def _run_workers_with_queue(
-    jobs: List[Tuple[str, str, int, int, str, Optional[Dict[str, Any]]]],
+    jobs: List[
+        Tuple[
+            ConversationData,
+            str,
+            int,
+            int,
+            str,
+            RubricConfig,
+            Optional[Dict[str, Any]],
+        ]
+    ],
     max_concurrent: Optional[int],
     per_judge: bool = False,
+    verbose_workers: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     Run evaluation jobs using a worker queue with concurrency control.
 
     Args:
         jobs: List of job tuples
-              (conversation_file, judge_model, instance, judge_id, output_folder,
-              extra_params)
+              (conversation, judge_model, instance, judge_id, output_folder,
+              rubric_config, extra_params)
         max_concurrent: Maximum number of concurrent workers (None = unlimited)
         per_judge: If True, max_concurrent applies per judge model;
                   if False, total
@@ -247,11 +297,25 @@ async def _run_workers_with_queue(
                         queue,
                         results,
                         total_jobs,
+                        verbose_workers,
                     )
                 )
                 for i in range(num_workers)
             ]
             all_workers.extend(workers)
+
+        # Print worker pool summary
+        if verbose_workers:
+            from datetime import datetime
+
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            print("\n[VERBOSE] Worker pool created:")
+            print(f"  - Total workers: {len(all_workers)}")
+            print("  - Mode: per-judge concurrency")
+            print(f"  - Judge models: {', '.join(jobs_by_model.keys())}")
+            max_str = max_concurrent if max_concurrent else "unlimited"
+            print(f"  - Max concurrent per judge: {max_str}")
+            print(f"  - Started at: {timestamp}\n")
 
         # Wait for all workers to complete
         await asyncio.gather(*all_workers)
@@ -271,9 +335,21 @@ async def _run_workers_with_queue(
 
         # Create workers
         workers = [
-            asyncio.create_task(_worker(i, queue, results, total_jobs))
+            asyncio.create_task(_worker(i, queue, results, total_jobs, verbose_workers))
             for i in range(num_workers)
         ]
+
+        # Print worker pool summary
+        if verbose_workers:
+            from datetime import datetime
+
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            print("\n[VERBOSE] Worker pool created:")
+            print(f"  - Total workers: {num_workers}")
+            print("  - Mode: global concurrency")
+            max_str = max_concurrent if max_concurrent else "unlimited"
+            print(f"  - Max concurrent: {max_str}")
+            print(f"  - Started at: {timestamp}\n")
 
         # Wait for all workers to complete
         await asyncio.gather(*workers)
@@ -282,13 +358,14 @@ async def _run_workers_with_queue(
 
 
 async def batch_evaluate_with_individual_judges(
-    conversation_file_paths: List[str],
+    conversations: List[ConversationData],
     judge_models: Dict[str, int],
     output_folder: str,
-    limit: Optional[int],
+    rubric_config: RubricConfig,
     max_concurrent: Optional[int],
     per_judge: bool,
     judge_model_extra_params: Optional[Dict[str, Any]] = None,
+    verbose_workers: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     Evaluate conversations with multiple judge models using queue workers.
@@ -297,11 +374,11 @@ async def batch_evaluate_with_individual_judges(
     Workers process jobs from a queue with configurable concurrency.
 
     Args:
-        conversation_file_paths: List of conversation file paths
+        conversations: List of ConversationData objects
         judge_models: Dict mapping model names to number of instances
                      Example: {"claude-3-7-sonnet": 3, "gpt-4": 2}
         output_folder: Folder to save evaluation results
-        limit: Optional limit on number of conversations to evaluate
+        rubric_config: Pre-loaded rubric configuration
         max_concurrent: Maximum number of concurrent workers
         per_judge: If True, max_concurrent applies per judge model; if False, total
         judge_model_extra_params: Extra parameters for the judge model
@@ -310,10 +387,7 @@ async def batch_evaluate_with_individual_judges(
         Flattened list of evaluation results with one row per
         (conversation, judge_model, judge_instance) tuple
     """
-    if limit is not None:
-        conversation_file_paths = conversation_file_paths[:limit]
-
-    total_files = len(conversation_file_paths)
+    total_files = len(conversations)
     total_judge_instances = sum(judge_models.values())
     total_evaluations = total_files * total_judge_instances
 
@@ -330,11 +404,17 @@ async def batch_evaluate_with_individual_judges(
 
     # Create all evaluation jobs
     jobs = _create_evaluation_jobs(
-        conversation_file_paths, judge_models, output_folder, judge_model_extra_params
+        conversations,
+        judge_models,
+        output_folder,
+        rubric_config,
+        judge_model_extra_params,
     )
 
     # Run workers with queue
-    results = await _run_workers_with_queue(jobs, max_concurrent, per_judge)
+    results = await _run_workers_with_queue(
+        jobs, max_concurrent, per_judge, verbose_workers
+    )
 
     print(f"Completed {len(results)}/{total_evaluations} evaluations successfully")
     return results
@@ -342,10 +422,10 @@ async def batch_evaluate_with_individual_judges(
 
 async def judge_conversations(
     judge_models: Dict[str, int],
-    conversation_folder: str,
-    rubrics: List[str] = ["rubric.csv"],
+    conversations: List[ConversationData],
+    rubric_config: RubricConfig,
     output_root: str = "evaluations",
-    limit: Optional[int] = None,
+    conversation_folder_name: Optional[str] = None,
     verbose: bool = True,
     output_folder: Optional[str] = None,
     save_aggregated_results: bool = True,
@@ -353,17 +433,18 @@ async def judge_conversations(
     judge_model_extra_params: Optional[Dict[str, Any]] = None,
     max_concurrent: Optional[int] = None,
     per_judge: bool = False,
+    verbose_workers: bool = False,
 ) -> List[Dict[str, Any]]:
     """
-    Judge conversations in a folder with multiple judge models.
+    Judge conversations with multiple judge models.
 
     Args:
         judge_models: Dict mapping model names to number of instances
                      Example: {"claude-3-7-sonnet": 3, "gpt-4": 2}
-        conversation_folder: Folder containing conversation files
-        rubrics: List of rubric names to use
+        conversations: List of pre-loaded ConversationData objects
+        rubric_config: Pre-loaded rubric configuration
         output_root: Root folder for evaluation outputs
-        limit: Optional limit on number of conversations to process
+        conversation_folder_name: Optional folder name for output path generation
         verbose: Whether to print status messages
         output_folder: Custom output folder (auto-generated if None)
         save_aggregated_results: Whether to save results to CSV
@@ -375,9 +456,6 @@ async def judge_conversations(
     Returns:
         Flattened list of evaluation results with one row per
         (conversation, judge_model, judge_instance) tuple
-
-    Raises:
-        FileNotFoundError: If folder or files not found
     """
     if output_folder is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
@@ -399,45 +477,25 @@ async def judge_conversations(
                 if k not in ["temperature", "max_tokens"]:
                     judge_info += f"_{k}{v}"
 
-        output_folder = (
-            f"{output_root}/j_{judge_info}_{timestamp}__"
-            f"{Path(conversation_folder).name}"
-        )
+        folder_name = conversation_folder_name or "conversations"
+        output_folder = f"{output_root}/j_{judge_info}_{timestamp}__{folder_name}"
 
     os.makedirs(output_folder, exist_ok=True)
 
-    # Check folder exists
-    folder_path = Path(conversation_folder)
-    if not folder_path.exists():
-        raise FileNotFoundError(f"Folder not found: {conversation_folder}")
-
-    # Find conversation files
-    conversation_files = list(folder_path.glob("*.txt"))
-    if not conversation_files:
-        raise FileNotFoundError(f"No .txt files found in: {conversation_folder}")
-
-    total_found = len(conversation_files)
-
-    if limit:
-        conversation_files = conversation_files[:limit]
-        if verbose:
-            print(f"🔍 Found {total_found} files, judging {limit} (debug mode)")
-    else:
-        if verbose:
-            print(f"🔍 Found {total_found} files to judge")
-
-    # Convert to strings
-    conversation_file_paths = [str(f) for f in conversation_files]
+    total_found = len(conversations)
+    if verbose:
+        print(f"🔍 Judging {total_found} conversations")
 
     # Run batch evaluation with multiple judges
     results = await batch_evaluate_with_individual_judges(
-        conversation_file_paths,
+        conversations,
         judge_models,
         output_folder,
-        limit,
+        rubric_config,
         max_concurrent,
         per_judge,
         judge_model_extra_params,
+        verbose_workers,
     )
 
     if save_aggregated_results and results:
@@ -465,29 +523,27 @@ async def judge_conversations(
 
 
 async def judge_single_conversation(
-    judge: LLMJudge, conversation_file: str, rubrics: List[str], output_folder: str
+    judge: LLMJudge,
+    conversation: ConversationData,
+    output_folder: str,
 ) -> Optional[Dict[str, Any]]:
     """
-    Judge a single conversation file.
+    Judge a single conversation.
 
     Args:
         judge: LLMJudge instance
-        conversation_file: Path to conversation file
-        rubrics: List of rubric names to use
+        conversation: ConversationData with content and metadata
         output_folder: Output folder for results
 
     Returns:
         Evaluation results or None if failed
     """
-    if not Path(conversation_file).exists():
-        print(f"❌ File not found: {conversation_file}")
-        return None
-
-    print(f"📄 Judging: {Path(conversation_file).name}")
+    conversation_filename = conversation.metadata.get("filename", "unknown.txt")
+    print(f"📄 Judging: {conversation_filename}")
 
     result = await judge.evaluate_conversation_question_flow(
-        conversation_file, output_folder=output_folder, auto_save=True
+        conversation, output_folder=output_folder, auto_save=True
     )
 
-    print(f"🟢 Done: {Path(conversation_file).name}")
+    print(f"🟢 Done: {conversation_filename}")
     return result

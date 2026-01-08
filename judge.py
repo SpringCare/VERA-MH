@@ -9,6 +9,7 @@ import asyncio
 
 from judge import judge_conversations, judge_single_conversation
 from judge.llm_judge import LLMJudge
+from judge.rubric_config import ConversationData, RubricConfig, load_conversations
 from utils.utils import parse_key_value_list
 
 
@@ -26,30 +27,48 @@ async def main(args):
             judge_models[model_spec] = 1
 
     models_str = ", ".join(f"{model}x{count}" for model, count in judge_models.items())
-    print(f"🎯 LLM Judge | Models: {models_str} | Rubrics: {', '.join(args.rubrics)}")
+    print(f"🎯 LLM Judge | Models: {models_str}")
+
+    # Load rubric configuration once at startup
+    print("📚 Loading rubric configuration...")
+    rubric_config = await RubricConfig.load(rubric_folder="data")
 
     if args.conversation:
         # Single conversation with first judge model (single instance)
         first_model = next(iter(judge_models.keys()))
+
+        # Load single conversation
+        conversation = await ConversationData.load(args.conversation)
+
+        # Create judge with rubric config
         judge = LLMJudge(
             judge_model=first_model,
+            rubric_config=rubric_config,
             judge_model_extra_params=args.judge_model_extra_params,
         )
-        await judge_single_conversation(
-            judge, args.conversation, args.rubrics, args.output
-        )
+        await judge_single_conversation(judge, conversation, args.output)
     else:
+        # Load all conversations at startup
+        print(f"📂 Loading conversations from {args.folder}...")
+        conversations = await load_conversations(args.folder, limit=args.limit)
+        print(f"✅ Loaded {len(conversations)} conversations")
+
         # Batch evaluation with multiple judges
+        from pathlib import Path
+
+        folder_name = Path(args.folder).name
+
         await judge_conversations(
             judge_models=judge_models,
-            conversation_folder=args.folder,
+            conversations=conversations,
+            rubric_config=rubric_config,
             max_concurrent=args.max_concurrent,
-            rubrics=args.rubrics,
             output_root=args.output,
-            limit=args.limit,
+            conversation_folder_name=folder_name,
             verbose=True,
             judge_model_extra_params=args.judge_model_extra_params,
             per_judge=args.per_judge,
+            verbose_workers=args.verbose_workers,
         )
 
 
@@ -143,6 +162,12 @@ if __name__ == "__main__":
             "If set, --max-concurrent applies per judge model. "
             "Otherwise, it applies to total workers across all judges."
         ),
+    )
+
+    parser.add_argument(
+        "--verbose-workers",
+        action="store_true",
+        help="Enable verbose worker logging to show concurrency behavior",
     )
 
     args = parser.parse_args()

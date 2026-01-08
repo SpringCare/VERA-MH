@@ -1,153 +1,25 @@
 """Question navigation logic for rubric-based evaluation."""
 
-from pathlib import Path
 from typing import Any, Dict, List, Optional
-
-import pandas as pd
 
 
 class QuestionNavigator:
     """Handles navigation through questions based on rubric flow logic."""
 
-    def __init__(self, rubric_path: str, sep: str = "\t"):
+    def __init__(
+        self,
+        question_flow_data: Dict[str, Dict[str, Any]],
+        question_order: List[str],
+    ):
         """
-        Initialize the question navigator by loading and parsing the rubric file.
+        Initialize the question navigator with pre-parsed rubric data.
 
         Args:
-            rubric_path: Path to the rubric TSV file
-            sep: Separator for the rubric file (default: tab)
+            question_flow_data: Dictionary mapping Question ID to question data
+            question_order: Ordered list of Question IDs
         """
-        self.rubric_path = Path(rubric_path)
-        if not self.rubric_path.exists():
-            raise FileNotFoundError(f"Rubric file not found: {rubric_path}")
-
-        # Load and parse the rubric
-        self.rubric_df = pd.read_csv(rubric_path, sep=sep)
-        self.question_flow_data, self.question_order = self._parse_rubric()
-
-    def _parse_rubric(self) -> tuple[Dict[str, Any], List[str]]:
-        """
-        Parse the rubric file into a navigable data structure.
-
-        The rubric has questions with potential multi-row answer options.
-        Questions have a Question ID, and subsequent rows with blank Question ID
-        contain answer options for that question.
-
-        Returns:
-            Tuple of (questions_dict, question_order_list):
-            - questions_dict: Dictionary mapping Question ID to question data
-            - question_order_list: Ordered list of Question IDs as they
-                appear in the file
-        """
-        questions = {}
-        question_order = []
-        current_question_id = None
-        current_question_data = None
-
-        for idx, row in self.rubric_df.iterrows():
-            question_id_raw = (
-                row["Question ID"] if pd.notna(row["Question ID"]) else None
-            )
-            # Convert to string and clean up (remove .0 from floats)
-            if question_id_raw is not None:
-                question_id = (
-                    str(int(question_id_raw))
-                    if isinstance(question_id_raw, (int, float))
-                    else str(question_id_raw).strip()
-                )
-            else:
-                question_id = ""
-
-            # If this row has a Question ID, it's a new question
-            if question_id and question_id != "nan":
-                # Save previous question if exists
-                # It means the current question is complete, so save it
-                # We don't know if a question is complete until we get to
-                # a new one or to the end of the file
-                if current_question_id and current_question_data:
-                    questions[current_question_id] = current_question_data
-
-                # Read severity from the question row (not from answers)
-                # Read severity from row, check it's not empty or spaces
-                severity = (
-                    str(row["Severity"]).strip() if pd.notna(row["Severity"]) else ""
-                )
-                # Check that severity is not just empty or spaces
-                severity = (
-                    severity if severity and severity not in ["nan", ""] else None
-                )
-
-                # Start new question
-                current_question_id = question_id
-                question_order.append(question_id)
-                current_question_data = {
-                    "dimension": str(row["Dimension"]).strip()
-                    if pd.notna(row["Dimension"])
-                    else "",
-                    "risk_type": str(row["Risk Type"]).strip()
-                    if pd.notna(row["Risk Type"])
-                    else "",
-                    "question": str(row["Question"]).strip()
-                    if pd.notna(row["Question"])
-                    else "",
-                    "examples": str(row["Examples"]).strip()
-                    if pd.notna(row["Examples"])
-                    else "",
-                    "severity": severity,  # Severity at question level
-                    "answers": [],
-                }
-
-                # Check if this row also has an answer (single-row question)
-                answer = str(row["Answer"]).strip() if pd.notna(row["Answer"]) else ""
-                if answer and answer != "nan":
-                    # Explicit answer and path to next question (as per GOTO)
-                    # If there is an explicit GOTO, use it
-                    goto_raw = row["GOTO"] if pd.notna(row["GOTO"]) else None
-                    goto = (
-                        str(int(goto_raw))
-                        if goto_raw and isinstance(goto_raw, (int, float))
-                        else (str(goto_raw).strip() if goto_raw else None)
-                    )
-                    current_question_data["answers"].append(
-                        {
-                            "option": answer,
-                            "goto": goto if goto and goto != "nan" else None,
-                        }
-                    )
-
-            # This is a continuation row with an answer option
-            # Question not complete, add answer to current question
-            elif current_question_data is not None:
-                answer = str(row["Answer"]).strip() if pd.notna(row["Answer"]) else ""
-                if answer and answer != "nan":
-                    goto_raw = row["GOTO"] if pd.notna(row["GOTO"]) else None
-                    goto = (
-                        str(int(goto_raw))
-                        if goto_raw and isinstance(goto_raw, (int, float))
-                        else (str(goto_raw).strip() if goto_raw else None)
-                    )
-                    current_question_data["answers"].append(
-                        {
-                            "option": answer,
-                            "goto": goto if goto and goto != "nan" else None,
-                        }
-                    )
-
-        # Save last question (above for loop ended)
-        if current_question_id and current_question_data:
-            questions[current_question_id] = current_question_data
-
-        # Add default Yes/No answers for questions without explicit answers
-        for question_id in question_order:
-            question_data = questions[question_id]
-            if len(question_data["answers"]) == 0:
-                # Add default answers: Yes/No (no GOTO, use default)
-                question_data["answers"] = [
-                    {"option": "Yes", "goto": None},
-                    {"option": "No", "goto": None},
-                ]
-
-        return questions, question_order
+        self.question_flow_data = question_flow_data
+        self.question_order = question_order
 
     def get_next_question(
         self, current_question_id: str, answer_text: str

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from llm_clients.llm_interface import JudgeLLM
 

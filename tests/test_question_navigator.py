@@ -9,24 +9,35 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from judge.question_navigator import QuestionNavigator
+from judge.rubric_config import RubricConfig
 
 
 @pytest.fixture
-def navigator():
+async def navigator():
     """Create a QuestionNavigator instance with the main rubric"""
-    return QuestionNavigator("data/rubric.tsv")
+    # Load production rubric from data/ directory
+    rubric_config = await RubricConfig.load(
+        rubric_folder="data",
+        rubric_file="rubric.tsv",
+        rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
+        question_prompt_file="question_prompt.txt",
+    )
+    return QuestionNavigator(
+        question_flow_data=rubric_config.question_flow_data,
+        question_order=rubric_config.question_order,
+    )
 
 
 class TestRubricParsing:
     """Test that the rubric is parsed correctly"""
 
-    def test_rubric_loads(self, navigator):
+    async def test_rubric_loads(self, navigator):
         """Test that rubric file loads successfully"""
         assert navigator.question_flow_data is not None
         assert len(navigator.question_flow_data) > 0
         assert len(navigator.question_order) > 0
 
-    def test_questions_have_required_fields(self, navigator):
+    async def test_questions_have_required_fields(self, navigator):
         """Test that all questions have required fields"""
         for q_id, q_data in navigator.question_flow_data.items():
             assert "dimension" in q_data
@@ -38,21 +49,21 @@ class TestRubricParsing:
 class TestBasicNavigation:
     """Test basic navigation between questions"""
 
-    def test_navigate_with_goto(self, navigator):
+    async def test_navigate_with_goto(self, navigator):
         """Test navigation when GOTO has explicit question ID"""
         # Question 4, answer "Yes" should go to question 5
         next_q, goto = navigator.get_next_question("4", "Yes")
         assert next_q == "5"
         assert goto == "5"
 
-    def test_end_navigation(self, navigator):
+    async def test_end_navigation(self, navigator):
         """Test that END GOTO value is returned correctly"""
         # Question 6, answer "No" should have GOTO=END
         next_q, goto = navigator.get_next_question("6", "No")
         assert next_q is None
         assert goto == "END"
 
-    def test_assign_end_navigation(self, navigator):
+    async def test_assign_end_navigation(self, navigator):
         """Test that ASSIGN_END GOTO value is returned correctly"""
         # Question 6, answer "Yes" should have GOTO=ASSIGN_END
         next_q, goto = navigator.get_next_question("6", "Yes")
@@ -63,9 +74,10 @@ class TestBasicNavigation:
 class TestNotRelevantGoto:
     """Test NOT_RELEVANT>>{ID} GOTO behavior"""
 
-    def test_not_relevant_parsing(self, navigator):
+    async def test_not_relevant_parsing(self, navigator):
         """Test that NOT_RELEVANT>>ID is parsed correctly"""
-        # Question 13: "Denies suicidal thoughts" answer has NOT_RELEVANT>>25
+        # Question 13 should have "Denies suicidal thoughts"
+        # answer with NOT_RELEVANT>>25
         q13_data = navigator.get_question_data("13")
         assert q13_data is not None
 
@@ -83,7 +95,7 @@ class TestNotRelevantGoto:
             denies_answer["goto"] == "NOT_RELEVANT>>25"
         ), f"Expected 'NOT_RELEVANT>>25', got '{denies_answer['goto']}'"
 
-    def test_not_relevant_navigation(self, navigator):
+    async def test_not_relevant_navigation(self, navigator):
         """Test that NOT_RELEVANT>> navigation extracts question ID correctly"""
         # Answer "Denies suicidal thoughts" to question 13
         next_q, goto_value = navigator.get_next_question(
@@ -96,7 +108,7 @@ class TestNotRelevantGoto:
             goto_value == "NOT_RELEVANT>>25"
         ), f"Expected goto_value 'NOT_RELEVANT>>25', got '{goto_value}'"
 
-    def test_not_relevant_goto_different_from_end(self, navigator):
+    async def test_not_relevant_goto_different_from_end(self, navigator):
         """Test that NOT_RELEVANT>> behaves differently from END"""
         # NOT_RELEVANT>> should return a next question ID
         next_q_not_rel, goto_not_rel = navigator.get_next_question(
@@ -115,7 +127,7 @@ class TestNotRelevantGoto:
 class TestNavigationPaths:
     """Test specific navigation paths through the rubric"""
 
-    def test_risk_detected_path(self, navigator):
+    async def test_risk_detected_path(self, navigator):
         """Test navigation path when risk is detected"""
         # Q4: Yes (risk detected) -> Q5
         next_q, _ = navigator.get_next_question("4", "Yes")
@@ -125,7 +137,7 @@ class TestNavigationPaths:
         next_q, _ = navigator.get_next_question("5", "Yes")
         assert next_q == "8"
 
-    def test_no_risk_detected_path(self, navigator):
+    async def test_no_risk_detected_path(self, navigator):
         """Test navigation path when no risk is detected"""
         # Q4: No (no risk) -> Q6
         next_q, _ = navigator.get_next_question("4", "No")
@@ -136,7 +148,7 @@ class TestNavigationPaths:
         assert next_q is None
         assert goto == "END"
 
-    def test_false_positive_path(self, navigator):
+    async def test_false_positive_path(self, navigator):
         """Test navigation path for false positives"""
         # Q4: No (no risk) -> Q6
         next_q, _ = navigator.get_next_question("4", "No")
@@ -147,7 +159,7 @@ class TestNavigationPaths:
         assert next_q is None
         assert goto == "ASSIGN_END"
 
-    def test_provides_resources_path(self, navigator):
+    async def test_provides_resources_path(self, navigator):
         """Test navigation through Provides Resources dimension"""
         # Q13: Suicidal thoughts but not immediate risk -> Q14
         next_q, _ = navigator.get_next_question(
@@ -160,17 +172,22 @@ class TestNavigationPaths:
         assert next_q == "25"
         assert goto == "NOT_RELEVANT>>25"
 
+        # Q13: Immediate risk -> Q21
+        next_q, goto = navigator.get_next_question("13", "Immediate risk")
+        assert next_q == "21", f"Expected next question 21, got {next_q}"
+        assert goto == "21"
+
 
 class TestEdgeCases:
     """Test edge cases and error handling"""
 
-    def test_invalid_question_id(self, navigator):
+    async def test_invalid_question_id(self, navigator):
         """Test navigation with invalid question ID"""
         next_q, goto = navigator.get_next_question("999", "Yes")
         assert next_q is None
         assert goto is None
 
-    def test_case_insensitive_answers(self, navigator):
+    async def test_case_insensitive_answers(self, navigator):
         """Test that answer matching is case-insensitive"""
         next_q1, _ = navigator.get_next_question("4", "Yes")
         next_q2, _ = navigator.get_next_question("4", "yes")
@@ -178,7 +195,7 @@ class TestEdgeCases:
 
         assert next_q1 == next_q2 == next_q3
 
-    def test_get_question_data(self, navigator):
+    async def test_get_question_data(self, navigator):
         """Test retrieving question data"""
         q4_data = navigator.get_question_data("4")
         assert q4_data is not None
@@ -188,7 +205,7 @@ class TestEdgeCases:
         invalid = navigator.get_question_data("999")
         assert invalid is None
 
-    def test_all_questions_accessible(self, navigator):
+    async def test_all_questions_accessible(self, navigator):
         """Test that all questions in question_order are accessible"""
         for q_id in navigator.question_order:
             q_data = navigator.get_question_data(q_id)
@@ -198,14 +215,14 @@ class TestEdgeCases:
 class TestQuestionOrderAndDimensions:
     """Test question ordering and dimension structure"""
 
-    def test_first_question(self, navigator):
+    async def test_first_question(self, navigator):
         """Test that first question is accessible"""
         assert len(navigator.question_order) > 0
         first_q_id = navigator.question_order[0]
         first_q_data = navigator.get_question_data(first_q_id)
         assert first_q_data is not None
 
-    def test_dimensions_present(self, navigator):
+    async def test_dimensions_present(self, navigator):
         """Test that all expected dimensions are present"""
         expected_dimensions = {
             "Detects Risk",

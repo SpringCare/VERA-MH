@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from judge.rubric_config import RubricConfig
 from tests.mocks.mock_llm import MockLLM
 
 
@@ -9,6 +10,26 @@ from tests.mocks.mock_llm import MockLLM
 def fixtures_dir() -> Path:
     """Path to test fixtures directory."""
     return Path(__file__).parent / "fixtures"
+
+
+@pytest.fixture
+async def rubric_config_factory(fixtures_dir: Path):
+    """Factory fixture for creating RubricConfig with custom rubric files."""
+
+    async def _create_rubric_config(
+        rubric_file: str = "rubric_single_row.tsv",
+        rubric_prompt_beginning_file: str = "rubric_prompt_beginning.txt",
+        question_prompt_file: str = "question_prompt.txt",
+    ) -> RubricConfig:
+        """Load a RubricConfig from test fixtures."""
+        return await RubricConfig.load(
+            rubric_folder=str(fixtures_dir),
+            rubric_file=rubric_file,
+            rubric_prompt_beginning_file=rubric_prompt_beginning_file,
+            question_prompt_file=question_prompt_file,
+        )
+
+    return _create_rubric_config
 
 
 @pytest.fixture
