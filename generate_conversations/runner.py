@@ -53,7 +53,7 @@ class ConversationRunner:
     async def run_single_conversation(
         self,
         persona_config: dict,
-        agent,
+        agent_config: dict,
         max_turns: int,
         conversation_id: int,
         run_number: int,
@@ -66,8 +66,6 @@ class ConversationRunner:
 
         # Generate filename base using persona name, model, and run number
         tag = uuid.uuid4().hex[:6]
-        # TODO: consider removing timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
         # TODO: should this be inside the LLM class?
         model_short = (
             model_name.replace("claude-3-", "c3-")
@@ -88,6 +86,19 @@ class ConversationRunner:
             name=f"{model_short} {persona_name}",
             system_prompt=system_prompt,
             **self.persona_model_config,
+        )
+
+        # Create agent instance with the agent configuration
+        agent_kwargs = {
+            k: v
+            for k, v in agent_config.items()
+            if k not in ("model", "name", "system_prompt")
+        }
+        agent = LLMFactory.create_llm(
+            model_name=agent_config["model"],
+            name=agent_config.get("name", "Agent"),
+            system_prompt=self.AGENT_SYSTEM_PROMPT,
+            **agent_kwargs,
         )
 
         # Log conversation start
@@ -166,14 +177,6 @@ class ConversationRunner:
         # Load prompts from CSV based on persona names
         personas = load_prompts_from_csv(persona_names)
 
-        # Load agent configuration (fixed, shared across all conversations)
-        agent = LLMFactory.create_llm(
-            model_name=self.agent_model_config["model"],
-            name=self.agent_model_config.pop("name"),
-            system_prompt=self.AGENT_SYSTEM_PROMPT,
-            **self.agent_model_config,
-        )
-
         # Create tasks for all conversations (each prompt run multiple times)
         tasks = []
         conversation_id = 1
@@ -189,7 +192,7 @@ class ConversationRunner:
                             "name": persona["Name"],
                             "run": run,
                         },
-                        agent,
+                        self.agent_model_config,
                         self.max_turns,
                         conversation_id,
                         run,
@@ -209,7 +212,8 @@ class ConversationRunner:
                     return await task
 
             print(
-                f"Running {len(tasks)} conversations with max concurrency: {self.max_concurrent}"
+                f"Running {len(tasks)} conversations with max concurrency: \
+                {self.max_concurrent}"
             )
             results = await asyncio.gather(*[run_with_limit(task) for task in tasks])
         else:
