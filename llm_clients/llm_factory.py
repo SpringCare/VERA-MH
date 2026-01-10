@@ -57,6 +57,27 @@ class LLMFactory:
             from .llama_llm import LlamaLLM
 
             return LlamaLLM(name, system_prompt, model_name, **model_params)
+        elif (
+            model_name.startswith("endpoint:")
+            or model_name.startswith("http://")
+            or model_name.startswith("https://")
+        ):
+            # Custom endpoint LLM - extract URL and use as endpoint_url
+            from .endpoint_llm import EndpointLLM
+
+            # If model_name starts with "endpoint:", remove the prefix
+            if model_name.startswith("endpoint:"):
+                endpoint_url = model_name[len("endpoint:") :].strip()
+            else:
+                endpoint_url = model_name
+
+            return EndpointLLM(
+                name,
+                system_prompt,
+                model_name,
+                endpoint_url=endpoint_url,
+                **model_params,
+            )
         else:
             raise ValueError(f"Unsupported model: {model_name}")
 
@@ -111,6 +132,13 @@ class LLMFactory:
         model_lower = model_name.lower()
         # Llama/Ollama models don't support structured output
         if "llama" in model_lower or "ollama" in model_lower:
+            return False
+        # Endpoint models don't support structured output
+        if (
+            model_name.startswith("endpoint:")
+            or model_name.startswith("http://")
+            or model_name.startswith("https://")
+        ):
             return False
         # All other supported models do
         return True

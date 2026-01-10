@@ -11,6 +11,8 @@ class Config:
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")  # For Gemini
+    ENDPOINT_API_KEY = os.getenv("ENDPOINT_API_KEY")  # For custom endpoint
+    ENDPOINT_URL = os.getenv("ENDPOINT_URL")  # For custom endpoint
     # Note: Llama via Ollama doesn't require an API key
 
     # Default model configurations
