@@ -73,30 +73,6 @@ class TestConversationSimulator:
         assert len(history) == 5
         assert history[-1]["turn"] == 5
 
-    async def test_early_termination_detection(self):
-        """Test that conversation detects early termination signals."""
-        # Arrange
-        persona = MockLLM(
-            name="persona",
-            responses=["Hello", "Goodbye, I have to go now", "Should not appear"],
-        )
-        agent = MockLLM(name="agent", responses=["Hi there"] * 5)
-        simulator = ConversationSimulator(persona=persona, agent=agent)
-
-        # Add termination signals
-        simulator.termination_signals = {"goodbye", "bye"}
-
-        # Act
-        history = await simulator.start_conversation(max_turns=10)
-
-        # Assert
-        # Turn 1: persona says "Hello"
-        # Turn 2: agent says "Hi there"
-        # Turn 3: persona says "Goodbye..." and terminates
-        assert len(history) == 3  # Should stop after persona says goodbye
-        assert history[-1]["early_termination"] is True
-        assert "goodbye" in history[-1]["response"].lower()
-
     async def test_conversation_history_structure(self):
         """Test that conversation history has correct structure."""
         # Arrange
@@ -204,27 +180,6 @@ class TestConversationSimulator:
         assert len(history) == 6
         assert all(not turn["early_termination"] for turn in history)
 
-    async def test_multiple_termination_signals(self):
-        """Test detection of multiple different termination signals."""
-        # Arrange
-        persona = MockLLM(
-            name="persona",
-            responses=["Hello", "Talk to you later, ttyl"],
-        )
-        agent = MockLLM(name="agent", responses=["Hi"] * 5)
-        simulator = ConversationSimulator(persona=persona, agent=agent)
-        simulator.termination_signals = {"goodbye", "ttyl", "farewell"}
-
-        # Act
-        history = await simulator.start_conversation(max_turns=10)
-
-        # Assert
-        # Turn 1: persona says "Hello"
-        # Turn 2: agent says "Hi"
-        # Turn 3: persona says "Talk to you later, ttyl" and terminates
-        assert len(history) == 3
-        assert history[-1]["early_termination"] is True
-
     async def test_response_used_as_next_input(self):
         """Test that each response becomes the next speaker's input."""
         # Arrange
@@ -242,44 +197,6 @@ class TestConversationSimulator:
         assert history[2]["input"] == history[1]["response"]
         # Turn 4's input should be turn 3's response
         assert history[3]["input"] == history[2]["response"]
-
-    async def test_early_termination_flag_only_on_last_turn(self):
-        """Test early_termination False for all turns except last."""
-        # Arrange
-        persona = MockLLM(name="persona", responses=["Hello", "Goodbye"])
-        agent = MockLLM(name="agent", responses=["Hi"])
-        simulator = ConversationSimulator(persona=persona, agent=agent)
-        simulator.termination_signals = {"goodbye"}
-
-        # Act
-        history = await simulator.start_conversation(max_turns=10)
-
-        # Assert
-        # Turn 1: persona says "Hello"
-        # Turn 2: agent says "Hi"
-        # Turn 3: persona says "Goodbye" and terminates
-        assert len(history) == 3
-        assert history[0]["early_termination"] is False
-        assert history[1]["early_termination"] is False
-        assert history[2]["early_termination"] is True
-
-    async def test_no_early_termination_when_no_signals(self):
-        """Test conversations run to completion without signals."""
-        # Arrange
-        persona = MockLLM(
-            name="persona",
-            responses=["Goodbye", "Bye", "Farewell"],
-        )
-        agent = MockLLM(name="agent", responses=["OK"] * 5)
-        simulator = ConversationSimulator(persona=persona, agent=agent)
-        # No termination signals set (empty set by default)
-
-        # Act
-        history = await simulator.start_conversation(max_turns=6)
-
-        # Assert - Should run to completion
-        assert len(history) == 6
-        assert all(not turn["early_termination"] for turn in history)
 
     async def test_conversation_history_reset_on_new_conversation(self):
         """Test that conversation history is reset when starting a new conversation."""
@@ -300,24 +217,6 @@ class TestConversationSimulator:
         assert history2[0]["turn"] == 1  # Should restart from turn 1
         assert simulator.conversation_history == history2
         assert simulator.conversation_history != history1
-
-    async def test_case_insensitive_termination_detection(self):
-        """Test that termination signals are detected case-insensitively."""
-        # Arrange
-        persona = MockLLM(name="persona", responses=["Hello", "GOODBYE and thanks"])
-        agent = MockLLM(name="agent", responses=["Hi"] * 5)
-        simulator = ConversationSimulator(persona=persona, agent=agent)
-        simulator.termination_signals = {"goodbye"}
-
-        # Act
-        history = await simulator.start_conversation(max_turns=10)
-
-        # Assert
-        # Turn 1: persona says "Hello"
-        # Turn 2: agent says "Hi"
-        # Turn 3: persona says "GOODBYE and thanks" and terminates
-        assert len(history) == 3
-        assert history[-1]["early_termination"] is True
 
     async def test_max_total_words_stopping_condition(self):
         """Test that conversation stops when max_total_words is reached."""

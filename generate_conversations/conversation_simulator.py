@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 from llm_clients import LLMInterface
 from utils.conversation_utils import save_conversation_to_file
@@ -11,52 +11,6 @@ class ConversationSimulator:
         self.persona = persona
         self.agent = agent
         self.conversation_history: List[Dict[str, Any]] = []
-
-        # Define termination signals that indicate persona wants to end the conversation
-        self.termination_signals: Set[str] = set()
-
-        # "goodbye", "bye", "farewell", "talk to you later",
-        # "ttyl",
-        # "end conversation", "conversation over", "that's all",
-        # "nothing more to discuss",
-        # "i'm done", "let's end here",
-        # "conversation complete", "wrapping up", "final thoughts",
-        # "concluding", "to conclude",
-        # "in conclusion"
-        # }
-
-    def _should_terminate_conversation(
-        self, response: str, speaker: LLMInterface
-    ) -> bool:
-        """
-        Check if the response indicates the conversation should end.
-        Only terminates if persona (the conversation initiator) signals to end.
-        """
-        # Only allow persona to terminate the conversation early
-        if speaker != self.persona:
-            return False
-
-        response_lower = response.lower()
-
-        # Check for exact phrase matches
-        for signal in self.termination_signals:
-            if signal in response_lower:
-                return True
-
-        # Check for common ending patterns
-        ending_patterns = [
-            # "it was nice",
-            # "pleasure talking",
-            # "great conversation",
-            # "good chat",
-            # "until next time"
-        ]
-
-        for pattern in ending_patterns:
-            if pattern in response_lower:
-                return True
-
-        return False
 
     async def start_conversation(
         self,
@@ -104,11 +58,6 @@ class ConversationSimulator:
                     "logging": current_speaker.get_last_response_metadata(),
                 }
             )
-
-            # Check if persona wants to end the conversation
-            if self._should_terminate_conversation(response, current_speaker):
-                self.conversation_history[-1]["early_termination"] = True
-                break
 
             # Check if we've reached the maximum total words
             # TODO: chatbot should not be hardcoded
