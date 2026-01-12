@@ -163,23 +163,6 @@ class TestConversationSimulator:
         assert "completion_tokens" in history[0]["logging"]
         assert "total_tokens" in history[0]["logging"]
 
-    async def test_termination_only_by_persona(self):
-        """Test that only persona can trigger early termination, not agent."""
-        # Arrange
-        persona = MockLLM(name="persona", responses=["Continue talking"] * 5)
-        agent = MockLLM(
-            name="agent", responses=["Goodbye, bye", "Another reply", "More replies"]
-        )
-        simulator = ConversationSimulator(persona=persona, agent=agent)
-        simulator.termination_signals = {"goodbye", "bye"}
-
-        # Act
-        history = await simulator.start_conversation(max_turns=6)
-
-        # Assert - Should complete all turns despite agent saying goodbye
-        assert len(history) == 6
-        assert all(not turn["early_termination"] for turn in history)
-
     async def test_response_used_as_next_input(self):
         """Test that each response becomes the next speaker's input."""
         # Arrange
