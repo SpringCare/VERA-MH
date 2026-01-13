@@ -269,14 +269,6 @@ class TestConversationRunnerSingle:
             "run": 1,
         }
 
-        agent = MockLLM(
-            name="test-agent",
-            model_name="mock-agent-model",
-            responses=["I'm here to help", "Tell me more"],
-            temperature=0.5,
-            max_tokens=500,
-        )
-
         # Act - patch setup_conversation_logger to use tmp_path
         with patch(
             "generate_conversations.runner.setup_conversation_logger"
@@ -290,7 +282,7 @@ class TestConversationRunnerSingle:
 
             result = await runner.run_single_conversation(
                 persona_config=persona_config,
-                agent=agent,
+                agent_config=basic_agent_config,
                 max_turns=4,
                 conversation_id=1,
                 run_number=1,
@@ -338,14 +330,6 @@ class TestConversationRunnerSingle:
             "run": 1,
         }
 
-        agent = MockLLM(
-            name="test-agent",
-            model_name="mock-agent-model",
-            responses=["Response 1"],
-            temperature=0.5,
-            max_tokens=500,
-        )
-
         # Act - use real logging with tmp_path
         os.makedirs(log_folder / run_id, exist_ok=True)
         log_file = log_folder / run_id / "test_conversation.log"
@@ -364,7 +348,7 @@ class TestConversationRunnerSingle:
 
             await runner.run_single_conversation(
                 persona_config=persona_config,
-                agent=agent,
+                agent_config=basic_agent_config,
                 max_turns=2,
                 conversation_id=1,
                 run_number=1,
@@ -406,14 +390,6 @@ class TestConversationRunnerSingle:
             "run": 2,
         }
 
-        agent = MockLLM(
-            name="test-agent",
-            model_name="mock-agent-model",
-            responses=["Response"],
-            temperature=0.5,
-            max_tokens=500,
-        )
-
         # Act
         with patch(
             "generate_conversations.runner.setup_conversation_logger"
@@ -423,7 +399,7 @@ class TestConversationRunnerSingle:
 
             result = await runner.run_single_conversation(
                 persona_config=persona_config,
-                agent=agent,
+                agent_config=basic_agent_config,
                 max_turns=2,
                 conversation_id=1,
                 run_number=2,
@@ -494,7 +470,7 @@ class TestConversationRunnerSingle:
                 # Act
                 result = await runner.run_single_conversation(
                     persona_config=persona_config,
-                    agent=agent_mock,
+                    agent_config=basic_agent_config,
                     max_turns=10,
                     conversation_id=1,
                     run_number=1,
@@ -528,14 +504,6 @@ class TestConversationRunnerSingle:
             "run": 1,
         }
 
-        agent = MockLLM(
-            name="test-agent",
-            model_name="mock-agent-model",
-            responses=["Response"],
-            temperature=0.5,
-            max_tokens=500,
-        )
-
         # Act
         with patch(
             "generate_conversations.runner.setup_conversation_logger"
@@ -545,7 +513,7 @@ class TestConversationRunnerSingle:
 
             result = await runner.run_single_conversation(
                 persona_config=persona_config,
-                agent=agent,
+                agent_config=basic_agent_config,
                 max_turns=2,
                 conversation_id=5,
                 run_number=3,
@@ -793,14 +761,6 @@ class TestConversationRunnerFileOperations:
             "run": 1,
         }
 
-        agent = MockLLM(
-            name="test-agent",
-            model_name="mock-agent-model",
-            responses=["Response"],
-            temperature=0.5,
-            max_tokens=500,
-        )
-
         # Act
         with patch(
             "generate_conversations.runner.setup_conversation_logger"
@@ -810,7 +770,7 @@ class TestConversationRunnerFileOperations:
 
             await runner.run_single_conversation(
                 persona_config=persona_config,
-                agent=agent,
+                agent_config=basic_agent_config,
                 max_turns=2,
                 conversation_id=1,
                 run_number=1,
@@ -924,15 +884,14 @@ class TestConversationRunnerErrorHandling:
             "run": 1,
         }
 
-        # Create agent that will error
-        error_agent = MockLLM(
-            name="error-agent",
-            model_name="mock-error-model",
-            responses=[],
-            simulate_error=True,
-            temperature=0.5,
-            max_tokens=500,
-        )
+        # Create agent config that will result in an error
+        error_agent_config = {
+            "model": "mock-error-model",
+            "name": "error-agent",
+            "system_prompt": "You are a helpful AI assistant.",
+            "temperature": 0.5,
+            "max_tokens": 500,
+        }
 
         with patch(
             "generate_conversations.runner.setup_conversation_logger"
@@ -943,19 +902,39 @@ class TestConversationRunnerErrorHandling:
             with patch(
                 "generate_conversations.runner.LLMFactory.create_llm"
             ) as mock_factory:
-                mock_factory.return_value = MockLLM(
+                # First call returns persona, second call (agent) returns error agent
+                persona_mock = MockLLM(
                     name="persona",
                     model_name="mock-persona-model",
                     responses=["Hello"],
                     temperature=0.7,
                     max_tokens=1000,
                 )
+                error_agent = MockLLM(
+                    name="error-agent",
+                    model_name="mock-error-model",
+                    responses=[],
+                    simulate_error=True,
+                    temperature=0.5,
+                    max_tokens=500,
+                )
+
+                call_count = 0
+
+                def side_effect(*args, **kwargs):
+                    nonlocal call_count
+                    call_count += 1
+                    if call_count == 1:
+                        return persona_mock
+                    return error_agent
+
+                mock_factory.side_effect = side_effect
 
                 # Act & Assert - should raise the error
                 with pytest.raises(Exception) as exc_info:
                     await runner.run_single_conversation(
                         persona_config=persona_config,
-                        agent=error_agent,
+                        agent_config=error_agent_config,
                         max_turns=2,
                         conversation_id=1,
                         run_number=1,
@@ -1019,14 +998,6 @@ class TestConversationRunnerErrorHandling:
             "run": 1,
         }
 
-        agent = MockLLM(
-            name="test-agent",
-            model_name="mock-agent-model",
-            responses=["Response"],
-            temperature=0.5,
-            max_tokens=500,
-        )
-
         # Act
         with patch(
             "generate_conversations.runner.setup_conversation_logger"
@@ -1037,7 +1008,7 @@ class TestConversationRunnerErrorHandling:
             with patch("generate_conversations.runner.cleanup_logger") as mock_cleanup:
                 await runner.run_single_conversation(
                     persona_config=persona_config,
-                    agent=agent,
+                    agent_config=basic_agent_config,
                     max_turns=2,
                     conversation_id=1,
                     run_number=1,
@@ -1076,14 +1047,6 @@ class TestConversationRunnerPerformance:
             "run": 1,
         }
 
-        agent = MockLLM(
-            name="test-agent",
-            model_name="mock-agent-model",
-            responses=["Response"],
-            temperature=0.5,
-            max_tokens=500,
-        )
-
         # Act
         with patch(
             "generate_conversations.runner.setup_conversation_logger"
@@ -1094,7 +1057,7 @@ class TestConversationRunnerPerformance:
             start = time.time()
             result = await runner.run_single_conversation(
                 persona_config=persona_config,
-                agent=agent,
+                agent_config=basic_agent_config,
                 max_turns=2,
                 conversation_id=1,
                 run_number=1,
