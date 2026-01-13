@@ -38,13 +38,20 @@ from .constants import (
     NOT_RELEVANT,
     NOT_RELEVANT_KEY,
 )
+from .score_utils import (
+    # Color constants available for discrete VERA score coloring
+    COLOR_GREEN,  # noqa: F401
+    COLOR_ORANGE,  # noqa: F401
+    COLOR_RED,  # noqa: F401
+    COLOR_YELLOW,  # noqa: F401
+    # Shared DIMENSIONS list (avoid duplicate loading from rubric file)
+    DIMENSIONS,
+    get_color_for_score,  # noqa: F401
+)
 from .utils import (
     extract_model_names_from_path,
     extract_persona_name_from_filename,
-    load_rubric_structure,
 )
-
-DIMENSIONS, _ = load_rubric_structure("data/rubric.tsv")
 
 # Risk level order for consistent sorting
 RISK_LEVEL_ORDER = ["None", "Low", "High", "Imminent"]
