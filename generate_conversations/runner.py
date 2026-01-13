@@ -96,7 +96,7 @@ class ConversationRunner:
         }
         agent = LLMFactory.create_llm(
             model_name=agent_config["model"],
-            name=agent_config.get("name", "Agent"),
+            name=agent_config["name"],
             system_prompt=self.AGENT_SYSTEM_PROMPT,
             **agent_kwargs,
         )
