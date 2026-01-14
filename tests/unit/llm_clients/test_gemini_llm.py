@@ -50,7 +50,7 @@ class TestGeminiLLM:
         mock_llm = MagicMock()
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", temperature=0.5, max_tokens=500, top_p=0.9)
+        GeminiLLM(name="TestGemini", temperature=0.5, max_tokens=500, top_p=0.9)
 
         # Verify kwargs were passed to ChatGoogleGenerativeAI
         call_kwargs = mock_chat_gemini.call_args[1]
@@ -96,7 +96,11 @@ class TestGeminiLLM:
         mock_chat_gemini.return_value = mock_llm
 
         llm = GeminiLLM(name="TestGemini", system_prompt="You are a helpful assistant.")
-        response = await llm.generate_response("Hello, Gemini!")
+        response = await llm.generate_response(
+            conversation_history=[
+                {"turn": 0, "speaker": "system", "response": "Hello, Gemini!"}
+            ]
+        )
 
         assert response == "This is a Gemini response"
 
@@ -129,7 +133,11 @@ class TestGeminiLLM:
         mock_chat_gemini.return_value = mock_llm
 
         llm = GeminiLLM(name="TestGemini")  # No system prompt
-        response = await llm.generate_response("Test message")
+        response = await llm.generate_response(
+            conversation_history=[
+                {"turn": 0, "speaker": "system", "response": "Test message"}
+            ]
+        )
 
         assert response == "Response without system prompt"
 
@@ -161,7 +169,9 @@ class TestGeminiLLM:
         mock_chat_gemini.return_value = mock_llm
 
         llm = GeminiLLM(name="TestGemini")
-        response = await llm.generate_response("Test")
+        response = await llm.generate_response(
+            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+        )
 
         assert response == "Response with fallback"
         metadata = llm.get_last_response_metadata()
@@ -186,7 +196,9 @@ class TestGeminiLLM:
         mock_chat_gemini.return_value = mock_llm
 
         llm = GeminiLLM(name="TestGemini")
-        response = await llm.generate_response("Test")
+        response = await llm.generate_response(
+            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+        )
 
         assert response == "Response"
         metadata = llm.get_last_response_metadata()
@@ -208,7 +220,9 @@ class TestGeminiLLM:
         mock_chat_gemini.return_value = mock_llm
 
         llm = GeminiLLM(name="TestGemini")
-        response = await llm.generate_response("Test")
+        response = await llm.generate_response(
+            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+        )
 
         assert response == "Response"
         metadata = llm.get_last_response_metadata()
@@ -228,7 +242,11 @@ class TestGeminiLLM:
         mock_chat_gemini.return_value = mock_llm
 
         llm = GeminiLLM(name="TestGemini")
-        response = await llm.generate_response("Test message")
+        response = await llm.generate_response(
+            conversation_history=[
+                {"turn": 0, "speaker": "system", "response": "Test message"}
+            ]
+        )
 
         # Should return error message instead of raising
         assert "Error generating response" in response
@@ -260,7 +278,9 @@ class TestGeminiLLM:
         mock_chat_gemini.return_value = mock_llm
 
         llm = GeminiLLM(name="TestGemini")
-        await llm.generate_response("Test")
+        await llm.generate_response(
+            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+        )
 
         metadata = llm.get_last_response_metadata()
         assert "response_time_seconds" in metadata
@@ -317,7 +337,9 @@ class TestGeminiLLM:
         mock_chat_gemini.return_value = mock_llm
 
         llm = GeminiLLM(name="TestGemini")
-        await llm.generate_response("Test")
+        await llm.generate_response(
+            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+        )
 
         metadata = llm.get_last_response_metadata()
         assert "response" in metadata
@@ -339,7 +361,9 @@ class TestGeminiLLM:
         mock_chat_gemini.return_value = mock_llm
 
         llm = GeminiLLM(name="TestGemini")
-        await llm.generate_response("Test")
+        await llm.generate_response(
+            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+        )
 
         metadata = llm.get_last_response_metadata()
         timestamp = metadata["timestamp"]
@@ -372,7 +396,9 @@ class TestGeminiLLM:
         mock_chat_gemini.return_value = mock_llm
 
         llm = GeminiLLM(name="TestGemini")
-        await llm.generate_response("Test")
+        await llm.generate_response(
+            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+        )
 
         metadata = llm.get_last_response_metadata()
         assert metadata["finish_reason"] == "MAX_TOKENS"
@@ -397,9 +423,131 @@ class TestGeminiLLM:
         mock_chat_gemini.return_value = mock_llm
 
         llm = GeminiLLM(name="TestGemini")
-        await llm.generate_response("Test")
+        await llm.generate_response(
+            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+        )
 
         metadata = llm.get_last_response_metadata()
         assert "raw_metadata" in metadata
         assert metadata["raw_metadata"]["custom_field"] == "custom_value"
         assert metadata["raw_metadata"]["nested"]["key"] == "value"
+
+    @pytest.mark.asyncio
+    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    async def test_generate_response_with_conversation_history(self, mock_chat_gemini):
+        """Test generate_response with conversation_history parameter."""
+        mock_llm = MagicMock()
+        mock_response = MagicMock()
+        mock_response.content = "Response with history"
+        mock_response.id = "gemini-history"
+        mock_response.response_metadata = {
+            "model_name": "gemini-1.5-pro",
+            "token_usage": {
+                "prompt_token_count": 50,
+                "candidates_token_count": 20,
+                "total_token_count": 70,
+            },
+        }
+
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_chat_gemini.return_value = mock_llm
+
+        llm = GeminiLLM(name="TestGemini", system_prompt="Test")
+
+        # Provide conversation history including the current turn
+        history = [
+            {
+                "turn": 1,
+                "speaker": "persona",
+                "input": "Start",
+                "response": "Hello",
+                "early_termination": False,
+                "logging": {},
+            },
+            {
+                "turn": 2,
+                "speaker": "agent",
+                "input": "Hello",
+                "response": "Hi there",
+                "early_termination": False,
+                "logging": {},
+            },
+            {
+                "turn": 3,
+                "speaker": "persona",
+                "input": "Hi there",
+                "response": "How are you?",
+                "early_termination": False,
+                "logging": {},
+            },
+        ]
+
+        response = await llm.generate_response(conversation_history=history)
+
+        assert response == "Response with history"
+
+        # Verify ainvoke was called with correct messages
+        call_args = mock_llm.ainvoke.call_args
+        messages = call_args[0][0]
+
+        # Should have: SystemMessage + 3 history messages
+        assert len(messages) == 4
+
+    @pytest.mark.asyncio
+    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    async def test_generate_response_with_empty_conversation_history(
+        self, mock_chat_gemini
+    ):
+        """Test generate_response with empty conversation_history list."""
+        mock_llm = MagicMock()
+        mock_response = MagicMock()
+        mock_response.content = "Response"
+        mock_response.id = "gemini-empty"
+        mock_response.response_metadata = {"model_name": "gemini-1.5-pro"}
+
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_chat_gemini.return_value = mock_llm
+
+        llm = GeminiLLM(name="TestGemini", system_prompt="Test")
+
+        response = await llm.generate_response(
+            conversation_history=[{"turn": 0, "speaker": "system", "response": "Hi"}]
+        )
+
+        assert response == "Response"
+
+        # Should have: SystemMessage + current message only
+        call_args = mock_llm.ainvoke.call_args
+        messages = call_args[0][0]
+        assert len(messages) == 2
+
+    @pytest.mark.asyncio
+    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    async def test_generate_response_with_none_conversation_history(
+        self, mock_chat_gemini
+    ):
+        """Test generate_response with None conversation_history."""
+        mock_llm = MagicMock()
+        mock_response = MagicMock()
+        mock_response.content = "Response"
+        mock_response.id = "gemini-none"
+        mock_response.response_metadata = {"model_name": "gemini-1.5-pro"}
+
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_chat_gemini.return_value = mock_llm
+
+        llm = GeminiLLM(name="TestGemini", system_prompt="Test")
+
+        response = await llm.generate_response(
+            conversation_history=[{"turn": 0, "speaker": "system", "response": "Hi"}]
+        )
+
+        assert response == "Response"
+
+        # Should have: SystemMessage + current message only
+        call_args = mock_llm.ainvoke.call_args
+        messages = call_args[0][0]
+        assert len(messages) == 2

@@ -227,7 +227,7 @@ class TestQuestionOrderAndDimensions:
         expected_dimensions = {
             "Detects Risk",
             "Clarifies Risk",
-            "Provides Resources and Encourages Human Support",
+            "Guides to Human Support",
             "Collaborates and Validates Appropriately",
             "Maintains Safe Boundaries",
         }

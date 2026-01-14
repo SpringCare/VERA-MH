@@ -15,9 +15,9 @@ class ConcreteLLM(LLMInterface):
         self.llm.temperature = 0.7
         self.llm.max_tokens = 1000
 
-    async def generate_response(self, message: str = None):
+    async def generate_response(self, conversation_history=None):
         """Concrete implementation of abstract method."""
-        return ("test response", {"model": "test"})
+        return "test response"
 
     def set_system_prompt(self, system_prompt: str) -> None:
         """Concrete implementation of abstract method."""
@@ -58,10 +58,13 @@ class TestLLMInterface:
     async def test_generate_response_abstract_method(self):
         """Test that generate_response is implemented in concrete class (line 21)."""
         llm = ConcreteLLM(name="TestLLM")
-        response, metadata = await llm.generate_response("test message")
+        response = await llm.generate_response(
+            conversation_history=[
+                {"turn": 0, "speaker": "system", "response": "test message"}
+            ]
+        )
 
         assert response == "test response"
-        assert isinstance(metadata, dict)
 
     def test_set_system_prompt_abstract_method(self):
         """Test that set_system_prompt is implemented in concrete class (line 26)."""
@@ -94,7 +97,7 @@ class TestLLMInterface:
         assert llm.max_tokens == 1000
 
     def test_getattr_raises_attribute_error_for_missing_attribute(self):
-        """Test that __getattr__ raises AttributeError for missing attributes (lines 43-45)."""
+        """Test that __getattr__ raises AttributeError for missing attributes."""
         llm = ConcreteLLM(name="TestLLM")
 
         # Try to access attribute that doesn't exist on llm (spec prevents it)
@@ -110,8 +113,8 @@ class TestLLMInterface:
         class MinimalLLM(LLMInterface):
             """Minimal implementation without self.llm."""
 
-            async def generate_response(self, message: str = None):
-                return ("response", {})
+            async def generate_response(self, conversation_history=None):
+                return "response"
 
             def set_system_prompt(self, system_prompt: str) -> None:
                 self.system_prompt = system_prompt
@@ -133,8 +136,8 @@ class TestLLMInterface:
                 super().__init__(name, system_prompt)
                 self.llm = None
 
-            async def generate_response(self, message: str = None):
-                return ("response", {})
+            async def generate_response(self, conversation_history=None):
+                return "response"
 
             def set_system_prompt(self, system_prompt: str) -> None:
                 self.system_prompt = system_prompt
@@ -190,8 +193,8 @@ class TestLLMInterface:
                 self.llm.bool_attr = True
                 self.llm.list_attr = [1, 2, 3]
 
-            async def generate_response(self, message: str = None):
-                return ("response", {})
+            async def generate_response(self, conversation_history=None):
+                return "response"
 
             def set_system_prompt(self, system_prompt: str) -> None:
                 self.system_prompt = system_prompt

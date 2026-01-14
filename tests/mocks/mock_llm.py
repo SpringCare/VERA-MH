@@ -31,13 +31,23 @@ class MockLLM(JudgeLLM):
         self.temperature = temperature
         self.max_tokens = max_tokens
 
-    async def generate_response(self, message: Optional[str] = None) -> str:
+    async def generate_response(
+        self,
+        conversation_history: Optional[List[Dict[str, Any]]] = None,
+    ) -> str:
         """Return predetermined responses in sequence.
+
+        Args:
+            conversation_history: Optional list of previous conversation turns
 
         Returns:
             Response text string
         """
-        self.calls.append(message)
+        # Extract the last message from conversation history for tracking
+        message = ""
+        if conversation_history and len(conversation_history) > 0:
+            message = conversation_history[-1].get("response", "")
+        self.calls.append(message or "")
 
         if self.simulate_error:
             self.last_response_metadata = {
@@ -100,7 +110,7 @@ class MockLLM(JudgeLLM):
             response_text = f"Mock response {self.response_index + 1}"
             self.response_index += 1
 
-        self.calls.append(message)
+        self.calls.append(message or "")
 
         # Try to parse the response as JSON and create model instance
         try:

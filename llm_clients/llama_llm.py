@@ -1,6 +1,8 @@
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from langchain_community.llms import Ollama
+
+from utils.conversation_utils import format_conversation_as_string
 
 from .config import Config
 from .llm_interface import LLMInterface
@@ -40,15 +42,21 @@ class LlamaLLM(LLMInterface):
         llm_params.update(kwargs)
         self.llm = Ollama(**llm_params)
 
-    async def generate_response(self, message: Optional[str] = None) -> str:
-        """Generate a response to the given message asynchronously."""
+    async def generate_response(
+        self,
+        conversation_history: Optional[List[Dict[str, Any]]] = None,
+    ) -> str:
+        """Generate a response based on conversation history.
+
+        Args:
+            conversation_history: Optional list of previous conversation turns
+        """
         try:
-            # Format the message with system prompt if available
-            full_message = message
-            if self.system_prompt:
-                full_message = (
-                    f"System: {self.system_prompt}\n\nHuman: {message}\n\nAssistant:"
-                )
+            # Build full message using utility function
+            full_message = format_conversation_as_string(
+                conversation_history=conversation_history,
+                system_prompt=self.system_prompt,
+            )
 
             # Ollama doesn't have native async support in langchain-community
             # So we'll use the synchronous version

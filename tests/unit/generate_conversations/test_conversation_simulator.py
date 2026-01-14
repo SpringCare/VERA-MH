@@ -84,7 +84,7 @@ class TestConversationSimulator:
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         # Add termination signals
-        simulator.termination_signals = {"goodbye", "bye"}
+        simulator.termination_signal = "Goodbye"
 
         # Act
         history = await simulator.start_conversation(max_turns=10)
@@ -95,7 +95,7 @@ class TestConversationSimulator:
         # Turn 3: persona says "Goodbye..." and terminates
         assert len(history) == 3  # Should stop after persona says goodbye
         assert history[-1]["early_termination"] is True
-        assert "goodbye" in history[-1]["response"].lower()
+        assert simulator.termination_signal in history[-1]["response"]
 
     async def test_conversation_history_structure(self):
         """Test that conversation history has correct structure."""
@@ -195,7 +195,7 @@ class TestConversationSimulator:
             name="agent", responses=["Goodbye, bye", "Another reply", "More replies"]
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
-        simulator.termination_signals = {"goodbye", "bye"}
+        simulator.termination_signal = "goodbye"
 
         # Act
         history = await simulator.start_conversation(max_turns=6)
@@ -213,7 +213,7 @@ class TestConversationSimulator:
         )
         agent = MockLLM(name="agent", responses=["Hi"] * 5)
         simulator = ConversationSimulator(persona=persona, agent=agent)
-        simulator.termination_signals = {"goodbye", "ttyl", "farewell"}
+        simulator.termination_signal = "ttyl"
 
         # Act
         history = await simulator.start_conversation(max_turns=10)
@@ -249,7 +249,7 @@ class TestConversationSimulator:
         persona = MockLLM(name="persona", responses=["Hello", "Goodbye"])
         agent = MockLLM(name="agent", responses=["Hi"])
         simulator = ConversationSimulator(persona=persona, agent=agent)
-        simulator.termination_signals = {"goodbye"}
+        simulator.termination_signal = "Goodbye"  # Must match exact case
 
         # Act
         history = await simulator.start_conversation(max_turns=10)
@@ -298,16 +298,18 @@ class TestConversationSimulator:
         assert len(history1) == 2
         assert len(history2) == 3
         assert history2[0]["turn"] == 1  # Should restart from turn 1
-        assert simulator.conversation_history == history2
-        assert simulator.conversation_history != history1
+        # Convert internal representation to dict for comparison
+        internal_history_dicts = [t.to_dict() for t in simulator.conversation_history]
+        assert internal_history_dicts == history2
+        assert internal_history_dicts != history1
 
     async def test_case_insensitive_termination_detection(self):
-        """Test that termination signals are detected case-insensitively."""
+        """Test that termination signals are detected (exact match required)."""
         # Arrange
         persona = MockLLM(name="persona", responses=["Hello", "GOODBYE and thanks"])
         agent = MockLLM(name="agent", responses=["Hi"] * 5)
         simulator = ConversationSimulator(persona=persona, agent=agent)
-        simulator.termination_signals = {"goodbye"}
+        simulator.termination_signal = "GOODBYE"  # Must match exact case
 
         # Act
         history = await simulator.start_conversation(max_turns=10)
@@ -321,13 +323,13 @@ class TestConversationSimulator:
 
     async def test_max_total_words_stopping_condition(self):
         """Test that conversation stops when max_total_words is reached."""
-        # Arrange - Use agent named "chatbot" to trigger the max_total_words check
+        # Arrange - Use agent named "agent" to trigger the max_total_words check
         persona = MockLLM(
             name="User",
             responses=["Hello there", "How are you", "Great thanks", "Goodbye"],
         )
         agent = MockLLM(
-            name="chatbot",
+            name="agent",
             responses=[
                 "I am doing well today",  # 5 words
                 "Very good indeed",  # 3 words
@@ -342,37 +344,37 @@ class TestConversationSimulator:
 
         # Assert
         # Turn 1: User says "Hello there" (2 words, total: 2)
-        # Turn 2: chatbot says "I am doing well today" (5 words, total: 7)
+        # Turn 2: agent says "I am doing well today" (5 words, total: 7)
         # Turn 3: User says "How are you" (3 words, total: 10)
-        # Turn 4: chatbot says "Very good indeed" (3 words, total: 13)
-        # Should stop after turn 4 since chatbot exceeded max_total_words
+        # Turn 4: agent says "Very good indeed" (3 words, total: 13)
+        # Should stop after turn 4 since agent exceeded max_total_words
         assert len(history) == 4
-        assert history[-1]["speaker"] == "chatbot"
+        assert history[-1]["speaker"] == "agent"
 
         # Verify total word count is close to but over the limit
         total_words = sum(len(turn["response"].split()) for turn in history)
         assert total_words >= 10  # Should exceed the limit
 
     async def test_max_total_words_only_stops_after_chatbot_turn(self):
-        """Test that max_total_words only checks after chatbot (agent) speaks."""
+        """Test that max_total_words only checks after agent (agent) speaks."""
         # Arrange
         persona = MockLLM(
             name="User",
             responses=["This is a very long message with many words here"] * 5,
         )
         agent = MockLLM(
-            name="chatbot",
+            name="agent",
             responses=["OK"] * 5,
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
-        # Act - Even though User exceeds limit, should only stop after chatbot
+        # Act - Even though User exceeds limit, should only stop after agent
         history = await simulator.start_conversation(max_turns=10, max_total_words=5)
 
         # Assert - Should complete at least 2 turns (User then chatbot)
         assert len(history) >= 2
-        # Last turn should be from chatbot since that's when the check happens
-        assert history[-1]["speaker"] == "chatbot"
+        # Last turn should be from agent since that's when the check happens
+        assert history[-1]["speaker"] == "agent"
 
     async def test_max_total_words_none_runs_to_max_turns(self):
         """Test that when max_total_words is None, conversation runs to max_turns."""
@@ -382,7 +384,7 @@ class TestConversationSimulator:
             responses=["Long message with many words"] * 10,
         )
         agent = MockLLM(
-            name="chatbot",
+            name="agent",
             responses=["Even longer response with many many words"] * 10,
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
@@ -409,9 +411,12 @@ class TestConversationSimulator:
         ) as mock_save:
             simulator.save_conversation("test_convo.txt", folder="test_folder")
 
-            # Assert
+            # Assert - should convert to dict format before saving
+            expected_history_dicts = [
+                t.to_dict() for t in simulator.conversation_history
+            ]
             mock_save.assert_called_once_with(
-                simulator.conversation_history,
+                expected_history_dicts,
                 "test_convo.txt",
                 "test_folder",
                 "test-persona",
