@@ -23,9 +23,10 @@ class OpenAILLM(JudgeLLM):
         name: str,
         system_prompt: Optional[str] = None,
         model_name: Optional[str] = None,
+        max_retries: int = 10,
         **kwargs,
     ):
-        super().__init__(name, system_prompt)
+        super().__init__(name, system_prompt, max_retries=max_retries)
 
         if not Config.OPENAI_API_KEY:
             raise ValueError("OPENAI_API_KEY not found in environment variables")
@@ -95,7 +96,15 @@ class OpenAILLM(JudgeLLM):
 
         try:
             start_time = time.time()
-            response = await self.llm.ainvoke(messages)
+
+            # Use retry logic for API call
+            async def _invoke():
+                return await self.llm.ainvoke(messages)
+
+            response = await self._retry_with_backoff(
+                _invoke,
+                operation_name="generate_response",
+            )
             end_time = time.time()
 
             # Extract metadata from response - capturing all available fields
@@ -177,7 +186,7 @@ class OpenAILLM(JudgeLLM):
                 "system_fingerprint": None,
                 "logprobs": None,
             }
-            return f"Error generating response: {str(e)}"
+            raise RuntimeError(f"Error generating response: {str(e)}") from e
 
     async def generate_structured_response(
         self, message: Optional[str], response_model: Type[T]

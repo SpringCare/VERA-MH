@@ -14,7 +14,7 @@ class TestGeminiLLM:
     def test_init_missing_api_key_raises_error(self):
         """Test that missing GOOGLE_API_KEY raises ValueError (line 25)."""
         with pytest.raises(ValueError) as exc_info:
-            GeminiLLM(name="TestGemini")
+            GeminiLLM(name="TestGemini", max_retries=1)
 
         assert "GOOGLE_API_KEY not found" in str(exc_info.value)
 
@@ -25,7 +25,7 @@ class TestGeminiLLM:
         mock_llm = MagicMock()
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", system_prompt="Test prompt")
+        llm = GeminiLLM(name="TestGemini", max_retries=1, system_prompt="Test prompt")
 
         assert llm.name == "TestGemini"
         assert llm.system_prompt == "Test prompt"
@@ -39,7 +39,7 @@ class TestGeminiLLM:
         mock_llm = MagicMock()
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", model_name="gemini-1.5-flash")
+        llm = GeminiLLM(name="TestGemini", max_retries=1, model_name="gemini-1.5-flash")
 
         assert llm.model_name == "gemini-1.5-flash"
 
@@ -50,7 +50,9 @@ class TestGeminiLLM:
         mock_llm = MagicMock()
         mock_chat_gemini.return_value = mock_llm
 
-        GeminiLLM(name="TestGemini", temperature=0.5, max_tokens=500, top_p=0.9)
+        GeminiLLM(
+            name="TestGemini", max_retries=1, temperature=0.5, max_tokens=500, top_p=0.9
+        )
 
         # Verify kwargs were passed to ChatGoogleGenerativeAI
         call_kwargs = mock_chat_gemini.call_args[1]
@@ -95,7 +97,11 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", system_prompt="You are a helpful assistant.")
+        llm = GeminiLLM(
+            name="TestGemini",
+            max_retries=1,
+            system_prompt="You are a helpful assistant.",
+        )
         response = await llm.generate_response(
             conversation_history=[
                 {"turn": 0, "speaker": "system", "response": "Hello, Gemini!"}
@@ -132,7 +138,7 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")  # No system prompt
+        llm = GeminiLLM(name="TestGemini", max_retries=1)  # No system prompt
         response = await llm.generate_response(
             conversation_history=[
                 {"turn": 0, "speaker": "system", "response": "Test message"}
@@ -168,7 +174,7 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", max_retries=1)
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -195,7 +201,7 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", max_retries=1)
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -219,7 +225,7 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", max_retries=1)
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -241,16 +247,21 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(side_effect=Exception("API quota exceeded"))
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
-        response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "Test message"}
-            ]
-        )
+        llm = GeminiLLM(name="TestGemini", max_retries=1)
+        error = None
+        try:
+            _ = await llm.generate_response(
+                conversation_history=[
+                    {"turn": 0, "speaker": "system", "response": "Test message"}
+                ]
+            )
+        except Exception as e:
+            error = str(e)
 
-        # Should return error message instead of raising
-        assert "Error generating response" in response
-        assert "API quota exceeded" in response
+        # Should raise exception with error message
+        assert error is not None
+        assert "Error generating response" in error
+        assert "API quota exceeded" in error
 
         # Verify error metadata was stored
         metadata = llm.get_last_response_metadata()
@@ -277,7 +288,7 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", max_retries=1)
         await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -294,7 +305,7 @@ class TestGeminiLLM:
                 mock_llm = MagicMock()
                 mock_chat.return_value = mock_llm
 
-                llm = GeminiLLM(name="TestGemini")
+                llm = GeminiLLM(name="TestGemini", max_retries=1)
                 llm.last_response_metadata = {"test": "value"}
 
                 metadata1 = llm.get_last_response_metadata()
@@ -315,7 +326,9 @@ class TestGeminiLLM:
                 mock_llm = MagicMock()
                 mock_chat.return_value = mock_llm
 
-                llm = GeminiLLM(name="TestGemini", system_prompt="Initial prompt")
+                llm = GeminiLLM(
+                    name="TestGemini", max_retries=1, system_prompt="Initial prompt"
+                )
                 assert llm.system_prompt == "Initial prompt"
 
                 llm.set_system_prompt("Updated prompt")
@@ -336,7 +349,7 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", max_retries=1)
         await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -360,7 +373,7 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", max_retries=1)
         await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -395,7 +408,7 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", max_retries=1)
         await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -422,7 +435,7 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", max_retries=1)
         await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -453,7 +466,7 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", system_prompt="Test")
+        llm = GeminiLLM(name="TestGemini", max_retries=1, system_prompt="Test")
 
         # Provide conversation history including the current turn
         history = [
@@ -510,7 +523,7 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", system_prompt="Test")
+        llm = GeminiLLM(name="TestGemini", max_retries=1, system_prompt="Test")
 
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Hi"}]
@@ -539,7 +552,7 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", system_prompt="Test")
+        llm = GeminiLLM(name="TestGemini", max_retries=1, system_prompt="Test")
 
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Hi"}]

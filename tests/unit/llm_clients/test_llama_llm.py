@@ -14,7 +14,7 @@ class TestLlamaLLMInit:
         """Test initialization uses default config when no overrides provided."""
         from llm_clients.llama_llm import LlamaLLM
 
-        LlamaLLM(name="test-llama")
+        LlamaLLM(name="test-llama", max_retries=1)
 
         # Verify Ollama was initialized with default config
         mock_ollama.assert_called_once()
@@ -30,7 +30,7 @@ class TestLlamaLLMInit:
         """Test initialization with custom model name."""
         from llm_clients.llama_llm import LlamaLLM
 
-        llm = LlamaLLM(name="test-llama", model_name="llama3:70b")
+        llm = LlamaLLM(name="test-llama", max_retries=1, model_name="llama3:70b")
 
         call_kwargs = mock_ollama.call_args[1]
         assert call_kwargs["model"] == "llama3:70b"
@@ -41,7 +41,7 @@ class TestLlamaLLMInit:
         """Test initialization with custom temperature via kwargs."""
         from llm_clients.llama_llm import LlamaLLM
 
-        LlamaLLM(name="test-llama", temperature=0.9)
+        LlamaLLM(name="test-llama", max_retries=1, temperature=0.9)
 
         call_kwargs = mock_ollama.call_args[1]
         assert call_kwargs["temperature"] == 0.9
@@ -52,7 +52,7 @@ class TestLlamaLLMInit:
         from llm_clients.llama_llm import LlamaLLM
 
         custom_url = "http://remote-server:11434"
-        LlamaLLM(name="test-llama", base_url=custom_url)
+        LlamaLLM(name="test-llama", max_retries=1, base_url=custom_url)
 
         call_kwargs = mock_ollama.call_args[1]
         assert call_kwargs["base_url"] == custom_url
@@ -62,7 +62,13 @@ class TestLlamaLLMInit:
         """Test that kwargs override default config values."""
         from llm_clients.llama_llm import LlamaLLM
 
-        LlamaLLM(name="test-llama", temperature=0.1, top_p=0.95, num_predict=500)
+        LlamaLLM(
+            name="test-llama",
+            max_retries=1,
+            temperature=0.1,
+            top_p=0.95,
+            num_predict=500,
+        )
 
         call_kwargs = mock_ollama.call_args[1]
         assert call_kwargs["temperature"] == 0.1
@@ -84,7 +90,7 @@ class TestLlamaLLMGenerateResponse:
         mock_instance.invoke.return_value = "This is a test response"
         mock_ollama.return_value = mock_instance
 
-        llm = LlamaLLM(name="test-llama")
+        llm = LlamaLLM(name="test-llama", max_retries=1)
         response = await llm.generate_response(
             conversation_history=[
                 {"turn": 0, "speaker": "system", "response": "Hello, how are you?"}
@@ -107,7 +113,11 @@ class TestLlamaLLMGenerateResponse:
         mock_instance.invoke.return_value = "I'm doing well, thanks!"
         mock_ollama.return_value = mock_instance
 
-        llm = LlamaLLM(name="test-llama", system_prompt="You are a helpful assistant")
+        llm = LlamaLLM(
+            name="test-llama",
+            max_retries=1,
+            system_prompt="You are a helpful assistant",
+        )
         response = await llm.generate_response(
             conversation_history=[
                 {"turn": 0, "speaker": "system", "response": "How are you?"}
@@ -131,7 +141,7 @@ class TestLlamaLLMGenerateResponse:
         mock_instance.invoke.return_value = "Sure, I can help with that"
         mock_ollama.return_value = mock_instance
 
-        llm = LlamaLLM(name="test-llama")
+        llm = LlamaLLM(name="test-llama", max_retries=1)
         llm.set_system_prompt("You are a coding expert")
         response = await llm.generate_response(
             conversation_history=[
@@ -157,16 +167,21 @@ class TestLlamaLLMGenerateResponse:
         )
         mock_ollama.return_value = mock_instance
 
-        llm = LlamaLLM(name="test-llama")
-        response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "Test message"}
-            ]
-        )
+        llm = LlamaLLM(name="test-llama", max_retries=1)
+        error = None
+        try:
+            _ = await llm.generate_response(
+                conversation_history=[
+                    {"turn": 0, "speaker": "system", "response": "Test message"}
+                ]
+            )
+        except Exception as e:
+            error = str(e)
 
-        # Should return error message, not raise exception
-        assert "Error generating response" in response
-        assert "Could not connect to Ollama server" in response
+        # Should raise exception with error message
+        assert error is not None
+        assert "Error generating response" in error
+        assert "Could not connect to Ollama server" in error
 
     @pytest.mark.asyncio
     @patch("llm_clients.llama_llm.Ollama")
@@ -180,15 +195,22 @@ class TestLlamaLLMGenerateResponse:
         )
         mock_ollama.return_value = mock_instance
 
-        llm = LlamaLLM(name="test-llama", model_name="nonexistent:latest")
-        response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "Test message"}
-            ]
+        llm = LlamaLLM(
+            name="test-llama", max_retries=1, model_name="nonexistent:latest"
         )
+        error = None
+        try:
+            _ = await llm.generate_response(
+                conversation_history=[
+                    {"turn": 0, "speaker": "system", "response": "Test message"}
+                ]
+            )
+        except Exception as e:
+            error = str(e)
 
-        assert "Error generating response" in response
-        assert "Model 'nonexistent:latest' not found" in response
+        assert error is not None
+        assert "Error generating response" in error
+        assert "Model 'nonexistent:latest' not found" in error
 
     @pytest.mark.asyncio
     @patch("llm_clients.llama_llm.Ollama")
@@ -200,19 +222,24 @@ class TestLlamaLLMGenerateResponse:
         mock_instance.invoke.side_effect = TimeoutError("Request timed out after 30s")
         mock_ollama.return_value = mock_instance
 
-        llm = LlamaLLM(name="test-llama")
-        response = await llm.generate_response(
-            conversation_history=[
-                {
-                    "turn": 0,
-                    "speaker": "system",
-                    "response": "Long message that times out",
-                }
-            ]
-        )
+        llm = LlamaLLM(name="test-llama", max_retries=1)
+        error = None
+        try:
+            _ = await llm.generate_response(
+                conversation_history=[
+                    {
+                        "turn": 0,
+                        "speaker": "system",
+                        "response": "Long message that times out",
+                    }
+                ]
+            )
+        except Exception as e:
+            error = str(e)
 
-        assert "Error generating response" in response
-        assert "Request timed out" in response
+        assert error is not None
+        assert "Error generating response" in error
+        assert "Request timed out" in error
 
     @pytest.mark.asyncio
     @patch("llm_clients.llama_llm.Ollama")
@@ -224,13 +251,20 @@ class TestLlamaLLMGenerateResponse:
         mock_instance.invoke.side_effect = RuntimeError("Unexpected error occurred")
         mock_ollama.return_value = mock_instance
 
-        llm = LlamaLLM(name="test-llama")
-        response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
-        )
+        llm = LlamaLLM(name="test-llama", max_retries=1)
+        error = None
+        try:
+            _ = await llm.generate_response(
+                conversation_history=[
+                    {"turn": 0, "speaker": "system", "response": "Test"}
+                ]
+            )
+        except Exception as e:
+            error = str(e)
 
-        assert "Error generating response" in response
-        assert "Unexpected error occurred" in response
+        assert error is not None
+        assert "Error generating response" in error
+        assert "Unexpected error occurred" in error
 
     @pytest.mark.asyncio
     @patch("llm_clients.llama_llm.Ollama")
@@ -242,7 +276,7 @@ class TestLlamaLLMGenerateResponse:
         mock_instance.invoke.return_value = "Default response"
         mock_ollama.return_value = mock_instance
 
-        llm = LlamaLLM(name="test-llama")
+        llm = LlamaLLM(name="test-llama", max_retries=1)
         response = await llm.generate_response(None)
 
         # Should handle None gracefully - message won't include current message part
@@ -259,7 +293,7 @@ class TestLlamaLLMGenerateResponse:
         mock_instance.invoke.return_value = "Response to empty"
         mock_ollama.return_value = mock_instance
 
-        llm = LlamaLLM(name="test-llama")
+        llm = LlamaLLM(name="test-llama", max_retries=1)
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": ""}]
         )
@@ -281,7 +315,7 @@ class TestLlamaLLMGenerateResponse:
         mock_ollama.return_value = mock_instance
 
         multiline_msg = "Line 1\nLine 2\nLine 3"
-        llm = LlamaLLM(name="test-llama", system_prompt="Helper")
+        llm = LlamaLLM(name="test-llama", max_retries=1, system_prompt="Helper")
         await llm.generate_response(
             conversation_history=[
                 {"turn": 0, "speaker": "system", "response": multiline_msg}
@@ -301,7 +335,7 @@ class TestLlamaLLMSystemPrompt:
         """Test that set_system_prompt updates the system_prompt attribute."""
         from llm_clients.llama_llm import LlamaLLM
 
-        llm = LlamaLLM(name="test-llama")
+        llm = LlamaLLM(name="test-llama", max_retries=1)
 
         # Initially empty string (from LLMInterface base class)
         assert llm.system_prompt == ""
@@ -324,7 +358,7 @@ class TestLlamaLLMSystemPrompt:
         mock_instance.invoke.return_value = "Response"
         mock_ollama.return_value = mock_instance
 
-        llm = LlamaLLM(name="test-llama")
+        llm = LlamaLLM(name="test-llama", max_retries=1)
 
         # First call without system prompt
         await llm.generate_response(
@@ -363,7 +397,9 @@ class TestLlamaLLMConversationHistory:
         mock_instance.invoke.return_value = "Response with history"
         mock_ollama.return_value = mock_instance
 
-        llm = LlamaLLM(name="test-llama", system_prompt="You are helpful")
+        llm = LlamaLLM(
+            name="test-llama", max_retries=1, system_prompt="You are helpful"
+        )
 
         history = [
             {
@@ -408,7 +444,7 @@ class TestLlamaLLMConversationHistory:
         mock_instance.invoke.return_value = "Response"
         mock_ollama.return_value = mock_instance
 
-        llm = LlamaLLM(name="test-llama")
+        llm = LlamaLLM(name="test-llama", max_retries=1)
 
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Hello"}]
@@ -430,7 +466,7 @@ class TestLlamaLLMConversationHistory:
         mock_instance.invoke.return_value = "Response"
         mock_ollama.return_value = mock_instance
 
-        llm = LlamaLLM(name="test-llama")
+        llm = LlamaLLM(name="test-llama", max_retries=1)
 
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]

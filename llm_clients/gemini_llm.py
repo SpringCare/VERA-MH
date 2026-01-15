@@ -23,9 +23,10 @@ class GeminiLLM(JudgeLLM):
         name: str,
         system_prompt: Optional[str] = None,
         model_name: Optional[str] = None,
+        max_retries: int = 10,
         **kwargs,
     ):
-        super().__init__(name, system_prompt)
+        super().__init__(name, system_prompt, max_retries=max_retries)
 
         if not Config.GOOGLE_API_KEY:
             raise ValueError("GOOGLE_API_KEY not found in environment variables")
@@ -96,7 +97,15 @@ class GeminiLLM(JudgeLLM):
 
         try:
             start_time = time.time()
-            response = await self.llm.ainvoke(messages)
+
+            # Use retry logic for API call
+            async def _invoke():
+                return await self.llm.ainvoke(messages)
+
+            response = await self._retry_with_backoff(
+                _invoke,
+                operation_name="generate_response",
+            )
             end_time = time.time()
 
             # Extract metadata from response
@@ -157,7 +166,7 @@ class GeminiLLM(JudgeLLM):
                 "error": str(e),
                 "usage": {},
             }
-            return f"Error generating response: {str(e)}"
+            raise RuntimeError(f"Error generating response: {str(e)}") from e
 
     def get_last_response_metadata(self) -> Dict[str, Any]:
         """Get metadata from the last response."""

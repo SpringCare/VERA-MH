@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any, Dict, List, Optional
 
 from langchain_community.llms import Ollama
@@ -21,9 +22,10 @@ class LlamaLLM(LLMInterface):
         name: str,
         system_prompt: Optional[str] = None,
         model_name: Optional[str] = None,
+        max_retries: int = 10,
         **kwargs,
     ):
-        super().__init__(name, system_prompt)
+        super().__init__(name, system_prompt, max_retries=max_retries)
 
         # Use provided model name or fall back to config default
         self.model_name = model_name or Config.get_llama_config()["model"]
@@ -59,11 +61,18 @@ class LlamaLLM(LLMInterface):
             )
 
             # Ollama doesn't have native async support in langchain-community
-            # So we'll use the synchronous version
-            response = self.llm.invoke(full_message)
+            # So we'll use the synchronous version, wrapped in async for retry logic
+            async def _invoke():
+                # Run sync invoke in thread pool to avoid blocking
+                return await asyncio.to_thread(self.llm.invoke, full_message)
+
+            response = await self._retry_with_backoff(
+                _invoke,
+                operation_name="generate_response",
+            )
             return response
         except Exception as e:
-            return f"Error generating response: {str(e)}"
+            raise RuntimeError(f"Error generating response: {str(e)}") from e
 
     def set_system_prompt(self, system_prompt: str) -> None:
         """Set or update the system prompt."""

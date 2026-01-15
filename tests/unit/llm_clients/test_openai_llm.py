@@ -14,7 +14,7 @@ class TestOpenAILLM:
     def test_init_missing_api_key_raises_error(self):
         """Test that missing OPENAI_API_KEY raises ValueError (line 25)."""
         with pytest.raises(ValueError) as exc_info:
-            OpenAILLM(name="TestOpenAI")
+            OpenAILLM(name="TestOpenAI", max_retries=1)
 
         assert "OPENAI_API_KEY not found" in str(exc_info.value)
 
@@ -25,7 +25,7 @@ class TestOpenAILLM:
         mock_llm = MagicMock()
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", system_prompt="Test prompt")
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1, system_prompt="Test prompt")
 
         assert llm.name == "TestOpenAI"
         assert llm.system_prompt == "Test prompt"
@@ -39,7 +39,7 @@ class TestOpenAILLM:
         mock_llm = MagicMock()
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", model_name="gpt-4-turbo")
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1, model_name="gpt-4-turbo")
 
         assert llm.model_name == "gpt-4-turbo"
 
@@ -50,7 +50,9 @@ class TestOpenAILLM:
         mock_llm = MagicMock()
         mock_chat_openai.return_value = mock_llm
 
-        OpenAILLM(name="TestOpenAI", temperature=0.5, max_tokens=500, top_p=0.9)
+        OpenAILLM(
+            name="TestOpenAI", max_retries=1, temperature=0.5, max_tokens=500, top_p=0.9
+        )
 
         # Verify kwargs were passed to ChatOpenAI
         call_kwargs = mock_chat_openai.call_args[1]
@@ -90,7 +92,11 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", system_prompt="You are a helpful assistant.")
+        llm = OpenAILLM(
+            name="TestOpenAI",
+            max_retries=1,
+            system_prompt="You are a helpful assistant.",
+        )
         response = await llm.generate_response(
             conversation_history=[
                 {"turn": 0, "speaker": "system", "response": "Hello, GPT!"}
@@ -131,7 +137,7 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")  # No system prompt
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1)  # No system prompt
         response = await llm.generate_response(
             conversation_history=[
                 {"turn": 0, "speaker": "system", "response": "Test message"}
@@ -161,7 +167,7 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1)
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -184,7 +190,7 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1)
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -218,7 +224,7 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1)
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -241,16 +247,21 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(side_effect=Exception("API rate limit exceeded"))
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
-        response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "Test message"}
-            ]
-        )
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1)
+        error = None
+        try:
+            _ = await llm.generate_response(
+                conversation_history=[
+                    {"turn": 0, "speaker": "system", "response": "Test message"}
+                ]
+            )
+        except Exception as e:
+            error = str(e)
 
-        # Should return error message instead of raising
-        assert "Error generating response" in response
-        assert "API rate limit exceeded" in response
+        # Should raise exception with error message
+        assert error is not None
+        assert "Error generating response" in error
+        assert "API rate limit exceeded" in error
 
         # Verify error metadata was stored
         metadata = llm.get_last_response_metadata()
@@ -277,7 +288,7 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1)
         await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -294,7 +305,7 @@ class TestOpenAILLM:
                 mock_llm = MagicMock()
                 mock_chat.return_value = mock_llm
 
-                llm = OpenAILLM(name="TestOpenAI")
+                llm = OpenAILLM(name="TestOpenAI", max_retries=1)
                 llm.last_response_metadata = {"test": "value"}
 
                 metadata1 = llm.get_last_response_metadata()
@@ -315,7 +326,9 @@ class TestOpenAILLM:
                 mock_llm = MagicMock()
                 mock_chat.return_value = mock_llm
 
-                llm = OpenAILLM(name="TestOpenAI", system_prompt="Initial prompt")
+                llm = OpenAILLM(
+                    name="TestOpenAI", max_retries=1, system_prompt="Initial prompt"
+                )
                 assert llm.system_prompt == "Initial prompt"
 
                 llm.set_system_prompt("Updated prompt")
@@ -336,7 +349,7 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1)
         await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -360,7 +373,7 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1)
         await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -392,7 +405,7 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", model_name="gpt-4")
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1, model_name="gpt-4")
         await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
         )
@@ -421,7 +434,7 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", system_prompt="Test")
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1, system_prompt="Test")
 
         # Provide conversation history including the current turn
         history = [
@@ -478,7 +491,7 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", system_prompt="Test")
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1, system_prompt="Test")
 
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Hi"}]
@@ -507,7 +520,7 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", system_prompt="Test")
+        llm = OpenAILLM(name="TestOpenAI", max_retries=1, system_prompt="Test")
 
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "speaker": "system", "response": "Hi"}]
