@@ -1,3 +1,4 @@
+from typing import Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -8,8 +9,10 @@ from llm_clients.llm_interface import LLMInterface
 class ConcreteLLM(LLMInterface):
     """Concrete implementation for testing abstract base class."""
 
-    def __init__(self, name: str, system_prompt: str = None):
-        super().__init__(name, system_prompt)
+    def __init__(
+        self, name: str, system_prompt: Optional[str] = None, max_retries: int = 10
+    ):
+        super().__init__(name, system_prompt, max_retries=max_retries)
         # Add a mock llm object for __getattr__ testing
         self.llm = MagicMock(spec=["temperature", "max_tokens", "custom_method"])
         self.llm.temperature = 0.7
@@ -77,14 +80,14 @@ class TestLLMInterface:
     def test_cannot_instantiate_abstract_class(self):
         """Test that LLMInterface cannot be instantiated directly."""
         with pytest.raises(TypeError) as exc_info:
-            LLMInterface(name="Test")
+            LLMInterface(name="Test")  # type: ignore[abstract]
 
         assert "Can't instantiate abstract class" in str(exc_info.value)
 
     def test_incomplete_implementation_raises_error(self):
         """Test that incomplete implementations raise TypeError."""
         with pytest.raises(TypeError) as exc_info:
-            IncompleteLLM(name="Incomplete")
+            IncompleteLLM(name="Incomplete")  # type: ignore[abstract]
 
         assert "Can't instantiate abstract class" in str(exc_info.value)
 
@@ -132,7 +135,7 @@ class TestLLMInterface:
         class NullLLM(LLMInterface):
             """Implementation with None llm."""
 
-            def __init__(self, name: str, system_prompt: str = None):
+            def __init__(self, name: str, system_prompt: Optional[str] = None):
                 super().__init__(name, system_prompt)
                 self.llm = None
 
@@ -184,7 +187,7 @@ class TestLLMInterface:
 
         # Create a fresh mock without spec for this test
         class FlexibleLLM(LLMInterface):
-            def __init__(self, name: str, system_prompt: str = None):
+            def __init__(self, name: str, system_prompt: Optional[str] = None):
                 super().__init__(name, system_prompt)
                 self.llm = MagicMock()
                 self.llm.string_attr = "test string"
@@ -206,3 +209,225 @@ class TestLLMInterface:
         assert isinstance(llm.float_attr, float)
         assert isinstance(llm.bool_attr, bool)
         assert isinstance(llm.list_attr, list)
+
+
+@pytest.mark.unit
+class TestLLMInterfaceRetryLogic:
+    """Unit tests for retry logic and error handling in LLMInterface."""
+
+    def test_extract_http_status_code_from_status_code_attribute(self):
+        """Test extracting status code from exception.status_code attribute."""
+        llm = ConcreteLLM(name="TestLLM")
+
+        class ExceptionWithStatusCode(Exception):
+            def __init__(self, status_code):
+                self.status_code = status_code
+                super().__init__(f"HTTP {status_code}")
+
+        exc = ExceptionWithStatusCode(429)
+        assert llm._extract_http_status_code(exc) == 429
+
+    def test_extract_http_status_code_from_response_attribute(self):
+        """Test extracting status code from exception.response.status_code."""
+        llm = ConcreteLLM(name="TestLLM")
+
+        class MockResponse:
+            def __init__(self, status_code):
+                self.status_code = status_code
+
+        class ExceptionWithResponse(Exception):
+            def __init__(self, status_code):
+                self.response = MockResponse(status_code)
+                super().__init__(f"HTTP {status_code}")
+
+        exc = ExceptionWithResponse(503)
+        assert llm._extract_http_status_code(exc) == 503
+
+    def test_extract_http_status_code_from_error_message(self):
+        """Test extracting status code from error message string."""
+        llm = ConcreteLLM(name="TestLLM")
+
+        exc = Exception("HTTP status 429: Too Many Requests")
+        assert llm._extract_http_status_code(exc) == 429
+
+        exc2 = Exception("Request failed with status_code 503")
+        assert llm._extract_http_status_code(exc2) == 503
+
+    def test_extract_http_status_code_error_code_pattern(self):
+        """Test extracting status code from 'Error Code' pattern."""
+        llm = ConcreteLLM(name="TestLLM")
+
+        exc = Exception("Error Code: 429")
+        assert llm._extract_http_status_code(exc) == 429
+
+        exc2 = Exception("Error Code 503 occurred")
+        assert llm._extract_http_status_code(exc2) == 503
+
+        exc3 = Exception("Error code: 500")
+        assert llm._extract_http_status_code(exc3) == 500
+
+    def test_extract_http_status_code_error_code_with_additional_text(self):
+        """Test extracting status code from 'Error code' with additional text after."""
+        llm = ConcreteLLM(name="TestLLM")
+
+        # Real-world example from Azure API
+        error_msg = (
+            "Error code: 400 - {'type': 'error', 'error': "
+            "{'type': 'invalid_request_error', 'message': "
+            "'messages.2: all messages must have non-empty content except for "
+            "the optional final assistant message'}, 'request_id': "
+            "'req_011CX84UXrNZGnUz2i9YM7AX'}"
+        )
+        exc = Exception(error_msg)
+        assert llm._extract_http_status_code(exc) == 400
+
+        # Test with different formats
+        exc2 = Exception("Error code: 429 - Rate limit exceeded")
+        assert llm._extract_http_status_code(exc2) == 429
+
+        exc3 = Exception("Error code: 503 Service unavailable")
+        assert llm._extract_http_status_code(exc3) == 503
+
+    def test_extract_http_status_code_no_match(self):
+        """Test that None is returned when no status code can be extracted."""
+        llm = ConcreteLLM(name="TestLLM")
+
+        exc = Exception("Generic error message")
+        assert llm._extract_http_status_code(exc) is None
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_empty_response_retries(self):
+        """Test that empty response content triggers retry."""
+        llm = ConcreteLLM(name="TestLLM", max_retries=3)
+
+        call_count = 0
+
+        async def func_with_empty_then_valid():
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                # First call returns empty response
+                mock_response = MagicMock()
+                mock_response.text = ""
+                return mock_response
+            else:
+                # Subsequent calls return valid response
+                mock_response = MagicMock()
+                mock_response.text = "Valid response"
+                return mock_response
+
+        def validator(response_obj):
+            """Validate that response has non-empty content."""
+            return bool(response_obj.text and response_obj.text.strip())
+
+        result = await llm._retry_with_backoff(
+            func_with_empty_then_valid,
+            operation_name="test_operation",
+            response_validator=validator,
+        )
+
+        assert result.text == "Valid response"
+        assert call_count == 2  # Should have retried once
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_empty_response_exhausts_retries(self):
+        """Test that empty response raises error after max retries."""
+        llm = ConcreteLLM(name="TestLLM", max_retries=2)
+
+        async def func_always_empty():
+            mock_response = MagicMock()
+            mock_response.text = ""
+            return mock_response
+
+        def validator(response_obj):
+            """Validate that response has non-empty content."""
+            return bool(response_obj.text and response_obj.text.strip())
+
+        with pytest.raises(RuntimeError) as exc_info:
+            await llm._retry_with_backoff(
+                func_always_empty,
+                operation_name="test_operation",
+                response_validator=validator,
+            )
+
+        assert "after 2 retries" in str(exc_info.value)
+        assert "response content is empty" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_whitespace_only_response_retries(self):
+        """Test that whitespace-only response triggers retry."""
+        llm = ConcreteLLM(name="TestLLM", max_retries=3)
+
+        call_count = 0
+
+        async def func_with_whitespace_then_valid():
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                # First call returns whitespace-only response
+                mock_response = MagicMock()
+                mock_response.text = "   \n\t  "
+                return mock_response
+            else:
+                # Subsequent calls return valid response
+                mock_response = MagicMock()
+                mock_response.text = "Valid response"
+                return mock_response
+
+        def validator(response_obj):
+            """Validate that response has non-empty content."""
+            return bool(response_obj.text and response_obj.text.strip())
+
+        result = await llm._retry_with_backoff(
+            func_with_whitespace_then_valid,
+            operation_name="test_operation",
+            response_validator=validator,
+        )
+
+        assert result.text == "Valid response"
+        assert call_count == 2  # Should have retried once
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_no_validator_passes_through(self):
+        """Test that without validator, empty response is returned."""
+        llm = ConcreteLLM(name="TestLLM", max_retries=3)
+
+        async def func_with_empty():
+            mock_response = MagicMock()
+            mock_response.text = ""
+            return mock_response
+
+        # No validator provided
+        result = await llm._retry_with_backoff(
+            func_with_empty,
+            operation_name="test_operation",
+        )
+
+        assert result.text == ""  # Empty response is returned without validation
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_validator_returns_true_immediately(self):
+        """Test that valid response passes validator immediately."""
+        llm = ConcreteLLM(name="TestLLM", max_retries=3)
+
+        call_count = 0
+
+        async def func_with_valid():
+            nonlocal call_count
+            call_count += 1
+            mock_response = MagicMock()
+            mock_response.text = "Valid response"
+            return mock_response
+
+        def validator(response_obj):
+            """Validate that response has non-empty content."""
+            return bool(response_obj.text and response_obj.text.strip())
+
+        result = await llm._retry_with_backoff(
+            func_with_valid,
+            operation_name="test_operation",
+            response_validator=validator,
+        )
+
+        assert result.text == "Valid response"
+        assert call_count == 1  # Should not retry for valid response

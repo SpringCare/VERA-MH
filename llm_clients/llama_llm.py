@@ -66,9 +66,22 @@ class LlamaLLM(LLMInterface):
                 # Run sync invoke in thread pool to avoid blocking
                 return await asyncio.to_thread(self.llm.invoke, full_message)
 
+            def _validate_response(response_obj):
+                """Validate that response has non-empty content."""
+                # Ollama may return string directly or a message object
+                if isinstance(response_obj, str):
+                    return bool(response_obj and response_obj.strip())
+                elif hasattr(response_obj, "text"):
+                    return bool(response_obj.text and response_obj.text.strip())
+                elif hasattr(response_obj, "content"):
+                    return bool(response_obj.content and response_obj.content.strip())
+                # If we can't determine, assume valid
+                return True
+
             response = await self._retry_with_backoff(
                 _invoke,
                 operation_name="generate_response",
+                response_validator=_validate_response,
             )
             return response
         except Exception as e:

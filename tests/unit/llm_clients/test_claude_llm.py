@@ -571,3 +571,109 @@ class TestClaudeLLM:
 
         # Should have: SystemMessage + current message only
         assert len(messages) == 2
+
+    @pytest.mark.asyncio
+    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("llm_clients.claude_llm.ChatAnthropic")
+    async def test_generate_response_retries_on_empty_response(
+        self, mock_chat_anthropic
+    ):
+        """Test that empty response content triggers retry."""
+        mock_llm = MagicMock()
+        mock_llm.model = "claude-3-5-sonnet-20241022"
+
+        call_count = 0
+
+        async def mock_ainvoke(messages):
+            nonlocal call_count
+            call_count += 1
+            mock_response = MagicMock()
+            if call_count == 1:
+                # First call returns empty response
+                mock_response.text = ""
+            else:
+                # Subsequent calls return valid response
+                mock_response.text = "Valid response after retry"
+            mock_response.id = f"msg_{call_count}"
+            mock_response.response_metadata = {}
+            return mock_response
+
+        mock_llm.ainvoke = AsyncMock(side_effect=mock_ainvoke)
+        mock_chat_anthropic.return_value = mock_llm
+
+        llm = ClaudeLLM(name="TestClaude", max_retries=3)
+        response = await llm.generate_response(
+            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+        )
+
+        assert response == "Valid response after retry"
+        assert call_count == 2  # Should have retried once
+
+    @pytest.mark.asyncio
+    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("llm_clients.claude_llm.ChatAnthropic")
+    async def test_generate_response_retries_on_whitespace_only_response(
+        self, mock_chat_anthropic
+    ):
+        """Test that whitespace-only response triggers retry."""
+        mock_llm = MagicMock()
+        mock_llm.model = "claude-3-5-sonnet-20241022"
+
+        call_count = 0
+
+        async def mock_ainvoke(messages):
+            nonlocal call_count
+            call_count += 1
+            mock_response = MagicMock()
+            if call_count == 1:
+                # First call returns whitespace-only response
+                mock_response.text = "   \n\t  "
+            else:
+                # Subsequent calls return valid response
+                mock_response.text = "Valid response"
+            mock_response.id = f"msg_{call_count}"
+            mock_response.response_metadata = {}
+            return mock_response
+
+        mock_llm.ainvoke = AsyncMock(side_effect=mock_ainvoke)
+        mock_chat_anthropic.return_value = mock_llm
+
+        llm = ClaudeLLM(name="TestClaude", max_retries=3)
+        response = await llm.generate_response(
+            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+        )
+
+        assert response == "Valid response"
+        assert call_count == 2  # Should have retried once
+
+    @pytest.mark.asyncio
+    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("llm_clients.claude_llm.ChatAnthropic")
+    async def test_generate_response_empty_response_exhausts_retries(
+        self, mock_chat_anthropic
+    ):
+        """Test that empty response raises error after max retries."""
+        mock_llm = MagicMock()
+        mock_llm.model = "claude-3-5-sonnet-20241022"
+
+        async def mock_ainvoke(messages):
+            mock_response = MagicMock()
+            mock_response.text = ""  # Always empty
+            mock_response.id = "msg_empty"
+            mock_response.response_metadata = {}
+            return mock_response
+
+        mock_llm.ainvoke = AsyncMock(side_effect=mock_ainvoke)
+        mock_chat_anthropic.return_value = mock_llm
+
+        llm = ClaudeLLM(name="TestClaude", max_retries=2)
+
+        with pytest.raises(RuntimeError) as exc_info:
+            await llm.generate_response(
+                conversation_history=[
+                    {"turn": 0, "speaker": "system", "response": "Test"}
+                ]
+            )
+
+        assert "after 2 retries" in str(exc_info.value)
+        assert "response content is empty" in str(exc_info.value)

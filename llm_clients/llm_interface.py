@@ -1,4 +1,5 @@
 import asyncio
+import re
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
 
@@ -88,6 +89,16 @@ class LLMInterface(ABC):
             if f"status {code}" in error_str or f"status_code {code}" in error_str:
                 return code
 
+        # Check for "Error Code" pattern in exception message
+        if "error code" in error_str:
+            # Try to extract numeric code after "error code"
+            match = re.search(r"error code[:\s]+(\d+)", error_str, re.IGNORECASE)
+            if match:
+                try:
+                    return int(match.group(1))
+                except (ValueError, TypeError):
+                    pass
+
         return None
 
     def _extract_retry_after(self, exception: Exception) -> Optional[int]:
@@ -108,6 +119,7 @@ class LLMInterface(ABC):
         self,
         func: Callable[[], Any],
         operation_name: str = "operation",
+        response_validator: Optional[Callable[[Any], bool]] = None,
     ) -> Any:
         """Execute a function with retry logic for transient HTTP errors.
 
@@ -122,16 +134,23 @@ class LLMInterface(ABC):
         - 529 (Overloaded - Anthropic): Treated like 503 with
           exponential backoff
 
+        Also retries if response_validator is provided and returns False
+        (e.g., for empty response content).
+
         Args:
             func: Async function to execute
             operation_name: Name of operation for error messages
+            response_validator: Optional function to validate response.
+                If provided and returns False, will retry the operation.
+                Should accept the result of func() and return True if valid.
 
         Returns:
             Result of func()
 
         Raises:
             RuntimeError: If max retries exceeded or non-retryable
-                error occurs
+                error occurs, or if response validation fails after
+                max retries
         """
         retryable_status_codes = {429, 500, 502, 503, 504, 529}
         max_retries_for_500_502 = 3  # Limit retries for 500/502
@@ -140,7 +159,18 @@ class LLMInterface(ABC):
 
         for attempt in range(self.max_retries):
             try:
-                return await func()
+                result = await func()
+
+                # Validate response if validator is provided
+                if response_validator is not None:
+                    if not response_validator(result):
+                        # Response validation failed, treat as retryable error
+                        raise ValueError(
+                            f"Response validation failed in {operation_name}: "
+                            "response content is empty or invalid"
+                        )
+
+                return result
             except Exception as e:
                 last_exception = e
                 status_code = self._extract_http_status_code(e)
@@ -159,6 +189,8 @@ class LLMInterface(ABC):
                         "gateway timeout",
                         "overloaded",
                         "timeout",
+                        "response validation failed",
+                        "response content is empty",
                     ]
                     if any(keyword in error_str for keyword in retryable_keywords):
                         # Treat as retryable, use exponential backoff

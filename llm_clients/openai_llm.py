@@ -101,9 +101,14 @@ class OpenAILLM(JudgeLLM):
             async def _invoke():
                 return await self.llm.ainvoke(messages)
 
+            def _validate_response(response_obj):
+                """Validate that response has non-empty content."""
+                return bool(response_obj.text and response_obj.text.strip())
+
             response = await self._retry_with_backoff(
                 _invoke,
                 operation_name="generate_response",
+                response_validator=_validate_response,
             )
             end_time = time.time()
 
