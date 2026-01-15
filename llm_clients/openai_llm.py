@@ -23,7 +23,7 @@ class OpenAILLM(JudgeLLM):
         name: str,
         system_prompt: Optional[str] = None,
         model_name: Optional[str] = None,
-        max_retries: int = 10,
+        max_retries: int = 3,
         **kwargs,
     ):
         super().__init__(name, system_prompt, max_retries=max_retries)

@@ -16,7 +16,7 @@ class LLMInterface(ABC):
     """
 
     def __init__(
-        self, name: str, system_prompt: Optional[str] = None, max_retries: int = 10
+        self, name: str, system_prompt: Optional[str] = None, max_retries: int = 3
     ):
         self.name = name
         self.system_prompt = system_prompt or ""

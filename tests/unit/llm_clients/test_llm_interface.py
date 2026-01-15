@@ -10,7 +10,7 @@ class ConcreteLLM(LLMInterface):
     """Concrete implementation for testing abstract base class."""
 
     def __init__(
-        self, name: str, system_prompt: Optional[str] = None, max_retries: int = 10
+        self, name: str, system_prompt: Optional[str] = None, max_retries: int = 3
     ):
         super().__init__(name, system_prompt, max_retries=max_retries)
         # Add a mock llm object for __getattr__ testing
