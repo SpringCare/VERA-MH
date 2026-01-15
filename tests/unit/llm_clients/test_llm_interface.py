@@ -1,9 +1,18 @@
-from typing import Optional
-from unittest.mock import MagicMock
+from typing import Any, Optional
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from llm_clients.llm_interface import LLMInterface
+
+
+class ExceptionWithStatusCode(Exception):
+    """Exception with status_code attribute for testing."""
+
+    def __init__(self, status_code: int, message: str = ""):
+        self.status_code = status_code
+        self.response: Any = None  # Can be set for testing Retry-After header
+        super().__init__(message or f"HTTP {status_code}")
 
 
 class ConcreteLLM(LLMInterface):
@@ -124,9 +133,9 @@ class TestLLMInterface:
 
         llm = MinimalLLM(name="Minimal")
 
-        # Should raise AttributeError (or RecursionError due to hasattr in __getattr__)
-        # The current implementation has a recursion issue, but it still raises an error
-        with pytest.raises((AttributeError, RecursionError)):
+        # Should raise RecursionError when self.llm doesn't exist
+        # because hasattr(self, "llm") in __getattr__ calls __getattr__ again
+        with pytest.raises(RecursionError):
             _ = llm.some_attribute
 
     def test_getattr_with_none_llm(self):
@@ -431,3 +440,460 @@ class TestLLMInterfaceRetryLogic:
 
         assert result.text == "Valid response"
         assert call_count == 1  # Should not retry for valid response
+
+    def test_extract_retry_after_from_headers(self):
+        """Test extracting Retry-After header from exception.response.headers."""
+        llm = ConcreteLLM(name="TestLLM")
+
+        class MockHeaders:
+            def __init__(self, retry_after):
+                self._headers = {"Retry-After": str(retry_after)}
+
+            def get(self, key):
+                return self._headers.get(key) or self._headers.get(key.lower())
+
+        class MockResponse:
+            def __init__(self, retry_after):
+                self.headers = MockHeaders(retry_after)
+
+        class ExceptionWithRetryAfter(Exception):
+            def __init__(self, retry_after):
+                self.response = MockResponse(retry_after)
+                super().__init__(f"Rate limited, retry after {retry_after}")
+
+        exc = ExceptionWithRetryAfter(30)
+        assert llm._extract_retry_after(exc) == 30
+
+    def test_extract_retry_after_case_insensitive(self):
+        """Test that Retry-After header extraction is case-insensitive."""
+        llm = ConcreteLLM(name="TestLLM")
+
+        class MockHeaders:
+            def __init__(self, retry_after):
+                self._headers = {"retry-after": str(retry_after)}
+
+            def get(self, key):
+                return self._headers.get(key) or self._headers.get(key.lower())
+
+        class MockResponse:
+            def __init__(self, retry_after):
+                self.headers = MockHeaders(retry_after)
+
+        class ExceptionWithRetryAfter(Exception):
+            def __init__(self, retry_after):
+                self.response = MockResponse(retry_after)
+                super().__init__("Rate limited")
+
+        exc = ExceptionWithRetryAfter(45)
+        assert llm._extract_retry_after(exc) == 45
+
+    def test_extract_retry_after_no_headers(self):
+        """Test that None is returned when headers don't exist."""
+        llm = ConcreteLLM(name="TestLLM")
+
+        class ExceptionWithoutHeaders(Exception):
+            def __init__(self):
+                self.response = object()  # No headers attribute
+                super().__init__("Error")
+
+        exc = ExceptionWithoutHeaders()
+        assert llm._extract_retry_after(exc) is None
+
+    def test_extract_retry_after_no_response(self):
+        """Test that None is returned when response doesn't exist."""
+        llm = ConcreteLLM(name="TestLLM")
+
+        exc = Exception("Generic error")
+        assert llm._extract_retry_after(exc) is None
+
+    def test_extract_retry_after_invalid_value(self):
+        """Test that None is returned when Retry-After value is invalid."""
+        llm = ConcreteLLM(name="TestLLM")
+
+        class MockHeaders:
+            def get(self, key):
+                return "invalid"  # Not a number
+
+        class MockResponse:
+            def __init__(self):
+                self.headers = MockHeaders()
+
+        class ExceptionWithInvalidRetryAfter(Exception):
+            def __init__(self):
+                self.response = MockResponse()
+                super().__init__("Error")
+
+        exc = ExceptionWithInvalidRetryAfter()
+        assert llm._extract_retry_after(exc) is None
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_429_rate_limit(self):
+        """Test retry logic for 429 (Too Many Requests) status code."""
+        llm = ConcreteLLM(name="TestLLM", max_retries=3)
+
+        call_count = 0
+
+        async def func_with_429_then_success():
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise ExceptionWithStatusCode(429, "HTTP status 429: Too Many Requests")
+            return "Success after retry"
+
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            result = await llm._retry_with_backoff(
+                func_with_429_then_success, operation_name="test_operation"
+            )
+
+        assert result == "Success after retry"
+        assert call_count == 2
+        # Should sleep once with exponential backoff (2^0 = 1 second)
+        assert mock_sleep.call_count == 1
+        mock_sleep.assert_called_with(1)
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_429_with_retry_after_header(self):
+        """Test that 429 respects Retry-After header."""
+        from unittest.mock import AsyncMock, patch
+
+        llm = ConcreteLLM(name="TestLLM", max_retries=3)
+
+        call_count = 0
+
+        class MockHeaders:
+            def get(self, key):
+                return "15" if key.lower() == "retry-after" else None
+
+        class MockResponse:
+            def __init__(self):
+                self.headers = MockHeaders()
+
+        async def func_with_429_and_retry_after():
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                exc = ExceptionWithStatusCode(429, "HTTP status 429: Too Many Requests")
+                exc.response = MockResponse()
+                raise exc
+            return "Success after retry"
+
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            result = await llm._retry_with_backoff(
+                func_with_429_and_retry_after,
+                operation_name="test_operation",
+            )
+
+        assert result == "Success after retry"
+        assert call_count == 2
+        # Should use Retry-After header value (15s) instead of backoff
+        assert mock_sleep.call_count == 1
+        mock_sleep.assert_called_with(15)
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_500_internal_server_error(self):
+        """Test retry logic for 500 (Internal Server Error) status code."""
+        llm = ConcreteLLM(name="TestLLM", max_retries=5)
+
+        call_count = 0
+
+        async def func_with_500_then_success():
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 2:
+                raise ExceptionWithStatusCode(
+                    500, "HTTP status 500: Internal Server Error"
+                )
+            return "Success after retries"
+
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            result = await llm._retry_with_backoff(
+                func_with_500_then_success, operation_name="test_operation"
+            )
+
+        assert result == "Success after retries"
+        assert call_count == 3
+        # Should sleep twice with exponential backoff (2^0=1, 2^1=2)
+        assert mock_sleep.call_count == 2
+        assert mock_sleep.call_args_list[0][0][0] == 1
+        assert mock_sleep.call_args_list[1][0][0] == 2
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_500_limited_to_3_retries(self):
+        """Test that 500 status code is limited to 3 retries."""
+        llm = ConcreteLLM(name="TestLLM", max_retries=10)
+
+        call_count = 0
+
+        async def func_always_500():
+            nonlocal call_count
+            call_count += 1
+            raise ExceptionWithStatusCode(500, "HTTP status 500: Internal Server Error")
+
+        with pytest.raises(RuntimeError) as exc_info:
+            await llm._retry_with_backoff(
+                func_always_500, operation_name="test_operation"
+            )
+
+        assert "after 3 retries" in str(exc_info.value)
+        assert call_count == 3  # Limited to 3 retries for 500
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_502_bad_gateway(self):
+        """Test retry logic for 502 (Bad Gateway) status code."""
+        from unittest.mock import AsyncMock, patch
+
+        llm = ConcreteLLM(name="TestLLM", max_retries=5)
+
+        call_count = 0
+
+        async def func_with_502_then_success():
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise ExceptionWithStatusCode(502, "HTTP status 502: Bad Gateway")
+            return "Success after retry"
+
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            result = await llm._retry_with_backoff(
+                func_with_502_then_success, operation_name="test_operation"
+            )
+
+        assert result == "Success after retry"
+        assert call_count == 2
+        assert mock_sleep.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_502_limited_to_3_retries(self):
+        """Test that 502 status code is limited to 3 retries."""
+        llm = ConcreteLLM(name="TestLLM", max_retries=10)
+
+        call_count = 0
+
+        async def func_always_502():
+            nonlocal call_count
+            call_count += 1
+            raise ExceptionWithStatusCode(502, "HTTP status 502: Bad Gateway")
+
+        with pytest.raises(RuntimeError) as exc_info:
+            await llm._retry_with_backoff(
+                func_always_502, operation_name="test_operation"
+            )
+
+        assert "after 3 retries" in str(exc_info.value)
+        assert call_count == 3  # Limited to 3 retries for 502
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_503_service_unavailable(self):
+        """Test retry logic for 503 (Service Unavailable) status code."""
+        from unittest.mock import AsyncMock, patch
+
+        llm = ConcreteLLM(name="TestLLM", max_retries=4)
+
+        call_count = 0
+
+        async def func_with_503_then_success():
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 2:
+                raise ExceptionWithStatusCode(
+                    503, "HTTP status 503: Service Unavailable"
+                )
+            return "Success after retries"
+
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            result = await llm._retry_with_backoff(
+                func_with_503_then_success, operation_name="test_operation"
+            )
+
+        assert result == "Success after retries"
+        assert call_count == 3
+        # Should sleep twice with exponential backoff
+        assert mock_sleep.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_504_gateway_timeout(self):
+        """Test retry logic for 504 (Gateway Timeout) status code."""
+        from unittest.mock import AsyncMock, patch
+
+        llm = ConcreteLLM(name="TestLLM", max_retries=3)
+
+        call_count = 0
+
+        async def func_with_504_then_success():
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise ExceptionWithStatusCode(504, "HTTP status 504: Gateway Timeout")
+            return "Success after retry"
+
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            result = await llm._retry_with_backoff(
+                func_with_504_then_success, operation_name="test_operation"
+            )
+
+        assert result == "Success after retry"
+        assert call_count == 2
+        assert mock_sleep.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_529_overloaded(self):
+        """Test retry logic for 529 (Overloaded - Anthropic) status code."""
+        from unittest.mock import AsyncMock, patch
+
+        llm = ConcreteLLM(name="TestLLM", max_retries=3)
+
+        call_count = 0
+
+        async def func_with_529_then_success():
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise ExceptionWithStatusCode(529, "HTTP status 529: Overloaded")
+            return "Success after retry"
+
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            result = await llm._retry_with_backoff(
+                func_with_529_then_success, operation_name="test_operation"
+            )
+
+        assert result == "Success after retry"
+        assert call_count == 2
+        assert mock_sleep.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_exponential_backoff_timing(self):
+        """Test that exponential backoff timing is correct (2^attempt, max 60s)."""
+        from unittest.mock import AsyncMock, patch
+
+        llm = ConcreteLLM(name="TestLLM", max_retries=5)
+
+        call_count = 0
+
+        async def func_with_multiple_503():
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 3:
+                raise ExceptionWithStatusCode(
+                    503, "HTTP status 503: Service Unavailable"
+                )
+            return "Success"
+
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            result = await llm._retry_with_backoff(
+                func_with_multiple_503, operation_name="test_operation"
+            )
+
+        assert result == "Success"
+        assert call_count == 4
+        # Should sleep 3 times with exponential backoff: 2^0=1, 2^1=2, 2^2=4
+        assert mock_sleep.call_count == 3
+        assert mock_sleep.call_args_list[0][0][0] == 1
+        assert mock_sleep.call_args_list[1][0][0] == 2
+        assert mock_sleep.call_args_list[2][0][0] == 4
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_exponential_backoff_capped_at_60(self):
+        """Test that exponential backoff is capped at 60 seconds."""
+        from unittest.mock import AsyncMock, patch
+
+        llm = ConcreteLLM(name="TestLLM", max_retries=10)
+
+        call_count = 0
+
+        async def func_with_many_503():
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 7:  # Need 7 attempts to reach 2^6 = 64 > 60
+                raise ExceptionWithStatusCode(
+                    503, "HTTP status 503: Service Unavailable"
+                )
+            return "Success"
+
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            result = await llm._retry_with_backoff(
+                func_with_many_503, operation_name="test_operation"
+            )
+
+        assert result == "Success"
+        # Check that wait times are capped at 60
+        wait_times = [call[0][0] for call in mock_sleep.call_args_list]
+        assert all(wait <= 60 for wait in wait_times)
+        # At attempt 6, 2^6 = 64, should be capped to 60
+        assert 60 in wait_times
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_non_retryable_status_code(self):
+        """Test that non-retryable status codes raise immediately."""
+        llm = ConcreteLLM(name="TestLLM", max_retries=3)
+
+        async def func_with_400():
+            raise ExceptionWithStatusCode(400, "HTTP status 400: Bad Request")
+
+        with pytest.raises(RuntimeError) as exc_info:
+            await llm._retry_with_backoff(
+                func_with_400, operation_name="test_operation"
+            )
+
+        assert "Error in test_operation" in str(exc_info.value)
+        assert "400" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_retryable_keyword_in_message(self):
+        """Test retryable keywords are retried even without status code."""
+        llm = ConcreteLLM(name="TestLLM", max_retries=3)
+
+        call_count = 0
+
+        async def func_with_retryable_message():
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                # No status code, but has retryable keyword
+                raise Exception("Rate limit exceeded")
+            return "Success"
+
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            result = await llm._retry_with_backoff(
+                func_with_retryable_message, operation_name="test_operation"
+            )
+
+        assert result == "Success"
+        assert call_count == 2
+        # Should treat as 503 and retry
+        assert mock_sleep.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_non_retryable_error_message(self):
+        """Test that errors without retryable keywords raise immediately."""
+        llm = ConcreteLLM(name="TestLLM", max_retries=3)
+
+        async def func_with_non_retryable_error():
+            raise Exception("Invalid API key provided")
+
+        with pytest.raises(RuntimeError) as exc_info:
+            await llm._retry_with_backoff(
+                func_with_non_retryable_error, operation_name="test_operation"
+            )
+
+        assert "Error in test_operation" in str(exc_info.value)
+        assert "Invalid API key" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_retry_with_backoff_max_retries_exceeded(self):
+        """Test that RuntimeError is raised when max retries are exceeded."""
+        llm = ConcreteLLM(name="TestLLM", max_retries=2)
+
+        call_count = 0
+
+        async def func_always_503():
+            nonlocal call_count
+            call_count += 1
+            raise ExceptionWithStatusCode(503, "HTTP status 503: Service Unavailable")
+
+        with pytest.raises(RuntimeError) as exc_info:
+            await llm._retry_with_backoff(
+                func_always_503, operation_name="test_operation"
+            )
+
+        assert "after 2 retries" in str(exc_info.value)
+        assert call_count == 2  # max_retries attempts
