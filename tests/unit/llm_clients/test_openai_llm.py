@@ -256,7 +256,7 @@ class TestOpenAILLM:
         metadata = llm.get_last_response_metadata()
         assert metadata["response_id"] is None
         assert metadata["model"] == "gpt-4"
-        assert metadata["provider"] == "metadata"  # Note: typo in original code
+        assert metadata["provider"] == "openai"
         assert "timestamp" in metadata
         assert "error" in metadata
         assert "API rate limit exceeded" in metadata["error"]

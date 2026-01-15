@@ -169,7 +169,7 @@ class OpenAILLM(JudgeLLM):
             self.last_response_metadata = {
                 "response_id": None,
                 "model": self.model_name,
-                "provider": "metadata",
+                "provider": "openai",
                 "timestamp": datetime.now().isoformat(),
                 "error": str(e),
                 "usage": {},
