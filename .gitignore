@@ -10,7 +10,6 @@ tmp_tests/
 .ipynb_checkpoints/
 *.ipynb
 .vscode
-run_test_generate.sh
 spring_scripts/
 
 # Testing artifacts
