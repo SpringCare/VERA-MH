@@ -1,7 +1,6 @@
 """Utilities for conversation management and file operations."""
 
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
@@ -38,9 +37,6 @@ def save_conversation_to_file(
         folder: Output folder
         llm1_name: Name of LLM1 to identify it as 'user'
     """
-    # Ensure folder exists
-    Path(folder).mkdir(parents=True, exist_ok=True)
-
     summary = format_conversation_summary(conversation_history, llm1_name)
     with open(f"{folder}/{filename}", "w", encoding="utf-8") as f:
         f.write(summary)
