@@ -21,9 +21,11 @@ class TestLlamaLLMInit:
         call_kwargs = mock_ollama.call_args[1]
 
         assert "model" in call_kwargs
-        assert "temperature" in call_kwargs
+        # base_url has a hardcoded default for Ollama connectivity
         assert "base_url" in call_kwargs
         assert call_kwargs["base_url"] == "http://localhost:11434"
+        # temperature should NOT be set by default
+        assert "temperature" not in call_kwargs
 
     @patch("llm_clients.llama_llm.Ollama")
     def test_init_with_custom_model_name(self, mock_ollama):
@@ -441,3 +443,38 @@ class TestLlamaLLMConversationHistory:
         # Should just have current message
         call_args = mock_instance.invoke.call_args[0][0]
         assert call_args == "Human: Test\n\nAssistant:"
+
+    @pytest.mark.asyncio
+    @patch("llm_clients.llama_llm.Ollama")
+    async def test_generate_response_with_persona_role_flips_types(self, mock_ollama):
+        """Test that persona role flips message types in conversation history."""
+        from llm_clients.llama_llm import LlamaLLM
+
+        mock_instance = MagicMock()
+        mock_instance.invoke.return_value = "Persona response"
+        mock_ollama.return_value = mock_instance
+
+        # Persona system prompt should trigger message type flipping
+        persona_prompt = "You are roleplaying as a human user"
+        llm = LlamaLLM(name="test-llama", system_prompt=persona_prompt)
+
+        history = [
+            {"turn": 1, "speaker": "persona", "response": "Hello"},
+            {"turn": 2, "speaker": "provider", "response": "Hi there"},
+            {"turn": 3, "speaker": "persona", "response": "How are you?"},
+        ]
+
+        response = await llm.generate_response(conversation_history=history)
+
+        assert response == "Persona response"
+
+        # Verify message types are flipped for persona role
+        call_args = mock_instance.invoke.call_args[0][0]
+        assert "System: You are roleplaying as a human user" in call_args
+        # Turn 1 (persona, odd) should be Assistant when persona role
+        assert "Assistant: Hello" in call_args
+        # Turn 2 (provider, even) should be Human when persona role
+        assert "Human: Hi there" in call_args
+        # Turn 3 (persona, odd) should be Assistant when persona role
+        assert "Assistant: How are you?" in call_args
+        assert "Assistant:" in call_args

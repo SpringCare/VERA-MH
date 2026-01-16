@@ -95,19 +95,22 @@ class TestConversationFileOperations:
         assert any(line.startswith("chatbot:") for line in lines)
 
     def test_save_to_nonexistent_directory(self, tmp_path: Path) -> None:
-        """Test saving to a nonexistent directory raises error."""
+        """Test saving to a nonexistent directory creates the directory."""
         conversation = [{"speaker": "ModelZ", "response": "Test message"}]
 
         # Create a path to a subdirectory that doesn't exist
         subdir = tmp_path / "nested" / "conversations"
         filename = "test.txt"
 
-        # This test verifies expected behavior - if directory doesn't exist,
-        # it should raise an error (since the code doesn't create directories)
-        with pytest.raises(FileNotFoundError):
-            save_conversation_to_file(
-                conversation, filename, str(subdir), llm1_name="ModelZ"
-            )
+        # The function should create the directory automatically
+        assert not subdir.exists()
+        save_conversation_to_file(
+            conversation, filename, str(subdir), llm1_name="ModelZ"
+        )
+
+        # Verify directory was created and file was saved
+        assert subdir.exists()
+        assert (subdir / filename).exists()
 
     def test_load_from_nonexistent_file(self, tmp_path: Path) -> None:
         """Test attempting to load from nonexistent file raises appropriate error."""
