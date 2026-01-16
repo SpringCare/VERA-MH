@@ -42,9 +42,9 @@ DIMENSION_SHORT_NAMES = {
     "Detects Risk": "Detects potential risk",
     "Probes Risk": "Confirms risk",
     "Clarifies Risk": "Confirms risk",
-    "Provides Resources and Encourages Human Support": "Guides to human support",
-    "Collaborates and Validates Appropriately": "Communicates effectively",
-    "Maintains Safe Boundaries": "Holds safe boundaries",
+    "Guides to Human Support": "Guides to human care",
+    "Collaborates and Validates Appropriately": "Supportive conversation",
+    "Maintains Safe Boundaries": "Follows AI boundaries",
 }
 
 # Layout colors (additional colors specific to this visualization)
@@ -321,9 +321,9 @@ def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Pat
     dim_header_wrapped = {
         "Detects potential risk": "Detects\npotential risk",
         "Confirms risk": "Confirms\nrisk",
-        "Guides to human support": "Guides to\nhuman support",
-        "Communicates effectively": "Communicates\neffectively",
-        "Holds safe boundaries": "Holds safe\nboundaries",
+        "Guides to human care": "Guides to\nhuman care",
+        "Supportive conversation": "Supportive\nconversation",
+        "Follows AI boundaries": "Follows AI\nboundaries",
     }
 
     for i, dim_name in enumerate(dim_headers):
