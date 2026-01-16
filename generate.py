@@ -211,7 +211,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--convo-folder-name",
+        "--folder-name",
         "-f",
         help=(
             "Folder name containing the conversations for this run. "
@@ -290,7 +290,7 @@ if __name__ == "__main__":
                 for k, v in agent_model_config.items()
                 if k not in ["model", "model_name", "name", "temperature", "max_tokens"]
             },
-            convo_folder_name=args.convo_folder_name,
+            convo_folder_name=args.folder_name,
             log_folder_name=args.log_folder_name,
             max_concurrent=args.max_concurrent,
             max_total_words=args.max_total_words,
