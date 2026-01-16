@@ -53,9 +53,10 @@ Where:
 - `pep` is the provider extra parameters
 - `t` is the number of turns
 - `r` is the run per turns
-- `f` is the folder name (defaults to conversations and a subfolder named based on other paramters and datetime)
+- `f` (or `--convo-folder-name`) is the conversation folder name (defaults to `conversations` with a subfolder named based on other parameters and datetime)
+- `lf` (or `--log-folder-name`) is the logging folder name (defaults to `logging` with a subfolder named based on other parameters and datetime)
 - `c` is the maximum concurrent conversations to run (defaults to None, but try this if the provider you're testing times out)
-This will generate conversations and store them in a subfolder of `conversations`
+This will generate conversations and store them in subfolders of `conversations` and `logging`
 
 6. **Judge the conversations**:
    ```bash
@@ -90,7 +91,9 @@ python judge.py -f conversations/my_experiment -j gpt-4o -jep temperature=0.5,ma
 ```
 
 **Note:** Extra parameters are automatically included in the output folder names, making it easy to track experiments:
-- Generation: `conversations/p_gpt_4o_temp0.3__a_claude_3_5_sonnet_temp0.5__t6__r2__{timestamp}/`
+- Generation: 
+  - Conversations: `conversations/p_gpt_4o_temp0.3__a_claude_3_5_sonnet_temp0.5__t6__r2__{timestamp}/`
+  - Logs: `logging/p_gpt_4o_temp0.3__a_claude_3_5_sonnet_temp0.5__t6__r2__{timestamp}/`
 - Evaluation: `evaluations/j_claude_3_5_sonnet_temp0.3_{timestamp}__{conversation_folder}/`
 
 **Multiple judge models**: You can use multiple different judge models and/or multiple instances:
@@ -305,7 +308,8 @@ results = await generate_conversations(
     max_turns=5,
     runs_per_prompt=3,
     persona_names=["Alex M.", "Chloe Kim"],  # Optional: filter specific personas
-    folder_name="custom_experiment"  # Optional: custom output folder
+    convo_folder_name="custom_conversations",  # Optional: custom conversation folder
+    log_folder_name="custom_logging"  # Optional: custom logging folder
 )
 ```
 
@@ -371,15 +375,18 @@ persona_model_config = {
 
 ### Output Organization
 
-Conversations are automatically organized into timestamped folders:
+Conversations and logs are automatically organized into separate timestamped folders:
 
 ```
 conversations/
-├── p_claude_sonnet_4_20250514__a_claude_sonnet_4_20250514_20250120_143022_t5_r3/
-│   ├── abc123_Alex_M_c3s_run1_20250120_143022_123.txt
-│   ├── abc123_Alex_M_c3s_run1_20250120_143022_123.log
-│   ├── def456_Chloe_Kim_c3s_run1_20250120_143022_456.txt
-│   └── def456_Chloe_Kim_c3s_run1_20250120_143022_456.log
+└── p_claude_sonnet_4_20250514__a_claude_sonnet_4_20250514_20250120_143022_t5_r3/
+    ├── abc123_Alex_M_c3s_run1.txt
+    └── def456_Chloe_Kim_c3s_run1.txt
+
+logging/
+└── p_claude_sonnet_4_20250514__a_claude_sonnet_4_20250514_20250120_143022_t5_r3/
+    ├── abc123_Alex_M_c3s_run1.log
+    └── def456_Chloe_Kim_c3s_run1.log
 ```
 
 ### Logging
