@@ -15,10 +15,14 @@ def setup_conversation_logger(
 
     Args:
         log_filename: Name of the log file (without extension)
-        log_folder: Directory to save log files
+        run_id: Unique identifier for the run, used to create a subfolder in log_folder
+        log_folder: Base directory to save log files (default: "logging")
+        level: Logging level (default: logging.INFO)
 
     Returns:
-        Configured logger instance
+        Tuple of (logger, log_file_path) where:
+        - logger: Configured logger instance
+        - log_file_path: Full path to the created log file
     """
     # Ensure log folder exists
     os.makedirs(log_folder, exist_ok=True)
