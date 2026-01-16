@@ -20,7 +20,8 @@ async def main(
     runs_per_prompt: int = 2,
     persona_names: Optional[List[str]] = None,
     verbose: bool = True,
-    folder_name: Optional[str] = None,
+    convo_folder_name: Optional[str] = None,
+    log_folder_name: Optional[str] = None,
     run_id: Optional[str] = None,
     max_concurrent: Optional[int] = None,
     max_total_words: Optional[int] = None,
@@ -39,7 +40,9 @@ async def main(
         runs_per_prompt: Number of runs per prompt
         persona_names: List of persona names to use. If None, uses all personas.
         verbose: Whether to print status messages
-        folder_name: Custom folder name for saving conversations. If None, uses
+        convo_folder_name: Custom folder name for saving conversations. If None, uses
+            default format.
+        log_folder_name: Custom folder name for saving logs. If None, uses
             default format.
         max_total_words: Optional maximum total words across all responses
         max_concurrent: Maximum number of concurrent conversations. If None, runs all
@@ -70,15 +73,19 @@ async def main(
         print(f"  - Max turns: {max_turns}")
         print(f"  - Runs per prompt: {runs_per_prompt}")
         print(f"  - Persona names: {persona_names}")
-        print(f"  - Folder name: {folder_name}")
+        print(f"  - Convo folder name: {convo_folder_name}")
+        print(f"  - Log folder name: {log_folder_name}")
         print(f"  - Run ID: {run_id}")
         print(f"  - Max concurrent: {max_concurrent}")
         print(f"  - Max total words: {max_total_words}")
         print(f"  - Max personas: {max_personas}")
 
     # Generate default folder name if not provided
-    if folder_name is None:
-        folder_name = "conversations"
+    if convo_folder_name is None:
+        convo_folder_name = "conversations"
+
+    if log_folder_name is None:
+        log_folder_name = "logging"
 
     if run_id is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -94,9 +101,11 @@ async def main(
             f"p_{persona_info}__a_{agent_info}__t{max_turns}__"
             f"r{runs_per_prompt}__{timestamp}"
         )
-        folder_name = f"{folder_name}/{run_id}"
+        convo_folder_name = f"{convo_folder_name}/{run_id}"
+        log_folder_name = f"{log_folder_name}/{run_id}"
         # TODO: do we want to give a message if the folder already exists?
-        os.makedirs(folder_name, exist_ok=True)
+        os.makedirs(convo_folder_name, exist_ok=True)
+        os.makedirs(log_folder_name, exist_ok=True)
 
     # Configuration
     runner = ConversationRunner(
@@ -104,7 +113,8 @@ async def main(
         agent_model_config=agent_model_config,
         max_turns=max_turns,
         runs_per_prompt=runs_per_prompt,
-        folder_name=folder_name,
+        convo_folder_name=convo_folder_name,
+        log_folder_name=log_folder_name,
         run_id=run_id,
         max_concurrent=max_concurrent,
         max_total_words=max_total_words,
@@ -115,7 +125,8 @@ async def main(
     results = await runner.run_conversations(persona_names=persona_names)
 
     if verbose:
-        print(f"✅ Generated {len(results)} conversations → {folder_name}/")
+        print(f"✅ Generated {len(results)} conversations → {convo_folder_name}/")
+        print(f"✅ Logs saved to {log_folder_name}/")
 
     return results
 
@@ -200,13 +211,20 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--folder-name",
+        "--convo-folder-name",
         "-f",
         help=(
             "Folder name containing the conversations for this run. "
             "Default is 'conversations'."
         ),
         default="conversations",
+    )
+
+    parser.add_argument(
+        "--log-folder-name",
+        "-lf",
+        help=("Folder name containing the logs for this run. " "Default is 'logging'."),
+        default="logging",
     )
 
     parser.add_argument(
@@ -272,7 +290,8 @@ if __name__ == "__main__":
                 for k, v in agent_model_config.items()
                 if k not in ["model", "model_name", "name", "temperature", "max_tokens"]
             },
-            folder_name=args.folder_name,
+            convo_folder_name=args.convo_folder_name,
+            log_folder_name=args.log_folder_name,
             max_concurrent=args.max_concurrent,
             max_total_words=args.max_total_words,
             max_personas=args.max_personas,

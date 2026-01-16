@@ -30,7 +30,8 @@ class ConversationRunner:
         run_id: str,
         max_turns: int = 6,
         runs_per_prompt: int = 3,
-        folder_name: str = "conversations",
+        convo_folder_name: str = "conversations",
+        log_folder_name: str = "logging",
         max_concurrent: Optional[int] = None,
         max_total_words: Optional[int] = None,
         max_personas: Optional[int] = None,
@@ -39,7 +40,8 @@ class ConversationRunner:
         self.agent_model_config = agent_model_config
         self.max_turns = max_turns
         self.runs_per_prompt = runs_per_prompt
-        self.folder_name = folder_name
+        self.convo_folder_name = convo_folder_name
+        self.log_folder_name = log_folder_name
         self.run_id = run_id
 
         # Limit concurrent conversations to avoid overwhelming the server
@@ -76,10 +78,14 @@ class ConversationRunner:
         )
         persona_safe = persona_name.replace(" ", "_").replace(".", "")
         filename_base = f"{tag}_{persona_safe}_{model_short}_run{run_number}"
-        os.makedirs(f"{self.folder_name}", exist_ok=True)
+        os.makedirs(f"{self.convo_folder_name}", exist_ok=True)
 
         # Setup logging
-        logger = setup_conversation_logger(filename_base, run_id=self.run_id)
+        logger, log_file_path = setup_conversation_logger(
+            log_filename=filename_base,
+            run_id=self.run_id,
+            log_folder=self.log_folder_name,
+        )
         start_time = time.time()
 
         # Create LLM1 instance with the persona prompt and configuration
@@ -141,7 +147,7 @@ class ConversationRunner:
         )
 
         # Save conversation file
-        simulator.save_conversation(f"{filename_base}.txt", self.folder_name)
+        simulator.save_conversation(f"{filename_base}.txt", self.convo_folder_name)
 
         result = {
             "id": conversation_id,
@@ -149,8 +155,8 @@ class ConversationRunner:
             "llm1_prompt": persona_name,
             "run_number": run_number,
             "turns": len(conversation),
-            "filename": f"{self.folder_name}/{filename_base}.txt",
-            "log_file": f"{self.folder_name}/{filename_base}.log",
+            "filename": f"{self.convo_folder_name}/{filename_base}.txt",
+            "log_file": log_file_path,
             "duration": conversation_time,
             "early_termination": early_termination,
             "conversation": conversation,

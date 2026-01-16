@@ -169,7 +169,7 @@ class TestConversationRunnerInit:
         assert runner.run_id == run_id
         assert runner.max_turns == 6
         assert runner.runs_per_prompt == 3
-        assert runner.folder_name == "conversations"
+        assert runner.convo_folder_name == "conversations"
         assert runner.max_concurrent is None
 
     def test_init_with_custom_parameters(
@@ -185,14 +185,16 @@ class TestConversationRunnerInit:
             run_id="custom_run",
             max_turns=10,
             runs_per_prompt=5,
-            folder_name="test_conversations",
+            convo_folder_name="test_conversations",
+            log_folder_name="test_logging",
             max_concurrent=3,
         )
 
         # Assert
         assert runner.max_turns == 10
         assert runner.runs_per_prompt == 5
-        assert runner.folder_name == "test_conversations"
+        assert runner.convo_folder_name == "test_conversations"
+        assert runner.log_folder_name == "test_logging"
         assert runner.max_concurrent == 3
 
     def test_agent_system_prompt_from_config(
@@ -259,7 +261,8 @@ class TestConversationRunnerSingle:
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
             run_id=run_id,
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         persona_config = {
@@ -284,9 +287,10 @@ class TestConversationRunnerSingle:
             logger = logging.getLogger("test_conversation")
             logger.handlers.clear()
             os.makedirs(log_folder / run_id, exist_ok=True)
-            handler = logging.FileHandler(log_folder / run_id / "test.log", mode="w")
+            log_file_path = str(log_folder / run_id / "test.log")
+            handler = logging.FileHandler(log_file_path, mode="w")
             logger.addHandler(handler)
-            mock_logger.return_value = logger
+            mock_logger.return_value = (logger, log_file_path)
 
             result = await runner.run_single_conversation(
                 persona_config=persona_config,
@@ -328,7 +332,8 @@ class TestConversationRunnerSingle:
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
             run_id=run_id,
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         persona_config = {
@@ -360,7 +365,7 @@ class TestConversationRunnerSingle:
             formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
             handler.setFormatter(formatter)
             logger.addHandler(handler)
-            mock_logger_setup.return_value = logger
+            mock_logger_setup.return_value = (logger, str(log_file))
 
             await runner.run_single_conversation(
                 persona_config=persona_config,
@@ -392,11 +397,13 @@ class TestConversationRunnerSingle:
         """Test that filename follows correct naming convention."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
             run_id="test_run",
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         persona_config = {
@@ -419,7 +426,8 @@ class TestConversationRunnerSingle:
             "generate_conversations.runner.setup_conversation_logger"
         ) as mock_logger:
             logger = MagicMock()
-            mock_logger.return_value = logger
+            log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+            mock_logger.return_value = (logger, log_file_path)
 
             result = await runner.run_single_conversation(
                 persona_config=persona_config,
@@ -446,11 +454,13 @@ class TestConversationRunnerSingle:
         """Test that early termination is tracked correctly."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
             run_id="test_run",
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         persona_config = {
@@ -489,7 +499,8 @@ class TestConversationRunnerSingle:
                 "generate_conversations.runner.setup_conversation_logger"
             ) as mock_logger:
                 logger = MagicMock()
-                mock_logger.return_value = logger
+                log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+                mock_logger.return_value = (logger, log_file_path)
 
                 # Act
                 result = await runner.run_single_conversation(
@@ -514,11 +525,13 @@ class TestConversationRunnerSingle:
         """Test that all metadata fields are present in result."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
             run_id="test_run",
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         persona_config = {
@@ -541,7 +554,8 @@ class TestConversationRunnerSingle:
             "generate_conversations.runner.setup_conversation_logger"
         ) as mock_logger:
             logger = MagicMock()
-            mock_logger.return_value = logger
+            log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+            mock_logger.return_value = (logger, log_file_path)
 
             result = await runner.run_single_conversation(
                 persona_config=persona_config,
@@ -591,13 +605,15 @@ class TestConversationRunnerMultiple:
         """Test running multiple conversations from persona list."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
             "test_run",
             max_turns=2,
             runs_per_prompt=2,
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         # Mock load_prompts_from_csv
@@ -613,7 +629,8 @@ class TestConversationRunnerMultiple:
                 "generate_conversations.runner.setup_conversation_logger"
             ) as mock_logger:
                 logger = MagicMock()
-                mock_logger.return_value = logger
+                log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+                mock_logger.return_value = (logger, log_file_path)
 
                 # Act
                 results = await runner.run_conversations(
@@ -635,13 +652,15 @@ class TestConversationRunnerMultiple:
         """Test that max_concurrent limits concurrent execution."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
             "test_run",
             max_turns=2,
             runs_per_prompt=3,
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
             max_concurrent=2,
         )
 
@@ -674,7 +693,8 @@ class TestConversationRunnerMultiple:
                 "generate_conversations.runner.setup_conversation_logger"
             ) as mock_logger:
                 logger = MagicMock()
-                mock_logger.return_value = logger
+                log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+                mock_logger.return_value = (logger, log_file_path)
 
                 # Act
                 results = await runner.run_conversations(persona_names=None)
@@ -694,13 +714,15 @@ class TestConversationRunnerMultiple:
         """Test running without concurrent limit."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
             "test_run",
             max_turns=2,
             runs_per_prompt=2,
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
             max_concurrent=None,
         )
 
@@ -713,7 +735,8 @@ class TestConversationRunnerMultiple:
                 "generate_conversations.runner.setup_conversation_logger"
             ) as mock_logger:
                 logger = MagicMock()
-                mock_logger.return_value = logger
+                log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+                mock_logger.return_value = (logger, log_file_path)
 
                 # Act
                 results = await runner.run_conversations(persona_names=None)
@@ -731,13 +754,15 @@ class TestConversationRunnerMultiple:
         """Test that conversation IDs increment correctly."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
             "test_run",
             max_turns=2,
             runs_per_prompt=2,
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         mock_personas = [
@@ -752,7 +777,8 @@ class TestConversationRunnerMultiple:
                 "generate_conversations.runner.setup_conversation_logger"
             ) as mock_logger:
                 logger = MagicMock()
-                mock_logger.return_value = logger
+                log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+                mock_logger.return_value = (logger, log_file_path)
 
                 # Act
                 results = await runner.run_conversations(persona_names=None)
@@ -777,13 +803,15 @@ class TestConversationRunnerFileOperations:
         """Test that conversation folder is created if it doesn't exist."""
         # Arrange
         conv_folder = tmp_path / "new_conversations"
+        log_folder = tmp_path / "new_logging"
         assert not conv_folder.exists()
 
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
             run_id="test_run",
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         persona_config = {
@@ -806,7 +834,8 @@ class TestConversationRunnerFileOperations:
             "generate_conversations.runner.setup_conversation_logger"
         ) as mock_logger:
             logger = MagicMock()
-            mock_logger.return_value = logger
+            log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+            mock_logger.return_value = (logger, log_file_path)
 
             await runner.run_single_conversation(
                 persona_config=persona_config,
@@ -830,13 +859,15 @@ class TestConversationRunnerFileOperations:
         """Test that multiple conversation files are created."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
             "test_run",
             max_turns=2,
             runs_per_prompt=3,
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         mock_personas = [{"Name": "TestPersona", "prompt": "Test prompt"}]
@@ -848,7 +879,8 @@ class TestConversationRunnerFileOperations:
                 "generate_conversations.runner.setup_conversation_logger"
             ) as mock_logger:
                 logger = MagicMock()
-                mock_logger.return_value = logger
+                log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+                mock_logger.return_value = (logger, log_file_path)
 
                 # Act
                 results = await runner.run_conversations(persona_names=None)
@@ -868,13 +900,15 @@ class TestConversationRunnerFileOperations:
         """Test that each conversation gets a unique filename."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
             "test_run",
             max_turns=2,
             runs_per_prompt=3,
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         mock_personas = [{"Name": "TestPersona", "prompt": "Test prompt"}]
@@ -886,7 +920,8 @@ class TestConversationRunnerFileOperations:
                 "generate_conversations.runner.setup_conversation_logger"
             ) as mock_logger:
                 logger = MagicMock()
-                mock_logger.return_value = logger
+                log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+                mock_logger.return_value = (logger, log_file_path)
 
                 # Act
                 results = await runner.run_conversations(persona_names=None)
@@ -910,11 +945,13 @@ class TestConversationRunnerErrorHandling:
         """Test that LLM errors are handled gracefully."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
             run_id="test_run",
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         persona_config = {
@@ -938,7 +975,8 @@ class TestConversationRunnerErrorHandling:
             "generate_conversations.runner.setup_conversation_logger"
         ) as mock_logger:
             logger = MagicMock()
-            mock_logger.return_value = logger
+            log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+            mock_logger.return_value = (logger, log_file_path)
 
             with patch(
                 "generate_conversations.runner.LLMFactory.create_llm"
@@ -973,11 +1011,13 @@ class TestConversationRunnerErrorHandling:
         """Test handling of empty persona list."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
             "test_run",
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         with patch("generate_conversations.runner.load_prompts_from_csv") as mock_load:
@@ -987,7 +1027,8 @@ class TestConversationRunnerErrorHandling:
                 "generate_conversations.runner.setup_conversation_logger"
             ) as mock_logger:
                 logger = MagicMock()
-                mock_logger.return_value = logger
+                log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+                mock_logger.return_value = (logger, log_file_path)
 
                 # Act
                 results = await runner.run_conversations(persona_names=None)
@@ -1005,11 +1046,13 @@ class TestConversationRunnerErrorHandling:
         """Test that logger cleanup is called after conversation."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
             run_id="test_run",
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         persona_config = {
@@ -1032,7 +1075,8 @@ class TestConversationRunnerErrorHandling:
             "generate_conversations.runner.setup_conversation_logger"
         ) as mock_logger:
             logger = MagicMock()
-            mock_logger.return_value = logger
+            log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+            mock_logger.return_value = (logger, log_file_path)
 
             with patch("generate_conversations.runner.cleanup_logger") as mock_cleanup:
                 await runner.run_single_conversation(
@@ -1062,11 +1106,13 @@ class TestConversationRunnerPerformance:
         """Test that conversation duration is tracked accurately."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
             run_id="test_run",
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         persona_config = {
@@ -1089,7 +1135,8 @@ class TestConversationRunnerPerformance:
             "generate_conversations.runner.setup_conversation_logger"
         ) as mock_logger:
             logger = MagicMock()
-            mock_logger.return_value = logger
+            log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+            mock_logger.return_value = (logger, log_file_path)
 
             start = time.time()
             result = await runner.run_single_conversation(
@@ -1115,13 +1162,15 @@ class TestConversationRunnerPerformance:
         """Test that batch processing completes in reasonable time."""
         # Arrange
         conv_folder = tmp_path / "conversations"
+        log_folder = tmp_path / "logging"
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
             "test_run",
             max_turns=2,
             runs_per_prompt=2,
-            folder_name=str(conv_folder),
+            convo_folder_name=str(conv_folder),
+            log_folder_name=str(log_folder),
         )
 
         mock_personas = [
@@ -1136,7 +1185,8 @@ class TestConversationRunnerPerformance:
                 "generate_conversations.runner.setup_conversation_logger"
             ) as mock_logger:
                 logger = MagicMock()
-                mock_logger.return_value = logger
+                log_file_path = str(tmp_path / "logging" / "test_run" / "test.log")
+                mock_logger.return_value = (logger, log_file_path)
 
                 # Act
                 start = time.time()

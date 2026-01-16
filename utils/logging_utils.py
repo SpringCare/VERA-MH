@@ -9,7 +9,7 @@ from llm_clients import LLMInterface
 
 def setup_conversation_logger(
     log_filename: str, run_id: str, log_folder: str = "logging", level=logging.INFO
-) -> logging.Logger:
+) -> tuple[logging.Logger, str]:
     """
     Set up a logger for a specific conversation.
 
@@ -47,7 +47,7 @@ def setup_conversation_logger(
     # Add handler to logger
     logger.addHandler(file_handler)
 
-    return logger
+    return logger, log_file_path
 
 
 # TODO: This should print all the llm1 and 2 settings
