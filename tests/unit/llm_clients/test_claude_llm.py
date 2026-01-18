@@ -73,7 +73,7 @@ class TestClaudeLLM:
 
         # Create mock response with metadata
         mock_response = MagicMock()
-        mock_response.content = "This is a test response"
+        mock_response.text = "This is a test response"
         mock_response.id = "msg_12345"
         mock_response.response_metadata = {
             "model": "claude-3-5-sonnet-20241022",
@@ -115,7 +115,7 @@ class TestClaudeLLM:
         mock_llm.model = "claude-3-5-sonnet-20241022"
 
         mock_response = MagicMock()
-        mock_response.content = "Response without system prompt"
+        mock_response.text = "Response without system prompt"
         mock_response.id = "msg_67890"
         mock_response.response_metadata = {"model": "claude-3-5-sonnet-20241022"}
 
@@ -146,7 +146,7 @@ class TestClaudeLLM:
 
         # Response without usage in metadata
         mock_response = MagicMock()
-        mock_response.content = "Response"
+        mock_response.text = "Response"
         mock_response.id = "msg_abc"
         mock_response.response_metadata = {"model": "claude-3-5-sonnet-20241022"}
 
@@ -174,7 +174,7 @@ class TestClaudeLLM:
 
         # Response without response_metadata attribute
         mock_response = MagicMock()
-        mock_response.content = "Response"
+        mock_response.text = "Response"
         mock_response.id = "msg_xyz"
         del mock_response.response_metadata  # Remove attribute
 
@@ -234,7 +234,7 @@ class TestClaudeLLM:
         mock_llm.model = "claude-3-5-sonnet-20241022"
 
         mock_response = MagicMock()
-        mock_response.content = "Timed response"
+        mock_response.text = "Timed response"
         mock_response.id = "msg_time"
         mock_response.response_metadata = {}
 
@@ -299,7 +299,7 @@ class TestClaudeLLM:
 
         # Response with partial usage info
         mock_response = MagicMock()
-        mock_response.content = "Partial usage response"
+        mock_response.text = "Partial usage response"
         mock_response.id = "msg_partial"
         mock_response.response_metadata = {
             "model": "claude-3-5-sonnet-20241022",
@@ -329,7 +329,7 @@ class TestClaudeLLM:
         mock_llm.model = "claude-3-5-sonnet-20241022"
 
         mock_response = MagicMock()
-        mock_response.content = "Test"
+        mock_response.text = "Test"
         mock_response.id = "msg_obj"
         mock_response.response_metadata = {}
 
@@ -354,7 +354,7 @@ class TestClaudeLLM:
         mock_llm.model = "claude-3-5-sonnet-20241022"
 
         mock_response = MagicMock()
-        mock_response.content = "Test"
+        mock_response.text = "Test"
         mock_response.id = "msg_time"
         mock_response.response_metadata = {}
 
@@ -387,7 +387,7 @@ class TestClaudeLLM:
         mock_llm.model = "claude-3-5-sonnet-20241022"
 
         mock_response = MagicMock()
-        mock_response.content = "Stopped response"
+        mock_response.text = "Stopped response"
         mock_response.id = "msg_stop"
         mock_response.response_metadata = {
             "model": "claude-3-5-sonnet-20241022",
@@ -414,7 +414,7 @@ class TestClaudeLLM:
         mock_llm.model = "claude-3-5-sonnet-20241022"
 
         mock_response = MagicMock()
-        mock_response.content = "Test"
+        mock_response.text = "Test"
         mock_response.id = "msg_raw"
         mock_response.response_metadata = {
             "model": "claude-3-5-sonnet-20241022",
@@ -444,7 +444,7 @@ class TestClaudeLLM:
         """Test generate_response with conversation_history parameter."""
         mock_llm = MagicMock()
         mock_response = MagicMock()
-        mock_response.content = "Response with history"
+        mock_response.text = "Response with history"
         mock_response.id = "msg_history"
         mock_response.response_metadata = {
             "model": "claude-3-5-sonnet-20241022",
@@ -504,7 +504,7 @@ class TestClaudeLLM:
         """Test generate_response with empty conversation_history."""
         mock_llm = MagicMock()
         mock_response = MagicMock()
-        mock_response.content = "Response"
+        mock_response.text = "Response"
         mock_response.id = "msg_empty"
         mock_response.response_metadata = {}
 
@@ -535,7 +535,7 @@ class TestClaudeLLM:
         """Test generate_response with None conversation_history (default)."""
         mock_llm = MagicMock()
         mock_response = MagicMock()
-        mock_response.content = "Response"
+        mock_response.text = "Response"
         mock_response.id = "msg_none"
         mock_response.response_metadata = {}
 
@@ -556,3 +556,52 @@ class TestClaudeLLM:
 
         # Should have: SystemMessage + current message only
         assert len(messages) == 2
+
+    @pytest.mark.asyncio
+    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("llm_clients.claude_llm.ChatAnthropic")
+    async def test_generate_response_with_persona_role_flips_types(
+        self, mock_chat_anthropic
+    ):
+        """Test that persona role flips message types in conversation history."""
+        from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+
+        mock_llm = MagicMock()
+        mock_response = MagicMock()
+        mock_response.text = "Persona response"
+        mock_response.id = "msg_persona"
+        mock_response.response_metadata = {}
+
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_chat_anthropic.return_value = mock_llm
+
+        # Persona system prompt should trigger message type flipping
+        persona_prompt = "You are roleplaying as a human user"
+        llm = ClaudeLLM(name="TestClaude", system_prompt=persona_prompt)
+
+        history = [
+            {"turn": 1, "speaker": "persona", "response": "Hello"},
+            {"turn": 2, "speaker": "provider", "response": "Hi there"},
+            {"turn": 3, "speaker": "persona", "response": "How are you?"},
+        ]
+
+        response = await llm.generate_response(conversation_history=history)
+
+        assert response == "Persona response"
+
+        # Verify message types are flipped for persona role
+        call_args = mock_llm.ainvoke.call_args
+        messages = call_args[0][0]
+
+        # Should have: SystemMessage + 3 history messages
+        assert len(messages) == 4
+        assert isinstance(messages[0], SystemMessage)
+        # Turn 1 (persona, odd) should be AIMessage when persona role
+        assert isinstance(messages[1], AIMessage)
+        assert messages[1].content == "Hello"
+        # Turn 2 (provider, even) should be HumanMessage when persona role
+        assert isinstance(messages[2], HumanMessage)
+        assert messages[2].content == "Hi there"
+        # Turn 3 (persona, odd) should be AIMessage when persona role
+        assert isinstance(messages[3], AIMessage)
+        assert messages[3].content == "How are you?"

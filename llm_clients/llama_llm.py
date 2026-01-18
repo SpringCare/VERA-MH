@@ -29,13 +29,10 @@ class LlamaLLM(LLMInterface):
         self.model_name = model_name or Config.get_llama_config()["model"]
 
         # Get default config and allow kwargs to override
-        config = Config.get_llama_config()
+        # Note: base_url is kept as a default for Ollama connectivity
         llm_params = {
             "model": self.model_name,
-            "temperature": config.get("temperature", 0.7),
-            "base_url": config.get(
-                "base_url", "http://localhost:11434"
-            ),  # Default Ollama URL
+            "base_url": "http://localhost:11434",  # Default Ollama URL
         }
 
         # Override with any provided kwargs

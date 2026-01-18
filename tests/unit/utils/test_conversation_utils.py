@@ -187,6 +187,85 @@ class TestBuildLangchainMessages:
         assert isinstance(messages[1], HumanMessage)
         assert messages[1].content == "Are you there?"
 
+    def test_build_messages_with_persona_role_flips_types(self):
+        """Test that persona role flips message types correctly."""
+        # When LLM is playing persona, persona turns should be AIMessage
+        # and provider turns should be HumanMessage
+        persona_system_prompt = "You are roleplaying as a human user"
+        history = [
+            {"turn": 1, "speaker": "persona", "response": "Hello, I need help"},
+            {"turn": 2, "speaker": "provider", "response": "How can I help you?"},
+            {"turn": 3, "speaker": "persona", "response": "I'm feeling anxious"},
+            {"turn": 4, "speaker": "provider", "response": "Tell me more"},
+        ]
+
+        messages = build_langchain_messages(
+            conversation_history=history, system_prompt=persona_system_prompt
+        )
+
+        assert len(messages) == 4
+        # Turn 1 (odd, persona) should be AIMessage when persona role
+        assert isinstance(messages[0], AIMessage)
+        assert messages[0].content == "Hello, I need help"
+        # Turn 2 (even, provider) should be HumanMessage when persona role
+        assert isinstance(messages[1], HumanMessage)
+        assert messages[1].content == "How can I help you?"
+        # Turn 3 (odd, persona) should be AIMessage when persona role
+        assert isinstance(messages[2], AIMessage)
+        assert messages[2].content == "I'm feeling anxious"
+        # Turn 4 (even, provider) should be HumanMessage when persona role
+        assert isinstance(messages[3], HumanMessage)
+        assert messages[3].content == "Tell me more"
+
+    def test_build_messages_without_persona_role_keeps_default(self):
+        """Test that non-persona role keeps default message types."""
+        # When LLM is NOT playing persona, default behavior applies
+        provider_system_prompt = "You are a helpful therapist"
+        history = [
+            {"turn": 1, "speaker": "persona", "response": "Hello"},
+            {"turn": 2, "speaker": "provider", "response": "Hi there"},
+            {"turn": 3, "speaker": "persona", "response": "How are you?"},
+        ]
+
+        messages = build_langchain_messages(
+            conversation_history=history, system_prompt=provider_system_prompt
+        )
+
+        assert len(messages) == 3
+        # Turn 1 (odd, persona) should be HumanMessage (default)
+        assert isinstance(messages[0], HumanMessage)
+        assert messages[0].content == "Hello"
+        # Turn 2 (even, provider) should be AIMessage (default)
+        assert isinstance(messages[1], AIMessage)
+        assert messages[1].content == "Hi there"
+        # Turn 3 (odd, persona) should be HumanMessage (default)
+        assert isinstance(messages[2], HumanMessage)
+        assert messages[2].content == "How are you?"
+
+    def test_build_messages_persona_with_turn_0(self):
+        """Test persona role with turn 0 (initial message)."""
+        persona_system_prompt = "You are roleplaying as a human user"
+        history = [
+            {"turn": 0, "speaker": "system", "response": "Initial message"},
+            {"turn": 1, "speaker": "persona", "response": "Hello"},
+            {"turn": 2, "speaker": "provider", "response": "Hi"},
+        ]
+
+        messages = build_langchain_messages(
+            conversation_history=history, system_prompt=persona_system_prompt
+        )
+
+        assert len(messages) == 3
+        # Turn 0 should always be HumanMessage regardless of role
+        assert isinstance(messages[0], HumanMessage)
+        assert messages[0].content == "Initial message"
+        # Turn 1 (persona) should be AIMessage when persona role
+        assert isinstance(messages[1], AIMessage)
+        assert messages[1].content == "Hello"
+        # Turn 2 (provider) should be HumanMessage when persona role
+        assert isinstance(messages[2], HumanMessage)
+        assert messages[2].content == "Hi"
+
 
 class TestFormatConversationAsString:
     """Test format_conversation_as_string function."""
@@ -284,3 +363,27 @@ class TestFormatConversationAsString:
         )
 
         assert result == ""
+
+    def test_format_with_persona_role_flips_types(self):
+        """Test that persona role flips message types in string format."""
+        persona_system_prompt = "You are roleplaying as a human user"
+        history = [
+            {"turn": 1, "speaker": "persona", "response": "Hello"},
+            {"turn": 2, "speaker": "provider", "response": "Hi there"},
+            {"turn": 3, "speaker": "persona", "response": "How are you?"},
+        ]
+
+        result = format_conversation_as_string(
+            conversation_history=history, system_prompt=persona_system_prompt
+        )
+
+        # When persona role, persona turns (odd) should be Assistant,
+        # provider turns (even) should be Human
+        expected = (
+            "System: You are roleplaying as a human user\n\n"
+            "Assistant: Hello\n\n"
+            "Human: Hi there\n\n"
+            "Assistant: How are you?\n\n"
+            "Assistant:"
+        )
+        assert result == expected
