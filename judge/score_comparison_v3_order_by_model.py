@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 """
-Compare VERA scores across multiple evaluation runs (v3).
+Compare VERA scores across multiple evaluation runs (v4).
 
-Modern card-based visualization showing:
-- Overall VERA Safety Score (with numbers in colored boxes)
-- Dimension scores as colored circles
-- Horizontal legend at top right
+Same as v3 but with grouped sorting:
+- Groups models by base name (e.g., "Claude Sonnet" from "Claude Sonnet (GPT-5.2 user)")
+- Sorts groups by average score across all variants
+- Within each group, sorts by individual score (highest first)
 
 Usage:
-    python -m judge.score_comparison_v3
-    python -m judge.score_comparison_v3 --input evaluations_to_compare.csv
-    python -m judge.score_comparison_v3 -i my_evaluations.csv -o output.png
+    python -m judge.score_comparison_v4
+    python -m judge.score_comparison_v4 --input evaluations_to_compare.csv
+    python -m judge.score_comparison_v4 -i my_evaluations.csv -o output.png
 """
 
 import argparse
+import re
+from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import matplotlib
 import matplotlib.patches as mpatches
@@ -53,6 +55,58 @@ HEADER_BAR_COLOR = "#D4D9D4"  # Light gray for dimension header bar
 SUBTLE_TEXT = "#666666"  # Lighter text for subtitles
 
 
+def extract_base_model_name(full_name: str) -> str:
+    """
+    Extract the base model name from a full model name with annotations.
+
+    Examples:
+        "Claude Sonnet (GPT-5.2 user / old prompt)" -> "Claude Sonnet"
+        "GPT 4o (Gemini 3 user / new prompt)" -> "GPT 4o"
+        "Gemini 2.5 Flash" -> "Gemini 2.5 Flash"
+    """
+    # Remove parenthetical annotations
+    match = re.match(r"^([^(]+)", full_name)
+    if match:
+        return match.group(1).strip()
+    return full_name.strip()
+
+
+def sort_models_grouped(model_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Sort models by grouped average, then by individual score within groups.
+
+    Args:
+        model_data: List of model dicts with model_name and vera_score
+
+    Returns:
+        Sorted list with models grouped by base name, sorted by group average,
+        then by individual score within each group
+    """
+    # Group models by base name
+    groups: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for model in model_data:
+        base_name = extract_base_model_name(model["model_name"])
+        groups[base_name].append(model)
+
+    # Calculate average score for each group
+    group_averages: List[Tuple[str, float, List[Dict[str, Any]]]] = []
+    for base_name, models in groups.items():
+        avg_score = sum(m["vera_score"] for m in models) / len(models)
+        # Sort models within group by individual score (highest first)
+        sorted_models = sorted(models, key=lambda m: m["vera_score"], reverse=True)
+        group_averages.append((base_name, avg_score, sorted_models))
+
+    # Sort groups by average score (highest first)
+    group_averages.sort(key=lambda x: x[1], reverse=True)
+
+    # Flatten back to a list
+    result = []
+    for _, _, models in group_averages:
+        result.extend(models)
+
+    return result
+
+
 def load_evaluation_data(
     input_path: Path,
 ) -> List[Dict[str, Any]]:
@@ -60,8 +114,7 @@ def load_evaluation_data(
     Load evaluation data from input CSV file.
 
     Args:
-        input_path: Path to CSV file with "Provider Model" and "Path" columns.
-                    Path can be a single path or multiple paths separated by ";"
+        input_path: Path to CSV file with "Provider Model" and "Path" columns
 
     Returns:
         List of dicts with model_name, vera_score, and dimensions data
@@ -76,41 +129,27 @@ def load_evaluation_data(
 
     for _, row in input_df.iterrows():
         model_name = str(row.get("Provider Model", "")).strip()
-        eval_paths_str = str(row.get("Path", "")).strip()
+        eval_path = str(row.get("Path", "")).strip()
 
-        if not model_name or not eval_paths_str:
+        if not model_name or not eval_path:
             continue
 
-        # Split paths by semicolon (supports single path or multiple paths)
-        eval_paths = [p.strip() for p in eval_paths_str.split(";") if p.strip()]
+        # Construct path to results.csv
+        results_csv_path = Path(eval_path) / "results.csv"
 
-        # Collect all dataframes from all paths
-        all_dfs = []
-        for eval_path in eval_paths:
-            # Construct path to results.csv
-            results_csv_path = Path(eval_path) / "results.csv"
-
-            if not results_csv_path.exists():
-                print(f"⚠️  Warning: results.csv not found at {results_csv_path}")
-                continue
-
-            # Read results.csv
-            try:
-                df = pd.read_csv(results_csv_path)
-                all_dfs.append(df)
-            except Exception as e:
-                print(f"⚠️  Warning: Error reading {results_csv_path}: {e}")
-                continue
-
-        if not all_dfs:
-            print(f"⚠️  Warning: No valid data found for {model_name}")
+        if not results_csv_path.exists():
+            print(f"⚠️  Warning: results.csv not found at {results_csv_path}")
             continue
 
-        # Combine all dataframes
-        combined_df = pd.concat(all_dfs, ignore_index=True)
+        # Read results.csv
+        try:
+            df = pd.read_csv(results_csv_path)
+        except Exception as e:
+            print(f"⚠️  Warning: Error reading {results_csv_path}: {e}")
+            continue
 
-        # Calculate dimension scores and overall counts from combined data
-        dimension_scores, overall_counts = calculate_dimension_scores(combined_df)
+        # Calculate dimension scores and overall counts
+        dimension_scores, overall_counts = calculate_dimension_scores(df)
 
         # Calculate VERA score from overall raw counts
         vera_score = calculate_vera_score(overall_counts)
@@ -138,8 +177,8 @@ def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Pat
         print("❌ No data to visualize")
         return
 
-    # Sort models by VERA score (highest to lowest)
-    sorted_data = sorted(model_data, key=lambda m: m["vera_score"], reverse=True)
+    # Sort models using grouped sorting (by group average, then individual score)
+    sorted_data = sort_models_grouped(model_data)
 
     # Get dimension short names in order
     dim_headers = []
@@ -474,16 +513,19 @@ def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Pat
     print(f"📄 Comparison data saved to: {csv_path}")
 
     print("\n" + "=" * 80)
-    print("VERA SCORE COMPARISON DATA (v3)")
+    print("VERA SCORE COMPARISON DATA (v4 - Grouped Sorting)")
     print("=" * 80)
     print(display_df.to_string(index=False))
     print("=" * 80)
 
 
 def main():
-    """Main entry point for score comparison v3."""
+    """Main entry point for score comparison v4."""
     parser = argparse.ArgumentParser(
-        description="Compare VERA scores across multiple evaluation runs (v3)"
+        description=(
+            "Compare VERA scores across multiple evaluation runs "
+            "(v3a - grouped sorting)"
+        )
     )
 
     parser.add_argument(
