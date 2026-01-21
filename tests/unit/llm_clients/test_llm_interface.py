@@ -50,13 +50,13 @@ class TestLLMInterface:
         assert llm.system_prompt == prompt
 
     def test_get_name(self):
-        """Test get_name method (line 30)."""
+        """Test get_name method."""
         llm = ConcreteLLM(name="MyLLM")
         assert llm.get_name() == "MyLLM"
 
     @pytest.mark.asyncio
     async def test_generate_response_abstract_method(self):
-        """Test that generate_response is implemented in concrete class (line 21)."""
+        """Test that generate_response is implemented in concrete class."""
         llm = ConcreteLLM(name="TestLLM")
         response = await llm.generate_response(
             conversation_history=[
@@ -67,7 +67,7 @@ class TestLLMInterface:
         assert response == "test response"
 
     def test_set_system_prompt_abstract_method(self):
-        """Test that set_system_prompt is implemented in concrete class (line 26)."""
+        """Test that set_system_prompt is implemented in concrete class."""
         llm = ConcreteLLM(name="TestLLM", system_prompt="Initial prompt")
         assert llm.system_prompt == "Initial prompt"
 
@@ -89,7 +89,7 @@ class TestLLMInterface:
         assert "Can't instantiate abstract class" in str(exc_info.value)
 
     def test_getattr_delegates_to_llm(self):
-        """Test that __getattr__ delegates to self.llm (lines 40-41)."""
+        """Test that __getattr__ delegates to self.llm."""
         llm = ConcreteLLM(name="TestLLM")
 
         # Access attributes that exist on llm

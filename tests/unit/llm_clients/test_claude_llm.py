@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from llm_clients.claude_llm import ClaudeLLM
 
@@ -12,7 +13,7 @@ class TestClaudeLLM:
 
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", None)
     def test_init_missing_api_key_raises_error(self):
-        """Test that missing ANTHROPIC_API_KEY raises ValueError (line 25)."""
+        """Test that missing ANTHROPIC_API_KEY raises ValueError."""
         with pytest.raises(ValueError) as exc_info:
             ClaudeLLM(name="TestClaude")
 
@@ -67,7 +68,7 @@ class TestClaudeLLM:
     async def test_generate_response_success_with_system_prompt(
         self, mock_chat_anthropic
     ):
-        """Test successful response generation with system prompt (lines 49-97)."""
+        """Test successful response generation with system prompt."""
         mock_llm = MagicMock()
         mock_llm.model = "claude-3-5-sonnet-20241022"
 
@@ -93,7 +94,7 @@ class TestClaudeLLM:
 
         assert response == "This is a test response"
 
-        # Verify metadata was extracted (lines 62-95)
+        # Verify metadata was extracted
         metadata = llm.get_last_response_metadata()
         assert metadata["response_id"] == "msg_12345"
         assert metadata["model"] == "claude-3-5-sonnet-20241022"
@@ -196,7 +197,7 @@ class TestClaudeLLM:
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
     @patch("llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_api_error(self, mock_chat_anthropic):
-        """Test error handling when API call fails (lines 98-108)."""
+        """Test error handling when API call fails."""
         mock_llm = MagicMock()
         mock_llm.model = "claude-3-5-sonnet-20241022"
 
@@ -215,7 +216,7 @@ class TestClaudeLLM:
         assert "Error generating response" in response
         assert "API rate limit exceeded" in response
 
-        # Verify error metadata was stored (lines 100-107)
+        # Verify error metadata was stored
         metadata = llm.get_last_response_metadata()
         assert metadata["response_id"] is None
         assert metadata["model"] == "claude-3-5-sonnet-20241022"
@@ -229,7 +230,7 @@ class TestClaudeLLM:
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
     @patch("llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_tracks_timing(self, mock_chat_anthropic):
-        """Test that response timing is tracked correctly (lines 57-59)."""
+        """Test that response timing is tracked correctly."""
         mock_llm = MagicMock()
         mock_llm.model = "claude-3-5-sonnet-20241022"
 
@@ -252,7 +253,7 @@ class TestClaudeLLM:
         assert metadata["response_time_seconds"] >= 0
 
     def test_get_last_response_metadata_returns_copy(self):
-        """Test that get_last_response_metadata returns a copy (line 112)."""
+        """Test that get_last_response_metadata returns a copy."""
         with patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key"):
             with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat:
                 mock_llm = MagicMock()
@@ -274,7 +275,7 @@ class TestClaudeLLM:
                 assert "modified" not in llm.last_response_metadata
 
     def test_set_system_prompt(self):
-        """Test set_system_prompt method (line 116)."""
+        """Test set_system_prompt method."""
         with patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key"):
             with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat:
                 mock_llm = MagicMock()
@@ -324,7 +325,7 @@ class TestClaudeLLM:
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
     @patch("llm_clients.claude_llm.ChatAnthropic")
     async def test_metadata_includes_response_object(self, mock_chat_anthropic):
-        """Test that metadata includes the full response object (line 74)."""
+        """Test that metadata includes the full response object."""
         mock_llm = MagicMock()
         mock_llm.model = "claude-3-5-sonnet-20241022"
 
@@ -349,7 +350,7 @@ class TestClaudeLLM:
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
     @patch("llm_clients.claude_llm.ChatAnthropic")
     async def test_timestamp_format(self, mock_chat_anthropic):
-        """Test that timestamp is in ISO format (line 70)."""
+        """Test that timestamp is in ISO format."""
         mock_llm = MagicMock()
         mock_llm.model = "claude-3-5-sonnet-20241022"
 
@@ -382,7 +383,7 @@ class TestClaudeLLM:
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
     @patch("llm_clients.claude_llm.ChatAnthropic")
     async def test_metadata_with_stop_reason(self, mock_chat_anthropic):
-        """Test metadata extraction of stop_reason (line 92)."""
+        """Test metadata extraction of stop_reason."""
         mock_llm = MagicMock()
         mock_llm.model = "claude-3-5-sonnet-20241022"
 
@@ -409,7 +410,7 @@ class TestClaudeLLM:
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
     @patch("llm_clients.claude_llm.ChatAnthropic")
     async def test_raw_metadata_stored(self, mock_chat_anthropic):
-        """Test that raw metadata is stored (line 95)."""
+        """Test that raw metadata is stored."""
         mock_llm = MagicMock()
         mock_llm.model = "claude-3-5-sonnet-20241022"
 
@@ -532,7 +533,7 @@ class TestClaudeLLM:
     async def test_generate_response_with_none_conversation_history(
         self, mock_chat_anthropic
     ):
-        """Test generate_response with None conversation_history (default)."""
+        """Test generate_response with None conversation_history."""
         mock_llm = MagicMock()
         mock_response = MagicMock()
         mock_response.text = "Response"
@@ -544,9 +545,8 @@ class TestClaudeLLM:
 
         llm = ClaudeLLM(name="TestClaude", system_prompt="Test")
 
-        response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Hello"}]
-        )
+        # Actually pass None to test the default behavior
+        response = await llm.generate_response(conversation_history=None)
 
         assert response == "Response"
 
@@ -554,8 +554,9 @@ class TestClaudeLLM:
         call_args = mock_llm.ainvoke.call_args
         messages = call_args[0][0]
 
-        # Should have: SystemMessage + current message only
-        assert len(messages) == 2
+        # Should have: SystemMessage only (no history messages)
+        assert len(messages) == 1
+        assert isinstance(messages[0], SystemMessage)
 
     @pytest.mark.asyncio
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
@@ -564,7 +565,6 @@ class TestClaudeLLM:
         self, mock_chat_anthropic
     ):
         """Test that persona role flips message types in conversation history."""
-        from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
         mock_llm = MagicMock()
         mock_response = MagicMock()

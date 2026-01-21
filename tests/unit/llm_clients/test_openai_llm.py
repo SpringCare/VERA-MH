@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from llm_clients.openai_llm import OpenAILLM
 
@@ -12,7 +13,7 @@ class TestOpenAILLM:
 
     @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", None)
     def test_init_missing_api_key_raises_error(self):
-        """Test that missing OPENAI_API_KEY raises ValueError (line 25)."""
+        """Test that missing OPENAI_API_KEY raises ValueError."""
         with pytest.raises(ValueError) as exc_info:
             OpenAILLM(name="TestOpenAI")
 
@@ -234,7 +235,7 @@ class TestOpenAILLM:
     @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
     @patch("llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_api_error(self, mock_chat_openai):
-        """Test error handling when API call fails (lines 124-137)."""
+        """Test error handling when API call fails."""
         mock_llm = MagicMock()
 
         # Simulate API error
@@ -288,7 +289,7 @@ class TestOpenAILLM:
         assert metadata["response_time_seconds"] >= 0
 
     def test_get_last_response_metadata_returns_copy(self):
-        """Test that get_last_response_metadata returns a copy (line 141)."""
+        """Test that get_last_response_metadata returns a copy."""
         with patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key"):
             with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
                 mock_llm = MagicMock()
@@ -309,7 +310,7 @@ class TestOpenAILLM:
                 assert "modified" not in llm.last_response_metadata
 
     def test_set_system_prompt(self):
-        """Test set_system_prompt method (line 145)."""
+        """Test set_system_prompt method."""
         with patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key"):
             with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
                 mock_llm = MagicMock()
@@ -325,7 +326,7 @@ class TestOpenAILLM:
     @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
     @patch("llm_clients.openai_llm.ChatOpenAI")
     async def test_metadata_includes_response_object(self, mock_chat_openai):
-        """Test that metadata includes the full response object (line 71)."""
+        """Test that metadata includes the full response object."""
         mock_llm = MagicMock()
 
         mock_response = MagicMock()
@@ -349,7 +350,7 @@ class TestOpenAILLM:
     @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
     @patch("llm_clients.openai_llm.ChatOpenAI")
     async def test_timestamp_format(self, mock_chat_openai):
-        """Test that timestamp is in ISO format (line 64)."""
+        """Test that timestamp is in ISO format."""
         mock_llm = MagicMock()
 
         mock_response = MagicMock()
@@ -381,7 +382,7 @@ class TestOpenAILLM:
     @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
     @patch("llm_clients.openai_llm.ChatOpenAI")
     async def test_model_name_update_from_metadata(self, mock_chat_openai):
-        """Test that model name is updated from response metadata (lines 85-86)."""
+        """Test that model name is updated from response metadata."""
         mock_llm = MagicMock()
 
         mock_response = MagicMock()
@@ -509,16 +510,16 @@ class TestOpenAILLM:
 
         llm = OpenAILLM(name="TestOpenAI", system_prompt="Test")
 
-        response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Hi"}]
-        )
+        # Actually pass None to test the default behavior
+        response = await llm.generate_response(conversation_history=None)
 
         assert response == "Response"
 
-        # Should have: SystemMessage + turn 0 message
+        # Should have: SystemMessage only (no history messages)
         call_args = mock_llm.ainvoke.call_args
         messages = call_args[0][0]
-        assert len(messages) == 2
+        assert len(messages) == 1
+        assert isinstance(messages[0], SystemMessage)
 
     @pytest.mark.asyncio
     @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
@@ -527,7 +528,6 @@ class TestOpenAILLM:
         self, mock_chat_openai
     ):
         """Test that persona role flips message types in conversation history."""
-        from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
         mock_llm = MagicMock()
         mock_response = MagicMock()

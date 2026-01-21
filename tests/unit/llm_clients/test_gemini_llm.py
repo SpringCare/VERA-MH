@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from llm_clients.gemini_llm import GeminiLLM
 
@@ -12,7 +13,7 @@ class TestGeminiLLM:
 
     @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", None)
     def test_init_missing_api_key_raises_error(self):
-        """Test that missing GOOGLE_API_KEY raises ValueError (line 25)."""
+        """Test that missing GOOGLE_API_KEY raises ValueError."""
         with pytest.raises(ValueError) as exc_info:
             GeminiLLM(name="TestGemini")
 
@@ -150,7 +151,7 @@ class TestGeminiLLM:
     @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
     @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_with_fallback_token_usage(self, mock_chat_gemini):
-        """Test response with fallback token_usage structure (lines 90-97)."""
+        """Test response with fallback token_usage structure."""
         mock_llm = MagicMock()
 
         mock_response = MagicMock()
@@ -234,7 +235,7 @@ class TestGeminiLLM:
     @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
     @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_api_error(self, mock_chat_gemini):
-        """Test error handling when API call fails (lines 108-118)."""
+        """Test error handling when API call fails."""
         mock_llm = MagicMock()
 
         # Simulate API error
@@ -288,7 +289,7 @@ class TestGeminiLLM:
         assert metadata["response_time_seconds"] >= 0
 
     def test_get_last_response_metadata_returns_copy(self):
-        """Test that get_last_response_metadata returns a copy (line 122)."""
+        """Test that get_last_response_metadata returns a copy."""
         with patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key"):
             with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
                 mock_llm = MagicMock()
@@ -309,7 +310,7 @@ class TestGeminiLLM:
                 assert "modified" not in llm.last_response_metadata
 
     def test_set_system_prompt(self):
-        """Test set_system_prompt method (line 126)."""
+        """Test set_system_prompt method."""
         with patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key"):
             with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
                 mock_llm = MagicMock()
@@ -325,7 +326,7 @@ class TestGeminiLLM:
     @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
     @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_metadata_includes_response_object(self, mock_chat_gemini):
-        """Test that metadata includes the full response object (line 73)."""
+        """Test that metadata includes the full response object."""
         mock_llm = MagicMock()
 
         mock_response = MagicMock()
@@ -349,7 +350,7 @@ class TestGeminiLLM:
     @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
     @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_timestamp_format(self, mock_chat_gemini):
-        """Test that timestamp is in ISO format (line 69)."""
+        """Test that timestamp is in ISO format."""
         mock_llm = MagicMock()
 
         mock_response = MagicMock()
@@ -381,7 +382,7 @@ class TestGeminiLLM:
     @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
     @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_finish_reason_extraction(self, mock_chat_gemini):
-        """Test finish_reason extraction (lines 100-102)."""
+        """Test finish_reason extraction."""
         mock_llm = MagicMock()
 
         mock_response = MagicMock()
@@ -407,7 +408,7 @@ class TestGeminiLLM:
     @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
     @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_raw_metadata_stored(self, mock_chat_gemini):
-        """Test that raw metadata is stored (line 105)."""
+        """Test that raw metadata is stored."""
         mock_llm = MagicMock()
 
         mock_response = MagicMock()
@@ -541,16 +542,16 @@ class TestGeminiLLM:
 
         llm = GeminiLLM(name="TestGemini", system_prompt="Test")
 
-        response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Hi"}]
-        )
+        # Actually pass None to test the default behavior
+        response = await llm.generate_response(conversation_history=None)
 
         assert response == "Response"
 
-        # Should have: SystemMessage + current message only
+        # Should have: SystemMessage only (no history messages)
         call_args = mock_llm.ainvoke.call_args
         messages = call_args[0][0]
-        assert len(messages) == 2
+        assert len(messages) == 1
+        assert isinstance(messages[0], SystemMessage)
 
     @pytest.mark.asyncio
     @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
@@ -559,7 +560,6 @@ class TestGeminiLLM:
         self, mock_chat_gemini
     ):
         """Test that persona role flips message types in conversation history."""
-        from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
         mock_llm = MagicMock()
         mock_response = MagicMock()
