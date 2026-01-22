@@ -204,8 +204,8 @@ class TestConversationSimulator:
         assert len(history) == 6
         assert all(not turn["early_termination"] for turn in history)
 
-    async def test_multiple_termination_signals(self):
-        """Test detection of multiple different termination signals."""
+    async def test_custom_termination_signal(self):
+        """Test detection of a custom termination signal (different from default)."""
         # Arrange
         persona = MockLLM(
             name="persona",
@@ -303,8 +303,8 @@ class TestConversationSimulator:
         assert internal_history_dicts == history2
         assert internal_history_dicts != history1
 
-    async def test_case_insensitive_termination_detection(self):
-        """Test that termination signals are detected (exact match required)."""
+    async def test_case_sensitive_termination_detection(self):
+        """Test that termination signal is detected (case-sensitive substring match)."""
         # Arrange
         persona = MockLLM(name="persona", responses=["Hello", "GOODBYE and thanks"])
         agent = MockLLM(name="agent", responses=["Hi"] * 5)

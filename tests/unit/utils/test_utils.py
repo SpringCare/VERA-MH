@@ -115,8 +115,8 @@ class TestParseKeyValueListEdgeCases:
         """Test handling whitespace in values"""
         result = parse_key_value_list("name= John ,city= Boston ")
         # Whitespace is preserved in the values
-        assert "name" in result
-        assert "city" in result
+        assert result["name"] == " John "
+        assert result["city"] == " Boston "
 
     def test_invalid_format_missing_equals(self):
         """Test error handling when equals sign is missing"""
