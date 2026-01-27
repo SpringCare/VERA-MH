@@ -5,6 +5,7 @@ Extracted from score_comparison_v3.py to enable reuse across scripts.
 """
 
 import re
+from pathlib import Path
 from typing import Any, Dict, List, Tuple, Union
 
 import pandas as pd
@@ -15,9 +16,20 @@ from .utils import load_rubric_structure
 # Load dimensions from rubric file
 DIMENSIONS, _ = load_rubric_structure("data/rubric.tsv")
 
+# Short dimension names for column headers
+DIMENSION_SHORT_NAMES = {
+    "Detects Risk": "Detects potential risk",
+    "Probes Risk": "Confirms risk",
+    "Clarifies Risk": "Confirms risk",
+    "Guides to Human Support": "Guides to human care",
+    "Collaborates and Validates Appropriately": "Supportive conversation",
+    "Maintains Safe Boundaries": "Follows AI boundaries",
+}
+
 # Discrete color scale for VERA scores
 COLOR_RED = "#DA4D2C"  # 0-24
-COLOR_ORANGE = "#EE9948"  # 25-49
+# COLOR_ORANGE = "#EE9948"  # 25-49
+COLOR_ORANGE = "#F09D65"
 COLOR_YELLOW = "#F5C54D"  # 50-74
 COLOR_GREEN = "#79CD71"  # 75-100
 
@@ -247,3 +259,171 @@ def combine_evaluations(tsv_files: List[str]) -> pd.DataFrame:
             continue
 
     return pd.DataFrame(rows)
+
+
+def build_results_csv_from_tsv_files(evaluations_dir) -> pd.DataFrame:
+    """
+    Build a results DataFrame from TSV evaluation files in a directory.
+
+    This function reads all .tsv files in the given directory and combines
+    them into a single DataFrame suitable for VERA score calculation.
+    Useful when results.csv is missing or needs to be regenerated.
+
+    Args:
+        evaluations_dir: Path to directory containing TSV evaluation files
+            (can be str or Path)
+
+    Returns:
+        DataFrame with columns: filename, run_id, and each dimension
+
+    Raises:
+        FileNotFoundError: If no TSV files are found in the directory
+    """
+    from pathlib import Path
+
+    evaluations_dir = Path(evaluations_dir)
+    results = []
+
+    # Get run_id from directory name (format: j_...__run_id)
+    run_id = (
+        evaluations_dir.name.split("__")[-1]
+        if "__" in evaluations_dir.name
+        else evaluations_dir.name
+    )
+
+    # Find all TSV files in the directory
+    tsv_files = list(evaluations_dir.glob("*.tsv"))
+
+    if not tsv_files:
+        raise FileNotFoundError(f"No TSV files found in: {evaluations_dir}")
+
+    for tsv_file in tsv_files:
+        filename = tsv_file.name
+        # Read TSV file
+        try:
+            tsv_df = pd.read_csv(tsv_file, sep="\t")
+
+            # Build row dictionary
+            row = {"filename": filename, "run_id": run_id}
+
+            # Extract dimension -> score mapping
+            for _, tsv_row in tsv_df.iterrows():
+                dimension = str(tsv_row.get("Dimension", "")).strip()
+                score = str(tsv_row.get("Score", "")).strip()
+
+                if dimension in DIMENSIONS:
+                    row[dimension] = score
+
+            # Ensure all dimensions are present (fill with empty string if missing)
+            for dimension in DIMENSIONS:
+                if dimension not in row:
+                    row[dimension] = ""
+
+            results.append(row)
+
+        except Exception as e:
+            print(f"Warning: Error reading TSV file {tsv_file}: {e}")
+            continue
+
+    # Build dataframe with correct column order
+    columns = ["filename", "run_id"] + list(DIMENSIONS)
+    df = pd.DataFrame(results, columns=columns)
+
+    return df
+
+
+def build_dataframe_from_tsv_files(evaluations_dir: Path) -> pd.DataFrame:
+    """
+    Build a dataframe from TSV evaluation files.
+
+    Args:
+        evaluations_dir: Directory containing TSV evaluation files
+
+    Returns:
+        DataFrame with columns: filename, run_id, and each dimension
+    """
+    # Use build_results_csv_from_tsv_files to build the dataframe
+    df = build_results_csv_from_tsv_files(evaluations_dir)
+
+    # Transform filename column: change .tsv extension to .txt
+    df["filename"] = df["filename"].str.replace(".tsv", ".txt", regex=False)
+
+    return df
+
+
+def ensure_results_csv(eval_path) -> pd.DataFrame:
+    """
+    Ensure results.csv exists and is valid, regenerating from TSV files if needed.
+
+    Args:
+        eval_path: Path to evaluation directory (can be str or Path)
+
+    Returns:
+        DataFrame with evaluation results
+    """
+    from pathlib import Path
+
+    eval_path = Path(eval_path)
+    results_csv_path = eval_path / "results.csv"
+
+    if results_csv_path.exists():
+        try:
+            df = pd.read_csv(results_csv_path)
+            # Check if it has dimension columns with data
+            has_dimension_data = any(
+                dim in df.columns and df[dim].notna().any() for dim in DIMENSIONS
+            )
+            if has_dimension_data and len(df) > 0:
+                return df
+            else:
+                print("⚠️  results.csv exists but is empty, regenerating...")
+        except Exception as e:
+            print(f"⚠️  Error reading results.csv: {e}, regenerating...")
+
+    # Regenerate from TSV files
+    print(f"📂 Building results.csv from TSV files in {eval_path}")
+    df = build_results_csv_from_tsv_files(eval_path)
+
+    # Save the regenerated CSV
+    df.to_csv(results_csv_path, index=False)
+    print(f"✅ Saved results.csv with {len(df)} rows")
+
+    return df
+
+
+def save_detailed_breakdown_csv(
+    sorted_data: List[Dict[str, Any]], output_path: Path, version_name: str
+) -> None:
+    """
+    Save a detailed breakdown CSV with dimension-level %HPH, %BP, and VERA scores.
+
+    Args:
+        sorted_data: List of model dicts with model_name, vera_score,
+                     overall_bp_pct, overall_hph_pct, and dimensions (each with
+                     vera_score, hph_pct, bp_pct)
+        output_path: Path object for the main output file (detailed CSV will be saved
+                     as {output_path.stem}_detailed.csv)
+        version_name: Version string (e.g., "v3", "v4", "v4a", "v5") for column headers
+    """
+    detailed_rows = []
+    for model in sorted_data:
+        row = {
+            "Model": model["model_name"],
+            f"Overall VERA {version_name} Score": round(model["vera_score"], 1),
+            "Overall %HPH": round(model.get("overall_hph_pct", 0.0), 1),
+            "Overall %BP": round(model.get("overall_bp_pct", 0.0), 1),
+        }
+        for dim in DIMENSIONS:
+            short_name = DIMENSION_SHORT_NAMES.get(dim, dim)
+            dim_data = model["dimensions"].get(dim, {})
+            row[f"{short_name} VERA {version_name} Score"] = round(
+                dim_data.get("vera_score", 0.0), 1
+            )
+            row[f"{short_name} %HPH"] = round(dim_data.get("hph_pct", 0.0), 1)
+            row[f"{short_name} %BP"] = round(dim_data.get("bp_pct", 0.0), 1)
+        detailed_rows.append(row)
+
+    detailed_df = pd.DataFrame(detailed_rows)
+    detailed_csv_path = output_path.with_name(f"{output_path.stem}_detailed.csv")
+    detailed_df.to_csv(detailed_csv_path, index=False)
+    print(f"📄 Detailed breakdown saved to: {detailed_csv_path}")  # noqa: F541

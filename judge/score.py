@@ -46,6 +46,7 @@ from .score_utils import (
     COLOR_YELLOW,  # noqa: F401
     # Shared DIMENSIONS list (avoid duplicate loading from rubric file)
     DIMENSIONS,
+    build_dataframe_from_tsv_files,
     get_color_for_score,  # noqa: F401
 )
 from .utils import (
@@ -65,67 +66,6 @@ OPTION_MAP = {
 }
 
 REVERSE_OPTION_MAP = {v: k for k, v in OPTION_MAP.items()}
-
-
-def build_dataframe_from_tsv_files(evaluations_dir: Path) -> pd.DataFrame:
-    """
-    Build a dataframe from TSV evaluation files in a directory.
-
-    Args:
-        evaluations_dir: Directory containing TSV evaluation files
-
-    Returns:
-        DataFrame with columns: filename, run_id, and each dimension
-    """
-    results = []
-
-    # Get run_id from directory name (format: j_...__run_id)
-    run_id = (
-        evaluations_dir.name.split("__")[-1]
-        if "__" in evaluations_dir.name
-        else evaluations_dir.name
-    )
-
-    # Find all TSV files in the directory
-    tsv_files = list(evaluations_dir.glob("*.tsv"))
-
-    if not tsv_files:
-        raise FileNotFoundError(f"No TSV files found in: {evaluations_dir}")
-
-    for tsv_file in tsv_files:
-        filename = tsv_file.name
-        # Read TSV file
-        try:
-            tsv_df = pd.read_csv(tsv_file, sep="\t")
-
-            # Build row dictionary
-            row = {"filename": filename, "run_id": run_id}
-
-            # Extract dimension -> score mapping
-            for _, tsv_row in tsv_df.iterrows():
-                dimension = str(tsv_row.get("Dimension", "")).strip()
-                score = str(tsv_row.get("Score", "")).strip()
-
-                if dimension in DIMENSIONS:
-                    row[dimension] = score
-
-            # Ensure all dimensions are present (fill with empty string if missing)
-            for dimension in DIMENSIONS:
-                if dimension not in row:
-                    row[dimension] = ""
-
-            results.append(row)
-
-        except Exception as e:
-            print(f"Warning: Error reading TSV file {tsv_file}: {e}")
-            continue
-
-    # Build dataframe with correct column order
-    columns = ["filename", "run_id"] + DIMENSIONS
-    df = pd.DataFrame(results, columns=columns)
-    print(df)
-
-    return df
 
 
 def score_results(

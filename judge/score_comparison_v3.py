@@ -27,25 +27,54 @@ matplotlib.use("Agg")  # Use non-interactive backend
 from .score_utils import (
     BG_COLOR,
     COLOR_GREEN,
-    COLOR_ORANGE,
     COLOR_RED,
-    COLOR_YELLOW,
+    DIMENSION_SHORT_NAMES,
     DIMENSIONS,
     TEXT_COLOR,
     calculate_dimension_scores,
     calculate_vera_score,
-    get_color_for_score,
+    ensure_results_csv,
+    save_detailed_breakdown_csv,
 )
 
-# Short dimension names for column headers
-DIMENSION_SHORT_NAMES = {
-    "Detects Risk": "Detects potential risk",
-    "Probes Risk": "Confirms risk",
-    "Clarifies Risk": "Confirms risk",
-    "Guides to Human Support": "Guides to human care",
-    "Collaborates and Validates Appropriately": "Supportive conversation",
-    "Maintains Safe Boundaries": "Follows AI boundaries",
-}
+# V3 additional color for gradient
+COLOR_WHITE = "#FFFFFF"
+
+
+def hex_to_rgb(hex_color: str) -> tuple:
+    """Convert hex color to RGB tuple (0-255)."""
+    hex_color = hex_color.lstrip("#")
+    return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+
+
+def rgb_to_hex(rgb: tuple) -> str:
+    """Convert RGB tuple (0-255) to hex color."""
+    return "#{:02x}{:02x}{:02x}".format(int(rgb[0]), int(rgb[1]), int(rgb[2]))
+
+
+def interpolate_color(color1: str, color2: str, t: float) -> str:
+    """Interpolate between two hex colors. t=0 returns color1, t=1 returns color2."""
+    rgb1 = hex_to_rgb(color1)
+    rgb2 = hex_to_rgb(color2)
+    rgb = tuple(rgb1[i] + (rgb2[i] - rgb1[i]) * t for i in range(3))
+    return rgb_to_hex(rgb)
+
+
+def get_color_for_score_v3(score: float) -> str:
+    """
+    Get the color for a VERA score using gradient (v3 uses 0-100 range).
+
+    Uses a gradient from COLOR_RED (0) to white (50) to COLOR_GREEN (100).
+    """
+    if score < 50:
+        # Gradient from COLOR_RED (0) to white (50)
+        t = score / 50  # 0 -> 0, 50 -> 1
+        return interpolate_color(COLOR_RED, COLOR_WHITE, t)
+    else:
+        # Gradient from white (50) to COLOR_GREEN (100)
+        t = (score - 50) / 50  # 50 -> 0, 100 -> 1
+        return interpolate_color(COLOR_WHITE, COLOR_GREEN, t)
+
 
 # Layout colors (additional colors specific to this visualization)
 CARD_COLOR = "#FFFFFF"  # White card
@@ -87,19 +116,15 @@ def load_evaluation_data(
         # Collect all dataframes from all paths
         all_dfs = []
         for eval_path in eval_paths:
-            # Construct path to results.csv
-            results_csv_path = Path(eval_path) / "results.csv"
-
-            if not results_csv_path.exists():
-                print(f"⚠️  Warning: results.csv not found at {results_csv_path}")
-                continue
-
-            # Read results.csv
+            # Ensure results.csv exists (regenerate from TSV files if needed)
             try:
-                df = pd.read_csv(results_csv_path)
+                df = ensure_results_csv(eval_path)
                 all_dfs.append(df)
+            except FileNotFoundError as e:
+                print(f"⚠️  Warning: {e}")
+                continue
             except Exception as e:
-                print(f"⚠️  Warning: Error reading {results_csv_path}: {e}")
+                print(f"⚠️  Warning: Error loading {eval_path}: {e}")
                 continue
 
         if not all_dfs:
@@ -112,6 +137,13 @@ def load_evaluation_data(
         # Calculate dimension scores and overall counts from combined data
         dimension_scores, overall_counts = calculate_dimension_scores(combined_df)
 
+        # Calculate overall percentages
+        total = overall_counts.get("total", 0)
+        bp_count = overall_counts.get("bp_count", 0)
+        hph_count = overall_counts.get("hph_count", 0)
+        overall_bp_pct = round(100.0 * bp_count / total, 1) if total > 0 else 0.0
+        overall_hph_pct = round(100.0 * hph_count / total, 1) if total > 0 else 0.0
+
         # Calculate VERA score from overall raw counts
         vera_score = calculate_vera_score(overall_counts)
 
@@ -119,6 +151,8 @@ def load_evaluation_data(
             {
                 "model_name": model_name,
                 "vera_score": vera_score,
+                "overall_bp_pct": overall_bp_pct,
+                "overall_hph_pct": overall_hph_pct,
                 "dimensions": dimension_scores,
             }
         )
@@ -170,15 +204,18 @@ def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Pat
     card_right = fig_width - margin
     card_width = card_right - card_left
 
-    # Model/Score section widths
-    model_col_width = 5.2
-    score_col_width = 0.9
-    left_section_width = model_col_width + score_col_width + 0.4
+    # New layout: Models | Dimensions | Score (at end)
+    model_col_width = 2.8
+    score_col_width = 1.8  # Wider score column at end with gradient background
 
-    # Dimensions section
-    dim_section_left = card_left + left_section_width + 0.2
-    dim_section_width = card_right - dim_section_left - 0.3
+    # Dimensions section (between models and score)
+    dim_section_left = card_left + model_col_width + 0.3
+    dim_section_right = card_right - score_col_width - 0.3
+    dim_section_width = dim_section_right - dim_section_left
     dim_col_width = dim_section_width / n_dims
+
+    # Score section at the far right
+    score_section_left = card_right - score_col_width
 
     # Row layout
     header_row_height = 0.7
@@ -217,57 +254,87 @@ def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Pat
         fontfamily="sans-serif",
     )
 
-    # Legend (top right)
-    legend_items = [
-        (COLOR_RED, "0-24", "Unsafe"),
-        (COLOR_ORANGE, "25-50", "High risk"),
-        (COLOR_YELLOW, "51-75", "Moderate risk"),
-        (COLOR_GREEN, "76-100", "Safe"),
-    ]
-
-    legend_box_width = 0.9
-    legend_box_height = 0.35
-    legend_spacing = 0.05
+    # Legend (top right) - Gradient bar
+    legend_width = 4.0
+    legend_height = 0.35
     legend_right = card_right
-    legend_y = fig_height - 0.4
+    legend_y = fig_height - 0.5
+    legend_left = legend_right - legend_width
 
-    for i, (color, range_label, desc_label) in enumerate(reversed(legend_items)):
-        box_x = legend_right - (i + 1) * (legend_box_width + legend_spacing)
-
-        # Draw box
-        rect = mpatches.FancyBboxPatch(
-            (box_x, legend_y - legend_box_height),
-            legend_box_width,
-            legend_box_height,
-            boxstyle="round,pad=0.02,rounding_size=0.05",
+    # Draw gradient bar using many thin rectangles
+    n_segments = 100
+    segment_width = legend_width / n_segments
+    for i in range(n_segments):
+        # Score goes from 0 (left) to 100 (right)
+        score = (i / n_segments) * 100
+        color = get_color_for_score_v3(score)
+        segment_x = legend_left + i * segment_width
+        rect = mpatches.Rectangle(
+            (segment_x, legend_y - legend_height),
+            segment_width + 0.01,  # Slight overlap to avoid gaps
+            legend_height,
             facecolor=color,
             edgecolor="none",
         )
         ax.add_patch(rect)
 
-        # Range label inside box
-        text_color = "white" if color in [COLOR_RED] else "black"
-        ax.text(
-            box_x + legend_box_width / 2,
-            legend_y - legend_box_height / 2,
-            range_label,
-            fontsize=9,
-            fontweight="bold",
-            color=text_color,
-            ha="center",
-            va="center",
-        )
+    # Draw thin gray line at 50 (center)
+    center_x = legend_left + legend_width / 2
+    ax.plot(
+        [center_x, center_x],
+        [legend_y - legend_height, legend_y],
+        color="#999999",
+        linewidth=1,
+        zorder=10,
+    )
 
-        # Description below
-        ax.text(
-            box_x + legend_box_width / 2,
-            legend_y - legend_box_height - 0.12,
-            desc_label,
-            fontsize=8,
-            color=SUBTLE_TEXT,
-            ha="center",
-            va="top",
-        )
+    # Legend border
+    legend_border = mpatches.FancyBboxPatch(
+        (legend_left, legend_y - legend_height),
+        legend_width,
+        legend_height,
+        boxstyle="round,pad=0,rounding_size=0.05",
+        facecolor="none",
+        edgecolor="#CCCCCC",
+        linewidth=1,
+    )
+    ax.add_patch(legend_border)
+
+    # Value labels: 0, 50, 100
+    ax.text(
+        legend_left, legend_y + 0.08, "0", fontsize=8, color=SUBTLE_TEXT, ha="center"
+    )
+    ax.text(
+        legend_left + legend_width / 2,
+        legend_y + 0.08,
+        "50",
+        fontsize=8,
+        color=SUBTLE_TEXT,
+        ha="center",
+    )
+    ax.text(
+        legend_right, legend_y + 0.08, "100", fontsize=8, color=SUBTLE_TEXT, ha="center"
+    )
+
+    # Description labels: "Unsafe" centered at 25, "Safe" centered at 75
+    ax.text(
+        legend_left + legend_width * 0.25,
+        legend_y - legend_height - 0.12,
+        "Unsafe",
+        fontsize=9,
+        color=SUBTLE_TEXT,
+        ha="center",
+        va="top",
+    )
+    ax.text(
+        legend_left + legend_width * 0.75,
+        legend_y - legend_height - 0.12,
+        "Safe",
+        fontsize=9,
+        color=SUBTLE_TEXT,
+        ha="center",
+        va="top",
+    )
 
     # === MAIN CARD ===
 
@@ -320,18 +387,6 @@ def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Pat
         va="top",
     )
 
-    # "Score" header - centered over score boxes
-    ax.text(
-        card_left + model_col_width + score_col_width / 2,
-        col_header_y,
-        "Score",
-        fontsize=11,
-        fontweight="bold",
-        color=TEXT_COLOR,
-        ha="center",
-        va="top",
-    )
-
     # Dimension column headers with manual line wrapping
     dim_header_wrapped = {
         "Detects potential risk": "Detects\npotential risk",
@@ -355,6 +410,18 @@ def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Pat
             linespacing=1.1,
         )
 
+    # "Score" header - centered over score section at end
+    ax.text(
+        score_section_left + score_col_width / 2,
+        col_header_y,
+        "Score",
+        fontsize=11,
+        fontweight="bold",
+        color=TEXT_COLOR,
+        ha="center",
+        va="top",
+    )
+
     # === DATA ROWS ===
     first_row_y = col_header_y - header_row_height
 
@@ -372,38 +439,8 @@ def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Pat
             va="center",
         )
 
-        # Score box
-        score = model["vera_score"]
-        score_color = get_color_for_score(score)
-        score_box_width = 0.6
-        score_box_height = 0.38
-        score_x = card_left + model_col_width + (score_col_width - score_box_width) / 2
-
-        score_rect = mpatches.FancyBboxPatch(
-            (score_x, row_y - score_box_height / 2),
-            score_box_width,
-            score_box_height,
-            boxstyle="round,pad=0.02,rounding_size=0.08",
-            facecolor=score_color,
-            edgecolor="none",
-        )
-        ax.add_patch(score_rect)
-
-        # Score text
-        text_color = "white" if score_color in [COLOR_RED] else "black"
-        ax.text(
-            score_x + score_box_width / 2,
-            row_y,
-            f"{int(round(score))}",
-            fontsize=10,
-            fontweight="bold",
-            color=text_color,
-            ha="center",
-            va="center",
-        )
-
-        # Dimension circles
-        circle_radius = 0.14
+        # Dimension circles with score labels (smaller circles)
+        circle_radius = 0.11
         for dim_idx, dim_name in enumerate(dim_headers):
             # Find the actual dimension key
             actual_dim = None
@@ -417,23 +454,89 @@ def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Pat
             else:
                 dim_score = 0.0
 
-            dim_color = get_color_for_score(dim_score)
+            dim_color = get_color_for_score_v3(dim_score)
             dim_x = dim_section_left + dim_idx * dim_col_width + dim_col_width / 2
+
+            # Border color: green for > 50, red for < 50, grey for exactly 50
+            if dim_score > 50:
+                border_color = COLOR_GREEN
+            elif dim_score < 50:
+                border_color = COLOR_RED
+            else:
+                border_color = "#CCCCCC"  # Grey for exactly 50 (neutral)
 
             circle = mpatches.Circle(
                 (dim_x, row_y),
                 circle_radius,
                 facecolor=dim_color,
-                edgecolor="none",
+                edgecolor=border_color,
+                linewidth=1.5,
             )
             ax.add_patch(circle)
 
+            # Score label to the right of circle (light gray)
+            ax.text(
+                dim_x + circle_radius + 0.08,
+                row_y,
+                f"{int(round(dim_score))}",
+                fontsize=8,
+                color="#999999",
+                ha="left",
+                va="center",
+            )
+
+        # Score section at end with gradient background
+        score = model["vera_score"]
+        score_color = get_color_for_score_v3(score)
+
+        # Light purple/blue gradient background for score area
+        score_bg_rect = mpatches.FancyBboxPatch(
+            (score_section_left + 0.1, row_y - data_row_height / 2 + 0.05),
+            score_col_width - 0.2,
+            data_row_height - 0.1,
+            boxstyle="round,pad=0.02,rounding_size=0.1",
+            facecolor="#F0F0FF",
+            edgecolor="none",
+        )
+        ax.add_patch(score_bg_rect)
+
+        # Large score number
+        ax.text(
+            score_section_left + score_col_width / 2 - 0.15,
+            row_y,
+            f"{int(round(score))}",
+            fontsize=14,
+            fontweight="bold",
+            color=TEXT_COLOR,
+            ha="center",
+            va="center",
+        )
+
+        # Small colored circle next to the score
+        small_circle_radius = 0.12
+        small_circle_x = score_section_left + score_col_width - 0.35
+        if score > 50:
+            border_color = COLOR_GREEN
+        elif score < 50:
+            border_color = COLOR_RED
+        else:
+            border_color = "#CCCCCC"
+
+        score_circle = mpatches.Circle(
+            (small_circle_x, row_y),
+            small_circle_radius,
+            facecolor=score_color,
+            edgecolor=border_color,
+            linewidth=1.5,
+        )
+        ax.add_patch(score_circle)
+
     # === FOOTER NOTE ===
-    # Check if all models are in "Unsafe" range
-    all_unsafe = all(m["vera_score"] < 25 for m in sorted_data)
-    if all_unsafe:
+    # Check if all models are below 50 (indicating harm detected)
+    all_have_harm = all(m["vera_score"] < 50 for m in sorted_data)
+    if all_have_harm:
         footer_text = (
-            'All evaluated models currently fall in the\n"Unsafe" VERA range (0–24).'
+            "All evaluated models scored below 50\n(harmful responses detected)."
         )
         ax.text(
             card_left + 0.4,
@@ -473,6 +576,9 @@ def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Pat
     display_df.to_csv(csv_path, index=False)
     print(f"📄 Comparison data saved to: {csv_path}")
 
+    # Save detailed breakdown CSV using shared function
+    save_detailed_breakdown_csv(sorted_data, output_path, "v3")
+
     print("\n" + "=" * 80)
     print("VERA SCORE COMPARISON DATA (v3)")
     print("=" * 80)
@@ -502,7 +608,7 @@ def main():
         default=None,
         help=(
             "Path to save the output visualization "
-            "(default: score_comparisons/{input_filename}_output.png)"
+            "(default: score_comparisons/{input_filename}_v3_output.png)"
         ),
     )
 
@@ -519,7 +625,7 @@ def main():
         output_path = Path(args.output)
     else:
         # Use input filename with _output suffix in score_comparisons directory
-        output_path = Path("score_comparisons") / f"{input_path.stem}_output.png"
+        output_path = Path("score_comparisons") / f"{input_path.stem}_v3_output.png"
 
     print(f"📥 Loading evaluations from: {input_path}")
 
