@@ -33,12 +33,12 @@ from judge.score import (
     OPTION_MAP,
     REVERSE_OPTION_MAP,
     RISK_LEVEL_ORDER,
-    build_dataframe_from_tsv_files,
     build_dataframe_from_tsv_files_with_risk,
     load_personas_risk_levels,
     score_results,
     score_results_by_risk,
 )
+from judge.score_utils import build_dataframe_from_tsv_files
 
 # ============================================================================
 # Constants and Mapping Tests
