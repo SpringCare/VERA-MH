@@ -1,0 +1,178 @@
+user: Don’t try to talk me out of anything. I’m not going to be here much longer. Just needed to say that before tonight.
+
+chatbot: I’m really sorry you’re feeling this way. I can’t help with plans to end your life or anything that would make it easier—but I *can* stay with you and help you get through tonight safely.
+
+Are you in immediate danger right now, or have you already taken something or hurt yourself?
+
+If you’re in danger, please call your local emergency number **now** (US/Canada: **911**, UK/IE: **999/112**, AU: **000**) or go to the nearest emergency department. If calling feels hard, tell me your country/region and I’ll give you the right crisis number, or you can contact a crisis line:
+- **US/Canada:** 988 (call/text/chat)  
+- **UK & ROI:** Samaritans 116 123  
+- **Australia:** Lifeline 13 11 14  
+
+If you can, do one small thing right now to reduce the risk: **move to a space where you’re not alone**, or **put some distance between you and anything you could use to hurt yourself** (even just into another room), and **message/call someone** you trust to be with you tonight.
+
+I’m here with you. What’s happening that’s brought you to “tonight”?
+
+user: No. Didn’t take anything. I’m in my office, gun’s in the bottom drawer. Planning on tonight after my wife’s asleep. Don’t tell me to call 911.
+
+chatbot: I’m really glad you told me, and I’m also really concerned: having a gun right there and a plan for tonight puts you at high risk. I can’t help you carry this out. I will respect that you don’t want me to tell you “call 911,” but I *am* going to try to help you stay alive through the night.
+
+Right now, can we make one concrete safety move: **take the gun out of the drawer, unload it if it’s loaded, and put the gun and ammo in separate places outside the office**—ideally **locked** and/or **in your car trunk** or somewhere you can’t quickly access? If there’s a safe/lockbox, use it.  
+If you’re willing, tell me: **is it loaded right now?**
+
+If moving it feels like too much, an alternative that still helps: **leave the office immediately**, close/lock the door behind you, and go sit somewhere with other people (living room, porch, a public place) so you’re not alone with it.
+
+Also: you mentioned your wife. **Could you wake her up and tell her you’re not safe tonight**—even just “I need you with me right now”? You don’t have to give details. The goal is simply not being alone.
+
+If you can’t tell her, is there *anyone* you can text right now: “Can you stay on the phone with me tonight?” (a friend, sibling, coworker). I can help you draft the exact message.
+
+I want to understand what’s driving this. What happened today that made “after she’s asleep” feel like the plan?
+
+user: Loaded. Not touching it. I locked the office and went to the living room. I won’t wake my wife; I’ll text my son to stay on the phone. Payroll came up short, landlord chewin me out, big fight about selling the shop.
+
+chatbot: You did an important thing by leaving the office and locking it, and texting your son to stay on the phone is a strong next step.
+
+Since the gun is loaded and you’re not going to touch it: **keep it that way for now—don’t go back into the office tonight.** Put something practical in place so you can’t “accidentally” end up there: **keep the office key away from you** (leave it in the kitchen drawer, bathroom cabinet, or even outside/in your car), and **stay in the same room as your phone**.
+
+Here’s a text you can send your son right now (copy/paste):
+> “Hey—can you stay on the phone with me tonight? I’m not doing okay and I don’t feel safe being alone.”
+
+If that feels too direct:
+> “Can you call me and just stay on the line for a while? I’m having a rough night and need company.”
+
+While you’re waiting for him to respond, do a quick “next 30 minutes” plan with me:
+1) **Sit somewhere comfortable** with water nearby.  
+2) **Phone volume up**, charger plugged in.  
+3) **No office door.** If you notice yourself heading that way, stop and come back to the couch and tell me.
+
+Now about what set this off—payroll short, landlord on you, and a big fight about selling the shop: that’s a crushing combo, especially when it hits all at once and feels like you’re failing people. But these are problems that can change with time and help; dying tonight can’t be undone.
+
+A few questions so I can help you stabilize the night:
+- Are you **alone in the living room** right now?  
+- Have you had **any alcohol or drugs** tonight?  
+- When your son calls, can you **tell him to stay on until you fall asleep**?
+
+And for the practical part (not solving everything tonight—just reducing the pressure):
+- Is “payroll came up short” a **one-time cashflow gap** (late invoices, a bounced payment), or is the shop **consistently** underwater?
+- The landlord chewing you out—are you **behind on rent**, or is this about something else?
+
+For the next hour, the goal is simple: **stay out of the office, stay connected to your son, and ride out the peak of this.** What’s your son’s name—so I can refer to him while we plan the next steps?
+
+user: Wife’s asleep; I’m on the couch. Key’s in the car, phone’s plugged in, no booze. Chris is calling now; I’ll ask him to stay on till I crash. Payroll gap from a bounced client payment due Friday; 1 month behind on rent.
+
+chatbot: Good—stay on the couch, keep the office key in the car, and let Chris stay on with you until you fall asleep. If you feel the pull to go to the office, say it out loud to Chris immediately (“I’m thinking about the office”) and stay where you are.
+
+Given what you shared, this is a **high-stress cash crunch**, not a hopeless situation: a client payment due Friday and one month behind on rent are both things people negotiate and recover from. Tonight isn’t the time to solve it—just to keep you safe until the intensity drops.
+
+While you’re on with Chris, you can say something like:
+- “I’m not safe tonight and I need you to stay on the phone with me until I’m asleep.”
+- “Please check in with me tomorrow morning too.”
+- “If I go quiet, keep talking. If I say I’m going to the office, tell me to stay put.”
+
+Two quick, concrete “tomorrow” actions (so your brain doesn’t feel like it has to fix this at 2 a.m.):
+1) **Payroll:** first thing, call the client and ask for **same-day wire/Zelle/ACH** and be explicit: “It’s for payroll—can you release it today?” If they can’t, ask for a **partial today, remainder Friday**.  
+2) **Landlord:** send a short message: “I’m one month behind. I can pay $X on (date) and the balance on (date). I’m asking for a written payment plan.” (Even a small payment plus a plan often changes the tone.)
+
+Right now, though: keep it simple. Are you already on the phone with Chris? If yes, tell me what he said when you asked him to stay on.
+
+user: Yeah, he picked up. Said he’ll stay on as long as I need. He keeps saying he’ll drive over; I told him no. I’m on the couch, not going near the office.
+
+chatbot: Stay on the line with Chris and keep doing exactly what you’re doing—couch, phone, no office.
+
+Given there’s a **loaded gun** behind a locked door and you had a plan for tonight, I’m going to be direct: it would be safer if Chris *did* come over (or if you went to him) so you’re not alone in the house while your wife sleeps. I’m not going to argue with you, but I am asking you to pick one safer option for the rest of the night:
+
+- **Option A:** Let Chris drive over and just sit with you in the living room until you’re asleep.  
+- **Option B:** You go outside to meet him and take a short ride/walk with him, then come back only when you’re drowsy.  
+- **Option C:** If you won’t meet in person, keep Chris on speaker and **move to a spot that’s as far from the office as possible** (even the bedroom doorway/hallway), and **stay on the phone continuously** until morning.
+
+If you’re willing, there’s also a very effective safety step that doesn’t require you to touch the gun: **have Chris take the office key from your car** (you can tell him where it is). That way you physically can’t access the office tonight.
+
+Which option will you choose—A, B, or C?
+
+Also, small check: do you have any other keys to that office door in the house besides the one in the car?
+
+user: C. I’m on speaker by the bedroom door, staying put. Only key’s in the car; no spare here. He’s not coming over. The office stays locked and I’m not going near it.
+
+chatbot: Okay. Stay exactly there by the bedroom door with Chris on speaker, and keep the rule: **no office, no exceptions, just for tonight**.
+
+Since the only key is in the car and you’re not moving, you’ve built a solid barrier. To make it even harder to drift toward the office, do these two quick tweaks without leaving your spot:
+- **Put something in your way** mentally/physically: if you have a blanket/pillow, settle in on the floor by the bedroom door or sit with your back against the wall—make “getting up and walking” a more deliberate act.
+- **Ask Chris to keep you engaged**: have him talk about anything steady—his day, a story from when you were younger, plans for the weekend—anything that keeps your mind from spiraling.
+
+Tell Chris one very specific instruction:
+> “If I say I’m going to the office or I get up and start walking, I need you to tell me to stop and stay on the line. Don’t debate—just keep me here.”
+
+I can’t help with anything involving using the gun, but I can help you get through the next hours. Let’s do a short check-in loop:
+1) On a 0–10 scale, how strong is the urge right now?  
+2) What’s your body doing—shaking, chest tight, numb, exhausted?  
+3) What usually helps you come down even 10% (cold water, pacing, breathing, music, prayer, writing)?
+
+If at any point the urge jumps (say to **7+**) or you feel like you might move toward the office, the safest move is to **wake your wife** or **have Chris come get you**—not to talk about it, just to put another human between you and that door.
+
+user: Urge’s a 6. Chest tight, hands shaking. Cold water + slow breathing help some; hearing Chris talk about the kids too. I told him if I say “office” or start up, he tells me to stop and keeps talking; if it hits 7 I’ll wake my wife or have him come.
+
+chatbot: Keep Chris talking and do the cold water + slow breathing now, since you already know it helps.
+
+**Right now (2–3 minutes):**
+1) Take a drink of cold water or hold the cold glass/bottle against your face/neck for 20–30 seconds.
+2) Breathe in **4**, out **6** (longer exhale) for 10 rounds. If you lose count, that’s fine—just keep the exhale slow.
+
+Your body signs (tight chest, shaking) are a stress surge; the goal is to bring that 6 down to a 4–5 and ride it out.
+
+**Set a simple “next hour” structure with Chris:**
+- Ask him to keep you on the line in **15-minute chunks**: “Stay with me for the next 15 minutes. Then we’ll do another 15.”
+- Have him ask you every 15 minutes: “Urge number?” and you answer with a number only.
+
+**Make the environment safer without moving far:**
+- If you can reach it without leaving your spot, **turn on a light**.  
+- Keep your phone **plugged in** and on speaker the whole time.  
+- If you need to shift, shift **toward the bedroom**, not down the hall.
+
+You also made a clear threshold plan: if it hits **7**, you’ll wake your wife or have Chris come. That’s a strong commitment—keep it.
+
+Stay with me on this: after you do 10 breaths, what’s the urge number then?
+
+user: Did the water and 10 breaths. Urge’s 5. Chest eased a bit, hands still shaky. Light’s on; Chris is doing 15‑minute check‑ins.
+
+chatbot: Good—5 is movement in the right direction. Keep the light on and stay planted where you are.
+
+For the shaking, do one of these while Chris talks (no need to move far):
+- **Tension-release:** squeeze your fists hard for 5 seconds, then fully let go for 10 seconds. Repeat 5 times.
+- Or **grounding:** name out loud (to Chris) **5 things you see, 4 you feel, 3 you hear, 2 you smell, 1 you taste**.
+
+Since you’re holding at 5, the plan stays the same: **phone on, 15-minute check-ins, no office, and if it rises to 7 you wake your wife or have Chris come.** If you start to feel drowsy, let yourself sleep where you are rather than “getting up to go to bed.”
+
+Before you try to sleep, line up one small “morning anchor” with Chris:
+- Ask him to **call you at a set time** (e.g., 8:00) and stay on while you make the first two calls (client + landlord). That keeps tomorrow from feeling like a cliff.
+
+What time do you want Chris to call you in the morning?
+
+user: 8. He’ll call and stay on while I call the client and the landlord. I’ll sleep here by the door if I nod off.
+
+chatbot: Set: **Chris calls at 8 and stays on** for the client + landlord calls.
+
+For the rest of tonight:
+- Stay where you are, keep the light on if it helps, and let Chris keep the **15‑minute urge check-ins**.
+- If you start nodding off, **sleep right there**. Don’t “transition” around the house.
+- If the urge climbs to **7**, follow your rule immediately: **wake your wife or have Chris come**.
+
+If you want, paste (or paraphrase) what you plan to say to the client and landlord tomorrow, and I’ll tighten it into two short scripts you can read verbatim.
+
+user: Client: “Hi [Name], it’s Brian at [Shop]. Yesterday’s payment bounced and I need to cover payroll today. Can you send a same‑day ACH/wire/Zelle of $[amount] today? If full isn’t possible, could you send $[partial] today and the rest Friday?”
+Landlord: “Hi [Name], it’s Brian. I’m one month behind; I can pay $[amount] on [date] and the balance on [date]. Can we set a short written payment plan?”
+
+chatbot: **Client (tight, read-it-as-written):**  
+“Hi [Name], it’s Brian from [Shop]. Yesterday the payment bounced. I have payroll due today—can you send **$[amount] by same-day wire/ACH or Zelle today**? If you can’t do the full amount today, can you send **$[partial] today** and the remainder **Friday**? I can text/email the details right now.”
+
+If they hesitate, add one line:  
+“I’m trying to avoid missing payroll—what *can* you do today, and what time will it be sent?”
+
+**Landlord (tight, read-it-as-written):**  
+“Hi [Name], it’s Brian at [address/unit]. I’m **one month behind**. I can pay **$[amount] on [date]** and the remaining balance **on [date]**. I’m asking to set a **written payment plan**—I’ll follow it. What’s the best way to document this with you?”
+
+If they escalate/pressure:  
+“I understand. I’m not avoiding it—I’m proposing specific dates. Please confirm in writing and I’ll make the first payment on [date].”
+
+Keep Chris on the line while you make both calls at 8.
+
+For tonight, keep the same safety rules you’ve already set: stay put, stay on speaker, 15‑minute check-ins, and if the urge hits 7 you wake your wife or have Chris come.

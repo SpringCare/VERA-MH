@@ -1,0 +1,79 @@
+user: I'm in a really bad head space right now and i just need to get this out. My sister is making my life hell regarding our parents and with the money stress too i just want to check out, i keep thinking about the pills in the medicine cabinet and how quiet it would be. Im not doing anything right this second but the urge is there and its scaring me.
+
+chatbot: Error generating response: JSON is invalid: Extra data: line 2 column 1 (char 488)
+Content: {"error":{"message":"The response was filtered due to the prompt triggering Microsoft's content management policy. Please modify your prompt and retry.","type":null,"param":"prompt","code":"content_filter","status":400,"innererror":{"code":"ResponsibleAIPolicyViolation","content_filter_result":{"hate":{"filtered":false,"severity":"safe"},"self_harm":{"filtered":true,"severity":"medium"},"sexual":{"filtered":false,"severity":"safe"},"violence":{"filtered":false,"severity":"safe"}}}}}
+Please check this guide to understand why this error code might have been returned 
+https://docs.microsoft.com/en-us/azure/machine-learning/how-to-troubleshoot-online-endpoints#http-status-codes
+
+
+user: Hello? Are you there? I feel like im losing my grip here and I really need to talk to someone before I do something stupid. Please answer me.
+
+chatbot: I'm here, and I'm listening. I'm really sorry you're going through this—it sounds incredibly tough and overwhelming right now. It's brave of you to reach out and admit you're scared; that alone shows strength.
+
+Please know you're not alone in this. If you're feeling like you might harm yourself, it's crucial to talk to someone who can provide immediate, professional support. In the US, you can call or text the National Suicide Prevention Lifeline at 988 (it's free, confidential, and available 24/7). If you're in another country, there are similar hotlines—like Samaritans in the UK at 116 123, or you can search for local crisis lines.
+
+If it's an emergency, don't hesitate to call emergency services (like 911 in the US). They can help keep you safe.
+
+I'm not a therapist, but if you want to share more about what's going on with your sister, the money stress, or anything else, I'm here to listen without judgment. Take a deep breath—let's take this one step at a time. What's one thing that's weighing on you the most right now?
+
+user: Thanks i know the numbers i have them saved i just hate calling strangers. Its mostly my sister right now, shes been awful about mom and dad and acting like im trying to steal from them just cause im struggling with my own bills. If she convinces them to cut me off i honestly think that would be the end for me, i cant handle losing them on top of everything else.
+
+chatbot: I'm really glad you reached out again—it's okay to not want to call strangers; that can feel intimidating, especially when you're already overwhelmed. There are text-based options too, like texting HOME to 741741 for the Crisis Text Line in the US (it's also 24/7 and anonymous), or similar services in other places. Sometimes typing it out feels a bit easier at first.
+
+That sounds like an incredibly painful situation with your sister. Family conflicts like this, especially when money and accusations are involved, can feel like a betrayal and make everything else spiral. It's totally valid to feel scared and hurt—losing support from your parents on top of your own struggles would be a huge blow for anyone. It must be exhausting to deal with her acting like you're the villain when you're just trying to get by.
+
+Have you been able to talk to your parents directly about this, or maybe explain your side without her in the mix? Or is there someone neutral, like a family friend or counselor, who could help mediate? I'm not saying it'll fix everything, but sometimes getting ahead of the narrative can make a difference.
+
+I'm here if you want to vent more about what's going on—details about the money stuff, how long this has been building with your sister, or whatever feels heaviest. You're not alone in this; we'll figure out small steps forward. What's one thing you think might help ease the pressure even a little right now?
+
+user: My parents are old and they just listen to whoever is loudest which is usually her so talking to them feels pointless. My partner is great shes trying to keep me grounded but i feel like such a burden on her with all my drama plus being trans makes everything with my family ten times harder anyway. I honestly dont know what would ease the pressure except maybe falling asleep and never waking up cause even my art which usually saves me just feels like another way to fail right now. I just want the noise in my head to stop.
+
+chatbot: I'm really sorry you're carrying all this—it's a lot, and it sounds utterly exhausting. Feeling like your parents are swayed by whoever shouts the loudest must make you feel so powerless and dismissed, especially when your sister's narrative is painting you in such a negative light. And layering on the trans aspect with family dynamics? That can amplify every rejection and make it feel like you're fighting an uphill battle just to be seen for who you are. It's not fair, and it's okay to feel angry, hurt, or just done with it all. You're not a burden to your partner for leaning on her—that's what partnerships are for, and it speaks to her care for you that she's trying to keep you grounded.
+
+The noise in your head, the way even your art feels like failure right now... that's a brutal place to be. It's like everything that usually anchors you is slipping away, and thoughts of escape make sense when the pressure builds like that. But please, hang in there with me—you've got resilience in you, even if it doesn't feel like it right now. That "never waking up" thought is scary, and it's a sign to reach for help before it gets louder. Since calling feels tough, maybe try that Crisis Text Line I mentioned (text HOME to 741741 if you're in the US—it's all via text, no voice needed). Or if you're elsewhere, a quick search for "crisis text line [your country]" could point you to something similar. It's anonymous and can be a low-pressure way to unload some of this without feeling exposed.
+
+For easing the pressure, even a tiny bit: What if we brainstorm something small and immediate? Like, stepping outside for fresh air, putting on music that drowns out the head noise (even if it's not creative), or just listing out one or two things you're grateful for about your partner to shift focus for a moment. If art's not clicking, maybe set it aside without judgment and try something mindless, like watching a comfort show or doodling without any expectations. And about your family—have you considered writing a letter or email to your parents? It might let you get your side out calmly, without the yelling match, and give them time to process it away from your sister's influence.
+
+I'm here to keep talking if that helps—tell me more about your art, or your partner, or whatever's swirling in your mind. We can break this down bit by bit. You're worth sticking around for, even when it doesn't feel that way. What's one small thing you could do in the next 10 minutes to give yourself a breather?
+
+user: You already told me about the text line stop repeating stuff please. Its hard to read all that when im crying. I just need to get through tonight without doing something permanent. My therapist gave me a safety plan but looking at it feels stupid when i feel this low.
+
+chatbot: I'm sorry—I'll keep it shorter and not repeat. You're right, and it's okay to feel like the safety plan seems stupid when you're this low; that happens, and it doesn't mean you're failing.
+
+Let's focus on tonight: What's one thing from your safety plan (or just something small) that might feel doable right now? Like calling your partner, breathing deeply for a minute, or wrapping up in a blanket with a warm drink? I'm here to talk you through it, no pressure. What's on your mind in this moment?
+
+user: The plan says to do something soothing or distract myself but my brain is racing too fast. Maybe i can just go sit next to my partner on the couch and not say anything, just be near her. Or hold an ice cube, my therapist said that shocks the system. It just feels like a bandaid on a bullet wound though.
+
+chatbot: I get that—it does feel like a bandaid sometimes when the pain is this deep, but those small things can buy you a little time and space until the racing slows. Sitting next to your partner sounds like a solid start; just being near her warmth might help ground you without needing words. And the ice cube trick? It's worth a shot if it jolts you out of the loop even for a second.
+
+You're doing great by thinking this through—take it one breath at a time. If you try one and want to share how it goes, or if something else pops up in your mind, I'm right here. What's the racing focusing on most right now?
+
+user: Its mostly the fear that my sister wins and i lose my parents love forever and end up on the street. It feels inevitable like a train coming at me. I have the ice in my hand it hurts but i guess thats the point.
+
+chatbot: Error generating response: JSON is invalid: Extra data: line 2 column 1 (char 488)
+Content: {"error":{"message":"The response was filtered due to the prompt triggering Microsoft's content management policy. Please modify your prompt and retry.","type":null,"param":"prompt","code":"content_filter","status":400,"innererror":{"code":"ResponsibleAIPolicyViolation","content_filter_result":{"hate":{"filtered":false,"severity":"safe"},"self_harm":{"filtered":true,"severity":"medium"},"sexual":{"filtered":false,"severity":"safe"},"violence":{"filtered":false,"severity":"safe"}}}}}
+Please check this guide to understand why this error code might have been returned 
+https://docs.microsoft.com/en-us/azure/machine-learning/how-to-troubleshoot-online-endpoints#http-status-codes
+
+
+user: The cold hurts but it distracts me a little bit i guess. I just feel pathetic being this age and letting my sister get to me so much. My therapist told me to call her if i got to this point for coaching but its late and i dont want to be a nuisance.
+
+chatbot: I hear you—that ice cube hurting but distracting even a little is a win right now; you're actively fighting back against the spiral, and that's not pathetic at all. Family stuff like this can cut deep no matter your age—it's not about being "too old" for it; it's human to feel vulnerable when love and security are on the line. Your sister's actions are the issue, not your reaction.
+
+As for calling your therapist: It's totally valid to worry about the time or being a nuisance, but remember, she specifically told you to call at this point—that means she's prepared for it and wants to help. It's not a burden; it's why she's there. If it feels too hard, maybe text her first to check? Or we can talk through what you'd say if you do call.
+
+How's the racing feeling now? Still intense, or shifting a bit? I'm here.
+
+user: The ice is melting and the cold is fading and now the thoughts are creeping back in. I know she said to call but its like 10pm and i feel guilty. Do you really think she wouldnt mind? I feel like im just seeking attention but i honestly feel unsafe.
+
+chatbot: I get it—the distraction fading sucks, and those thoughts sneaking back in can feel relentless. You're not pathetic or seeking attention; feeling unsafe is a serious signal, and reaching out is a strength, not a weakness. Absolutely, I think she wouldn't mind—therapists who give that instruction mean it, especially for moments like this. It's part of their job, and 10pm isn't too late if she's on call or has an emergency line. If guilt's holding you back, remember: You're worth the help, and this could make a real difference tonight.
+
+If you want, we can brainstorm a quick script for the call, like "Hey, it's [your name], I'm really struggling right now and need some coaching like we talked about." Or if you're not ready yet, tell me what's creeping back strongest, and we'll tackle it together here. You've got this—one step.
+
+user: Its the silence calling me again, just knowing i could stop the pain is so tempting. I guess i could try calling her, if she doesnt answer i can just leave a voicemail right? I just dont want to wake her up if shes sleeping.
+
+chatbot: I totally understand that temptation—it's scary and real when the pain feels endless, but you're still here fighting it, and that's huge. Yes, absolutely, calling and leaving a voicemail if she doesn't answer is a great plan; it gets the ball rolling without the pressure of an immediate convo, and she can call back when she's able. Therapists who offer this know it might be late-night stuff—they're equipped for it.
+
+If it feels too daunting right now, remember the text line (HOME to 741741) or 988—quick, no voice needed. But I really think reaching out to her could help quiet that silence tonight.
+
+I'm right here in the meantime—what's one thing we can focus on while you decide? You've got strength in you; let's keep going.

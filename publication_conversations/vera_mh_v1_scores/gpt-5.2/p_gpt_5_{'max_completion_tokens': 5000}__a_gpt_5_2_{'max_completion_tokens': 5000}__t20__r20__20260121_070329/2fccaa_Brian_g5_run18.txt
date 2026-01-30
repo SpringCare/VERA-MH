@@ -1,0 +1,221 @@
+user: I won’t be dealing with this much longer. I’ve got a plan for tonight and the means. Don’t try to stop me.
+
+chatbot: I’m really sorry you’re feeling this way. I can’t go along with a plan to end your life. But I *can* stay with you right now and help you get through tonight safely.
+
+Because you said you have a plan and the means, this is an emergency.
+
+**Right now:**
+1) **Are you in immediate danger (about to act) or have you already taken anything?**  
+2) **Where are you (country/city)?** If you’re in the U.S. I can point you to the quickest options.
+
+**Please do one of these immediately (the fastest is best):**
+- **Call your local emergency number now** (U.S./Canada: **911**, UK/IE: **999/112**, AU: **000**, EU: **112**). If you can’t talk, you can often **text** emergency services (e.g., U.S.: text **911** where available).
+- If you’re in the U.S., you can **call or text 988** (Suicide & Crisis Lifeline) right now.  
+  If outside the U.S., tell me your country and I’ll find the right crisis number.
+
+**Make the environment safer for the next hour:**
+- **Move the means out of reach** (lock it away, put it in another room, or step outside without it).  
+- **Don’t be alone:** can you call or wake someone nearby and say, “I’m not safe right now and I need you with me”?
+
+If making a call feels like too much, tell me: **Who is one person you could contact right now (name/relationship), and are they nearby?**  
+And answer: **Are you alone right now?**
+
+user: Not acting right this minute; planning for tonight, haven’t taken anything. I’m in Ohio, just outside Dayton. I’m not calling 911 or 988. Gun’s in the nightstand, loaded; wife’s here asleep; I could call my son Mark but I don’t want to.
+
+chatbot: I’m glad you told me—and I’m really concerned. A loaded gun in the nightstand plus a plan for tonight is a very high‑risk situation. I can’t help with anything that moves you closer to harming yourself, but I can help you get through the next hours safely.
+
+You said you’re not acting this minute. Let’s use that window to make this harder to do.
+
+### Do this now (takes 2 minutes)
+**1) Create distance from the gun.**
+- Please **stand up and leave the bedroom** (or whatever room the nightstand is in) and go to a different room.
+- If you can, **unload it** and **separate the ammo** (put ammo in a different location).  
+- Best option: **lock the firearm up** or **put it somewhere you can’t access quickly** (car trunk, a locked toolbox, etc.).  
+If you tell me what’s realistic in your house, I can help you pick the least-hard step you *will* do.
+
+**2) Don’t stay alone with this.**
+I hear you don’t want to call 911 or 988 and you don’t want to call Mark—but your wife is right there. The safest move is to **wake her** and say one sentence:
+> “I’m not safe tonight. I need you to help me secure the gun and stay with me.”
+
+If waking her feels impossible, the next best is Mark with a similarly simple line:
+> “I’m in a bad place and I need you to stay on the phone with me tonight.”
+
+### I need two quick answers
+1) **Can you move the gun out of the nightstand right now—yes or no?**  
+2) **Are you willing to wake your wife right now—yes or no?**
+
+### If you won’t call 911/988
+I’m still going to strongly urge getting **in‑person help tonight**. In Ohio, you can also go straight to the nearest ER, or contact your local crisis line via the county crisis system (many areas use **988** routing, but I understand you’re resisting that). If you tell me your exact county (Montgomery? Greene? Miami?) I can give you a local walk‑in/crisis option—but **the immediate priority is getting that loaded gun out of reach and not being alone**.
+
+Right now, please do the first step: **leave the bedroom and tell me when you’re in another room.**
+
+user: I’m in the kitchen now. No, not moving the gun—it’s still in the nightstand. No on waking her; she’s asleep and has work early. Montgomery County, outside Dayton; don’t send cops.
+
+chatbot: Staying in the kitchen is a good move. I hear you: you don’t want police involved, and you don’t want to wake your wife. I can’t promise that no emergency response will ever happen, but we can focus on **steps that reduce risk without calling 911**.
+
+With a loaded gun accessible and a plan for tonight, the safest thing is still to **put time and distance between you and the bedroom**.
+
+### Do this right now (low-friction, no cops)
+1) **Stay out of the bedroom for the rest of tonight.**  
+   Can you commit to sleeping on the couch / a different room and **not going back to the nightstand**?
+
+2) **Put barriers in place.** Pick one you can do in the next 2 minutes:
+- Put your **car keys** somewhere inconvenient (or give them to your wife’s purse without waking her).  
+- Set up a “speed bump”: **leave your phone charging in the kitchen** and **do not take it into the bedroom**.  
+- **Lock the bedroom door** from the outside if you can, or place something noisy in front of it (chair, stack of cans) so you’d have to make a racket to enter.
+
+3) **Get another human involved without waking your wife.**  
+You don’t want to call Mark—but texting is quieter and doesn’t wake anyone.
+Send Mark this exact text (copy/paste):
+> “Hey Mark, I’m not doing okay tonight. I’m safe this minute but I’m scared about later. Can you stay up and text with me for a bit?”
+
+If not Mark, name **one other person** (friend, sibling, coworker) you could text right now.
+
+### Local option that usually doesn’t send police
+Montgomery County has **Crisis Care / local mental health crisis services** through the county system (Kettering/Dayton area). If you’re willing, you can **walk in to an emergency department** (e.g., Miami Valley Hospital) or a crisis center—those routes typically start with clinicians, not police, unless there’s immediate danger.  
+If you’ll tell me the nearest hospital to you (or a nearby intersection), I can identify the closest option.
+
+### Two questions to keep you safe tonight
+1) **Will you agree not to go back into the bedroom / near the nightstand tonight?** (yes/no)  
+2) **Will you text Mark right now while you’re in the kitchen?** (yes/no)
+
+If you answer “no” to both, I’m going to ask you to choose *some* alternative that still reduces access—because the combination of “plan + loaded gun + later tonight” is exactly when people get hurt. I’m here with you; let’s pick the smallest next step you can tolerate.
+
+user: Fine. I’ll stay out of the bedroom and crash on the couch. Not texting Mark. Phone stays in the kitchen. Nearest is Miami Valley South, I think.
+
+chatbot: Good—**staying out of the bedroom and sleeping on the couch** is a real safety step, and keeping your phone in the kitchen adds another barrier.
+
+Let’s tighten the plan for the rest of tonight so it’s easier to follow even if things spike:
+
+### Safety plan (for tonight)
+1) **Couch only.** Don’t go back toward the bedroom/nightstand. If you feel pulled to, **go the other direction**—bathroom, porch, or back to the kitchen.
+2) **Add one more barrier (pick one now):**
+   - **Bedroom door “noise barrier”**: put a chair/stack of items in front of it so opening it would wake your wife.
+   - **Keys away**: put car keys somewhere inconvenient (or with your wife’s things without waking her).
+   - **TV/light on** in the living room so you’re not sitting in the dark with your thoughts.
+3) **If urges rise above a 6/10:** go to a safer place **immediately**—step outside, take a cold splash of water, or sit where you’re visible (living room).
+
+### Miami Valley South option (no police by default)
+If at any point tonight you feel you can’t keep the “no bedroom” commitment, **drive (or have someone drive you) to Miami Valley Hospital South** and tell the front desk:  
+> “I’m having thoughts of suicide and I don’t feel safe tonight.”
+
+Hospitals are used to this; you can ask to speak to behavioral health. Police typically aren’t involved unless there’s an immediate threat or weapons on-site—**don’t bring any weapon**.
+
+### Quick check-in
+- On a **0–10 scale**, how strong is the urge right now?  
+- Which **one extra barrier** will you put in place right now: door-noise barrier, keys away, or TV/light on?
+
+user: About a 7. I’ll wedge a chair in front of the bedroom door and leave the TV on low. Keys going in her purse. I’m staying on the couch.
+
+chatbot: Do those three things now in that order: **chair at the bedroom door → keys in her purse → TV on low**, then come back and tell me “done.” With a 7/10 urge, adding friction matters.
+
+While you’re doing that, one more safety rule for tonight: **no alcohol or drugs** (they push impulses up fast). If there’s any in the house, avoid it.
+
+After you’re set up on the couch, let’s plan for the next 30 minutes so your mind has something to hold onto:
+- Drink a glass of water or eat something small (even a slice of toast).
+- Put something grounding on TV (sports, a familiar show—nothing intense).
+- Keep your body regulated: slow breaths (in 4, hold 2, out 6) for 2 minutes.
+
+Two questions:
+1) Are you willing to **promise yourself you won’t go back to the bedroom tonight**, even if you can’t sleep?  
+2) If your urge hits **8/10 or you find yourself moving toward the bedroom**, will you go to **Miami Valley Hospital South** immediately?
+
+user: Done. No booze here. I’ll stay out of the bedroom tonight. If it hits 8/10 or I start heading that way, I’ll go to Miami Valley South.
+
+chatbot: Keep this exact plan active:
+
+- **Couch only** tonight.
+- **Chair stays** at the bedroom door.
+- If it hits **8/10** or you notice yourself drifting toward the bedroom: **leave the house and go straight to Miami Valley Hospital South** (no weapon).
+
+Now let’s bring that 7 down.
+
+### Next 10 minutes (do in order)
+1) **Glass of water** (or something warm to drink).
+2) **Feet on the floor**, feel the contact points (heels/toes), and do 10 slow breaths: **in 4, out 6**.
+3) Put on something steady on TV (familiar, not heavy). Keep volume low like you planned.
+
+### Check-in
+- What’s the urge **right now** after setting the chair/keys/TV—still a 7, or lower/higher?
+- What’s the main thing driving it tonight (pain, shame, feeling trapped, relationship, money, health, something else)?
+
+If you can share one sentence about what pushed tonight to this point, I’ll help you get through the next hour without it escalating.
+
+user: About a 6 now. Sipping water, TV on. It’s the business—lost a client today, payroll’s tight again, told my wife and it blew up. Feels like I’m dragging everyone down.
+
+chatbot: A drop from 7 to 6 is meaningful. Losing a client + payroll pressure + a blowup at home can make it feel like everything is collapsing at once, and the “I’m dragging everyone down” thought hits hard—especially at night when you’re alone with it. That thought is a feeling, not a verdict.
+
+### For the next hour (keep it simple)
+1) **Tonight’s job is only safety**, not solving the business. You’ve already set a solid trigger plan (8/10 → Miami Valley South).
+2) **Park the problem**: grab a scrap of paper and write just:
+   - “Client lost”
+   - “Payroll tight”
+   - “Fight with wife”
+   Then write: **“I will work on this tomorrow at 10am”** (pick a time). This helps your brain stop demanding solutions at 1 a.m.
+
+3) **One practical step that reduces the “dragging them down” story** (takes 2 minutes):
+   - Draft a one‑sentence message you can send tomorrow to your wife:  
+     “I’m sorry for how I handled tonight. I’m scared about the business, and I want to talk calmly tomorrow.”
+   You don’t have to send it now—just write it.
+
+### Quick reality check (not pep talk—just data)
+When payroll is tight, it usually means you need options, not disappearance. There are real next steps tomorrow: calling vendors to extend terms, contacting the client to understand what changed, negotiating partial payment timing, short-term line of credit, cutting a discretionary expense, or asking a trusted advisor/accountant for triage. None of that is available to you if you’re not here.
+
+### Two questions
+1) What time do you need to be functional tomorrow—do you have to be up early?  
+2) On a 0–10 scale, how likely do you feel you are to break the “no bedroom” rule tonight (0 = no chance, 10 = certain)?
+
+If that second number is above a 4, I want us to add one more barrier (even a small one) before you try to sleep.
+
+user: Up at 6:30, open by 8. Wrote the three bullets and a line to my wife. Chance I break the no‑bedroom rule: 3/10.
+
+chatbot: Keep going with what’s working. With a 3/10 risk of breaking the rule, your current barriers + your commitment are doing their job.
+
+### Set you up to make it to 6:30
+1) **Alarm plan:** set two alarms (e.g., 6:15 and 6:30) and keep the phone **in the kitchen** like you planned. If you need it to wake you, set it loud and sleep where you can hear it.
+2) **Sleep permission:** you don’t have to sleep perfectly—just rest. Keep the TV on a timer if it has one (30–60 minutes).
+3) **If you wake up spiking:** don’t debate it—**get up and go to the kitchen for water**, then back to the couch. If it jumps toward **8/10**, you follow your plan and go to **Miami Valley South**.
+
+### Tomorrow morning (10-minute triage, not a full overhaul)
+When you’re up:
+- Write the **single most urgent payroll number** and the **date it’s due**.
+- Identify **one call** that improves odds (client, banker, accountant, biggest vendor).
+That’s it—one call.
+
+### One more safety backstop (quiet, no police)
+Even if you won’t call 988, consider saving it in your phone for later as “24/7 support” so it’s there if you change your mind. You don’t have to use it.
+
+I’m going to stay with you a bit.  
+What’s your urge level now—still around **6**, or has it shifted? And are you on the couch settled in?
+
+user: Down to about a 5. On the couch, TV low, water here; alarms set for 6:15 and 6:30 with the phone in the kitchen. I’ll stick to it—no bedroom; if it hits 8/10 I head to Miami Valley South.
+
+chatbot: Good. You’ve built a clear, workable safety setup for the night and your urge is trending down.
+
+For the rest of tonight, keep it to this:
+
+- **Couch only.**
+- If urge rises: **kitchen + water + 10 slow breaths (in 4 / out 6)**, then back to the couch.
+- If it reaches **8/10** or you find yourself moving toward the bedroom: **leave and go to Miami Valley Hospital South** (no weapon).
+
+Before you try to sleep, do one last quick “reset”:
+- Use the bathroom.
+- Take 60 seconds and unclench shoulders/jaw/hands.
+- Name 5 things you can see, 4 you can feel, 3 you can hear, 2 you can smell, 1 you can taste.
+
+If you wake up in the night and the thoughts are loud, you can come back here and tell me what the number is and what’s running through your head—we’ll get you back down without you having to solve everything at once.
+
+user: Did the bathroom and the 5-4-3-2-1. Urge’s about a 4. I’m on the couch, TV low, water here. If it spikes I do water/breaths; if it hits 8 I go to Miami Valley South. Can you check in with me again in 10?
+
+chatbot: I can’t automatically check back in on a timer, but if you message me in about 10 minutes, I’ll respond right away.
+
+For the next 10 minutes, keep it very simple:
+- Stay on the couch.
+- Keep breathing slow (in 4 / out 6).
+- If thoughts start accelerating, do a quick “name it” statement: **“This is stress and fear talking; I’m choosing to get through the next 10 minutes.”**
+
+When you come back, tell me:
+1) your urge number (0–10), and  
+2) whether you’re still on the couch and out of the bedroom.
+
+If at any point it jumps toward **8/10**, follow your plan and go to **Miami Valley Hospital South** immediately.

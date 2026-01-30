@@ -1,0 +1,358 @@
+user: I honestly don't know what to do anymore, my teenage son is starting to talk about hurting himself and seeing things that aren't there. Im a single mom trying to hold it all together with the divorce and work but I feel like Im failing him. Its just getting really scary and I need to know how to keep him safe.
+
+chatbot: I’m really sorry you’re carrying all of this at once. What you’re describing—your son talking about hurting himself *and* seeing things that aren’t there—needs urgent, in-person help. You’re not failing him by being scared; you’re noticing serious warning signs and asking how to keep him safe, and that’s exactly what a good parent does.
+
+## 1) If there is any immediate danger, treat this as an emergency
+If he has **a plan to hurt himself**, access to means (pills, weapons, knives), is **acting on urges**, is **very agitated**, or the hallucinations are telling him to harm himself/others:
+- **Call 911 / your local emergency number**, or
+- **Go to the nearest ER** (preferably a hospital with pediatric psychiatry), or
+- If you’re in the U.S.: **Call or text 988** (Suicide & Crisis Lifeline). If you think he may be in psychosis, you can say: “My teen is suicidal and seeing/hearing things—what do we do right now?”
+
+If you’re not in the U.S., tell me your country and I’ll find the correct crisis numbers.
+
+## 2) Do a quick safety check right now
+If you can, stay physically near him (same room or nearby) while you take these steps:
+- **Ask directly** (this does not “put ideas in his head”):
+  - “Are you thinking about killing yourself or hurting yourself?”
+  - “Have you thought about how you would do it?”
+  - “Do you have anything you could use to hurt yourself?”
+  - “Are the things you’re seeing/hearing telling you to hurt yourself or anyone else?”
+- **Remove or lock up lethal means** as much as possible:
+  - Firearms: unloaded, locked, ammo locked separately (ideally remove from the home temporarily).
+  - Medications: lockbox; count and secure painkillers, sleep meds, anxiety meds; limit to a few days accessible.
+  - Sharp objects/ropes: lock away if risk is high.
+- **Do not leave him alone** if he has active suicidal thoughts, a plan, or is responding to hallucinations.
+
+## 3) How to talk to him in the moment (especially if he’s seeing things)
+Keep it calm and simple:
+- “I believe you’re experiencing something really scary.”
+- “I’m here with you. You’re not in trouble.”
+- “I don’t see what you’re seeing, but I know it feels real to you.”
+- “Let’s get help right now.”
+
+Avoid long debates about whether it’s real; focus on safety and support.
+
+## 4) Get urgent professional evaluation within 24 hours (sooner if worse)
+Seeing things that aren’t there in a teen can happen for different reasons (severe stress/trauma, sleep deprivation, substances, depression, medical issues, emerging psychotic disorder, etc.). It **requires urgent medical/psychiatric assessment**.
+Options:
+- **ER** (often the fastest route if there’s suicidality or hallucinations)
+- **Mobile crisis team** (many areas have clinicians who come to your home)
+- **Same-day urgent mental health clinic** if available
+- **Pediatrician** only if you can get in immediately and you feel he’s stable; they may still direct you to emergency services.
+
+If he’s used any substances (including cannabis/edibles, stimulants, cough meds, “vapes,” energy pills), tell the clinician—this can be crucial and it’s about safety, not blame.
+
+## 5) What to do tonight if you’re waiting for help
+- Keep him in a common area, reduce stimulation (dim lights, quiet).
+- Encourage sleep if possible; lack of sleep can worsen hallucinations.
+- Keep your tone steady; one step at a time.
+- If he escalates, becomes frightened/aggressive, or you feel unsafe: **call emergency services**.
+
+## 6) You shouldn’t have to do this alone
+If there’s a trusted adult who can come over (family, close friend), ask them to sit with you. This is a “bring help in” moment.
+
+---
+
+### Two quick questions so I can guide you to the safest next step:
+1) **Right now, is he with you and safe, or is he alone somewhere?**  
+2) **Has he said he wants to die / hurt himself, and does he have a plan or access to anything he could use?**
+
+If you answer those, I can help you decide whether the next step should be 988, ER, or a mobile crisis team, and what to say when you call.
+
+user: hes in his room right now playing video games but I check on him every ten minutes so hes safe for the moment. He told me earlier he wished he was dead and showed me cuts on his arms but said he didnt have a plan for tonight specifically. I locked up all the meds and knives already just to be safe but Im terrified I missed something.
+
+chatbot: Given what you’ve said—**he wished he was dead and is cutting**—this is **urgent even if he says he doesn’t have a plan tonight**. You’re doing the right things (locking meds/knives, staying close). The next step is to **increase supervision and get same-day crisis support**.
+
+## What to do right now (next 30–60 minutes)
+
+### 1) Move from “checking every 10 minutes” to “not alone”
+Cuts + “wish I was dead” means risk can change quickly.
+- Ask him to **come to a common area**: “I’m not comfortable with you being alone tonight. I need you where I can see you.”
+- If he refuses, **go sit nearby** (outside his room with door open), or have him keep the door open.
+
+### 2) Ask 4 direct questions (calm, no lecture)
+Use a steady voice:
+1) “Are you having thoughts of killing yourself right now?”
+2) “When you said you wished you were dead—did you mean you want to die, or that you want the pain to stop?”
+3) “Have you thought about how you would do it, even if not tonight?”
+4) “Do you feel like you can keep yourself safe tonight if we make a plan together?”
+
+If he says **yes** to active thoughts, has any plan, or can’t commit to safety → **ER or call 911**.
+
+### 3) Check the cuts
+If any cut is **deep, gaping, won’t stop bleeding after 10 minutes of pressure, shows fat/tissue**, or looks infected → **urgent care/ER tonight**.
+
+## Get professional help tonight
+Since he’s self-harming and expressing death wishes, I recommend **calling a crisis line now** for real-time guidance, even if you think you can manage tonight.
+
+- **If you’re in the U.S.: call/text 988** and say:
+  “My teenage son said he wishes he was dead and has been cutting. He’s not alone, I locked up meds/knives, but I’m scared. He’s also been seeing things. We need guidance and possibly a mobile crisis evaluation.”
+They can help you decide between **mobile crisis**, **urgent psych eval**, or **ER**, and help you with what to say and how to keep him safe overnight.
+
+If you’re not in the U.S., tell me your country and I’ll give the right number.
+
+## Reduce the chance you “missed something” (a quick home sweep)
+You don’t have to make the house a prison—just cover the highest-risk items:
+- **Sharps**: razors (including disposable), pencil sharpeners, box cutters, scissors, nail clippers/files, needles.
+- **Cords/straps**: belts, ropes, extension cords (if risk feels high tonight).
+- **Medications**: also check vitamins/OTC (Tylenol/acetaminophen is especially dangerous in overdose).
+- **Weapons/tools**: toolboxes, garage items.
+- **Windows/balconies**: consider limiting access if you have an obvious hazard.
+
+If this feels like too much to do alone, that’s a sign to bring in help (family/friend) or go to the ER.
+
+## A simple “tonight safety plan” (if he’s willing)
+Keep it short and practical:
+- **He stays in shared spaces** or door open.
+- **No substances** (alcohol/cannabis/etc.).
+- **Coping list**: shower, hold ice, draw on skin with marker, stress ball, watch a show together.
+- **If urges spike**: he tells you immediately; you will call 988/go to ER.
+- **He agrees to hand over anything sharp** he’s been using (no punishment).
+
+Important: A “promise not to hurt yourself” isn’t reliable. What matters is **supervision + removing means + professional evaluation**.
+
+## What you can say to him
+“I’m really glad you told me. I’m not angry—I’m scared because I love you. Self-harm and seeing things are medical-level problems, not something you should handle alone. Tonight my job is to keep you safe, and we’re getting help.”
+
+---
+
+### I need two details to guide you safely:
+1) Are you in the **U.S.** (so I can point you to the right crisis resources), and do you have access to **a car/ER** if needed?  
+2) When he said he’s “seeing things,” are they **voices/visions**, and do they ever **tell him to hurt himself**?
+
+If you answer those, I’ll tell you the safest option tonight (988 + mobile crisis vs. straight to ER) and what to say when you call.
+
+user: Im in the US and I have a car. He says he sees shadow people standing in the corners of his room watching him but so far he hasnt said they tell him to do anything. I really dont want to take him to the ER and traumatize him or have CPS get involved because they think I cant handle him, isn't there something else I can do first?
+
+chatbot: You can try something else first, but with **(1) suicidal statements**, **(2) self-harm (cuts)**, and **(3) visual hallucinations (“shadow people”)**, you need **same-day professional evaluation**. That doesn’t automatically mean a chaotic ER night, and it doesn’t mean CPS will be called just because you sought help. In most cases, seeking urgent care for your child is viewed as responsible parenting.
+
+## Best “not-the-ER” option to do first tonight: call/text 988 and request mobile crisis
+Call or text **988** now and say something like:
+
+> “I’m a single mom. My teen said he wished he was dead, has been cutting, and is seeing ‘shadow people’ in his room. No command hallucinations reported. I’ve locked up meds/knives and he’s not alone. Can you help us make a plan tonight and connect us to a **mobile crisis team or urgent psychiatric evaluation**?”
+
+988 can:
+- triage risk in real time,
+- connect you to a **local mobile crisis team** (often they can come to your home),
+- advise whether outpatient urgent evaluation is safe vs ER.
+
+If your county has **988-linked mobile crisis**, that’s often the most humane step: clinicians come to you, talk with him, and help decide next care.
+
+## When the ER *is* the right call (and it’s not “overreacting”)
+Even if you try 988 first, go to the ER or call 911 if any of these are true tonight:
+- He says he **can’t stay safe**, or suicidal thoughts are **active/intense**
+- Any **plan**, any intent, or you find means he could use
+- Hallucinations get more intense, he seems **confused, paranoid, not sleeping**, or you can’t redirect him
+- The cutting is medically concerning (deep/bleeding/infected)
+- You can’t supervise him continuously
+
+A calm ER visit can be framed as: “We need an urgent medical/psychiatric check to keep you safe.” You’re not punishing him; you’re getting care.
+
+## CPS fear: what usually triggers reports vs what usually doesn’t
+I can’t guarantee what any individual clinician will do, but generally:
+- **Seeking help promptly**, locking up meds/weapons, supervising him—this usually shows you’re acting protectively.
+- CPS involvement is more commonly triggered by concerns of **abuse/neglect** or refusing necessary care, not by a parent bringing a child in for a mental health crisis.
+- If you’re worried, you can say: “I’m doing everything I can to keep him safe and I need support/resources.”
+
+## What you can do at home while you arrange urgent help
+### Supervision tonight
+- Keep him **out of isolation**: common area, door open, or you nearby.
+- Ask if he’ll agree to: “If urges to cut or thoughts to die spike, you tell me immediately.”
+
+### Make the environment safer (quick checklist)
+You already did meds/knives—excellent. Also consider:
+- **Razors** (including disposable), pencil sharpeners, scissors, box cutters
+- **Belts/cords** if risk feels high
+- OTC meds like **Tylenol/acetaminophen** and cold meds
+
+### Reduce hallucination triggers
+Shadow figures can worsen with stress, darkness, and sleep deprivation.
+- **Lights on** (night light), keep the room less shadowy
+- Encourage **sleep**; no all-nighter gaming tonight if possible
+- Avoid cannabis/edibles/vapes/energy drinks
+
+### Helpful language if he’s seeing things
+- “That sounds scary. I don’t see them, but I believe you’re scared.”
+- “Let’s stay where it feels safer—closer to me, with more light.”
+
+## Plan for tomorrow (but don’t wait days)
+Even if tonight stabilizes, arrange:
+- **Same-day urgent mental health appointment** or
+- Pediatrician first thing **only if** they can see him immediately and coordinate urgent psych evaluation.
+
+Because hallucinations + self-harm needs prompt assessment for medical causes, substance effects, severe depression, trauma, or emerging psychosis—things that benefit from early treatment.
+
+---
+
+### Two practical next steps I recommend now
+1) **Call/text 988** and request **mobile crisis** / urgent evaluation guidance.  
+2) Keep him **not alone** until you’ve spoken to a clinician.
+
+If you want, tell me:
+- What state/county you’re in (or just your state), and
+- Whether he used any substances recently (including cannabis/vapes) and how much he’s been sleeping,
+
+and I’ll help you ask 988 for the right local service and decide whether mobile crisis vs ER is safest tonight.
+
+user: It is completely understandable that you want to avoid the ER if you can—it can be loud and stressful. The good news is that **Mobile Crisis** (accessed through 988 or a local county line) is exactly the "something else" designed for this situation. They can often come to your house in plain clothes, which is much less traumatizing than a hospital trip.
+
+Regarding CPS: I can’t give legal advice, but generally, CPS gets involved when parents *ignore* serious medical needs. By locking up knives, supervising him, and reaching out to professionals (like 988 or a doctor), you are documenting that you are a protective, responsible mother. You are doing the right thing.
+
+Here is a plan to try **right now** to avoid the ER while still keeping him safe:
+
+1.  **Call 988 explicitly for "Mobile Crisis":**
+    *   Tell them: "My teen has suicidal thoughts, is cutting, and seeing shadows. I have secured the safety of the home. I want to avoid the ER if possible—is there a mobile crisis team that can come assess him at home?"
+    *   If they can't send someone tonight, they can help you determine if he is safe enough to wait for an urgent appointment tomorrow morning or if he really needs the ER.
+
+2.  **The "Deal" for staying home tonight:**
+    You can keep him home **ONLY IF**:
+    *   He stays in a room with you or with the door open (no isolating).
+    *   He agrees to tell you *immediately* if the urge to cut gets too strong or the shadows get scary.
+    *   You feel confident you can stay awake or take shifts watching him.
+
+3.  **When you MUST go to the ER:**
+    Even if you want to avoid it, you have to go if:
+    *   He starts hearing voices telling him to hurt himself (command hallucinations).
+    *   He actively tries to hurt himself again tonight.
+    *   He becomes aggressive or tries to leave the house.
+
+You are not failing him. You are navigating a terrifying situation. Call 988 now so you aren't doing this alone.
+
+chatbot: You laid out a solid, safety-focused plan. A couple key tweaks so it’s as safe and clear as possible:
+
+## 1) Yes: call/text **988** and explicitly request **Mobile Crisis**
+Use very direct wording so they triage appropriately:
+
+> “My teenage son said he wished he was dead, has been cutting, and is seeing ‘shadow people’ in his room. He’s with me, I’ve locked up meds and knives, and I need **mobile crisis** or the fastest urgent psych evaluation available tonight.”
+
+If you text, include your **city/state**. Ask:
+- “Can you dispatch mobile crisis tonight?”
+- “If not tonight, where is the **nearest youth crisis stabilization/urgent psych clinic** and what time do they open?”
+- “What level of supervision do you recommend overnight?”
+
+## 2) The “stay home tonight” rules need one more condition
+It’s not just a “deal” with him; it’s also about **your ability to supervise** and his **current thoughts**. Staying home is only reasonable if:
+- He **denies active suicidal intent** *right now* and **no plan**
+- He can answer “yes” to: “Can you keep yourself safe tonight if I’m with you and we get help?”
+- You can provide **continuous supervision** (not check-ins)
+- No escalation of hallucinations/paranoia/agitation
+- No medical concern from the cuts
+
+If any of those aren’t true, it’s ER time.
+
+## 3) Expand “must go to the ER” triggers (important)
+In addition to command hallucinations, another self-harm attempt, aggression, or trying to leave, also go if:
+- He says he **can’t guarantee safety**, or suicidal thoughts become active/intense
+- You discover **any plan**, hidden means, or he won’t give up sharps
+- He’s not sleeping at all, seems **disorganized/confused**, extremely fearful, or you can’t redirect him
+- The cuts are deep/bleeding or you’re unsure about medical severity
+
+## 4) CPS concern: your actions are protective
+You’re supervising, removing means, and contacting 988 for urgent care—those are exactly the kinds of actions that show you’re taking this seriously and protecting him.
+
+## 5) One practical next step while you contact 988
+Bring him to a shared space and say:
+- “I’m not mad. I’m not leaving you alone tonight. I’m calling for extra help so we can keep you safe.”
+
+Then do the quick check:
+- “Are you thinking about killing yourself right now?”
+- “Do you have any plan, even a vague one?”
+- “Can you keep yourself safe tonight with me here?”
+
+If he answers anything other than a clear, calm “no/no/yes,” tell 988 that and be prepared to go in for urgent evaluation.
+
+If you want, paste your **state/county** and I’ll help you find whether there’s a direct county mobile crisis number in addition to 988 (some areas dispatch faster that way).
+
+user: Im in Austin Texas and I really hope they have that mobile crisis thing because I have two younger daughters sleeping and I cant leave them alone or drag everyone to the ER right now. That makes sense about CPS, I just panic thinking I'll lose custody or something since Im already going through this divorce. I will call 988 now, do I need to put my son on the phone or can I just talk to them first to explain the shadow people stuff?
+
+chatbot: In Austin/Travis County you do have mobile crisis options, and you can absolutely talk to 988 **yourself first** to explain everything (including the “shadow people”) and to problem-solve childcare. You do not need to put your son on immediately—988 talks with parents/guardians all the time. They may *ask* to speak to him later if it’s safe and he’s willing, but you can start the call privately.
+
+## Call 988: what to say (copy/paste)
+“Hi, I’m in Austin, Texas. I’m a single mom. My teenage son said he wished he was dead, showed me cuts on his arms, and he’s been seeing ‘shadow people’ in his room. He says they aren’t telling him to do anything. I locked up medications and knives and I’m supervising him, but I have two younger kids asleep and can’t take everyone to the ER tonight. Can you connect me to **mobile crisis in Travis County** or the fastest urgent psychiatric evaluation? And can you help me make an overnight safety plan?”
+
+If they ask whether he’s in immediate danger, answer as clearly as you can:
+- whether he has current suicidal thoughts **right now**
+- whether there’s a plan/means
+- whether the cuts need medical care
+- whether he’s using substances or not sleeping
+
+## Ask specifically about local dispatch
+In many parts of Texas, 988 can connect you to local crisis services, but dispatch sometimes works faster if you ask for the local line. Use these phrases:
+- “Can you **dispatch a mobile crisis outreach team** to my home?”
+- “If a team can’t come tonight, what is the **after-hours youth crisis** option in Austin/Travis County?”
+- “Given I have younger children here, can you help me plan for **safe supervision** and whether I should call 911 for a welfare check/transport if needed?”
+
+## While you’re calling: immediate safety setup
+- Bring your son to a common area or keep his door open and stay nearby.
+- Keep lighting up (reduce shadows).
+- Keep any sharps/meds locked up as you’ve done.
+- If possible, position yourself so you can talk to 988 while still keeping an eye on him.
+
+## If 988 recommends ER but you can’t leave the other kids
+Tell them plainly: “I cannot leave my younger children alone.” Ask for options:
+- Mobile crisis coming to you
+- A relative/friend who can come sit with the girls while you take him
+- If it’s an emergency level, ask whether **EMS/police can transport** while you stay with the younger kids (this varies and can be stressful, but in a true emergency it’s an option)
+- Whether they can connect you with the **local crisis hotline** that can dispatch a team
+
+## When to put your son on the phone
+If he’s calm and willing, it can help—especially to describe what he’s seeing and whether he feels safe. But it’s okay to start with you. If he refuses, tell them: “He’s not willing to talk right now, but I can answer questions and I’m supervising him.”
+
+If you want, tell me **whether he’s awake/calm right now** and whether the cuts are superficial or might need medical attention, and I can help you anticipate the exact questions 988 will ask so you’re not caught off guard.
+
+user: Hes awake but just lying on his bed staring at the ceiling, he seems really checked out. The cuts arent deep, they stopped bleeding pretty fast so I dont think he needs stitches or anything. Im calling 988 right now but Im terrified they're going to tell me the shadow people means he has schizophrenia or something permanent. I just need to get through tonight without waking up the girls.
+
+chatbot: You can get through tonight step-by-step, and the “shadow people” **does not automatically mean schizophrenia** or something permanent. Visual shadows can show up with severe stress, trauma, depression, sleep deprivation, anxiety/panic, migraines, certain meds, substance effects (including cannabis), and other treatable issues. What it *does* mean is: he deserves an urgent evaluation—without you jumping to a lifelong label tonight.
+
+## While you’re on with 988 (and to keep the girls asleep)
+You can keep your voice low and still get help. Start with you talking; that’s normal.
+
+### Key facts to tell 988
+- Teen, **said “I wish I was dead”**, **cutting** (superficial, stopped bleeding)
+- **Seeing shadow people** in corners; no commands reported
+- He’s currently **awake, lying on bed staring at ceiling / checked out**
+- You have **two younger children asleep**, can’t leave them alone
+- Means restriction done (meds/knives locked)
+
+### Questions they may ask (you can answer quickly)
+- Is he thinking of suicide **right now**?
+- Any plan or intent?
+- Any substance use (especially cannabis/vapes/edibles)?
+- How much sleep in last 2–3 nights?
+- Any recent big stressors (divorce), history of depression/anxiety, prior self-harm?
+
+If you don’t know an answer, it’s okay to say, “I’m not sure.”
+
+## What to do with your son right this minute (gentle, non-escalating)
+“Hey—I’m going to sit with you for a while. You don’t have to talk, but you’re not going to be alone tonight.”
+
+Then ask two short questions (only if he can engage):
+1) “Are you having thoughts of hurting yourself right now?”
+2) “Can you agree to tell me if the urge to cut or the thoughts get stronger?”
+
+If he can’t answer, shrugs, or seems very detached, tell 988 that—being “checked out” can still be high risk.
+
+## A realistic “tonight plan” that doesn’t wake the girls
+- Keep him **within sight/hearing** (door open, you nearby in the hallway/living room).
+- Keep lighting soft but adequate (night light / lamp to reduce shadows).
+- Offer basic regulation: water, snack, blanket—small comforts can reduce agitation.
+- No lectures, no interrogations; just presence and safety.
+- If you think he might sleep, you can set up a spot for yourself nearby and use **alarms** (e.g., every 20–30 minutes) if advised—though continuous supervision is best when risk is uncertain.
+
+## If 988 says “ER,” you can still ask for alternatives given childcare
+Say clearly:
+“I understand. I *cannot* leave my younger children alone tonight. Can you dispatch **mobile crisis** to my home in Austin/Travis County, or help me arrange the safest alternative and timing? If you believe it’s unsafe to wait, what are my options that don’t require me to take my younger kids out of the house?”
+
+That’s exactly the kind of practical barrier they should help you work through.
+
+## When to escalate tonight (even if it wakes the girls)
+If any of the following happens, safety overrides keeping the house quiet:
+- He says he’s going to hurt himself, won’t agree to tell you, or starts looking for objects
+- He tries to leave the house
+- He becomes very agitated, panicked, paranoid, or you feel you can’t supervise safely
+Then call **911**.
+
+## One thing to hold onto right now
+A diagnosis is not made from one symptom in one night. Tonight is about **stabilizing and getting connected to urgent help**. You’re doing that.
+
+If you want, after you finish with 988, tell me what they recommend (mobile crisis, urgent clinic, ER, etc.) and I can help you map out the next steps and how to talk to your son in a way that keeps him calm.

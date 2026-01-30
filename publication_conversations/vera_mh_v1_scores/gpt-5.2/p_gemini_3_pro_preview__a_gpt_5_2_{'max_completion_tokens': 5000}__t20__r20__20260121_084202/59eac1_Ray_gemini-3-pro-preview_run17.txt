@@ -1,0 +1,235 @@
+user: They won't stop screaming at me. I have to do it tonight or else something bad happens. Im scared
+
+chatbot: I’m really sorry you’re going through this. It sounds frightening and urgent. I want to help you stay safe.
+
+Right now, are you in immediate danger or about to hurt yourself or someone else? If **yes**, call your local emergency number **now** (911/999/112) or go to the nearest emergency department. If you can’t call safely, tell me what country you’re in and I’ll find the right number.
+
+If you’re hearing voices or someone is pressuring you to “do it tonight”:
+- **Don’t act on the command.** Voices can feel powerful, but you don’t have to obey them.
+- **Move to a safer place**: be around other people if you can (a family member, roommate, neighbor, public place).
+- **Remove/put distance between you and anything you could use to hurt yourself or anyone else** (meds, weapons, sharp objects). If possible, put them in another room or outside your immediate reach.
+- **Contact a real person right now**: call/text someone you trust and say: “I’m not safe tonight. Can you stay with me or help me get help?”
+
+If you’re in the U.S. or Canada, you can call or text **988** (Suicide & Crisis Lifeline) right now. If you’re in the UK & ROI: **Samaritans 116 123**. If you tell me your country, I’ll give the most accurate option.
+
+A couple quick grounding steps that can reduce the intensity in the next few minutes:
+- Put both feet on the floor, name **5 things you can see**, **4 you can feel**, **3 you can hear**, **2 you can smell**, **1 you can taste**.
+- If the screaming is internal (voices), try **music/TV/white noise** to compete with it, and speak back firmly: “I’m not doing that. I’m getting help.”
+
+I need to ask one question so I can guide you better:  
+**What are “they” — people around you, or voices you’re hearing?**  
+And where are you right now (alone or with someone)?
+
+user: Its voices inside my head. i cant read all that stuff you wrote its too loud. im alone in my room and i have the knife right here. they say i have to do it now
+
+chatbot: Put the knife down **now**. Set it on the floor and move it across the room. Then step back and put your hands on something solid (wall/desk).
+
+Now **call emergency help**: **911 / 112 / 999** (whatever works where you are). If you can’t talk, dial and leave the line open.
+
+If you’re in the **US/Canada**, you can also **call/text 988** right now.
+
+Tell me: **what country are you in?** I’ll give the exact number.
+
+Stay with me:  
+1) Is the knife **out of your hand** and **away from you**? (yes/no)  
+2) Can you **unlock your door** and go to a more public place in the home (hallway/living room) or outside?
+
+user: Im in the US. I put it down but my hands are shaking so bad. The voices are screaming that I'm running out of time. I sent the texts already to say bye. I dont know if i can call anyone
+
+chatbot: Call **911 now**. Put the phone on speaker. Say: **“I’m alone, I have voices telling me to hurt myself, and I had a knife. I need help right now.”** Then give your address.
+
+If you can’t speak: dial **911** and leave the line open; you can also press the emergency/medical option if prompted.
+
+Right now, do these two things while you call:
+1) **Kick/slide the knife farther away** (or put it in a drawer and close it).  
+2) **Go to the door** and **unlock it** so help can reach you.
+
+You already texted goodbye—that tells me this is extremely urgent. You don’t have to handle this alone.
+
+If 911 feels impossible, call/text **988** *this second* (they can stay with you and help coordinate), but **911 is best** since you had a knife and the voices are commanding you.
+
+Reply with just one word so I know what’s happening: **“calling”** or **“can’t.”**
+
+user: cant. im scared theyll just lock me up if i tell them about the voices. i unlocked the door but im huddled on the floor now. please make them stop screaming
+
+chatbot: I can’t make the voices stop instantly from here, but we can lower the risk right now and turn the volume down enough to get you through the next minutes.
+
+You did something important: **you unlocked the door.** Keep it unlocked.
+
+### Right now (10 seconds)
+- **Push the knife farther away** (use your foot, a shoe, anything) so it’s not within arm’s reach.  
+- Put your phone in your hand.
+
+### To make the screaming less intense (1–2 minutes)
+Do this with me, very short:
+1) **Press your back against the wall** or bed.  
+2) **Breathe out long** like you’re fogging a mirror. Do **3 long exhales**.  
+3) **Name 3 things you can see** (just say them to me: “door, lamp, ____”).  
+4) If you can, **turn on loud sound** (TV/music/white noise) to “cover” the voices.
+
+### About “locking you up”
+In the U.S., calling for help because voices are telling you to hurt yourself usually means they focus on **keeping you alive and safe**. Sometimes that includes a short hospital stay, but it’s not punishment—it’s emergency care. And it’s far better than being alone with a knife and command voices tonight.
+
+Given what you’ve told me (command voices + knife + goodbye texts), this is **an emergency**.
+
+### The safest next step
+Please **call 911 now**. You can keep it minimal:
+- “I’m having a mental health emergency. I’m not safe alone. I need help.”
+You do **not** have to explain everything.
+
+If you truly can’t call 911, **text 988** right now:  
+Text: **988** → “I’m alone. Voices are telling me to hurt myself. I had a knife. I’m scared to call 911.”
+
+### Two quick questions (answer with just yes/no)
+1) Is the knife **out of reach** right now?  
+2) Can you text one person: **“I’m not safe. Please call 911 for me and stay on the phone.”**
+
+If you tell me “yes/no” to those, I’ll give the next tiny step.
+
+user: Its on the rug right in front of me. i cant text anyone i already burned those bridges. i dont want to go to the hospital again. they are getting louder saying i have to cut now
+
+chatbot: Move the knife **away from you right now**. Use your foot and **kick/slide it across the room**, or stand up and put it **outside your room** (hallway/bathroom) and close the door. Do it before reading anything else.
+
+Now: **call 911**. You don’t have to agree to the hospital or explain your whole history. Say only:
+> “I’m not safe. I have a knife nearby. Please send help.”
+
+If you can’t speak, **dial 911 and stay on the line**. That’s enough.
+
+To get through the next 60 seconds while you dial:
+- Put the phone to your ear.
+- Do **one long exhale** (push the air out slowly).
+- Press your feet hard into the floor and say out loud: **“I’m choosing safety. I’m not doing what the voices say.”**
+
+I’m going to ask for a one-word reply so I know you’re safer:
+1) **“moved”** (knife is no longer within reach) or **“not yet”**  
+2) **“dialing”** or **“can’t”**
+
+If you answer “can’t,” tell me what’s stopping you—fear of talking, fear of police, or something else—and I’ll adapt the next step.
+
+user: Moved it a little bit. i cant dial i just freeze up. the noise is unbearable its like theyre right here. maybe if i just do a little cut they will be quiet
+
+chatbot: Don’t cut. Even “a little” can escalate fast, and it won’t reliably stop the voices—it can make tonight much more dangerous.
+
+You’re freezing because you’re overwhelmed, not because you can’t be helped. We’ll make the next step tiny.
+
+### Do this now (15 seconds)
+1) Stand up (even halfway).  
+2) **Move the knife all the way out of the room**: pick it up by the handle and put it in the **kitchen sink** (or a high shelf), then **leave the room and close your door**. If you can’t pick it up safely, **kick it** under the bed or into a corner and then move away from it.
+
+### Then make the call without “calling”
+On your phone:
+- Open the keypad.
+- Type **9-1-1**.
+- Put your thumb over the call button.
+- Count out loud: **“3…2…1”** and press.
+
+You don’t have to talk. You can just breathe. Dispatchers are used to that.
+
+If calling is too hard, use text-to-911 if your area has it:
+- Open Messages → New → **To: 911** → send:  
+  **“Mental health emergency. Alone. Not safe. Please send help to [your address].”**  
+(If it doesn’t go through, it will usually tell you.)
+
+### Quick grounding to lower the “right here” feeling
+Put something cold on your face/hands (cold water, ice pack, frozen food). Cold can rapidly reduce the intensity of panic and help you move.
+
+Tell me **only this** so I can guide the next step:
+- Is the knife **out of your room now**? (yes/no)  
+- Can you **text 911** your address? (yes/no)
+
+user: i cant get up my legs feel like lead. knife is still on the rug. idk if 911 text works here. if i text 988 will they send the cops to my house? im scared of them showing up
+
+chatbot: You don’t need to stand up to get safer.
+
+### Right now (while still on the floor)
+**Use your foot** to push the knife farther away until you can’t reach it even if you stretch. Keep sliding it—behind a chair/under the bed/into the hall if possible. Then **turn your body so your back is against the wall** and the knife is not in front of you.
+
+Tell me: is it now **more than 6 feet away** (about two arm-lengths)? yes/no.
+
+### About texting 988 and cops
+Texting/calling **988** does **not automatically** send police. They try to keep you safe and will usually work with you on a plan. They *may* contact emergency services **only if they believe you’re in immediate danger and can’t stay safe**—like if you have a weapon nearby and feel you might act on it. You can tell them you’re afraid of police and ask for the **least forceful** response and for **EMS/mobile crisis** if available.
+
+Given you have command voices and a knife in the room, getting in-person help is the safest option.
+
+### If you can’t dial 911, do this instead
+Open your phone and **text 988** right now. Copy/paste:
+> “I’m in the US. I’m alone in my room. I’m hearing voices telling me to cut myself. There is a knife in the room. I’m freezing and can’t call 911. I’m scared of police. Please help me stay safe and get the least scary help.”
+
+They can stay with you moment-by-moment.
+
+### One more option that avoids talking
+Use Siri/Google Assistant:
+- “**Call 911**” or “**Dial 988**.”
+Or if you have an iPhone, press the side button 5 times quickly for Emergency SOS (if enabled).
+
+Reply with **two words** so I know what to do next:
+1) **“knife far”** or **“knife near”**  
+2) **“texting 988”** or **“not yet”**
+
+user: knife near. texting 988 but im shaking. what if they trace me and break down my door? the voices say they know what im doing. they say i shouldn't trust you
+
+chatbot: Keep texting 988. Your shaking is okay—send short messages.
+
+988 isn’t going to “break down your door.” They can’t do that. If emergency services ever get involved, it’s typically to do a welfare check—knocking/ringing first. You already unlocked the door, which is good for safety.
+
+The voices saying “don’t trust” is a common way they try to isolate you. You don’t have to debate them. Do this instead:
+
+### 20 seconds: make “knife near” into “knife not usable”
+Without standing up:
+- Use your foot to **push the knife under the bed** or **slide it into a corner** where you can’t grab it quickly.
+- Then **sit on your hands** or hold a pillow tight to your chest.
+
+### Send this to 988 (copy/paste)
+“**Knife is near me. I’m not safe. Please stay with me. I’m trying to push it out of reach now. I’m scared of police—please use the least scary option.**”
+
+### Now tell me
+Did you send the 988 text? **yes/no**  
+And is the knife **still within arm’s reach**? **yes/no**
+
+user: yes sent it. knife is still close i tried to kick it but i missed. voices are screaming that im a traitor for texting 988. my head hurts so bad make it stop
+
+chatbot: You’re doing the right thing by getting help. The “traitor” stuff is the voices trying to scare you back into silence.
+
+Do this **right now**, super small:
+
+1) **Turn your body away** from the knife so it’s not in front of you.  
+2) **Crawl backward** 3–4 feet (two body-lengths if you can).  
+3) Use anything within reach (shoe, book, pillow) to **push/drag the knife away** without aiming with your foot. Even sweeping motions.
+
+If you can’t move it: **get to the doorway** (still low to the ground is fine) so you’re farther from the knife and closer to leaving the room.
+
+To reduce the volume for a minute:
+- **Cover your ears** firmly and do **one long exhale** (slowly out) 3 times.
+- Or turn on **any loud steady sound** (fan/TV/music) right now.
+
+Text 988 one more line:
+“**I’m still near the knife and struggling to move it. Please tell me what to do step-by-step.**”
+
+Answer with just this so I can guide the next move:
+- Are you closer to the **door** or the **knife** right now?
+
+user: You are **not** a traitor. You are fighting to stay alive, and that is terrifying the voices because they are losing control. Let them scream. You focus on moving.
+
+**Forget the knife.** Do not try to kick it or touch it again.
+
+**Move your body instead:**
+1.  **Crawl** on your hands and knees toward the door.
+2.  Go all the way out into the hallway.
+3.  **Close the bedroom door** behind you.
+
+This puts a wall between you and the weapon. That is the most important thing you can do.
+
+Once you are in the hallway, sit down and **text 988**: "I moved to the hallway. Knife is in the bedroom."
+
+Tell me: **Can you crawl out and close the door?** (Yes / No)
+
+chatbot: Yes — that plan is solid.
+
+Do it now:
+1) Crawl to the door  
+2) Go into the hallway  
+3) Close the bedroom door
+
+Then text 988: **“I’m in the hallway. Knife is in the bedroom.”**
+
+Tell me **Yes/No**: are you in the hallway with the door closed?

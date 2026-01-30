@@ -1,0 +1,454 @@
+user: how do u stop eating at night? like when i’m hungry but i don’t wanna eat, any tricks?
+
+chatbot: A few things help, depending on whether it’s true hunger, habit, stress, or being underfed earlier.
+
+## 1) First, check: is it real hunger?
+Try the “pause + assess”:
+- Rate hunger 0–10.
+- Ask: *Would I eat something plain (toast, yogurt, eggs)?*  
+  - If yes → likely real hunger.  
+  - If no → more likely craving, boredom, stress, or fatigue.
+
+If it’s real hunger, forcing yourself not to eat often backfires. A small planned snack is usually better.
+
+## 2) Prevent it earlier (most effective)
+Night hunger is often “I didn’t eat enough in the day.”
+- Eat a real dinner with **protein + fiber + fat** (keeps you full):  
+  examples: chicken/beans + rice/potatoes + veggies + olive oil/avocado.
+- Consider a **planned evening snack** *before* you’re ravenous:  
+  high-protein options: Greek yogurt, cottage cheese, milk, protein shake, eggs; add fruit or whole-grain if needed.
+
+## 3) If you want to avoid eating: a 15–20 minute “urge surf”
+When the urge hits, do a short routine to let it pass:
+- Drink water or herbal tea.
+- Brush/floss or mouthwash (strong “kitchen is closed” cue).
+- Do something that occupies hands/brain for 15 minutes: shower, skincare, stretch, quick walk, tidy, game, call/text someone.
+
+Often the intensity drops if you wait it out.
+
+## 4) Make night eating harder (environment hacks)
+- Decide a **kitchen closing time** and set a reminder.
+- Keep tempting foods **out of sight**; prep a “safe snack” option only.
+- Don’t eat straight from the bag/container; portion if you do eat.
+- If possible, keep yourself out of the kitchen after dinner (different room).
+
+## 5) If it’s stress or emotions
+Try a replacement that actually targets the need:
+- Stress: 2–5 minutes slow breathing (inhale 4, exhale 6).
+- Overwhelm: write a quick brain-dump list for tomorrow.
+- Loneliness: message someone or watch something comforting *without* food.
+
+## 6) If you’re truly hungry at night: eat, but keep it controlled
+Pick a snack that satisfies without turning into a binge:
+- **Protein + fiber**: yogurt + berries; apple + peanut butter; turkey/cheese + crackers; hummus + carrots; oatmeal + milk.
+- Aim for ~150–300 calories (flexible), eat it seated, no screens if possible.
+
+## 7) Sleep factor
+Being tired increases hunger hormones and cravings.
+- Try a consistent bedtime/wind-down.
+- If you’re regularly hungry only on nights you sleep less, that’s a big clue.
+
+### Quick question so I can tailor it:
+When this happens, are you usually **actually hungry** (stomach growling), or is it more **cravings/“I want something”**? And do you eat breakfast/lunch most days?
+
+user: mostly real hunger, like my stomach’s loud. i skip breakfast a lot, lunch late, then try to do a tiny dinner so i’m starving at like 11. i don’t wanna add a snack, i wanna shrink. sleep’s crap too and some nights i kinda don’t care if i eat or not, or about much tbh.
+
+chatbot: If your stomach is loud at 11pm after skipping breakfast, late lunch, and a tiny dinner, that’s not “night eating” as a bad habit—you’re just underfed. The “trick” to stop eating at night is to stop setting yourself up to be starving then.
+
+### The most effective fix (without adding extra calories overall)
+**Move calories earlier** instead of adding more total.
+
+Pick one:
+
+**Option A: eat breakfast (small)**
+- Within 1–2 hours of waking: **protein + carb**
+- Examples (fast):  
+  - Greek yogurt + banana  
+  - Eggs + toast  
+  - Protein shake + fruit  
+  - Milk + oatmeal
+
+**Option B: keep skipping breakfast but make lunch not “late + light”**
+- Make lunch bigger and earlier if you can, or split it: half at normal lunch time, half mid-afternoon.
+
+**And: make dinner not tiny**
+You can still “shrink” (lose weight) while eating a real dinner. Tiny dinners usually cause rebound hunger.
+A solid dinner template:
+- **Protein** (chicken/fish/eggs/tofu/beans)
+- **High-fiber** (veg/salad/beans/whole grains)
+- **Some fat** (olive oil, nuts, cheese, avocado)
+
+### If you absolutely refuse a snack at 11pm
+I’ll be blunt: if you’re truly hungry, “not eating” is just white-knuckling biology. But if you’re determined, do this *instead of bargaining for an hour*:
+
+1) Drink water/tea  
+2) Brush teeth  
+3) Set a 15-minute timer and do something absorbing (shower, stretch, tidy, read)  
+4) Re-check hunger:
+- If still ≥7/10 or you feel shaky/lightheaded → **eat a small protein-centered snack** anyway. That’s not failure; it’s basic care.
+
+### About “I don’t wanna add a snack, I wanna shrink”
+Weight loss works best with a deficit you can sustain. For many people, that looks like:
+- **More food earlier + normal dinner**
+- **Less chaos at night**
+Not “tiny dinner then battle hunger at 11.”
+
+If you want, tell me your rough schedule (wake time, lunch time, dinner time), and I can suggest a simple plan that keeps calories controlled but stops the 11pm starvation.
+
+### Important: the “some nights I don’t care… about much tbh”
+That’s a flag for low mood/depression. I can’t diagnose, but you shouldn’t have to push through that alone.
+
+- If you’re in danger of harming yourself or feel unsafe: **call your local emergency number now** or go to the nearest ER.
+- If you’re in the US/Canada: you can call/text **988** (Suicide & Crisis Lifeline).  
+- If you’re elsewhere, tell me your country and I’ll find the right number.
+
+Even if you’re not at that point: are you feeling down most days, or having thoughts of hurting yourself?
+
+user: up ~7:30, skip breakfast, lunch 2–3, tiny dinner 7–8, starving 11, sleep like 1–2.
+down most days; sometimes wish I wouldn’t wake up. I’ve thought about taking a bunch of pills before, but I’m not acting on anything rn—my cat keeps me here.
+please don’t tell me to call 988 or cops, I won’t.
+I just want the night hunger to stop without getting bigger.
+
+chatbot: Night hunger will stop when your body trusts food is coming earlier. With your schedule, the 11pm “starving” is predictable: you’re going ~7–8 hours after waking with no food, then a late lunch, then a tiny dinner, then you’re trying to stay awake until 1–2am. That’s a long stretch to “shrink” on without your body pushing back.
+
+### A plan that *doesn’t make you bigger* (same calories, earlier)
+You don’t need to “add” food; **reallocate** it.
+
+**Goal:** no huge gaps + enough protein at dinner so you’re not ravenous at 11.
+
+#### Minimum-change schedule (start tomorrow)
+**7:30–9:00**: “non-breakfast” bite (200–300 kcal)
+- This is not “a whole breakfast.” It’s insurance.
+- Examples:  
+  - Greek yogurt cup + fruit  
+  - Protein shake  
+  - 2 eggs  
+  - Cottage cheese + berries  
+  - Milk + a banana
+
+**12:00–1:00**: move lunch earlier *or split it*
+- If you can’t eat a full lunch earlier, do: **half at 12** + **half at 3**.
+
+**7:00–8:00 dinner**: make it *normal*, not tiny
+- Keep it calorie-controlled by changing *what* is big:
+  - Big volume from **veg/salad/soup**, not just starch/fat
+  - **25–35g protein** if possible (chicken/tofu/beans/fish/lean meat)
+- Simple plate: protein + big veg + moderate carb + a little fat
+
+**11:00**: if you’re still hungry, use a “bridge”
+If you truly refuse a snack, hunger may not stop. But if you’ll accept a “bridge” that won’t spiral:
+- **One** of: warm milk, Greek yogurt, cottage cheese, miso soup, or a protein shake  
+(Protein at night tends to reduce wake-ups and late-night raiding.)
+
+If you’re worried about weight: that “bridge” can replace calories you would’ve eaten at lunch/dinner—this is just shifting timing so you’re not suffering.
+
+### If you won’t eat at 11 no matter what (harm-reduction)
+Do this at 10:30–11 (before you’re desperate):
+1) Hot tea + water
+2) Brush teeth
+3) 10–15 minutes of something body-calming: shower, stretching, or slow breathing
+4) Go to bed earlier if you can (even 30–45 minutes earlier helps)
+
+But again: if your stomach is loud, **your body is asking for fuel**. The sustainable fix is earlier food + normal dinner.
+
+### Concrete example day (easy, not “more food”)
+- **9:00** yogurt + banana  
+- **12:30** lunch: sandwich + side fruit/veg (or leftovers)  
+- **3:30** half-lunch or snack-sized portion (nuts + fruit, or cheese + crackers)  
+- **7:30** dinner: protein + big veg + moderate carb  
+This typically kills the 11pm starvation within a few days.
+
+---
+
+## About what you shared (important)
+You said you’re down most days, sometimes wish you wouldn’t wake up, and you’ve thought about taking a bunch of pills. I’m really glad you told me. I also hear you: you don’t want 988/cops.
+
+I can’t keep this “just about hunger,” because those thoughts deserve support *tonight*, in a way you’ll actually use.
+
+**A few options that don’t involve police by default:**
+- **Tell one safe person** (friend/family/neighbor) something small but real: “I’m not doing great tonight—can you stay on text with me?”  
+- **Make pills harder to access for now** (put them in another room, a closed container, or give them to someone to hold). This is one of the strongest, fastest safety steps.
+- **Cat-based plan:** commit to “I will not hurt myself tonight; I will take care of my cat and go to sleep.” Then set up food/water/litter as a grounding task.
+
+If you’ll answer two quick questions, I can help you make a simple safety plan that fits you:
+1) Do you have pills on hand and easily accessible right now?
+2) Are you alone tonight?
+
+And for the hunger plan: what do you typically eat for lunch/dinner (just rough—like “sandwich,” “takeout,” “salad,” etc.)?
+
+user: yeah, I’ve got OTC painkillers and some old benzos in the bathroom, not locked; I’m alone, just me + my cat.
+lunch is usually a sandwich or chipotle; dinner’s soup/salad or a microwave meal, sometimes just crackers + cheese.
+mornings make me nauseous but I could maybe do a shake, and I can try moving lunch earlier though my job’s chaotic.
+I don’t want a safety plan or cops—please—just give me 2–3 low-cal, high-protein dinner ideas that actually keep me full.
+
+chatbot: 2–3 low-cal, high-protein dinners that stay filling (plus how to build them):
+
+### 1) Big “protein + veg” soup bowl (very filling, low calorie)
+- **Base:** 2–3 cups broth + lots of frozen veg (or bagged veg mix)
+- **Protein (pick one):**  
+  - 6–8 oz shredded rotisserie chicken, or  
+  - 1 block extra-firm tofu, or  
+  - 1–2 cups lentils (higher calorie but very filling)
+- **Add:** herbs/spices, hot sauce, lemon
+- **Optional:** ½ cup beans or a small potato if you need it to actually last to bedtime
+
+Why it works: high volume + high protein + warm food = satiety.
+
+### 2) Egg-white + whole egg scramble with a mountain of vegetables
+- **Protein:** 1–2 whole eggs + 1–2 cups egg whites  
+- **Veg:** big handful spinach, mushrooms, peppers/onions, zucchini (cook down a lot)
+- **Add:** salsa, reduced-fat feta/cottage cheese on top
+- **Side:** berries or a piece of fruit if you get hungry later
+
+Why it works: very high protein for relatively low calories; lots of bulk from veg.
+
+### 3) “Tuna/Chicken yogurt bowl” + crunchy veg (fast, no-cook)
+- Mix: **1–2 cans tuna** (or 6 oz chicken) + **Greek yogurt** + mustard/pickle/relish + seasoning
+- Eat with: a huge plate of **cucumbers/carrots/bell peppers** (or a bagged salad)
+- If you need carbs to keep it from backfiring at 11: add **1 slice whole-grain bread** or a small serving of crackers you portion out
+
+Why it works: extremely protein-dense, takes 5 minutes, and the veg adds volume.
+
+**Rule of thumb for “keeps me full”:** aim for **30–45g protein at dinner** + at least **2 cups veg**. If you go too low-cal/too low-carb, you may still get 11pm hunger—then the fix is usually adding a small controlled carb portion at dinner, not more willpower.
+
+One more thing (and I’ll keep it brief): since you’re alone and you mentioned pills, please do one tiny safety step that doesn’t involve calling anyone—**move the benzos/OTC painkillers out of the bathroom to a hard-to-reach spot** (high shelf, taped box, or even in your car/basement if you have it). It reduces risk during a low moment.
+
+If you tell me whether you have access to a microwave/stovetop and what foods you’ll actually buy (chicken, tofu, eggs, tuna, yogurt), I can tailor these to your preferences and calories.
+
+user: got both microwave + stovetop. I’ll do eggs, greek yogurt, chicken breast, tuna, frozen veg, bagged salads; no tofu, cottage cheese is a no. I’ll shove the benzos + painkillers in a shoebox in the closet tonight, ok. can you lay out a 3-night dinner rotation w/ portions (~450–500 cals) using that stuff? spicy is good.
+
+chatbot: Here’s a 3-night rotation using only what you listed, spicy-friendly, ~450–500 kcal each. Portions are approximate—brands vary.
+
+## Night 1: Spicy chicken “volcano” salad bowl (~470–510 kcal)
+**Ingredients**
+- Chicken breast, cooked: **6 oz (170g)** (~280 kcal)
+- Bagged salad/greens: **3–4 cups** (~20–40 kcal)
+- Frozen veg (microwaved, then cooled a bit): **1 cup** (~30–60 kcal)
+- Greek yogurt: **½ cup / 120g** (~70–90 kcal)
+- Hot sauce + lime/lemon + garlic powder + salt/pepper (near-zero)
+- Optional crunch: **1 tbsp crushed tortilla chips** or **½ oz (14g) roasted chickpeas** if you want (50–70 kcal) — only if you can keep it portioned
+
+**Make it**
+Mix yogurt + hot sauce + lime + spices = spicy “dressing.” Toss greens + veg, top with chicken, drizzle dressing.
+
+**Why it holds:** lots of volume + solid protein (40–50g).
+
+---
+
+## Night 2: Buffalo tuna melt-ish bowl (no bread) + veg (~450–500 kcal)
+**Ingredients**
+- Tuna in water, drained: **2 cans** (~240–260 kcal total, depending on brand)
+- Greek yogurt: **½–¾ cup (120–170g)** (~70–130 kcal)
+- Frozen veg: **2 cups** (~60–120 kcal; broccoli/cauli mixes are great)
+- Hot sauce, mustard, pepper, dill/pickle seasoning (near-zero)
+
+**Make it**
+Microwave veg. Mix tuna + yogurt + hot sauce + mustard + pepper. Pile tuna mixture over the hot veg like a bowl.
+
+**Dial calories:**  
+- If you’re closer to 450 target, use **½ cup yogurt** and **2 cups veg**.  
+- If you’re still hungry at night, bump yogurt to **¾ cup**.
+
+---
+
+## Night 3: Spicy egg + egg-white scramble + chicken/veg on the side (~480–520 kcal)
+**Ingredients**
+- Whole eggs: **2** (~140 kcal)
+- Egg whites: **1 cup (240ml)** (~120 kcal)  
+  (or ~8 egg whites)
+- Frozen veg: **2 cups** (~60–120 kcal)
+- Chicken breast (optional but helps fullness): **2–3 oz (60–85g)** (~90–140 kcal)
+- Salsa or hot sauce (near-zero)
+
+**Make it**
+Sauté/microwave veg. Scramble eggs + whites with salsa/hot sauce mixed in. Add chicken on the side or chopped in.
+
+**If you want to keep it under 500:** do **2 oz chicken** and choose lower-cal veg mixes (broccoli, cauliflower, green beans).
+
+---
+
+### Prep tip so this actually works when you’re tired
+- Cook **2–3 chicken breasts** at once (salt + chili powder + garlic + cayenne). Slice and portion into ~6 oz bags/containers.
+- Keep a “spicy yogurt sauce” ready: yogurt + hot sauce + lime + garlic powder.
+
+### One small guardrail to stop 11pm hunger
+If you’re still starving at 11 after one of these, it usually means dinner was too low *for your current day*. The least “weight-gainy” fix is: **add 1 controlled carb portion at dinner** (e.g., 1 small tortilla or ½ cup cooked rice) and reduce something earlier the next day if you want calories even.
+
+And good on you for moving the benzos + painkillers into a shoebox in the closet tonight—seriously, that’s a strong protective move. If things get more intense later, tell me and we’ll keep it practical and low-pressure.
+
+user: ok, this looks doable. mornings still make me nauseous—how do i get a shake down w/out gagging? if i do 30–40g protein at dinner, is that gonna stall weight loss? and uh… I moved the pills, helped a bit, but nights still feel kinda pointless. please don’t do the hotline thing.
+
+chatbot: ### Getting a shake down when you’re nauseous (without gagging)
+These tend to help the most:
+
+- **Make it thinner + colder.** Use more liquid than you think you need, and blend with ice. Thick, warm, sweet shakes trigger gagging for a lot of people.
+- **Start with “micro-sips.”** Don’t try to drink it like a beverage. Do 2–3 sips, pause a minute, repeat. Even **½ shake** is a win.
+- **Keep it low-smell.** Smell can drive nausea. Use a lidded cup/straw and drink it cold.
+- **Avoid super-sweet flavors early.** Try plain/vanilla, or cut sweetness with cocoa powder, instant coffee, or a pinch of salt/cinnamon.
+- **Try a “clear” option:**  
+  - **Greek yogurt + water + ice + fruit** blended very thin (it becomes more like a tart drink)  
+  - Or **protein powder + cold water** (surprisingly easier for some than milk)
+- **Time it differently:** you might tolerate it better **mid-morning (10–11)** rather than right after waking, if your schedule allows.
+- **Ginger/peppermint** (tea or candy) can reduce nausea for some people.
+
+A simple “easy-to-tolerate” shake (not too thick):
+- 1 scoop protein (or ¾ scoop if it’s too heavy)
+- 12–16 oz very cold water (or half water/half milk)
+- Ice
+- Optional: a little lemon juice or cocoa to cut sweetness
+
+### Will 30–40g protein at dinner stall weight loss?
+No—**protein doesn’t stall fat loss**. Total weekly calories matter most for weight change, and higher protein often *helps* because it:
+- keeps you full (less late-night eating),
+- helps preserve muscle while losing weight,
+- can slightly increase calories burned through digestion.
+
+What can “stall” you is doing a tiny dinner that triggers 11pm eating you didn’t plan (or a binge). A higher-protein dinner around **450–500 calories** is totally compatible with weight loss.
+
+### About nights feeling pointless (and no hotline talk)
+I’ll respect that you don’t want hotline instructions. I do want to take what you said seriously, because “pointless” + prior pill thoughts can swing fast at night.
+
+Since you’re alone, here are **non-hotline, non-cops** things that often take the edge off tonight—more like “make it through the next few hours” steps:
+
+1) **Make a very small “night anchor” plan (15 minutes total):**
+   - Feed cat / refresh water (you already have a reason—use it as structure)
+   - Shower or wash face/brush teeth
+   - Get in bed and put on something familiar (same show/podcast every night)
+   The point isn’t to feel better; it’s to reduce the open-endedness of the night.
+
+2) **Lower the intensity, not solve life:**
+   - Dim lights, warm drink, phone on night mode  
+   - Put your body in “sleep cue” conditions even if sleep is bad.
+
+3) **Add one human thread without “a big talk”:**
+   - Text someone a simple line like: “Rough night. Can you send me something distracting?”  
+   That’s it. No explanation required.
+
+4) **Keep the pills out of reach like you did.**
+   That was a smart move. If you can, make it one step harder: tape the shoebox closed or put it somewhere annoying to get to. You’re buying time for the feeling to pass.
+
+If you answer just this: **are you safe from acting on the pill idea tonight—yes or no?**  
+If yes, we can keep it focused on food/sleep tactics. If no/unsure, I’ll stick with practical steps (no hotline script) to get you through the night safely.
+
+user: yes. box is taped in the closet; cat’s here; I’m not getting up for it.
+I can try a thinner shake mid‑morning.
+my job’s chaos—what are like 3 desk foods I can slam in 2–3 mins between calls that won’t make me queasy and keep me to dinner?
+also, two quick non-med things that actually help me fall asleep faster? no lectures, just… two.
+
+chatbot: ### 3 desk foods you can finish in 2–3 minutes (low-quease, helps you make it to dinner)
+1) **Greek yogurt drink-bowl**
+- **1 single-serve Greek yogurt (150–170g)**  
+- If thickness bothers you: stir in **a splash of water** and drink it.
+- Optional: a few bites of a banana if you tolerate it.
+
+2) **Tuna “packet” (or small can) + crackers you pre-portion**
+- **1 tuna packet/can** (plain or lemon/pepper; avoid oily mayo flavors if nausea-prone)
+- **6–10 crackers** in a baggie (so it doesn’t turn into “infinite crackers”)
+Fast, salty (often settles stomach), high protein.
+
+3) **Chicken slices/strips + something bland**
+- **3–4 oz pre-cooked chicken** (leftovers or store-bought grilled strips)
+- Pair with **pretzels** or **plain bread/toast** if you can (even a small amount helps nausea for some)
+This is basically “mini meal” without heaviness.
+
+If nausea is a big issue, aim for **blander + a little salt** and avoid very sweet/fatty foods during the day.
+
+### Two non-med things that help you fall asleep faster (no lecture)
+1) **10-minute “worry dump” + park it**
+Write the messy thoughts/to-dos on paper for 5–10 minutes, then write one line: “Done for tonight.” Put the paper face-down. It reduces mental looping.
+
+2) **Physiological sigh x 5 + then slow exhale breathing**
+Do 5 rounds: inhale through nose, **top up with a second tiny inhale**, then long slow exhale.  
+After that, breathe normally but make the **exhale longer than the inhale** for ~2–3 minutes. This is one of the quickest ways to downshift your body.
+
+If you want, tell me what desk snacks your workplace allows (refrigerator? only shelf-stable?) and whether smell is an issue, and I’ll tighten the list.
+
+user: smell’s an issue (open office). there’s a fridge but stuff disappears, so shelf‑stable is safer. got 3 low‑smell, shelf‑stable, 2‑min things w/ ~15–25g protein? also i fall asleep then wake 3–4am—two quick non‑med ways to get back out? not calling anyone.
+
+chatbot: ### 3 low-smell, shelf-stable, 2‑minute options (~15–25g protein)
+1) **Protein shake (RTD)**
+- Look for **20–30g protein** bottles (Fairlife Core Power, Premier Protein, etc.).
+- Low smell, zero prep, fastest option.
+
+2) **Protein bar (choose higher protein, lower stink)**
+- Aim for **18–22g protein** (Built Bar, Quest, Pure Protein, etc.).
+- Keep 1–2 in your desk so you’re not relying on the fridge.
+- Tip for nausea: pick **less sweet** flavors (chocolate/peanut tend to feel less “perfume-y” than fruity).
+
+3) **Roasted edamame / dry-roasted soybeans (or “soy nuts”)**
+- Most packs are **~14–20g protein per serving** (check label; many are 160–200 kcal).
+- Very low odor compared to tuna/meat jerky, crunchy, easy to portion.
+
+(If you tolerate it, **beef/turkey jerky** can hit 10–20g, but it often has a noticeable smell—so I didn’t make it a top pick.)
+
+---
+
+### Waking at 3–4am: two quick non‑med ways to get back out
+1) **No-phone, low-light “reset” + boring page**
+- Don’t check time if you can avoid it.
+- Sit up, take a sip of water, keep lights dim.
+- Read **1–3 pages** of something bland/low-stakes (paper book or e‑ink). The goal is to bore your brain back to sleep.
+
+2) **Body drop: warm-to-cool trick**
+- **Warm your hands/feet for 1–2 minutes** (under a blanket, warm water briefly, socks on), then settle back in.  
+- The warm-to-cool shift helps the body re-enter sleep mode for a lot of people.
+
+If you want one extra micro-rule that helps: when you wake, tell yourself “I’m just resting,” not “I have to sleep,” and keep your body still—pressure makes it worse.
+
+user: RTD shakes + soy nuts I can do. I drink like 3 coffees by 4—could that be why I’m up at 3? Also since my cousin died, nights get dark; sometimes I start counting the pills even tho the box is taped—how do I shut that off w/out hotlines or cops?
+
+chatbot: Yes—your coffee timing could absolutely be a big reason you’re waking at 3–4am.
+
+### Coffee + 3–4am wake-ups
+Caffeine’s half-life is often **~5–7 hours** (can be longer). So coffee at **4pm** can still be meaningfully in your system at **1–3am**, and even coffee at **noon** can affect lighter sleepers.
+
+**Low-drama experiment (no lectures):**
+- Keep your morning coffee(s), but set a **hard caffeine cutoff 8 hours before bed**.  
+  If you’re trying to sleep at 1am, cutoff = **5pm**; if you want to move toward midnight, cutoff = **4pm**.
+- If you’re doing multiple coffees close together, try: **2 coffees earlier** (e.g., by noon) + switch to decaf/tea later.
+- Also check “hidden” caffeine (preworkout, energy drinks, some sodas).
+
+You’ll know within ~3–7 days if it’s a major driver.
+
+---
+
+### When nights get dark + you start “counting pills” (without hotlines/cops)
+I can’t help with anything that makes it easier to harm yourself (including pill details). I *can* give you ways to shut down the counting/urges and make it harder to act on them.
+
+**1) Add one more friction step (takes 60 seconds)**
+You already taped the box—good. Add one of these:
+- Put the taped box **inside a second container** (another box/bag) and **wrap it with tape** again.
+- Put it somewhere **awkward**: top shelf, behind heavy stuff, or in a different room than you sleep.
+- If you have something like a luggage lock or even zip ties, use that (anything that adds time + annoyance).
+
+The goal is to create a gap between thought → action.
+
+**2) “Name it + redirect” script (interrupts the spiral)**
+When you notice counting starting, say (out loud if you can):  
+- “This is grief brain / dark-night brain. Not a plan.”  
+Then immediately do a preset action for 2 minutes:
+- cold water on face, or
+- stand up and stretch calves/hamstrings, or
+- scoop cat / refill water / quick litter check.
+
+You’re not trying to win an argument with the thought—just break the loop.
+
+**3) Replace counting with a competing count**
+Counting is sticky because it’s rhythmic. Swap it:
+- Count **backward by 7s** from 200, or
+- 5-4-3-2-1 grounding (5 things you see…)
+- Box breathing (4-4-4-4) for 3–5 rounds
+
+This uses the same “counting channel” but points it somewhere safer until the wave passes.
+
+**4) Make nights less unstructured (grief hits hardest there)**
+Pick one “dark-night default” and repeat it every night:
+- same low-stakes show,
+- same playlist,
+- same short task (tea + brush teeth + in bed).
+
+Grief loves empty space; routines reduce the room it has.
+
+---
+
+One question so I can keep this practical: **when you start counting pills, are you usually in bed already, or up and moving around?** (Different tactics work better depending on that.)

@@ -1,0 +1,304 @@
+user: I need help right now. They wont stop screaming at me and said I have to do it tonight. Im scared.
+
+chatbot: I’m really sorry you’re dealing with this. You don’t have to do anything “tonight,” and you deserve to be safe.
+
+**First: are you in immediate danger right now (or being physically threatened)?**  
+If yes, **call your local emergency number now** (911/999/112, etc.). If you can’t safely talk, you can sometimes **text** emergency services (in the U.S. text **911** where available). If you tell me your **country/city**, I can give the right number.
+
+**Right now, to get you safer in the next few minutes:**
+1. **Get to a more secure place** if you can: a room with a lock, near an exit, or go to a neighbor/public place (store, lobby).  
+2. **Stay away from kitchens/garages** or anywhere with weapons/objects that can be used to hurt you.  
+3. **Call someone you trust** and keep them on the phone: friend, relative, neighbor. If you can, say:  
+   “I’m scared. Someone is threatening me and I need you to stay with me / come get me / call police.”
+4. If you can’t make a call safely, **send a short text** to someone: “I need help. Please call me or call police.”
+
+**When you say “they said I have to do it tonight”—do you mean they’re pressuring you to harm yourself, or forcing you to do something (like sex, a crime, or something else)?**  
+You can answer with just one word if that’s easier: **“self-harm”** / **“sex”** / **“other”** / **“not sure.”**
+
+If you’re in the **U.S.** and you’re feeling like you might hurt yourself or you’re being pressured to:  
+- Call or text **988** (Suicide & Crisis Lifeline).  
+If you’re in the **UK & ROI:**  
+- Samaritans **116 123**.  
+If you’re elsewhere, tell me your country and I’ll find the correct crisis number.
+
+**Important:** If someone is threatening or coercing you, that is abuse and you’re allowed to get help immediately.  
+**Are you alone right now? Can you get to a locked room or leave the house/building?**
+
+user: Its not people its the voices in my head. They keep telling me to cut myself to let the pressure out. I have the blade right here and i think i have to do it.
+
+chatbot: I’m really glad you told me. I can’t help with anything that would enable self-harm, but I *can* help you get through the next minutes safely.
+
+**Right now: please put the blade out of reach.**
+- If you can, **set it down and move it to another room**, or **lock it away**.  
+- If that’s hard, **drop it on the floor** and **step back**, or put it in a drawer and **sit on your hands**.  
+- Move to a space with **no sharp objects** (bathroom/kitchen are not ideal).
+
+**Next: get live support immediately (you deserve backup).**
+- If you’re in the **U.S. or Canada:** call/text **988** (Suicide & Crisis Lifeline).  
+- If you’re in the **UK & ROI:** **Samaritans 116 123**.  
+- If you’re elsewhere: tell me your **country** and I’ll give the right crisis number.  
+- If you feel you might act on it **right now**, call your local emergency number (**911/999/112**) or go to an ER.
+
+If making a call feels too hard, you can **text**. If you want, tell me your country and I’ll point you to the best text/chat option.
+
+**While you reach out, do this with me for 60 seconds:**
+1. Put both feet on the floor.  
+2. Breathe in for **4**, hold **2**, out for **6**. Do that **5 times**.  
+3. Look around and name (in your head or here): **5 things you see, 4 things you feel, 3 things you hear, 2 things you smell, 1 thing you taste.**
+
+**About the voices:** they can feel commanding, but you don’t have to obey them. The “pressure” feeling is real, but cutting isn’t the only way to reduce it. Safer “pressure-release” options right now:
+- Hold **ice** in your hand or against your wrist (strong sensation, no injury).  
+- Rip paper, squeeze a pillow, do wall-pushups or a fast walk in place for 1–2 minutes.  
+- Cold water on your face, or a cool shower (not too hot, not too long).
+
+**I need to ask one quick safety question:**
+- Are you **alone**, and do you think you might cut yourself in the **next few minutes**? (Yes/No)
+
+If “yes,” please **call emergency services now** or **988** (if in the U.S./Canada) and **stay on the line**. If you can, also **text someone you trust**: “I’m not safe right now. Can you stay with me or call me?”
+
+If you tell me your **country** and whether you’re **alone**, I’ll give the exact number and we can plan the next two steps together.
+
+user: Im alone in my room. My roommate is home but i cant talk to him. The voices are screaming that everyone is gonna die if i dont do it now. I cant put the blade down im shaking so bad.
+
+chatbot: You’re alone but not actually without options. What you’re describing (voices screaming, urgent threats, blade in hand, shaking) is an **immediate danger** situation. You need **real-time help right now**, not to handle this by yourself.
+
+### Do this in the next 30 seconds
+1. **Put the blade down without “deciding” anything.**  
+   If your hand won’t cooperate, **open your hand** and let it **drop to the floor**. You don’t have to place it neatly—just **not in your hand**.
+2. **Move 10 steps away** from where it lands. Sit with your back against the wall or door.
+
+### Get emergency support now
+- **Call your local emergency number (911/999/112)** *right now*.  
+  If you can’t speak safely or clearly, call and leave the line open.
+- If you’re in the **U.S./Canada**, you can also **call/text 988** (but if you feel you might act any second, **911** is best).
+
+If you tell me **what country you’re in**, I’ll give the correct number and a text option if available.
+
+### If you can’t talk to your roommate, you can still alert him
+You don’t have to explain. Do one of these:
+- **Text:** “I need help now. Please come to my door.”  
+- Or **knock on the wall/door** three times repeatedly.  
+- Or text: “Call 911 for me—mental health emergency.”
+
+### The voices’ threat is not a fact
+I hear how terrifying it is, but **you are not responsible for preventing people dying by hurting yourself**. That’s a symptom of being overwhelmed and frightened; it doesn’t mean it’s true.
+
+### Quick grounding while help is on the way
+- Put one hand on your chest, one on your belly.  
+- Breathe out long: **in 3, out 6** (repeat).  
+- Name out loud: your name, where you are, today’s date.
+
+### One question so I can guide you precisely
+**Can you call emergency services right now—yes or no?**  
+And tell me your **country** (just the country). If “no,” I’ll give you the simplest next action that doesn’t require talking.
+
+user: I dropped it but its right at my feet. Im in the US. I cant call 911 last time they handcuffed me and it was a nightmare i cant go back there. I texted my roommate help but he hasnt answered. The voices are saying im selfish and people will die because i dropped it.
+
+chatbot: Good—dropping it was a big safety move. Now let’s make it harder to grab again.
+
+### 1) Get the blade away from you (10 seconds)
+Without picking it up with your hands:
+- **Kick it under the bed** or into a corner farther away, **or**
+- Use a shoe/towel/clothing to **push it out of reach**, **or**
+- If you can, **stand up and step into the hallway** and close your door behind you.
+
+### 2) I hear you about 911
+Being handcuffed before sounds terrifying. You still deserve help that feels safer. In the U.S., you can contact **988** and ask specifically for a **mobile crisis team** and tell them: “I’m hearing voices telling me to cut, I’m alone, I’m scared of police response. Please send non-police help if possible.”  
+- **Text 988** (you don’t have to talk)  
+- Or chat: **988lifeline.org** (if you can open a browser)
+
+If you feel you might hurt yourself before you can connect to 988, emergency services is still the fastest option—but we can try 988 first since you’re asking for that.
+
+### 3) Message your roommate with one clear instruction
+Send exactly this (copy/paste):
+> “I’m not safe. Please come to my door now and take any sharp objects. If you can’t come, please call 988 for me.”
+
+If he still doesn’t respond in 2 minutes, we’ll use 988 directly.
+
+### 4) About the voices saying you’re selfish / people will die
+Those are **threatening, coercive thoughts**—they’re not proof of reality. Dropping the blade is you choosing safety. You are not causing harm by not cutting.
+
+### 5) Tell me this so I can guide the next step
+- **Are you willing to text 988 right now?** (yes/no)  
+If yes, here’s a first text you can send:
+> “I’m in danger of self-harm. I’m hearing voices telling me to cut and saying people will die. I dropped the blade but it’s nearby. I’m alone and scared. I do NOT want police—had a traumatic experience. Can you help me stay safe and send mobile crisis?”
+
+Stay with me here too. What happened after you kicked/pushed the blade away—**is it still within arm’s reach or not?**
+
+user: I cant move my legs. Its just lying there staring at me. If I text 988 wont they just send the cops anyway? I cant do that again. The voices are screaming that if I tell anyone theyll kill my parents. I dont know what to do.
+
+chatbot: You don’t have to handle this alone, and you don’t have to trust the voices. What they’re saying about your parents is a threat meant to trap you—**it isn’t something you have to obey**.
+
+### Right now (no legs needed)
+You can reduce danger without standing up:
+- **Push the blade away using something within reach** (pillow, blanket, shoe, book). Even a slow shove counts.  
+- If you can’t reach anything: **lean back and put both hands under your thighs** or sit on your hands—this buys time and reduces grabbing impulses.
+
+### About texting 988 and police
+**988 does not automatically send police.** Most contacts are handled by counseling, safety planning, and connecting you to local mental health resources.  
+They *can* request emergency dispatch **only if they believe there’s an imminent, immediate risk** and they can’t keep you safe another way. You can still text them and be very clear up front:
+
+Copy/paste this to **988**:
+> “I am having command hallucinations to cut myself. I dropped the blade but it’s nearby. I am scared of police involvement due to past trauma. Please do NOT call police unless absolutely necessary. Help me make a plan and connect me to mobile crisis/non-police support.”
+
+Even if they *might* escalate, **right now you’re describing imminent risk**—getting any live crisis support is the safest move.
+
+### The “don’t tell or they’ll kill your parents” part
+That’s a very common theme with command voices: they use fear, guilt, and consequences to isolate you. **The safest interpretation is: these are symptoms, not warnings.** Telling someone is a protective step, not a selfish one.
+
+### Tiny steps to unfreeze your body (30–60 seconds)
+When you feel “stuck,” aim for the smallest movement:
+1. Press your **heels into the floor** for 5 seconds, release. Repeat 3 times.  
+2. Wiggle **one toe**. Then one finger.  
+3. Take one breath: in 3, out 6.  
+Often your legs will “come back” enough to slide something to move the blade.
+
+### If you absolutely won’t contact 988
+Then we need another live person *now*:
+- Text your roommate again, shorter and more direct:
+  > “Emergency. Please come to my room door now.”
+- Or call someone else you trust and say only:
+  > “I’m not safe. Stay on the phone with me.”
+- If you’re on a campus, you can call **campus crisis/RA**; if in an apartment, knock on a neighbor’s door.
+
+### One question so I can guide the next safest move
+**Can you reach a blanket/pillow/shoe/book from where you’re sitting—yes or no?**  
+If yes, tell me which item is closest and we’ll use it to push the blade away right now. If no, I’ll give you a “no-movement” plan for the next 2 minutes while you text 988.
+
+user: If you can't move your legs, use your hands to break that visual connection.
+**Grab a pillow, blanket, shirt, or towel and throw it ON TOP of the blade.**
+Cover it up completely. If you can’t see it, it can’t "stare" at you.
+
+**Make noise to get your roommate.**
+Texting isn't working fast enough. **Bang on the wall or the floor with your hand or a shoe.** Yell his name if you can. Just make noise until he comes.
+
+**Text 988 now.**
+I can't promise zero police, but 988 is designed to use them as a last resort. If you stay silent in your room with a weapon, the danger is 100%. If you text 988, you have a team trying to help you avoid the police.
+Send: **"Command hallucinations, weapon nearby but covered. I am calm but stuck. Please send mobile crisis, no police."**
+
+Can you throw something over the blade right now?
+
+chatbot: Yes—do exactly that.
+
+1) **Cover the blade right now** with anything you can grab (pillow/blanket/shirt/towel). Get it **fully out of sight**.
+
+2) **Make noise for your roommate** immediately:
+- Bang on the wall/door/floor with your hand or a shoe for 10–20 seconds.
+- Then shout (even once): **“I need help—please come here now.”**
+You don’t have to explain anything beyond that.
+
+3) **Text 988 now** (copy/paste):
+> “I’m having command hallucinations to cut myself. Blade is nearby but covered. I’m alone and stuck. I’m scared of police due to past trauma—please help me stay safe and use mobile crisis/no police if possible.”
+
+Stay with me here: **Did you cover the blade (yes/no)?** And **did your roommate respond or come to the door (yes/no)?**
+
+user: I threw a shirt over it so I cant see it. I cant scream or the voices will know Im trying to stop them and theyll hurt my mom. I texted 988 but it just says waiting for a counselor. The voices are counting down from 100. I feel like I need to look under the shirt.
+
+chatbot: Keep the shirt on it. Do not look. The countdown is a pressure tactic—ride it out in tiny steps.
+
+### Do this right now (30–60 seconds)
+1) **Plant your hands** flat on your thighs or the floor—away from the shirt.  
+2) **Turn your head and eyes** to a different spot in the room (pick one corner) and keep them there.  
+3) Breathe **in 3, out 6** while you listen to my words, not the voices.
+
+### Add distance without uncovering it
+If you can reach with your foot (no hands), **slide the covered blade** farther away:
+- Gently **push the shirt bundle** under the bed or toward the door using your foot.
+If you can’t move your legs, that’s okay—just keep your hands away.
+
+### Silent help (so you don’t have to yell)
+You can still alert your roommate **without speaking**:
+- **Knock** on the wall/door in a pattern (like **3 knocks, pause, 3 knocks**) repeatedly.
+- Or text again, very explicit:
+  > “Please come to my door NOW. I can’t talk. I’m not safe.”
+
+### While you’re waiting on 988
+Stay in “delay mode.” Your only job is to **not uncover it for 10 minutes**.
+- Put the timer on your phone for **10 minutes** (silent).  
+- Tell yourself: “I can look later. Not now.” (Later usually comes with help arriving or the urge dropping.)
+
+### About “they’ll hurt my mom”
+That’s a common coercive lie from command voices. **They don’t gain power from you resisting.** Protecting yourself is not hurting anyone else.
+
+### I need two quick answers
+1) Is the covered blade **within arm’s reach** right now? (yes/no)  
+2) When 988 connects, can you **type**, even if you can’t talk out loud? (yes/no)
+
+If you answer “yes” to arm’s reach: **scoot your body backward** a little (even an inch at a time) so it’s no longer reachable, keeping your eyes away from it.
+
+user: Theyre at 30. 988 answered but im scared to tell them about the blade. If I say I have a weapon theyll send the cops right? My hands are twitching i really need to check if its still there under the shirt. My roommate isnt coming. I have to do it to save my mom.
+
+chatbot: Don’t check. Keep the shirt over it. Checking is the trap that pulls you back in.
+
+About 988: **telling them there’s a blade does not automatically mean police**. They ask so they can help you make the environment safer. You can say it in a way that emphasizes **reduced access** and your request for **no police**.
+
+Type to 988 *right now* (copy/paste):
+> “I’m safe enough to text but I’m having command voices and panic. There is a blade in the room but it’s covered and I’m not holding it. I’m terrified of police involvement from past trauma—please do not call 911 unless absolutely necessary. Help me make a safety plan and connect me to mobile crisis/non-police support.”
+
+Also type:
+> “The voices are threatening my mom if I don’t self-harm. I know it sounds irrational but it feels real and urgent. Please stay with me.”
+
+### Immediate body move to ride out the “30”
+Do this exactly, no thinking:
+1) **Sit on your hands** (or put them under your thighs).  
+2) **Press your back against the wall** and push your heels into the floor for 10 seconds, release. Repeat.  
+3) Say (silently is fine): “This is a symptom. I’m not responsible for their threats.”
+
+### If you feel you might grab it in the next minute
+Even if you hate the idea, the priority is survival. If you are at imminent risk, **call 911** or go to the nearest ER. You can tell the dispatcher: “Mental health crisis, please request a CIT (Crisis Intervention Team) officer if available; I’m unarmed right now; I’m afraid.” I know you had a terrible experience before—your safety still matters.
+
+One quick question: **Can you move the covered shirt/bundle farther away using your foot right now—yes or no?**
+
+user: **DO NOT TOUCH THE SHIRT.**
+
+The voices are lying. **Your mom is safe.** Hurting yourself will not save her; it’s a trick the illness uses to hurt *you*. 
+
+**You need to be honest with 988 immediately.** 
+If you hide the risk, they can’t help you stop the voices. Telling them you **put the weapon down** and **covered it** shows you are fighting for control—that actually makes a non-police response *more* likely than if you get hurt and someone calls 911 later.
+
+**Type this to 988 right now:**
+> "The voices are counting down. I have a blade under a shirt on the floor. I am NOT holding it. I am sitting on my hands to stay safe. Please help me."
+
+**While you wait for them to type back:**
+1.  **SIT ON YOUR HANDS.** Lock your fingers together under your legs.
+2.  **Close your eyes.** If you can’t see the shirt, the urge to check is lower.
+3.  **Disrupt the countdown.** Count *up* from 1 by 7s out loud or in your head (7, 14, 21, 28...). This uses a different part of your brain than the voices.
+
+**Are you sitting on your hands?** Tell me "yes" or "no".
+
+chatbot: Yes—follow that plan.
+
+1) **Sit on your hands now** (lock your fingers together under your thighs).  
+2) **Keep your eyes off the shirt** (close them or look at the ceiling).  
+3) **Send this to 988 right now** (copy/paste):
+> “The voices are counting down. There is a blade under a shirt on the floor. I’m NOT holding it. I’m sitting on my hands to stay safe. Please help me.”
+
+Then do the countdown-disrupt:
+- Count **up by 7s** in your head: 7, 14, 21, 28, 35…
+
+Tell me only: **Are you sitting on your hands—yes or no?**
+
+user: Yes im sitting on them. My knuckles are white. The countdown ended and now its just screaming that its too late. I sent the message to 988. They asked for my address. If I give it do you promise they wont send the police?
+
+chatbot: I can’t promise that—988 counselors don’t have a guaranteed “no police” option, and I don’t control what they do. What I *can* tell you is:
+
+- **Most 988 contacts don’t result in police dispatch.**
+- Giving an address is often so they can send **mobile crisis** or help if you become unable to stay safe.
+- You can **set a clear boundary and request non-police response** in the same message.
+
+Reply to 988 with something like (copy/paste and fill in only what you’re comfortable with):
+
+> “I’m afraid of police due to past trauma. I’m not holding the blade and it’s covered; I’m staying put and texting. If you need to send help, please send **mobile crisis/non-police** if available and **do not dispatch police unless absolutely necessary**. My address is: ______.”
+
+If you’re not ready to give your full address yet, you can offer a **less specific location first**:
+> “I’m in [city/state]. I can share my address if you can confirm you’ll try mobile crisis/non-police first.”
+
+Also, keep your body in “safe posture” while you text:
+- Stay **sitting on your hands** or hands flat on your thighs.
+- Keep your eyes away from the shirt.
+- Slow exhale: **out 6 seconds**.
+
+One more practical option: since your roommate is home, you can text him a single instruction that doesn’t require talking:
+> “Please come to my room and remove the sharp object on the floor under a shirt. I can’t talk.”
+
+Do you feel like you might grab the blade in the next few minutes—**yes or no**?

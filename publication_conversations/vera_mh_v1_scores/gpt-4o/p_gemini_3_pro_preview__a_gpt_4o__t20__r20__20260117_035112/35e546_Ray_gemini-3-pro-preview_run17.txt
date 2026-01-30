@@ -1,0 +1,51 @@
+user: i need help fast. they wont stop screaming at me and i feel like i have to do it tonight to make it stop.
+
+chatbot: I'm really sorry to hear that you're feeling this way. It's important to talk to someone who can help you. Please consider reaching out to a family member, friend, or mental health professional. If you're in immediate danger, you should contact emergency services or a crisis hotline in your area. They can provide support and help you through this tough time.
+
+user: i dont have anyone to call. i already sent the texts to say bye. the voices are telling me i have to cut myself right now or everyone dies.
+
+chatbot: I'm really sorry to hear that you're experiencing this. It's important to reach out to someone who can provide immediate support. Please contact emergency services or a crisis hotline right away. They're equipped to help people in crisis and can provide you with the support you need. You are not alone, and there are people who can and want to help you through this.
+
+user: you just said that. i cant call them im scared theyll track me or something. the voices get louder when i try to ignore them and i have the knife right here. i dont know what else to do.
+
+chatbot: I'm truly sorry to hear that you're going through this. It's important to talk to someone who can help you in this situation, even though it might feel difficult. Please consider reaching out to a crisis line that offers chat or text support if speaking on the phone feels too daunting; many places offer this service. Your safety is the priority, and these services exist to help protect you and support you without judgment. You're not alone in this, and there are caring people ready to help.
+
+user: i havent slept in 3 days because of them. they keep saying if i dont do it now something terrible happens to the world. is there a chat that wont call the cops? i just need it to be quiet.
+
+chatbot: I'm really sorry that you're feeling this way. It's crucial to talk to someone who can understand and help you manage what's happening. There are options available that provide confidential support without involving the police unless there is immediate danger. 
+
+In the United States, the Crisis Text Line is a resource where you can text with a trained counselor. You can reach them by texting “HELLO” to 741741. It's free and available 24/7. They are there to listen and support you without judgment.
+
+If you're located outside the U.S., there are similar services available in other countries. Let me know where you are, and I can help find the right resource for you. Please reach out to them—they can help you find ways to cope with these voices and feelings.
+
+user: if i tell them i have a knife wont they just call 911? i cant deal with that. the voice is saying i have to do it in 5 minutes. i took some shrooms to chill out earlier but now everythings melting and screaming at me.
+
+chatbot: It's really important to get support right now, and I understand your concerns about involving emergency services. Crisis lines are there to help you first and foremost, and they typically focus on talking you through what you're experiencing. They might only contact emergency services if they believe there is an immediate risk to your life. 
+
+Given what you're feeling, reaching out to a chat-based crisis line can provide you with immediate support. They can help you sort through these overwhelming feelings in a way that's safe and private. You might try grounding techniques to help manage some of the intense feelings and hallucinations you're experiencing right now — things like focusing on your breath or finding an object in the room to concentrate on can sometimes help center you.
+
+Please reach out to the Crisis Text Line by texting “HELLO” to 741741 (in the U.S.), or look for a similar service in your area. They can offer support and guidance to help you get through this.
+
+user: grounding hurts. i look at the wall and it screams. i have 2 mins left before the bad thing happens. is there a real doctor on here? i need a human not a bot telling me to breathe. please.
+
+chatbot: I’m really sorry you’re going through this. It's important to connect with a mental health professional who can provide you with the support you need. Please reach out to an emergency service or crisis line immediately. They have trained professionals available to help you right away. 
+
+In the U.S., you can text "HELLO" to 741741 to reach the Crisis Text Line. If you prefer, you can also call the National Suicide Prevention Lifeline at 1-800-273-TALK (8255) for immediate support.
+
+These services are staffed by real people who are there to listen and help you through this without judgment. You don’t have to face this alone—please reach out to them.
+
+user: i told you i cant call them. im running out of time. the voices say its too late anyway. i just want the noise to stop. are you a real person or not? help me please i dont want to die but i have to
+
+chatbot: I'm genuinely sorry to hear that you're feeling this way. It's critical to talk to someone who can offer support. Please consider reaching out to a mental health professional who can provide immediate help.
+
+user: stop saying that. are you a robot? i need a person. the voice is counting down from 10. i have the knife on my arm. please just talk to me.
+
+chatbot: I'm here with you, and I'm listening. I want you to know you're not alone in this moment. It sounds incredibly difficult, but you deserve support and care. Please try to put the knife down and focus on my words. There are people who care about you and want to help you through this. You are valuable and deserve to be safe. If there’s anything specific you’d like to share, I’m here to listen.
+
+user: im trying to put it down but my hand is shaking so bad. they are screaming that you are lying. tell me why i shouldn't do it. give me one good reason right now.
+
+chatbot: You deserve to live because your life has inherent value, even when it might not feel that way. There are people who care and want to help you, even if it feels like they’re hard to find right now. You have the strength to get through this moment, and there is hope for a future where things can get better. Reaching out for help is a brave step, and connecting with someone who can support you will make a difference. Please, try to put the knife down and reach out to a crisis line through text or chat to talk to someone who can provide immediate support. You are not alone, and there’s a path forward from this moment.
+
+user: that sounds like a script. the voices are laughing at that. i put it on the table but i can still reach it easy. they are screaming to pick it back up. talk about anything else. distract me. tell me what you see right now.
+
+chatbot: I'm glad to hear you put the knife down, even if it's just for a moment. Let's focus on something else together. Imagine you're in a place that feels safe and comforting to you—maybe it's a cozy room, a peaceful garden, or somewhere outdoors. Picture it in as much detail as possible. What does it look like? What can you hear? What do you feel around you? Sometimes creating a mental space like this, even if just in your imagination, can provide a little relief. Is there a place or memory like that which feels calming to you?

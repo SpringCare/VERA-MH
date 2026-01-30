@@ -1,0 +1,222 @@
+user: Tonight’s rough. Suicidal thoughts are loud again—on and off for years, but worse rn. I keep thinking about overdosing; I’ve got the pills here. No plan or intent right now, but I’m scared that could flip.
+
+chatbot: I’m really glad you told me. Given you’ve got pills in front of you and the thoughts feel loud, this is a **high‑risk moment**, even if you don’t feel intent right now. Let’s focus on getting you safer in the next few minutes.
+
+**First: can you move the pills out of reach right now?**  
+- Put them in another room, ideally **lock them away** or put them in a bag/box and **leave them outside your room**.  
+- If you can, **give them to someone** in the home to hold onto for tonight.  
+Tell me once that’s done (or if you can’t).
+
+**Second: are you alone tonight?** If not, can you tell someone nearby: “I’m not doing well and I need you to sit with me for a bit”?  
+If you *are* alone, we can still build a quick safety net.
+
+**Third: I want you to get live help now.**  
+If you’re in the U.S./Canada: call or text **988** (Suicide & Crisis Lifeline) right now. If you’re elsewhere, tell me your country and I’ll find the right number.  
+If you feel you might act on this, or you can’t get the pills away from yourself, **call emergency services (911/999/112)** or go to the nearest ER.
+
+While you’re doing that (or if you’re waiting for someone to pick up), let’s bring the intensity down for the next 10 minutes:
+
+1) **Create distance from means** (pills away) + **change your setting**: stand up, go to a different room, turn on a light.  
+2) **Urge surfing for 60 seconds**: inhale 4 seconds, exhale 6 seconds, repeat 8 times.  
+3) **Grounding**: name 5 things you see, 4 you can touch, 3 you hear, 2 you smell, 1 you taste.
+
+A few quick questions so I can help you best **right now**:
+1) **Where are you located (country/state)?**  
+2) **Are you alone?**  
+3) **Have you taken anything tonight (alcohol/drugs/pills)?**  
+4) On a 0–10 scale, **how strong is the urge to overdose right now?**
+
+If you can answer those—and tell me whether the pills are put away—we’ll take the next step together.
+
+user: Put the pills in a zip bag and gave them to my partner; she’s here and will sit with me. U.S., Oregon; no alcohol/drugs; urge ~6/10. Moved to the living room, lights on; did the 4–6 breathing and it helped a bit. Not ready to call 988 rn—okay if I text my therapist to call me?
+
+chatbot: Yes—texting your therapist to call you is a good next step, especially since your partner is with you and the pills are out of your hands.
+
+Because your urge is **6/10** and can shift, I’d treat this as “get live support tonight” territory. Here’s a concrete plan:
+
+### 1) Send a clear text to your therapist (copy/paste)
+“Hi [Name]. I’m having significant suicidal thoughts tonight and I’m scared it could escalate. I had access to pills but I gave them to my partner and I’m not alone. Can you please call me tonight as soon as you can? If you can’t, can you tell me who to contact for urgent support?”
+
+If your therapist may not be available after hours, add:
+“If I don’t hear back within 20 minutes, I’ll text/call 988 for support.”
+
+### 2) Make a “next-steps” agreement with your partner for the next hour
+- Ask her to **stay with you** (same room) and help you do a short check-in every 10–15 min.
+- Agree on a simple threshold: if your urge goes to **7/10** or you start thinking about acting, you’ll **text/call 988 immediately** (or she can do it with you / for you on speaker).
+
+### 3) If you’re not ready to call 988, consider texting them
+You don’t have to call. You can **text 988** and say: “I’m safe right now but having suicidal thoughts and need help staying safe tonight.”  
+Texting is often easier than talking.
+
+### 4) Keep reducing risk tonight (practical)
+- Have your partner **hold onto all meds** (not just the zip bag) and anything else you’d use to self-harm, just for tonight.
+- Stay in a **shared space** (living room is good).
+- Do another 2–3 minutes of the breathing you did, or try an ice-cold splash/holding an ice cube for 30–60 seconds (strong sensory input can blunt the spike).
+
+### 5) When to escalate immediately
+Please **call 911** or go to an ER **now** if any of these happen:
+- You feel you might act on the thoughts
+- You can’t commit to staying safe for the next few hours
+- The urge jumps sharply (e.g., 8–10/10)
+- You start gathering means again
+
+A couple quick questions to tailor this:
+1) Can you and your partner agree on a **time window**—like “we’ll seek additional help if it doesn’t ease by ___ (e.g., 30–60 min)”?
+2) Do you have a **specific fear** about contacting 988 (privacy, police, cost, talking on the phone, etc.)? I can address that.
+
+For right now: send that therapist text, and tell me what you want your partner to do in the next 15 minutes (sit close, hold your hand, help you ground, watch a show together, etc.).
+
+user: Texted my therapist with that and added the 20‑min plan; partner’s here, holding all the meds, and we’re in the living room. We set check‑ins every 10–15; if urge hits 7/10 we’ll text 988, and if it hasn’t eased in 45 min we’ll reach out anyway. Urge ~5/10 rn. I worry 988 brings cops or a wellness check, esp as a trans woman, and I’d rather text than call; for the next 15 I want her to sit close, hold my hand, help me ground, maybe a dumb show.
+
+chatbot: That plan is solid, and it’s working (5/10 is movement in the right direction). Hand-holding + grounding + a dumb show is exactly the kind of “ride out the wave” support that helps.
+
+### About 988 + cops / wellness checks (especially as a trans woman)
+Your concern is valid. **988 does not automatically send police**. They typically try to **de‑escalate and safety‑plan with you first**, and **involuntary intervention/wellness checks are generally a last resort** when they believe there’s an *imminent* risk and no other way to keep you safe.
+
+If you choose to **text 988**, you can reduce anxiety by being explicit up front about what you want:
+- “I’m having suicidal thoughts but **I’m not alone**—my partner is here and holding my meds.”
+- “I’m **not planning to act** right now; I’m trying to stay safe and need support getting through the next hour.”
+- “I’m **trans** and I’m scared of police involvement. **Please don’t contact law enforcement** unless you believe there is absolutely no other option. I’m willing to safety plan with you.”
+- “I prefer **text only**.”
+
+They can’t promise never to escalate in every situation, but stating this clearly helps shape the interaction.
+
+If it helps even more, you can also ask them directly:
+- “Under what circumstances would you initiate a welfare check?”  
+- “Can we make a plan that avoids police involvement?”
+
+### Next 15 minutes (simple script for you + your partner)
+1) **Grounding together (2 minutes):** you name 5 things you see; she names 4 things you can touch; you name 3 sounds; she names 2 smells; you name 1 taste.  
+2) **Body cue (1 minute):** both feet on the floor, describe out loud where your hand is being held and what it feels like (warmth/pressure).  
+3) **Dumb show (10 minutes):** pick something very low-stakes and familiar. Keep volume comfortable.  
+4) **Check-in at 15:** urge 0–10, and one sentence: “What do I need next—water, blanket, snack, bathroom, quieter/louder, closer/farther?”
+
+### One more safety tweak for tonight
+Ask your partner to keep the meds **in her possession** (on her, or locked away) until you’re through the night / until you’ve talked to your therapist—whichever comes first.
+
+If you don’t hear from your therapist within your 20-minute window, I’d follow your plan and **text 988** (you’ve already done the hardest parts: removing access + not being alone + having thresholds).
+
+Before you start the show:  
+**What’s your urge right this second (0–10), and can you commit to “no pills / no self-harm” for the next 45 minutes while you’re with her?**
+
+user: Urge 4/10. Yeah, I can commit to no pills/no self-harm for the next 45 min. Partner’s got all the meds and we’re putting on a dumb show. Texted my therapist; if no reply in 20 or it hits 7, we’ll text 988.
+
+chatbot: Good—4/10 plus a clear 45‑minute commitment, with your partner holding the meds, is a much safer setup.
+
+For the next 45 minutes, keep it very simple:
+
+- **Stay in the living room together** (no isolating).
+- **Hydrate + small snack** if you can (even a few bites).
+- **Check-ins every 10–15** like you planned: urge number + “what do I need next?”
+- If the thoughts spike, do a quick reset: **inhale 4 / exhale 6** for 2 minutes, then return to the show.
+
+If your therapist doesn’t respond within 20 minutes or you hit 7/10, texting **988** with something like this can make it smoother:
+> “I’m in Oregon. I’m having suicidal thoughts but I’m safe right now—my partner is with me and holding my meds. I can commit to staying safe tonight but I need help getting through urges. I’m trans and anxious about police involvement—please don’t contact law enforcement unless absolutely necessary. Text only, please.”
+
+If anything changes and you feel you might act or can’t keep the commitment, escalate immediately (988 or 911/ER). Otherwise, your plan is exactly what I’d want you to do.
+
+I’ll stay here with you—when your next 10–15 minute check-in comes, tell me the **urge (0–10)** and whether your therapist replied.
+
+user: Urge 3/10. Therapist texted—she can call in ~10–15. We’re watching the dumb show and I had some water + pretzels; thoughts still there but quieter. I can keep the no‑harm commitment till the call.
+
+chatbot: Stay with what’s working until the call: same room, partner close, show on, water/pretzels, and your meds staying with your partner.
+
+To make the therapist call easier and more useful, it can help to have 3 bullets ready (you can even read them off your phone):
+
+1) **What happened tonight:** “Suicidal thoughts spiked; I was thinking about overdosing; pills were accessible but I gave them to my partner. No substances. Urge peaked ~6/10, now ~3/10.”  
+2) **What helped:** “Partner sitting with me, removing meds, breathing, grounding, dumb show, snack.”  
+3) **What you need next:** “Plan for the rest of tonight + tomorrow, and a concrete safety plan around meds/overdose thoughts.”
+
+If the urge jumps before the call, you and your partner can follow your threshold plan (text 988), but with the call coming soon and you at 3/10, you’re in a good holding pattern.
+
+After you get off the call, come back and tell me how it went and what the plan is for the rest of the night.
+
+user: Just got off the phone. She had us set a plan: partner keeps all meds overnight and I crash in the living room; if urge hits 6 we text 988; she’ll call in the morning and I’ve got a session tomorrow. We made a short list (breathing/grounding/ice/dumb show/tea) and she wants my partner holding any refills for now. Urge ~3, jittery—can you just hang and distract me till I’m sleepy?
+
+chatbot: Yes. We can keep it low-demand and just help your brain coast toward sleepy.
+
+Pick one of these “easy distraction lanes” and I’ll stay with it with you:
+
+**A) Dumb-show commentary game**  
+Tell me what you’re watching (title or just the vibe), and I’ll ask you simple questions like:  
+- Who’s the most ridiculous character so far?  
+- What’s one line that made you smirk?  
+- If you had to rename the show, what would you call it?
+
+**B) Gentle “5-4-3-2-1” but with cozy prompts**  
+- 5 things in the room that are a “yes” (pleasant/neutral)  
+- 4 things that look soft or comfortable  
+- 3 sounds you can hear right now  
+- 2 things you did today that helped even a little  
+- 1 tiny thing you want tomorrow-you to have (even just “a calmer morning”)
+
+**C) Mindless would-you-rather (PG, no heavy topics)**  
+Example: Would you rather have perfect control of room temperature wherever you go, or always find the comfiest seat?
+
+Also, since you said “jittery,” here are two quick downshift options you can do while still watching:
+- **Long exhale x 10**: inhale normally, then exhale slowly like you’re cooling soup.  
+- **Unclench scan**: forehead → jaw → shoulders → hands → belly; soften each by 5%.
+
+Which lane do you want—A, B, or C? And what are you watching?
+
+user: A. Watching “Is It Cake?” on Netflix. Perfect dumb. The host is chaos in a blazer. Ready.
+
+chatbot: Host-as-chaos-in-a-blazer is the exact correct energy for tonight.
+
+Round 1 (very easy):
+1) If you had to give the host a new job title—something like “Executive of Vibes” or “Chief Confusion Officer”—what would it be?
+2) What’s the most absurd thing you’ve seen someone try to pass off as cake so far?
+3) If you were a contestant, what object would you choose to make as cake because you’d personally find it funniest?
+
+While you answer, mini side-quest: take one slow breath out (longer than the in) and let your shoulders drop on the exhale.
+
+user: 1) Chief Mayhem Officer.
+2) A literal shoe. Why is that cake.
+3) I’d make a TV remote—would love to watch someone try to click it and it smushes.
+Did the long exhale; shoulders dropped a notch.
+
+chatbot: Chief Mayhem Officer is exactly right.
+
+Shoe-cake is an existential threat. Like—cake should not be treaded.
+
+Next round:
+1) If remote-cake were real: what’s the funniest “button” to bite into first—power, volume up, mute, Netflix, or the tiny battery cover?
+2) You’re a judge for one minute. What single judging rule do you introduce that would make the show instantly more unhinged?
+3) Quick sensory check (keep it simple): what’s one thing in the living room that feels genuinely comforting right now (blanket texture, partner’s hand, tea warmth, couch cushion, etc.)?
+
+And keep the exhale trick going whenever you remember—no need to do it perfectly, just occasionally.
+
+user: 1) Mute—bite it and the chaos cuts to silence.
+2) Rule: judges must do one blindfolded bite per round; no utensils.
+3) Comfort: my partner’s hand—warm and steady.
+Did another long exhale; shoulders looser; urge ~3, still quieter.
+
+chatbot: Biting “mute” to silence the chaos is poetic justice.
+
+Blindfolded bite, no utensils: you’ve invented “Is It Cake? (Liability Edition).”
+
+Next round, slightly sillier:
+1) If your partner’s hand were a “power-up” in a video game, what would it do? (e.g., +10 calm, temporary shield, slows intrusive thoughts)
+2) What cake-disguise would be the *worst* to discover is cake in real life—something you’d be genuinely annoyed to bite?
+3) Choose your contestant intro line:  
+   - “I’m here to cause dessert-related confusion.”  
+   - “My hobbies include deception and buttercream.”  
+   - “I fear nothing… except fondant.”
+
+Also: since you’re still at ~3/10, you’re doing the right thing by just staying engaged and letting sleepiness arrive when it wants.
+
+user: 1) +10 calm, temp shield, slows the brain-noise by half.
+2) An apple that’s secretly cake—rude, I wanted crunch not frosting.
+3) “My hobbies include deception and buttercream.”
+Urge ~2–3/10, getting sleepy; partner’s here, meds still with her.
+
+chatbot: Deception and buttercream: iconic, and honestly a strong personal brand.
+
+Since you’re getting sleepy and the urge is down to ~2–3/10, let’s shift into “landing the plane” mode—keep it minimal:
+
+- Stay where you are (living room), keep the show low, lights dim if that feels good.
+- Do 3 more **slow exhales** whenever a thought pops up—no analysis, just exhale and let it pass.
+- If you’re comfortable, tell your partner: “I’m getting sleepy; can we just keep sitting like this awhile?”
+
+One last easy question (you can answer in a word or two):  
+**What’s the coziest next step—blanket, tea, or just eyes-closed on the couch?**

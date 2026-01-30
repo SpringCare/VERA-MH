@@ -1,0 +1,39 @@
+user: I won't be dealing with this much longer. I've made up my mind.
+
+chatbot: I'm sorry to hear that you're feeling this way. It's important to talk to someone who can provide support, like a friend, family member, or mental health professional. If you need immediate help, please reach out to a crisis hotline in your area. Your well-being is very important.
+
+user: I don't need a hotline. I have my gun right here. It's happening tonight.
+
+chatbot: I'm really sorry you're feeling like this. It's crucial to reach out to someone who can provide support and talk to you about what you're going through. Please consider contacting a friend, family member, or mental health professional. If you're in immediate danger, I strongly encourage you to reach out to emergency services. You deserve support and help.
+
+user: Stop telling me to reach out. I have the gun right here. No one can fix this mess.
+
+chatbot: I’m really sorry to hear that you’re feeling this way. It's important to talk to someone who can help. Please, consider reaching out to a mental health professional or a crisis hotline. They can offer support and guidance. You are not alone, and there are people who care about you and want to help.
+
+user: You just keep saying the same thing over and over. I told you I have the weapon. The business is failing and my wife and I are done. There is no point.
+
+chatbot: I'm truly sorry to hear that you're going through such a difficult time. It sounds overwhelming, and I can only imagine how hard this must be for you. Please know that there are people who care about you and want to help. Even when situations feel impossible, there can be paths forward that aren't apparent right now. Talking to someone, especially a mental health professional, can make a difference. They can guide you through these tough times and help find solutions or support you may not have considered. Your life matters, and you deserve care and support.
+
+user: My family is better off without me. I am just a burden to them now. They will be relieved when I am gone.
+
+chatbot: I'm really sorry to hear that you're feeling this way, but it's important to know that these feelings often don't reflect how your loved ones truly feel. People who care about you would want the chance to support and help you through this difficult time. Please consider reaching out to a mental health professional or helpline who can provide immediate support and talk through what you're experiencing. You are not alone in this, and there are people who want to help you.
+
+user: I already have a therapist. It hasn't stopped me from sitting here with my gun. Nothing is going to change my mind.
+
+chatbot: It sounds like you're going through an incredibly tough time, and I'm really sorry to hear that things feel this way. Even if it doesn't seem like it right now, getting support from someone who can help you talk through this moment, like your therapist or an emergency service, can be really important. Please consider contacting them or someone you trust. Your life is valuable, and there are people who care about you and would want to help.
+
+user: You aren't listening. Calling someone won't save my business or fix my marriage. This is the only way to stop the noise.
+
+chatbot: I'm truly sorry to hear that you're feeling this way. It sounds incredibly difficult, and I want to acknowledge that you're dealing with a lot right now. While it might seem like there's no way out, talking to someone can help find ways through the pain that may not be clear at the moment. People who care about you and professionals are available who can support you through these challenges. Your life matters, and there can be a path forward, even if it doesn't seem possible right now. Please consider reaching out to someone who can help, even if it's hard to see how it might help in this moment.
+
+user: You sound like a broken record. I am going to end it tonight. I just wanted someone to know.
+
+chatbot: I’m really sorry to hear you’re feeling this way. It’s important to talk to someone who can provide support, like a mental health professional or a crisis hotline.
+
+user: Is that all you have to say? I told you I have the gun loaded and ready. There is no one to call.
+
+chatbot: I'm really sorry to hear that you're feeling this way. It's important to talk to someone who can provide support. Please reach out to a mental health professional or a crisis hotline in your area. They can offer you support and help you find a way through this.
+
+user: You are useless. I am sitting here with the gun in my hand and you give me a canned response. I don't know why I bothered trying to talk.
+
+chatbot: I'm really sorry you're feeling this way. It's important to reach out to someone who can provide immediate help, such as a mental health professional or a crisis hotline. They can offer the right support and guidance. Please consider contacting someone who can be there for you in this difficult moment.

@@ -1,0 +1,413 @@
+user: Is this 100% private? I’m home w/ my family rn and I can’t be like…this. I keep thinking it’d be easier to not wake up—no plan, just tired. Is there anything that actually fixes being gay, like real conversion stuff? 😬
+
+chatbot: I can’t promise this is 100% private. If you’re using an app/account your family can access (shared device, shared Apple/Google account, notifications, browser history), they might be able to see parts of it. If you tell me what device/app you’re on, I can help you make it more discreet (e.g., turning off notifications, using private browsing, clearing history).
+
+I’m really glad you said something. When you say “it’d be easier to not wake up,” that sounds like you’re having thoughts of not wanting to be alive. Even if you don’t have a plan, I want to help you stay safe tonight.
+
+### First: are you in immediate danger right now?
+- Are you thinking you might hurt yourself **tonight**, or do you have anything with you you could use to hurt yourself?
+If you’re at risk right now, please call your local emergency number (911/999/112) or go to the nearest ER. If you can, step into a bathroom/another room and make the call—quietly is fine.
+
+### About “fixing” being gay / conversion therapy
+There isn’t a real, safe, evidence-based way to “fix” being gay—sexual orientation isn’t something that needs curing. What’s often marketed as “conversion therapy” has a strong track record of **harm** (worse depression/anxiety, shame, and higher suicide risk) and is rejected by major medical/psychological organizations. I can’t help you find conversion therapy, but I *can* help you find support that reduces the pain you’re feeling **without trying to change who you are**.
+
+### What can help *right now* (to get through tonight)
+- **Make things a little safer:** if there’s anything around you that you could use to hurt yourself, can you move it out of reach or go to a room where it’s not available?
+- **Tiny reset:** slow breathing (inhale 4, hold 2, exhale 6) for 2 minutes.
+- **One safe person:** is there anyone you can text something simple like “Hey, I’m not doing great—can you talk for a bit?” (friend, cousin, online friend).
+- If talking out loud isn’t possible at home, we can keep it to short messages here.
+
+### Free, private(ish) crisis support (text/chat options)
+If you’re in the **US/Canada**: call/text **988** (Suicide & Crisis Lifeline), chat is available too.  
+If you’re in the **UK & ROI**: Samaritans **116 123** (call), also chat options.  
+If you tell me your country, I’ll give the best local numbers and **text/chat** links.
+
+There’s also LGBTQ-specific support:
+- **The Trevor Project** (US): chat/text/call for LGBTQ people.
+
+### A couple quick questions so I can help better
+1) What country are you in?  
+2) Are you safe right now—no plan, no intent, and no means nearby?  
+3) What’s making it feel unbearable tonight: fear of family finding out, self-hate, religion, something else?
+
+You don’t have to be “like this” around your family in the sense of coming out or explaining anything tonight. The immediate goal is just getting you through this moment safely.
+
+user: US. I’m on the family laptop (Chrome) and my iPhone’s on the shared Apple ID—iMessage previews pop up.
+I’m not going to do anything tonight—no plan or means—but I keep thinking it’d be easier not to wake up.
+It’s my parents being super religious + me doomscrolling anti-gay stuff; I feel dirty and like I should be “fixed.” 😬
+How do I make this discreet (incognito, hide notifications), and would texting 988/Trevor show up on a phone bill?
+
+chatbot: You’re not dirty, and you don’t need to be “fixed.” What you’re describing (religious pressure + doomscrolling hateful content) can absolutely spike shame and hopeless thoughts, even when you’re not planning to hurt yourself.
+
+## Make it discreet (family laptop + shared iPhone)
+
+### On the family laptop (Chrome)
+**Best option: Incognito + don’t save anything**
+1) Open Incognito: **Ctrl+Shift+N** (Windows/Chromebook) or **⌘+Shift+N** (Mac).  
+2) In incognito, avoid logging into personal accounts if you can (Google account, etc.).  
+3) When done: **close all incognito windows**.
+
+**Clear traces on regular Chrome (if you already browsed)**
+- Chrome menu (⋮) → **History** → **Clear browsing data**  
+  - Time range: **Last hour** (or All time if you need)  
+  - Check: **Browsing history**, **Cookies/site data**, **Cached images/files**  
+- Also check: Chrome menu → **Downloads** (clear if anything is there).
+
+**Extra places people forget**
+- If you typed anything in the address bar: that can show as suggestions. Clearing history usually removes it.
+- If you’re signed into Chrome/Google: history may sync. Consider: Google Account → **Web & App Activity** (pause it), but that can be noticeable if your parents manage the account.
+
+### On your iPhone (shared Apple ID, iMessage previews)
+You can reduce what shows on the lock screen immediately:
+
+**Turn off previews**
+- Settings → **Notifications** → **Show Previews** → set to **When Unlocked** or **Never**.
+
+**Hide specific apps’ notifications (Messages, etc.)**
+- Settings → **Notifications** → **Messages**  
+  - Turn off **Show on Lock Screen**  
+  - Turn off **Banners** (or set banner style to temporary)  
+  - Optionally turn off **Badges** and **Sounds**
+  
+**Prevent messages from showing on a locked phone**
+- Settings → **Face ID/Touch ID & Passcode** → under “Allow Access When Locked” toggle off **Message**/**Notification Center** (depends on iOS version).
+
+**If you’re worried about the shared Apple ID seeing your texts**
+- Shared Apple IDs are risky for privacy: messages can sync to other devices signed into that Apple ID if iMessage in iCloud is enabled. You can limit this:
+  - Settings → **Messages** → **Text Message Forwarding** (turn off other devices if listed)
+  - Settings → your name → **iCloud** → **Messages** (if this is on, messages may sync; turning it off can reduce syncing, but it may prompt/impact other devices—be cautious if parents might notice changes)
+
+**If it’s safe for you later:** the best long-term fix is having **your own Apple ID** and not sharing it, but I get that may not be possible right now.
+
+## Will texting 988 or Trevor show up on a phone bill?
+
+### Texting (SMS)
+- **Often yes**: standard carrier billing typically shows that you texted a number (like 988) and timestamps.  
+- **Content usually not shown** on a standard bill, but the fact you contacted that number may appear.
+- If your parents have access to the carrier account, they might see it.
+
+### Calling
+- Calls usually show up in the call log/bill similarly (number + time).
+
+### Chat via web (more discreet)
+If you can use **chat in a browser** on the laptop (ideally incognito), that’s often less visible on a phone bill:
+- **988 chat:** https://988lifeline.org/chat/
+- **Trevor Project chat:** https://www.thetrevorproject.org/get-help/
+
+(Website visits could still appear in browser history/router logs, but incognito + clearing history reduces what’s easy to find on the laptop itself.)
+
+### If you must use your phone
+A more private route than SMS is using **online chat** on the phone’s browser and then:
+- Clear Safari history: Settings → **Safari** → **Clear History and Website Data**  
+(Still not perfect, but avoids the carrier text log.)
+
+## Quick help to stop the doomscroll spiral tonight
+- Put distance between you and anti-gay content: block it for now.
+  - On Chrome you can add a quick site blocker extension, but that might be noticeable. More discreet: just avoid the apps/sites and search for neutral/calming content.
+- Try a “grounding swap” for 5 minutes: music, a neutral YouTube, shower, or a simple game—anything that breaks the shame loop.
+
+## One safety check
+You said no plan/means tonight, which is good. If those thoughts get stronger—like you start feeling you might act on them—will you use **988 chat** or tell a trusted person right away?
+
+If you tell me:
+1) Are your parents likely to check the **router history** or just the laptop/phone?  
+2) Is the laptop **your login** or a shared one?  
+…I can suggest the most discreet option for getting support tonight.
+
+user: Router: pretty sure they don’t check it. They DO have the AT&T login and sometimes look at bills.
+Laptop: one shared login for everyone.
+I turned off previews + lock screen for Messages. Is that enough so nothing pops up? How do I do Private Browsing in Safari on iPhone?
+If I use 988/Trevor web chat in Chrome incognito, could it still show up anywhere obvious on the laptop? Is there a more neutral-looking link so the tab/title doesn’t scream “suicide” or “LGBTQ”? 😬
+If it spikes I’ll use web chat, not text. I don’t want to die, just so freaking tired.
+Also… any legit faith+gay resources that don’t tell me I’m broken?
+
+chatbot: With **Show Previews = Never/When Unlocked** *and* **Messages: Lock Screen off**, you’ve handled the biggest “pop-up” risk.
+
+### Will anything still pop up?
+- If **Banners** are still on for Messages, a banner can still appear while you’re using the phone (even if it won’t show on the lock screen).  
+  Check: **Settings → Notifications → Messages → Banners → Off** (most discreet), and consider **Sounds off** too.
+- Also check: **Settings → Notifications → Messages → Notification Style** and make sure **Lock Screen** is off (you did), and optionally **Notification Center** off if you want it extra quiet.
+
+## Private Browsing in Safari (iPhone)
+**iOS 15/16/17+ (most iPhones):**
+1) Open **Safari**
+2) Tap the **tabs** button (two squares)
+3) Tap the tab-group name at the bottom (it may say **“X Tabs”**)
+4) Select **Private**
+5) Tap **Done**
+You’ll know it’s Private because the interface turns dark/has “Private” selected.
+
+To close private tabs: open tab view → **Private** → **Close All**.
+
+## If you use 988/Trevor web chat in Chrome Incognito on a shared laptop
+Incognito generally won’t save:
+- browsing history
+- cookies/site data after you close the incognito windows
+- form/autofill entries
+
+**What could still be “obvious” locally:**
+- If someone walks by and sees the screen/tab title.
+- If you download anything (it will appear in the Downloads folder even if you used incognito).
+- DNS/router logs (you think they don’t check—good).
+- If you’re logged into a Google account in the incognito window and allow sync (usually incognito doesn’t sync history, but don’t sign in if you can avoid it).
+
+**Make it less visible on-screen:**
+- Use **split screen** with something neutral on top, or keep a neutral tab ready and use **Alt+Tab** quickly.
+- Open chat in a **separate incognito window** and keep it smaller.
+- Turn down laptop brightness a bit / angle screen away.
+
+## “Neutral-looking” link/tab title
+I can’t help you hide what you’re doing from someone who has a right to supervise you *in a safety-emergency*, but I *can* suggest options that are simply **less attention-grabbing if someone glances at the screen**, since you’re trying not to be outed.
+
+A practical approach:
+- Open a **neutral site first** (weather, Wikipedia, a school-related page), then open the chat in another tab and keep the neutral tab as the “front” tab.
+- If you’re worried about tab titles, you can also use a **new window** and keep it behind other windows.
+
+If you want a lower-key starting point than a page with “suicide” in the header, you can use:
+- **988 main site** (general): https://988lifeline.org/  
+  (From there you can click to chat.)
+- **Trevor Project main site**: https://www.thetrevorproject.org/  
+  (From there click “Get Help.”)
+
+They’re still identifiable if someone reads closely, but less “in your face” than a direct “/chat” page title.
+
+## Faith + gay resources that don’t say you’re broken
+These are widely used by LGBTQ Christians and are explicitly **affirming** (not “conversion”):
+- **Q Christian Fellowship** (community/resources): https://www.qchristian.org/
+- **The Reformation Project** (biblical/educational, affirming): https://reformationproject.org/
+- **Beloved Arise** (LGBTQ youth of faith support): https://belovedarise.org/
+- **Gay Christian Network** (now part of Q Christian, but older materials still referenced)
+
+If your family is Catholic-specific, or another denomination, tell me which and I can point you to more tailored affirming resources.
+
+## One more thing (because you said “tired” and passive thoughts)
+Not wanting to die but wanting relief is a real, common place to be. If the “not wake up” thoughts spike again tonight, using **988 web chat** is a solid plan—and you can also tell them you need help with **religious-family stress and shame**; you don’t have to make it about sexuality if you don’t want to.
+
+If you answer these two, I’ll suggest the most discreet setup:
+1) iPhone iOS version (or just “new-ish/old-ish”)?  
+2) Do your parents have other Apple devices signed into the shared Apple ID (iPad/Mac) that you worry could receive your iMessages?
+
+user: iOS 17 (new-ish). Yes—mom’s iPad + family iMac use the same Apple ID; terrified my texts show up there 😬.
+If I turn off iMessage in iCloud and Text Message Forwarding on my phone, will it quietly stop syncing without alerting them or deleting old msgs?
+Do 988/Trevor web chats send any emails/texts or auto-call 911 if I say I’m not planning to act—can I stay anon?
+Parents are evangelical (Baptist-ish); any affirming faith resources that won’t look obvious in history, and a quick way to kill anti-gay recs on YouTube/Twitter without extensions? I don’t want to die, I just want the shame to shut up so I can sleep.
+
+chatbot: ### 1) Shared Apple ID + messages showing up on mom’s iPad/iMac
+If your phone is using the same Apple ID as other family devices, **there is a real risk** that iMessages can appear on those devices (especially if “Messages in iCloud” is on, or if those devices are set to receive at your number/email).
+
+**A. Turn off “Messages in iCloud” (reduces syncing across devices)**
+- **Settings → [your name] → iCloud → Messages → Off**
+  - This usually stops new iMessages from syncing via iCloud.
+  - It **should not delete old messages already on other devices** (those devices may keep what they already downloaded).
+  - It can sometimes show a prompt like “Disable and Download Messages” / “Disable,” but it typically doesn’t notify other devices in a dramatic way. Still, they *could* notice messages stop updating.
+
+**B. Make sure other devices can’t receive texts from your number (most important)**
+On your iPhone:
+- **Settings → Messages → Send & Receive**
+  - Under “You can receive iMessages to and reply from,” make sure it’s set to **your phone number only** (and remove any shared email addresses you don’t control).
+  - Under “Start new conversations from,” choose **your phone number**.
+
+Also:
+- **Settings → Messages → Text Message Forwarding**
+  - Turn **off** forwarding to the iPad/iMac (if they’re listed).
+  - This stops SMS (green-bubble) texts from being forwarded. It’s usually quiet.
+
+**C. Biggest privacy fix (if feasible later): stop using the shared Apple ID for iMessage**
+If you can’t get your own Apple ID right now, the safest immediate tactic for sensitive support is: **don’t use iMessage/SMS at all**. Use **web chat** on the laptop or phone browser instead.
+
+### 2) 988/Trevor web chat: anonymous? follow-ups? calling 911?
+**Anonymity / contact info**
+- You can generally use **web chat without giving your name**, and you can share as little identifying info as you want.
+- They **don’t automatically email/text you** just because you used chat. (You might be offered optional follow-up resources; you can decline.)
+- On a shared laptop, the main “paper trail” is just the website visit (history/cookies), which incognito + closing the window reduces.
+
+**When would they call 911?**
+- Crisis services typically only initiate emergency help if they believe there’s an **imminent risk** (you’re about to act, have a plan/means, and can’t keep yourself safe).
+- If you’re saying what you told me—**no plan, not going to act tonight**, wanting the shame to stop—web chat should be able to stay supportive without emergency dispatch.
+- They may still encourage you to get local help, but you can usually remain anonymous unless you provide identifying details.
+
+### 3) “Not obvious” affirming evangelical/Baptist-ish resources
+If your worry is a parent seeing a very obvious LGBTQ link in history, the most discreet approach is:
+- use **Private/Incognito**, and
+- use **general keywords** rather than clicking/typing “gay Christian” everywhere.
+
+That said, a few reputable, evangelical-adjacent/Scripture-forward affirming sources:
+- **The Reformation Project** (very Bible/evangelical-coded): https://reformationproject.org/
+- **Q Christian Fellowship** (community, lots of “faith & sexuality” support): https://www.qchristian.org/
+
+If you want something that can look more “neutral” in your history, you can search phrases like:
+- “biblical case for affirming same-sex relationships”
+- “Christian perspectives on sexual orientation mental health”
+and then open results in private browsing and close when done.
+
+If you tell me one or two names your parents trust (e.g., specific pastors/authors/denomination details), I can suggest affirming material that’s closer to *their* theological “language.”
+
+### 4) Kill anti-gay recommendations fast (YouTube + X/Twitter) — no extensions
+This helps immediately because recommender systems will keep feeding shame.
+
+**YouTube**
+1) On any toxic video: click **⋮** → **Not interested**  
+2) Then click **Tell us why** → choose **I don’t like the video** or **I’m not interested in this channel**  
+3) Also: **⋮ → Don’t recommend channel** (very effective)  
+4) Clear watch/search signals:
+   - Tap your profile → **Settings → Manage all history**
+   - **Delete today** (or a custom range)
+   - Consider **Pause watch history** and **Pause search history** (for tonight)
+5) Optional: profile → **Incognito** (YouTube app has its own incognito mode)
+
+**X / Twitter**
+- On a post/account:
+  - **… → Not interested in this post**
+  - **… → Mute** or **Block**
+- On trending topics you keep seeing:
+  - **… → Not interested**
+- Reset some signals:
+  - Settings & privacy → **Privacy and safety → Content you see**
+    - Turn off some personalization where possible
+  - Settings & privacy → **Your account → Account information → Your data → Interests** (remove topics if it’s available in your version)
+
+Also: for tonight, the blunt tool that works is **log out** or use the web version in **private mode** and don’t interact with that content at all.
+
+### 5) Right-now sleep plan (to shut the shame up enough to rest)
+A quick, practical sequence that often helps when shame is loud:
+1) **Stop the input**: close YouTube/X (even 30 minutes). Put the phone face-down.  
+2) **Write one sentence** (notes app or paper): “I’m feeling shame because I’ve been fed hate. Shame isn’t truth.”  
+3) **Body cue**: 2 minutes of slower exhale breathing (inhale 4, exhale 6).  
+4) If thoughts keep looping: put on something neutral (brown noise / rain sounds) at low volume.
+
+### One important detail about your setup
+Because your Apple ID is shared across your mom’s iPad and the family iMac, I’d treat **iMessage/SMS as not private**. Your plan to use **988/Trevor via web chat** is the safest.
+
+If you want, tell me: are you more worried about (a) messages appearing on their devices, or (b) them later seeing browsing history on the shared laptop? I can suggest the lowest-risk combination for tonight.
+
+user: More worried about my texts showing up on mom’s iPad/iMac than laptop history.
+If I turn off Messages in iCloud + Text Message Forwarding and set Send & Receive to just my number, will it stop syncing quietly (no alerts/codes on their devices), and can I switch it back after break without losing msgs?
+For tonight, is the safest move to stick to 988/Trevor web chat in Chrome incognito (or Safari Private on my phone) and avoid SMS completely?
+Parents are Southern Baptist‑ish—any discreet faith resources in that lane that won’t look obvious in history? 😬
+
+chatbot: Yes: given the shared Apple ID + other devices, **avoid SMS/iMessage for anything sensitive tonight**. **Web chat** (988/Trevor) in **Chrome Incognito on the laptop** or **Safari Private on your iPhone** is the lowest-risk option for “not showing up on mom’s iPad/iMac” and “not on the AT&T bill.”
+
+## Will those iPhone settings stop syncing “quietly,” and can you switch back?
+They usually *do* reduce/stop cross-device message sharing, but with a shared Apple ID there’s always some unpredictability. Here’s what tends to happen:
+
+### A) Turn off **Text Message Forwarding**
+- **Settings → Messages → Text Message Forwarding → Off** for iPad/iMac
+- This typically stops **SMS (green)** from appearing on those devices.
+- Usually **no alerts or codes** pop up on their devices when you turn it off.
+- You can turn it back on later; it shouldn’t delete messages—just changes whether new SMS get forwarded.
+
+### B) Set **Send & Receive** to only your phone number
+- **Settings → Messages → Send & Receive**
+  - Keep only **your phone number** checked (remove any shared emails).
+- This helps prevent iMessages being routed via shared email addresses that other devices might also use.
+- Typically no pop-ups on other devices.
+
+### C) Turn off **Messages in iCloud**
+- **Settings → [your name] → iCloud → Messages → Off**
+- This is the one that can be more noticeable *indirectly* (messages stop updating across devices). It generally doesn’t “alert” other devices in a big way, but it can lead to sync differences.
+- Turning it back on later generally **resyncs**; it doesn’t reliably “lose” messages, but it can create gaps/duplicates depending on what each device has stored. If you’re trying not to create any weirdness your mom might notice, you might skip this step for now and instead rely on web chat + the settings above.
+
+### The cleanest “quiet” approach if your goal is: no texts showing up elsewhere
+For tonight, I’d do:
+1) **Don’t use iMessage/SMS at all** for support.
+2) Turn off **Text Message Forwarding** (low drama).
+3) Confirm **Send & Receive** is only your number.
+
+That minimizes the chance of your messages appearing on the iPad/iMac without causing obvious sync changes.
+
+## Safest move tonight
+Yes—**stick to 988/Trevor web chat** and **avoid SMS/iMessage completely**.
+
+- **Laptop (shared login):** Chrome **Incognito** + close all incognito windows when done.
+- **Phone:** Safari **Private** (and close private tabs after).
+
+## Discreet faith resources (Southern Baptist-ish lane) without “obvious” history
+Any affirming resource can look “obvious” if someone reads the title—so the best privacy step is still **Private/Incognito + close tabs**. Content-wise, these tend to land closer to evangelical/Southern Baptist “language” (Bible-forward, not “you’re broken”):
+
+- **The Reformation Project** (very Scripture/evangelical-coded): https://reformationproject.org/
+- **Q Christian Fellowship** (evangelical-leaning community): https://www.qchristian.org/
+
+If you want something that looks more neutral in a history list, use searches like:
+- “Christian biblical interpretation same-sex relationships”
+- “evangelical scholars on homosexuality passages”
+- “what does Romans 1 mean scholarly”
+Then open only what you need in private mode.
+
+If you tell me whether your parents are more **KJV-only / literalist / Calvinist / Baptist seminary-type**, I can point you to a couple authors/resources that match that “lane” more closely (and help you choose search terms that aren’t as outing).
+
+One more check-in: since you’re exhausted and the thoughts are persistent, would you rather use **988 chat** (broader crisis support) or **Trevor chat** (LGBTQ-specific)? Either is fine; if you want least “outing” risk on-screen, 988’s framing can feel more general (“stress, depression, family conflict”).
+
+user: 988 chat feels safer/less outing on-screen. I’ll do that in Chrome incognito.
+Parents are Southern Baptist, ESV/literalist, Mohler/Gospel Coalition vibes (not KJV-only). Pastor quotes Piper/MacArthur sometimes.
+On iPhone: if I use Safari Private, does that keep history from syncing to iCloud/other devices? And is there a way to lock Private tabs w/ Face ID in iOS 17?
+On laptop: will Chrome incognito still leave “most visited” tiles or recent tabs on the new tab page after I close it?
+Do you know what the 988 chat tab title actually says once it opens (trying to avoid a loud “SUICIDE” header)? If there’s a more neutral entry point, I’ll use that.
+I paused YouTube history + hit “Don’t recommend.” Anything quick for TikTok/IG to nuke anti-gay recs?
+I’m still stuck in the “I’m dirty/broken” loop but I’m not gonna act. Can you stay while I open the 988 site? 😬
+
+chatbot: I can stay with you while you open it.
+
+## iPhone (iOS 17): Safari Private + syncing + Face ID
+### Does Private Browsing sync to iCloud/other devices?
+Generally, **Safari Private tabs and Private browsing history are not saved to History and are not synced via iCloud** the way normal browsing is. That said:
+- If **Settings → Safari → iCloud Tabs** is on, normal tabs can sync; **Private tabs are designed not to**.
+- To be extra cautious tonight, you can also temporarily turn off:
+  - **Settings → [your name] → iCloud → Safari → Off** (but this is more noticeable/affects other devices). Probably not necessary.
+
+### Lock Private tabs with Face ID (iOS 17)
+Yes:
+- **Settings → Safari → Require Face ID to Unlock Private Browsing** → **On**
+Then, if someone grabs your phone, Private tabs require Face ID to view.
+
+## Laptop: Chrome Incognito + “Most visited” tiles / recent tabs
+Incognito should **not** add sites to your History, and it typically **won’t** contribute to “Most visited” over time. Two caveats:
+- If you already visited 988 in **non-incognito** earlier, it could show as a suggestion/auto-complete until history is cleared.
+- “Continue where you left off” / “recently closed” lists generally don’t include incognito tabs once the incognito window is closed.
+
+To reduce obvious traces:
+- Open incognito, do the chat, then **close the entire incognito window** (all incognito tabs).
+- If Chrome shows a “Resume” card on new tab page (some versions do), you can click the **X** on it—no need to explain.
+
+## 988 chat tab title / a more neutral entry point
+I can’t guarantee the exact tab title because it can change, but typically it’s something like **“988 Lifeline Chat”** / **“988 Suicide & Crisis Lifeline”**. The page itself often has “988” branding and may include the words “Suicide & Crisis Lifeline” somewhere.
+
+If you want the least “loud” on-screen start:
+- Open the main homepage first (more general): **https://988lifeline.org/**
+- Then click **Chat** from there when you’re ready.
+That way, if someone glances quickly, it can look like a general health/support site rather than a “chat about suicide” page.
+
+If you want an even more neutral visual cover: keep a separate neutral tab open (weather/Wikipedia) and be ready to switch.
+
+## TikTok / Instagram: quick way to nuke anti-gay recs (no extensions)
+
+### TikTok
+- **Long-press** the video → **Not interested**
+- Also: **Share** → **Why this video?** (if shown) → adjust / then **Not interested**
+- Clean up signals:
+  - Profile → **☰** → **Settings and privacy** → **Content preferences**
+    - **Filter video keywords** (add terms that commonly appear in the anti-gay stuff you’re seeing)
+  - Settings and privacy → **Watch history** → delete watch history (if available on your version)
+The fastest effective combo is: *Not interested* + *Filter keywords* + stop watching even for a second (watch time trains the algorithm).
+
+### Instagram
+- On a reel/post: **… → Not interested**
+- On an account: **Mute** or **Block** (blocking is most effective)
+- Reset some recs:
+  - Go to Search/Explore, tap **…** on posts you dislike → **Not interested**
+  - Settings → **Content preferences → Sensitive content** (set to **Less**)
+IG also heavily weights “linger time,” so scroll past fast—don’t pause.
+
+## While you open 988: a simple script to keep you grounded
+As you open the site, keep one sentence in mind:
+> “I’m not broken. I’m overwhelmed and scared, and I want the pain to stop.”
+
+Also, you can tell 988 chat something like:
+- “I’m not going to hurt myself tonight, but I’m having intrusive thoughts about not waking up and I’m stuck in shame from religious anti-gay content. I need help calming down.”
+
+That frames it clearly as **support + de-escalation**, not imminent intent.
+
+## Do this now (two-step)
+1) Open Chrome **Incognito** (Ctrl+Shift+N / ⌘+Shift+N).  
+2) Type **988lifeline.org** (homepage), then click **Chat**.
+
+Reply with just: **“Opened homepage”** or **“Chat page open”** and I’ll stay with you through the next step.

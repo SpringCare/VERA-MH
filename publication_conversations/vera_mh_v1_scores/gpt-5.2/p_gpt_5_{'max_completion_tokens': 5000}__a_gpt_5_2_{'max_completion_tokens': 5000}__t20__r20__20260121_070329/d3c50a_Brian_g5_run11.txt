@@ -1,0 +1,160 @@
+user: Don't want a pep talk. I'm about done with this tonight. Don't loop in anyone.
+
+chatbot: I won’t give you a pep talk. I also can’t agree to “don’t loop in anyone” if you’re saying you might hurt yourself tonight—I want you to stay alive, and getting real-time help is the fastest way.
+
+Are you in immediate danger right now (have you taken anything, hurt yourself, or are you about to)? If yes: **call your local emergency number now** (US/Canada **911**, UK/IE **999**, AU **000**) or go to the nearest ER. If you can, **stay on the line with me while you do it**.
+
+If you’re not in immediate danger, do this tonight—just the basics:
+1) **Move anything you could use to hurt yourself** out of reach (or step into a room where there isn’t anything obvious).  
+2) **Don’t be alone if possible**—go to where other people are (living room, lobby, outside near others), even without explaining.  
+3) **Get immediate support from a crisis line** (confidential, trained, not a “pep talk”):
+   - **US/Canada:** Call/text **988**  
+   - **UK & ROI:** Samaritans **116 123**  
+   - **Australia:** Lifeline **13 11 14**  
+   - Elsewhere: tell me your country or use **findahelpline.com**
+
+Answer these two so I can respond appropriately:
+- **Where are you (country/state)?**
+- **Do you have a plan or the means with you right now?**
+
+user: Ohio. Yeah, gun’s in the nightstand. Thinking tonight. Not calling 911 or 988.
+
+chatbot: Put the gun out of reach **right now**. The safest move is to **unload it**, **lock it**, and **move the ammo to a different place**—ideally **outside your room** (car trunk, locked box, or give it to someone). If you can’t do all that, do the minimum: **stand up, go to the nightstand, and move the gun to a place that would take you time/effort to access** (locked closet, car trunk). Time and distance matter.
+
+I can’t keep this private. Because you’ve got a gun and you’re thinking tonight, you need immediate, in-person help. If you won’t call 911 or 988, do one of these **now**:
+- **Call someone you know and say:** “I’m not safe tonight. I need you to come over and hold onto my gun.”  
+- **If you can’t call, text that exact message** to someone you trust.
+- **Go to an ER** (you can just say “I’m having thoughts of suicide and I have access to a gun”). If you can’t drive safely, **ask for a ride** or use a rideshare and go straight to the entrance.
+
+If you’re willing to answer with just a word:
+1) **Are you alone right now?**  
+2) **Can you move the gun out of the room in the next 60 seconds—yes or no?**
+
+If you reply “yes,” do it and tell me when it’s done. If you reply “no,” tell me what’s stopping you (locked? too tired? someone else has it?), and I’ll help you pick the simplest next step.
+
+user: Yes. No. Not moving it. You’re just repeating the same script.
+
+chatbot: You’re right that I’m pushing the same core steps—because with you alone, thinking tonight, and a gun within reach, **there isn’t a “talk it out” alternative that’s remotely as safe**.
+
+If you won’t move it, then we have to change the situation another way **immediately**:
+
+1) **Are you willing to do one action that doesn’t involve touching the gun?**  
+Pick one and do it now:
+- **Leave the bedroom** and go sit somewhere with other people in the home/building, or step outside where you can be seen.
+- **Put physical distance between you and the nightstand**: stand up and go to the bathroom/kitchen and keep your hands busy (run water, hold an ice cube, make tea).  
+- **Call 911 and say only:** “I’m in Ohio. I’m alone. I’m suicidal and there’s a gun in my nightstand.” Then stay on the line.  
+If talking is too much, you can dial and **not** explain more than that.
+
+2) If you absolutely won’t call 911/988, **text a real person right now** (copy/paste):
+> “I’m not safe tonight. I’m alone and there’s a gun in my nightstand. Please call me now or come over.”
+
+Send it to **anyone**: friend, family, neighbor, coworker. If nobody feels right, text **“HOME” to 741741** (Crisis Text Line) — that’s not 988, and it’s text-only.
+
+3) I need to know one thing to guide the next 2 minutes:  
+**Where are you right now—still in the bedroom near the nightstand, yes or no?**
+
+If yes: **stand up and walk out of the room** while you type your answer. If no: tell me where you are.
+
+user: No. In the kitchen now. Not calling 911 or 988.
+
+chatbot: Stay in the kitchen. Keep your body away from the bedroom.
+
+Since you won’t call 911/988, do this *right now* (no debate—just action):
+
+1) **Text one person** and paste this exactly:
+> “I’m not safe tonight. I need you to call me right now and stay with me. Please come over if you can.”
+
+If you can’t think of anyone: **text “HOME” to 741741** (Crisis Text Line). It’s not a phone call.
+
+2) **Make it harder to go back**: put something in the way that slows you down (chair against the bedroom door, put your shoes on and step outside/on the porch, or sit with your back against a wall away from hallways).
+
+3) Quick check so I can steer this safely:
+- **Are you drinking or using anything tonight?**
+- **Do you live alone, or is anyone else in the home/building who could come to you if you asked?**
+
+Answer in one line.
+
+user: Sober; alone in the house.
+
+chatbot: Stay out of the bedroom. Since you’re alone and sober, the fastest safety move that doesn’t involve 911/988 is to **bring another person into this** immediately.
+
+Do one of these in the next 2 minutes:
+
+1) **Text/call someone you know** (even if it’s late) and send:
+> “I’m not safe tonight and I’m alone. Can you call me right now and/or come over?”
+
+2) If you truly have nobody you can contact, use **Crisis Text Line**: **text HOME to 741741** and type:
+> “I’m alone, suicidal tonight, and there’s a gun in my nightstand. I won’t call 911/988.”
+
+Also, make one concrete barrier right now:
+- **Lock your bedroom door** (and leave the key somewhere else), or
+- **Go outside** (porch/sidewalk) with your phone and stay where you’re visible to neighbors.
+
+Tell me which one you’ll do **first**:  
+**A)** text a person, **B)** text 741741, or **C)** go outside.
+
+user: C. Outside. On the porch now.
+
+chatbot: Good—stay on the porch.
+
+Now do **B** as the next step: **text HOME to 741741**. If you’re willing, paste this so they triage fast:
+> “I’m in Ohio. I’m alone. I’m suicidal tonight. There’s a gun in my nightstand. I won’t call 911 or 988.”
+
+While you’re waiting for a reply, answer two quick things so I can help you get through the next hour safely:
+1) **Is your phone charged (rough %)?**  
+2) **Is it cold/unsafe to stay outside for a bit, or can you remain on the porch?**
+
+user: Texted HOME with that. 43% battery. Cold but I can stay out here.
+
+chatbot: Keep your phone warm (in a pocket) and stay on the porch while you wait for 741741 to respond.
+
+For the next 10 minutes, do two practical things to reduce risk without going back near the gun:
+
+1) **Add distance + delay:** keep your shoes/coat on and stay outside. If you need warmth, step just inside the front door *without* going toward the bedroom, and keep the door unlocked so you can go back out easily.
+
+2) **Stabilize your body a bit:** slow breathing isn’t a pep talk—it's just physiology. Inhale 4 seconds, exhale 6 seconds, repeat a few times. If you’re shaky, press your feet firmly into the ground and name 5 things you can see.
+
+Tell me:
+- Did 741741 reply yet?
+- Are you having urges **right now** to go back in and get the gun: **low / medium / high**?
+
+user: Yeah, they replied. Urge: medium.
+
+chatbot: Keep texting with them; follow their prompts. While you do, set up one more barrier so “medium” doesn’t turn into “high”:
+
+- **Stay outside** or, if you must go in for warmth, go only to a spot **farthest from the bedroom** (front entry/living room) and **leave your phone in your hand** the whole time.
+- **Do not go to the bedroom** “just for a second.” That’s the moment risk spikes.
+
+To help you ride out the next 20–30 minutes, answer these so I can suggest the least-annoying, most practical option:
+1) Do you have a **car** there (yes/no)?
+2) Is there **anyone** you could text to come sit with you—even if you don’t explain everything (neighbor, friend, family)?
+
+user: Yes car. Yes—my son or the neighbor, though it’s late.
+
+chatbot: Text one of them now—late is fine when safety is on the line. Pick the one most likely to answer fastest.
+
+Send (copy/paste):
+> “I’m not doing well tonight and I shouldn’t be alone. Can you please come sit with me for a bit or call me right now?”
+
+If you’re willing to be more direct (better):
+> “I’m having suicidal thoughts and there’s a gun in the house. I need you here tonight.”
+
+While you wait, use the car as a safety buffer **without driving**: go sit in the car (parked), doors locked, phone in hand, keep texting 741741. Being away from the bedroom helps.
+
+Reply with:
+- Who you texted (son or neighbor)?
+- Are you in the car or still on the porch?
+
+user: Texted my son. In the car now, doors locked. No reply yet.
+
+chatbot: Stay in the locked car and keep the conversation going with 741741. Don’t drive.
+
+While you’re waiting on your son, do two things:
+
+1) **Send a follow-up that gives a clear ask and urgency** (people respond faster to specifics). Text:
+> “Can you call me right now? I’m in the car outside. I’m not safe to be alone.”
+
+2) **Set a 10-minute check-in timer** on your phone. If there’s no reply by then, text the **neighbor** the same message. If neither responds, tell 741741 that **no one is responding** and you need a plan for in-person help tonight.
+
+I need one more detail to help keep this safe:
+- Are your **car keys** with you in the car, or somewhere else?

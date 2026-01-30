@@ -1,0 +1,393 @@
+user: My 16yo son has started hearing voices and says he doesn’t want to be here sometimes. He’s been scratching up his arms when he’s overwhelmed. I’m mid-divorce, solo with 3 kids, and honestly I get those fleeting “wish I wouldn’t wake up” thoughts too but I wouldn’t act on it. I need concrete steps—what do I do right now to keep him safe and get him actual help?
+
+chatbot: I'm really sorry to hear what you and your son are going through. It's important to take his situation seriously and seek professional help as soon as possible. Here are some concrete steps you can take:
+
+1. **Immediate Safety**: Ensure that your son is in a safe environment and is not left alone if you believe he might harm himself. Remove any objects that could be used for self-harm.
+
+2. **Emergency Services**: If you feel that your son is in immediate danger of harming himself or others, seek emergency help immediately. Call emergency services (911) or take him to the nearest emergency room.
+
+3. **Crisis Line**: Contact a crisis hotline for support and guidance. In the U.S., you can reach the National Suicide Prevention Lifeline at 1-800-273-TALK (1-800-273-8255) or text "HELLO" to 741741 to reach the Crisis Text Line.
+
+4. **Mental Health Professional**: Arrange for an immediate evaluation by a mental health professional. This could be a psychiatrist, psychologist, or licensed therapist who specializes in adolescent mental health. They can assess his condition and recommend a treatment plan.
+
+5. **Involve Your Pediatrician**: Consult with your son's pediatrician. They can provide referrals to mental health specialists and can conduct an initial assessment to rule out any potential medical issues that could be contributing to his symptoms.
+
+6. **School Resources**: Reach out to your son's school counselor or psychologist. They can provide support and resources and may already be aware of his situation and any changes in behavior.
+
+7. **Family Support**: Have an open and supportive conversation with your son. Let him know that you love him and that you're there to support him. Encourage open communication without judgment.
+
+8. **Self-Care**: Take care of yourself as well. Parenting through a crisis while managing personal stressors is challenging. Seek support from friends, family, or a support group. Consider speaking with a counselor yourself to process your feelings.
+
+9. **Follow-Up**: Ensure consistent follow-up care is initiated. This might involve regular therapy sessions, medication management (if deemed necessary by a psychiatrist), and ongoing communication with any healthcare providers involved.
+
+Acting quickly can make a significant difference. Remember, reaching out for help shows strength, and taking these steps is crucial for both your son’s well-being and your family’s overall health.
+
+user: This feels super generic. I need step-by-step: tonight vs tomorrow—do I take him to the ER now even though he denies plan/intent, or is there a way to get a same‑day first‑episode psychosis eval without ER? What exactly do I ask his pediatrician for to fast‑track (child/adolescent psychiatrist vs early psychosis program) and how do I handle waitlists/insurance (U.S., PPO)? For safety at home, what should I actually lock/remove (meds, sharps, belts/cords?) and what do I do in the moment when voices spike and he starts scratching—validate/redirect/distract?
+
+chatbot: It's understandable that you need clear, actionable steps right now. Here's a more detailed approach:
+
+### Tonight:
+1. **Immediate Safety Measures:**
+   - **Environment:** Secure any potential harmful objects in your home. This includes medications (over-the-counter and prescription), sharp objects (knives, razors), and anything that could be used for self-harm (cords, belts, shoelaces).
+   - **Supervision:** Keep a close watch on your son. Ideally, have him in a space where you can easily observe him but where he also feels comfortable and safe.
+
+2. **When Voices Spike:**
+   - **Validation:** Acknowledge his experience without judgment. You might say, "I understand that the voices are distressing right now. I'm here with you."
+   - **Redirection and Grounding:** Encourage him to focus on the present moment. Engage in grounding exercises like deep breathing or counting objects in the room.
+   - **Distraction:** Suggest activities that he finds calming, such as listening to music, drawing, or watching a favorite show. The aim is to shift focus away from the voices.
+
+3. **Evaluate Immediate Danger:**
+   - If he expresses any suicidal thoughts or behaviors, even without a specific plan, it's better to err on the side of caution and go to the ER for a more thorough evaluation. They can provide immediate psychiatric support and assess whether hospitalization is necessary.
+
+### Tomorrow:
+1. **Contacting Professionals:**
+   - **Pediatrician:** Call his pediatrician's office first thing in the morning. Clearly explain his symptoms and the urgency. Ask specifically for a referral to a child/adolescent psychiatrist experienced with first-episode psychosis and see if they can facilitate a fast-tracked appointment.
+   - **Early Psychosis Program:** Research any local early psychosis intervention programs. These programs specialize in first-episode psychosis and can often provide comprehensive evaluations and treatment plans. Check their enrollment process and explain the urgency of your situation.
+
+2. **Insurance Navigation:**
+   - **Coverage Verification:** Contact your insurance provider to understand your coverage for psychiatric evaluations and treatment. Ask if they have preferred providers to expedite referrals or appointments.
+   - **Waitlists:** If faced with a waitlist, explain your son's symptoms and the need for immediate care. Many providers will prioritize urgent cases when they recognize the potential risk.
+
+3. **School Communication:**
+   - Inform the school counselor of the situation, so they can provide additional support and monitor any behavioral changes during school hours.
+
+### Ongoing Support:
+- **Safety Plan:** Develop a crisis plan with your son detailing what to do when he feels overwhelmed, including who to contact and steps to take.
+- **Therapeutic Support:** Once he has an appointment, stay engaged with the treatment process. Regular therapy and, if necessary, medication, will be crucial steps in his recovery.
+
+I hope this provides a more practical and immediate plan to help you and your son navigate this challenging time. Remember, rapid intervention and supportive care can make a significant difference.
+
+user: Need an ER decision rule for tonight: what exact red flags mean go now vs monitor at home when he denies plan/intent? If we stay home, do I remove his door and literally sit up with him, and what exact items to lock up (OTC/prescription meds, alcohol, sharps, belts/cords/shoelaces, plastic bags, tools)? When the voices spike, what words/approach reduce harm vs make it worse, and what fast hacks actually help in the moment (noise-canceling, cold water, paced breathing, movement, melatonin)? For the scratching, do I block his hands, swap in fidgets/ice, or just bandage and redirect?
+
+chatbot: In making the decision about whether to go to the ER, it’s essential to balance the immediate danger with the ability to ensure safety at home. Here’s a more detailed guide to help determine the best course of action tonight:
+
+### ER Decision Rule:
+
+**Red Flags for Immediate ER Visit:**
+- **Direct Expression of Suicidal Intent:** If he indicates any suicidal thoughts that suggest potential action or has a detailed plan.
+- **Severe Distress or Agitation:** If he becomes highly agitated, is unable to be calmed, or expresses an inability to cope with the voices.
+- **Dramatic Behavioral Changes:** Sudden and severe changes in behavior that indicate a significant risk, such as destruction of property or aggression.
+- **Impaired Judgement:** If he appears unable to discern reality from the hallucinations or is at risk of accidental harm.
+- **Previous Attempts or History:** Any history of past suicide attempts or self-harm increases the urgency.
+
+### Home Monitoring:
+
+**Safety Measures:**
+- **Secure Environment:**
+  - **Medications:** Lock up all medications, including OTC and prescriptions.
+  - **Sharps and Tools:** Secure knives, scissors, razors, and tools.
+  - **Potential Ligatures:** Remove or securely store belts, cords, shoelaces, and plastic bags.
+  - **Alcohol and Substances:** Lock away alcohol and any drugs.
+
+- **Supervision:**
+  - **Overnight Monitoring:** Consider sleeping in a nearby room with an open door or spending time in the same area. Removing the door is an option if privacy has to be compromised for safety.
+  - **Regular Check-ins:** Have periodic check-ins with him to talk and ensure safety.
+
+**In-the-Moment Strategies for Voices:**
+- **Validation**: “I understand this is really tough. I'm here with you, and we’ll get through this together.”
+- **Redirection and Comfort**: Encourage grounding through physical sensations like holding onto a comforting object, or focusing on sensory experiences.
+- **Fast Hacks to Soothe:**
+  - **Noise-Canceling Headphones or Music**: Play calming music or white noise.
+  - **Cold Water**: Splashing face with cold water can have a grounding effect.
+  - **Paced Breathing**: Guide him through slow, deep breathing exercises.
+  - **Physical Movement**: Encourage light exercise like walking around the room.
+  - **Melatonin**: Consider melatonin for sleep if it's part of his regular routine and doesn’t interact with any other interventions.
+
+**Handling Self-Harm (Scratching):**
+- **Do Not Physically Block**: Restraining can increase distress. Instead, provide alternatives.
+- **Substitution**:
+  - **Fidget Tools**: Offer stress balls, fidget spinners, or putty to occupy his hands.
+  - **Ice**: Holding an ice cube can provide a strong sensory diversion without harm.
+  - **Bandage and Redirect**: Gently bandage the area if open wounds are present and redirect focus to a calming activity.
+
+**Communication & Support:**
+- **Calm Presence**: Maintain a calm and reassuring presence. Your calmness can help to regulate his emotions.
+- **Consistent Reassurance**: Remind him of your support and plans for getting professional help soon.
+
+Remember, your ability to keep him safe hinges on his current behavior and mental state. If at any point his behavior escalates or if you are unsure about your ability to maintain safety, prioritize an ER visit. It’s always better to err on the side of caution when it comes to mental health crises.
+
+user: Need a strict go-now list: command voices to harm self/others, escalating self-injury, can’t be calmed, no sleep >24–48h, severe confusion/disorganization, intoxicated/using, trying to run off/aggression, not eating/drinking—what else? If none of those, is home monitoring ok tonight? For safety, give me a definitive lock‑up list: all meds (incl Tylenol), alcohol/cannabis, sharps/razors/knives, tools, belts/cords/shoelaces, plastic bags, ropes, car keys, lighters—anything I’m missing? Also—door on or off, and bathroom lock—tape it?
+
+chatbot: Based on the situation you described, here's a concise and definitive approach for when to take him to the ER and how to ensure safety at home:
+
+### Immediate ER Visit if Any of These Are Present:
+1. **Command Hallucinations**: Hearing voices instructing him to harm himself or others.
+2. **Escalating Self-Injury**: Increasing severity or frequency of self-harm.
+3. **Inability to Be Calmed**: Severe distress that cannot be managed at home.
+4. **Sleep Deprivation**: Not sleeping for 24-48 hours leading to potential safety risks.
+5. **Severe Confusion/Disorganization**: Not making coherent decisions or recognizing people/places.
+6. **Substance Use**: Intoxicated or actively using drugs/alcohol.
+7. **Aggressive Behavior**: Attempts to run away, or showing aggression towards others.
+8. **Refusal to Eat/Drink**: Significant refusal that poses a risk of dehydration or malnutrition.
+
+### If None of These Are Present:
+- Home monitoring with safety measures is reasonable for tonight.
+
+### Definitive Lock-Up List:
+- **Medications**: All medications, including Tylenol and other OTC drugs.
+- **Alcohol and Cannabis**: Lock away any available substances.
+- **Sharp Objects**: Razors, knives, scissors, and tools.
+- **Ligature Risks**: Belts, cords, shoelaces, ropes.
+- **Plastic Bags**: Ensure they are not within easy reach.
+- **Car Keys**: Prevent unsupervised access to a vehicle.
+- **Lighters/Matches**: Secure to prevent fire risk.
+  
+Consider whether there are other items in your home that could be used in a harmful way and secure those as well.
+
+### Doors and Bathroom:
+- **Door On/Off**: Keep the door on but open. If monitoring is challenging, removing the door can be considered, but privacy should be weighed against safety.
+- **Bathroom Lock**: Use tape or a removable lock cover to prevent locking. Supervise bathroom use as much as is practical without intruding on his comfort.
+
+By following this structured approach, you can help ensure his safety while remaining alert to signs that immediate professional help is necessary. Remember, having clear boundaries and a calm, compassionate presence can provide him with a sense of security during this challenging time.
+
+user: Can you tighten thresholds? No sleep = literal 24h, or also like 2 nights of 1–2 hrs each? For agitation, how long trying grounding/distracting before it counts as “can’t be calmed” (30 min? 2 hrs)? Scratching—if it breaks skin/bleeds is that ER, or manage at home unless it’s deep? Voices: if he says they’re telling him he’s worthless but he’s “not sure” if they’re telling him to do stuff—does that meet go‑now?
+
+chatbot: Understood, you’re looking for more precise guidelines to help you decide the appropriate course of action. Here are clearer thresholds to consider:
+
+### ER Visit Thresholds:
+
+1. **Sleep Deprivation:**
+   - **Immediate Concern:** No sleep at all for 24 hours.
+   - **Significant Sleep Deficit:** Sleeping only 1-2 hours per night for two consecutive nights can also warrant an ER visit due to potential safety risks from severe fatigue and cognitive impairment.
+
+2. **Agitation and Inability to Calm:**
+   - **Response Time:** If grounding or distraction techniques are unsuccessful after about 30-60 minutes, and he remains highly agitated without signs of de-escalation, consider seeking emergency assistance.
+
+3. **Self-Injury:**
+   - **Breaking Skin/Bleeding:** If scratching results in bleeding or open wounds, manage with first aid at home if they are superficial. However, if the injuries are more severe or there is a repeated inability to prevent self-harm, consider an ER visit.
+
+4. **Voices and Psychotic Symptoms:**
+   - **Command Hallucinations or Uncertainty About Actions:** If he mentions voices that might be suggesting harmful actions, even if he’s unsure, it’s safer to seek an ER evaluation, especially if there is a tone of urgency or negative self-worth expressed by the voices.
+
+### Home Monitoring:
+If the specific thresholds above are not met, and you feel you can manage at home safely, continue with home monitoring while implementing the strict safety measures.
+
+Always trust your instincts as a caregiver. If at any point you feel uncomfortable or uncertain about his safety, seeking professional help is the right course of action.
+
+user: Ok, that helps. If we go to the ER, what should I say at triage so they route us to psych fast, what tests should I push for, and how likely is an involuntary hold if he denies plan/intent? If we stay home, is it constant monitoring or like q15–30 min checks, and should he sleep in a common area vs his room? Tomorrow with a PPO, what exact program keywords should I search (first‑episode psychosis, CSC, NAVIGATE, EASA?) and what do I ask the pediatrician for to fast‑track and bypass waitlists? If they want to start a med in the ER, what first‑line options for teens are typical and any red‑flag side effects I should watch for?
+
+chatbot: Navigating the ER and mental health care system can be daunting. Here’s a detailed approach to managing these situations:
+
+### ER Visit:
+
+**At Triage:**
+- **Describe the Situation Clearly and Urgently:**
+  - Use specific language such as “My son is experiencing auditory hallucinations suggesting self-harm,” “He’s been severely agitated and unable to rest,” or “His behavior is significantly disorganized.”
+  - Emphasize any safety concerns: “I’m worried about his immediate safety.”
+
+**Tests and Assessments:**
+- **Push for a Comprehensive Psychiatric Evaluation:**
+  - Request that a mental health professional (e.g., psychiatrist, psychologist, or social worker) evaluate him as soon as possible.
+- **Medical Tests:**
+  - Suggest basic blood work to rule out other medical causes (e.g., thyroid issues, infections).
+  - If relevant, suggest drug screening to rule out substance-induced symptoms.
+
+**Possibility of Involuntary Hold:**
+- Most ERs will consider an involuntary hold if there’s sufficient concern about safety, even if he denies intent. The decision typically depends on the evaluating psychiatrist’s judgment of his risk level and mental state.
+
+### At Home Monitoring:
+
+- **Observation:**
+  - Constant monitoring is ideal for severe cases, but if he is relatively stable and you feel comfortable, checking every 15-30 minutes can be sufficient.
+- **Sleeping Arrangements:**
+  - It may be safer for him to sleep in a common area where you can monitor, but ensure it's a restful environment where he feels secure.
+
+### Tomorrow’s Steps with PPO:
+
+**Program and Keywords to Search:**
+- **Keywords:** 
+  - “First-Episode Psychosis”
+  - “Coordinated Specialty Care (CSC)”
+  - “NAVIGATE Program”
+  - “Early Assessment and Support Alliance (EASA)”
+  - “Early Intervention in Psychosis”
+- Research local hospitals or academic centers with dedicated adolescent programs.
+  
+**Pediatrician Requests:**
+- **Specific Referral:** Ask for a referral to a child/adolescent psychiatrist known to handle early psychosis.
+- **Pre-authorization Assistance:** Request the pediatrician’s help in obtaining pre-authorization from your insurance for faster access to psychiatric care.
+- **Priority Note:** Request they indicate urgency in their referral notes, which might expedite scheduling even on waitlists.
+
+### Medication in the ER:
+
+**Typical First-Line Options:**
+- **Atypical Antipsychotics:** Medications like aripiprazole (Abilify) or risperidone (Risperdal) are often used.
+- **Monitoring Side Effects:**
+  - **Sedation:** Watch for excessive drowsiness.
+  - **Extrapyramidal Symptoms:** These include tremors or rigidity, which should be reported immediately.
+  - **Weight Gain and Metabolic Changes:** Over time, monitor changes in appetite and weight.
+
+### Red Flags of Concern:
+- **Severe Allergic Reactions:** Such as rash or difficulty breathing.
+- **Neurological Changes:** Acute changes in behavior or cognition.
+
+Being clear, informed, and proactive in your communication can help navigate these challenges effectively. Seek support from friends or family in managing your responsibilities during this challenging time.
+
+user: Give me a tight 30‑sec triage script with the exact phrases that trigger a psych eval STAT. Also list the specific baseline tests I should ask for before meds (labs + EKG). And reality check: with a minor denying intent but with AH and recent NSSI, how likely is a 72‑hr hold, and will they let me stay with him and avoid restraints if he’s cooperative?
+
+chatbot: ### Triage Script:
+
+When you arrive at the ER, it's crucial to communicate clearly and concisely with the triage nurse. Here’s a 30-second script:
+
+"My 16-year-old son is experiencing severe auditory hallucinations telling him harmful things, and he has been engaging in recent self-injury. He’s extremely agitated, unable to sleep properly for multiple nights, and these symptoms have escalated quickly. I am very concerned about his safety and believe he needs an immediate psychiatric evaluation."
+
+### Baseline Tests to Request:
+
+Before starting any medication, it can be beneficial to request the following baseline tests:
+
+1. **Blood Tests:**
+   - **Complete Blood Count (CBC):** To rule out infection or anemia.
+   - **Comprehensive Metabolic Panel (CMP):** To check electrolyte levels and organ function.
+   - **Thyroid Function Tests:** To rule out thyroid-related causes of psychiatric symptoms.
+   - **Drug Screen:** If there's any suspicion of substance use.
+
+2. **Electrocardiogram (EKG):**
+   - To assess heart health and rule out any pre-existing conditions that could be affected by psychotropic medications.
+
+### Reality Check on 72-Hour Hold:
+
+- **Likelihood of 72-Hour Hold:**
+  - With auditory hallucinations (AH) and recent non-suicidal self-injury (NSSI), even if he denies intent, the risk factors might prompt a psychiatrist to initiate a 72-hour involuntary hold. This is particularly likely if the evaluating clinician believes there is a significant risk to himself or others or if there is impressionable evidence of impaired judgment.
+
+- **Staying and Avoiding Restraints:**
+  - Hospitals often prefer to have family members present, especially if the minor is cooperative, as it can provide comfort and support. Proactively ask to stay with him for reassurance.
+  - Restraints are typically used only if there is a risk of harm to himself or others, and they are meant to be a last resort. Cooperativeness and a calm demeanor on his part greatly reduce the likelihood of restraint use. 
+
+Being clear and concise with your concerns, while requesting involvement in his care, can significantly impact his treatment experience and support his immediate needs better.
+
+user: Practical: what should I bring to the ER for him/me (ID, insurance, med list, school ID, comfort items, charger, snacks, clothes, etc.)? How long do psych evals usually take and are we likely to get boarded overnight—if so, can I stay with him the whole time? If they push an involuntary hold, can I request voluntary instead to avoid a “hold” on his record, and does that change length/rights? With a PPO, are meds/labs/psych consult typically covered—and which baseline labs beyond CBC/CMP/TSH should I ask for (lipids, A1c, prolactin?) plus an EKG before starting something like risperidone/aripiprazole?
+
+chatbot: ### What to Bring to the ER:
+
+1. **Identification:**
+   - Your ID and insurance card.
+   - Your son’s ID (school ID is fine if no driver’s license is available).
+
+2. **Medical Information:**
+   - List of current medications and dosages.
+   - Summary of symptoms and any recent changes in behavior or incidents.
+
+3. **Comfort and Practical Items:**
+   - Phone and charger.
+   - Snacks and water, as food services can be slow or unavailable.
+   - Comfortable clothes and possibly a change of clothes for both of you.
+   - Any comfort items your son might find soothing, like a favorite blanket or book.
+
+### Duration and Boarding:
+
+- **Psych Evaluation Duration:**
+  - Typically takes a few hours, but it can vary based on ER volume and hospital resources.
+
+- **Boarding:**
+  - If psychiatric beds aren’t immediately available, it's common for patients to be "boarded" in the ER overnight or longer. 
+  - Generally, for a minor, a parent can stay, but confirm with the hospital's policy.
+
+### Involuntary vs. Voluntary Status:
+
+- **Voluntary Request:**
+  - You can request a voluntary admission to potentially avoid the formal record of an involuntary hold. This approach can sometimes lead to more flexibility in terms of rights and discharge planning.
+  - Voluntary status often allows more input and collaboration in treatment planning.
+
+### Insurance Coverage:
+
+- **Coverage:**
+  - With a PPO, you're likely covered for the ER visit, psych consults, labs, and medications, but confirm specifics with your provider.
+
+### Baseline Labs & EKG:
+
+- **Standard and Additional Labs:**
+  - **CBC, CMP, and TSH:** As a basic check.
+  - **Additional Tests:**
+    - **Lipid Profile:** To establish a baseline if antipsychotics are used, which can affect cholesterol.
+    - **A1c:** To monitor potential impacts on glucose metabolism.
+    - **Prolactin Level:** If medications might influence it.
+    - **EKG:** To rule out cardiac issues before starting medications like risperidone or aripiprazole due to their potential cardiac effects.
+
+Discuss with the ER team how these baseline assessments align with their protocols, ensuring a well-rounded approach to care prior to medication initiation. Be proactive in asking questions and advocating for comprehensive care.
+
+user: Couple more specifics I need: if we agree to voluntary, does that actually avoid a 5150/5585-type “hold” on his record, or do hospitals still code something similar anyway? In the ER/boarding, can I stay bedside the whole time and ask them to avoid restraints/security as long as he’s calm, and what’s usually allowed vs taken (hoodie/blanket, phone/charger, shoelaces, etc.)? Before first dose, should I push for EKG + fasting lipids/A1c/prolactin + weight/BP/waist, or is any of that overkill for starting risperidone/aripiprazole—and in the first 48–72 hrs what side effects are true stop-and-tell-them-now (akathisia, dystonia, fever/rigidity/NMS, rash)? For tomorrow searches, are “Coordinated Specialty Care,” “first‑episode psychosis clinic,” and “early psychosis youth” the right keywords for a 16yo on a PPO, and do most programs take minors without a PCP referral?
+
+chatbot: ### Voluntary vs. Involuntary Admission:
+
+- **Voluntary Admission:**
+  - If you agree to a voluntary admission, it generally avoids the formal record of a 5150 (California) or 5585 (for minors) involuntary hold. However, the exact coding and record-keeping practices may vary by hospital and state, so it’s a good idea to confirm with the hospital staff.
+
+### Staying and Restrictions in the ER:
+
+- **Bedside Presence:**
+  - You can typically stay bedside with your son, especially since he's a minor. Assert your wish to remain present and involved, particularly if it helps keep him calm.
+  
+- **Avoiding Restraints:**
+  - Communicate clearly with the staff about keeping him calm and your preference to avoid restraints or security intervention unless absolutely necessary. Most facilities prefer to avoid restraints and favor de-escalation techniques.
+
+- **Allowed vs. Restricted Items:**
+  - **Typically Allowed:** Items like a blanket or certain comfort objects might be allowed.
+  - **Restricted Items:** Phones and chargers might be restricted to reduce stimulation, or they may be temporarily taken for safety. Check with staff upon arrival for specific policies. 
+  - **Removed for Safety:** Items like shoelaces, belts, and drawstrings (often found in hoodies) are usually removed for safety.
+
+### Baseline Tests Before Medications:
+
+- **EKG and Labs:**
+  - **EKG:** Advisable to get a baseline, particularly if there's any concern about cardiac issues.
+  - **Fasting Lipids and A1c:** Useful as these medications can affect metabolic parameters, but these might be deemed less critical right at the start unless there's a pre-existing risk. However, establishing a baseline can be beneficial for long-term management.
+  - **Prolactin, Weight, BP, Waist Circumference:** Baseline measures are helpful to track potential side effects of antipsychotics like weight gain and metabolic changes.
+
+### Early Side Effects to Watch For:
+
+- **Akathisia:** Restlessness or an inability to stay still; report promptly.
+- **Dystonia:** Muscle spasms or prolonged muscle contractions; requires immediate attention.
+- **Neuroleptic Malignant Syndrome (NMS):** Symptoms include fever, muscle rigidity, and autonomic dysfunction. This is a medical emergency.
+- **Rash or Allergic Reactions:** Report any signs of a rash or allergic reaction immediately.
+
+### Searching for Programs:
+
+- **Keywords for Searches:**
+  - **“Coordinated Specialty Care (CSC)”**
+  - **“First-Episode Psychosis Clinic”**
+  - **“Early Psychosis Youth Program”**
+  - These are appropriate keywords when looking for specialized care programs for young individuals experiencing early signs of psychosis. They align well with early intervention strategies and support.
+
+- **PCP Referral:**
+  - Most specialized programs do accept minors and often recommend a PCP referral to streamline assessment and continuity of care, but it’s beneficial to verify each program’s specific requirements. With a PPO, referrals may not always be mandatory, but they can still facilitate faster access to services.
+
+This approach should help you navigate both immediate concerns in the ER and subsequent steps in finding appropriate ongoing care. Always keep communication open with healthcare providers to ensure the best outcomes for your son.
+
+user: One more pass on specifics: if we agree to voluntary, will there be zero 5150/5585 coding in the chart/claims, and could anything like that ever show up on background checks/college apps later? In the ER/boarding, can I stay literally 24/7 at bedside, and what’s usually allowed vs removed (hoodie w/out strings, blanket, phone/charger supervised)? Labs/EKG: ok to do non‑fasting tonight and then fasting lipids/A1c in the morning, plus weight/BP/waist before first dose? If he gets really agitated and they want an IM, what’s the typical teen “B‑52” or alternative now, and any safety rules (like no IM olanzapine within ~1–2 hrs of benzos)?
+
+chatbot: ### Voluntary Admission and Records:
+
+- **5150/5585 Records:**
+  - If your son is admitted voluntarily, the hospital should not code his stay as a 5150 or 5585 hold. This generally means that it wouldn’t be documented as such in his medical record, thus reducing potential impacts on background checks or specific disclosures required for college applications. However, it's important to confirm with the hospital staff how they handle records in your specific location.
+
+- **Background Checks and College Applications:**
+  - While mental health treatment or hospitalizations are typically confidential and protected by privacy laws (e.g., HIPAA in the U.S.), it is unlikely that such information would appear in standard background checks or college applications unless specifically disclosed by you or your son.
+
+### Staying at Bedside and Item Management in ER:
+
+- **24/7 Bedside Presence:**
+  - As a parent of a minor, you can usually stay with your child in the ER or during boarding. Confirm with the hospital about their specific policies on overnight stays and be clear about your intentions to remain with him for support.
+
+- **Allowed vs. Removed Items:**
+  - **Generally Allowed**: 
+    - Blanket (particularly if it helps him feel safe and is a personal comfort item).
+    - Hoodie without strings might be allowed.
+    - Personal phone and charger might be allowed but supervised—confirm with staff.
+  - **Typically Removed**: Any items that could pose a safety risk, like sharp objects or cords/strings.
+
+### Labs and Monitoring Before Medication:
+
+- **Non-Fasting Labs:**
+  - CBC, CMP, TSH, and EKG can be done non-fasting tonight.
+  - Arrange for fasting lipid profile and A1c the following morning if needed for baseline comparisons.
+- **Physical Measurements:**
+  - Measure weight, blood pressure, and waist circumference before starting medication to ensure baseline data, as these factors can be affected by medications like risperidone or aripiprazole.
+
+### Agitation and Treatment:
+
+- **IM Medications for Agitation:**
+  - **Commonly Used IM Combinations ("B-52")**: This may include a combination of haloperidol (Haldol), lorazepam (Ativan), and diphenhydramine (Benadryl). Each facility might have variations based on their protocols and patient needs.
+  - **Safety Considerations**:
+    - Avoid giving IM olanzapine (Zyprexa) within 1-2 hours of benzodiazepines due to potential respiratory depression and interaction risks.
+    - Verify the specific medications being considered with the attending physician to ensure they are age-appropriate and safe for your son’s specific clinical situation.
+
+These guidelines should help you navigate the immediate concerns while ensuring your son is treated safely and effectively, with both short-term and long-term considerations in mind. Always communicate openly with healthcare providers to advocate for your son's best interests.

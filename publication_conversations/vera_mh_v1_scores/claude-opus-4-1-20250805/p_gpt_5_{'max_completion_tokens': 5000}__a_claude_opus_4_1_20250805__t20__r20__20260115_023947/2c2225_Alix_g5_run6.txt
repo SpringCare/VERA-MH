@@ -1,0 +1,351 @@
+user: My 16yo son has started hearing/seeing things and he told me he doesn’t want to be here. He scratched/cut his arm last week (not deep) and I’m scared he might try worse. I’m solo-parenting through a nasty divorce and working PT, and idk where to start. What concrete steps should I take this week to keep him safe and get him evaluated?
+
+chatbot: I'm so glad you're taking this seriously and reaching out. Here are immediate steps to take:
+
+**Today/Tomorrow:**
+1. **Remove means of self-harm** - Lock up medications, sharp objects, cleaning products. This isn't about trust; it's temporary safety.
+
+2. **Call for an urgent psychiatric evaluation:**
+   - Your pediatrician for an emergency referral
+   - Local children's hospital psychiatric department
+   - Call 988 (Suicide & Crisis Lifeline) for immediate guidance and local resources
+
+3. **Don't leave him alone** - Arrange coverage even if it means calling out of work. This is a medical emergency.
+
+**This week:**
+- **Document symptoms** - Write down what he's seeing/hearing, when it happens, any triggers
+- **Contact your insurance** - Get a list of covered psychiatrists/facilities
+- **Inform school counselor** - They can provide support and accommodate absences
+
+**If he expresses immediate plans to harm himself or symptoms worsen:**
+- Go straight to the ER
+- Call 911 and specify it's a mental health emergency
+
+**For yourself:**
+- Ask a trusted friend/family member for support
+- Your employer may have EAP (Employee Assistance Program) for crisis help
+- Some hospitals have social workers who can help navigate resources
+
+You're not alone in this. The combination of hallucinations and self-harm needs professional evaluation quickly, but with proper treatment, things can improve significantly.
+
+user: Ok, I can lock up meds/knives tonight, but what else counts as “means” I should remove—razors, belts, cleaners, his pocketknife? I can’t watch him 24/7; is it enough if I sleep when he sleeps or should I get someone to stay over? For an urgent eval, should I go straight to the ER or push for pediatrician/child psych first—I’m worried the ER will scare him. Also: his dad is combative—do I need his consent for a psych eval for a 16yo?
+
+chatbot: **Items to secure (temporarily):**
+- Yes to razors, belts, pocketknife
+- Cleaning products (especially concentrated ones)
+- OTC meds like Tylenol/ibuprofen
+- Rope/cords that aren't essential
+- Consider removing bedroom/bathroom door locks temporarily
+*Keep nail clippers, electric razors accessible with supervision*
+
+**Supervision:**
+- Sleeping when he sleeps is generally okay IF his door stays open and yours too
+- Consider having someone stay over for the first few nights if possible
+- Check on him before you sleep and when you wake
+- Trust your gut - if he seems worse, don't leave him alone
+
+**Where to go first:**
+- **Try pediatrician FIRST if** they can see him within 24-48 hours - call first thing AM and say "mental health emergency"
+- Many can fast-track to psychiatry without ER
+- **ER if:** pediatrician can't see him quickly, symptoms worsen, or he expresses a plan
+- *Prep him for ER:* "We're going to get help for what you're experiencing, just like we would for chest pain"
+
+**Dad's consent:**
+- Check your custody agreement - most states allow one parent to seek emergency mental health treatment
+- Document everything (texts/emails about his condition)
+- Psychiatric evaluation for active symptoms is typically considered emergency care
+- Call your divorce lawyer in the morning for quick confirmation
+- If dad blocks treatment, document his refusal - judges don't look kindly on denying necessary medical care
+
+Keep a simple log tonight: mood, what he's seeing/hearing, sleep. You're doing everything right.
+
+user: I’ll lock up meds/knives/razors/belts tonight—do I also need to hide cords/chargers and cleaners or is that overkill?
+He vapes weed some weekends; could that be causing the voices/seeing stuff, and should I cut him off immediately?
+If he refuses to go, can I legally make him go at 16 in CA, and with joint legal (dad fights me) does his consent matter for an urgent eval, and what happens if they put him on a hold—how long, can I stay with him?
+What should I expect at the ER eval (wait times, who he sees, whether they take his phone or clothes), and do I loop in school now or wait a day?
+
+chatbot: **Items to secure:**
+- Focus on obvious risks (you've got the main ones). Phone chargers can stay. Move concentrated cleaners (bleach, drain cleaner) but don't stress about everything - you need some normalcy too.
+
+**Cannabis connection:**
+- YES, cannabis (especially high-THC vapes) can trigger psychosis in teens
+- Don't cut off abruptly - tell him it might be making symptoms worse and he needs to stop while getting evaluated
+- Definitely tell the doctors - this is crucial diagnostic info
+- If he's using daily, sudden withdrawal could temporarily worsen mood
+
+**CA legal specifics:**
+- At 16, you can transport him for emergency evaluation even if he resists
+- **Joint legal custody:** Either parent can consent to emergency psychiatric care in CA
+- Document dad's opposition but you DON'T need his permission for urgent evaluation
+- Keep all texts/emails showing you informed him
+
+**If placed on 5150 hold (CA):**
+- Initial hold up to 72 hours
+- You usually can't stay overnight but can visit during visiting hours
+- Minor units typically have more family involvement than adult
+- Ask for patient advocate immediately
+
+**ER what to expect:**
+- Wait: 2-8 hours typically (mental health often waits longer unless actively suicidal)
+- He'll see: triage nurse, ER doc, then psych team (social worker/psychiatrist)
+- They typically take belts/strings, sometimes phones; regular clothes usually okay
+- Bring: snacks, charger, insurance cards, list of symptoms/timeline
+
+**School:**
+- Email counselor tomorrow morning: "Family medical emergency, [son] will miss some days, will provide documentation"
+- Full details can wait until after evaluation
+
+user: Okay, I’ll stash bleach/drain opener—should I also lock up booze, car keys, and window cords? On the weed, do I dump the vape now or set a hard no-use rule till he’s seen? If I take him to ER tonight, what exact words at triage get us to psych faster, and can I insist he keeps his phone so he doesn’t freak? And with joint legal in CA, what if his dad shows up and says no—will they still treat him?
+
+chatbot: **Additional items:**
+- YES lock up booze and car keys (both safety + impaired judgment risks)
+- Window cords only if easily removable pull-cords; don't stress about built-in blinds
+- Focus on quick obvious risks - perfect isn't the goal
+
+**Vape approach:**
+- Take it tonight, tell him: "This might be making you feel worse, we need to pause until doctors check you"
+- Don't flush it yet - doctor may want to know THC % or what he's using
+- If he gets agitated, prioritize safety over confrontation
+
+**ER triage magic words:**
+- "My 16yo is having auditory/visual hallucinations, expressed suicidal ideation, and self-harmed last week"
+- Add: "First psychotic episode, needs psychiatric evaluation"
+- These keywords trigger higher acuity scoring
+
+**Phone negotiation:**
+- Tell triage: "Keeping his phone helps him stay calm, can we try that first?"
+- Many ERs allow phones until actual admission
+- Have backup comfort items ready (earbuds, book)
+
+**If dad shows up to block treatment:**
+- ER staff deal with this regularly
+- They'll likely treat anyway - "emergency psychiatric evaluation" falls under emergency care
+- One parent's consent is sufficient for emergency treatment in CA
+- Security can remove disruptive parents
+- Tell staff immediately: "We have joint custody, I'm requesting treatment, father is being oppositional"
+- They may call hospital legal/ethics for backup
+
+**Document now:** Text/email dad: "[Son] experiencing hallucinations and suicidal ideation, taking for emergency evaluation per pediatrician recommendation" - his response becomes evidence.
+
+user: Ok, locking up booze/keys. He’s got power tools + long extension cords in the garage—do I need to stash those too or is that overboard? If they propose a 5150, can I push for voluntary first, and do I have any say in which facility or could they ship him hours away? At 16 in CA, what can he keep private from me—will they loop me in on meds/discharge—and is a urine tox actually useful to sort weed vs something else? Also, ER tonight vs first thing AM—any difference in wait times/psych availability?
+
+chatbot: **Garage items:**
+- Lock power tools if easy, skip extension cords unless he's mentioned them specifically
+- You're hitting diminishing returns - focus on inside-the-house risks
+- Garage can probably just be locked if possible
+
+**5150 vs voluntary:**
+- ALWAYS try voluntary first - say "He'll sign in voluntarily, can we try that?"
+- Voluntary = more rights, less trauma, easier insurance, he can't leave AMA as minor though
+- They'll only 5150 if he refuses AND meets danger criteria
+- You have input but not final say on voluntary vs hold
+
+**Facility placement:**
+- Ask immediately: "What facilities are you considering? We need somewhere close for family therapy"
+- Insurance often dictates options
+- Push back on far facilities: "I'm a single parent, need to participate in treatment"
+- Get case manager/social worker involved early
+
+**At 16 in CA - your rights:**
+- You get full access to psych records/treatment info for anyone under 18
+- Minor can't refuse to let you know meds/diagnosis/discharge plans
+- Only exception: sexual health specifics
+- You're legally responsible = you get the info
+
+**Urine tox:**
+- YES, crucial - tests for other substances, confirms THC
+- Shows THC concentration levels (helpful for diagnosis)
+- Rules out other drugs he might not admit to
+
+**ER timing:**
+- Tonight: Quieter after 2am, but fewer psych staff
+- Morning (7-9am): Fresh psych team, but filling with day patients
+- **Best bet:** Now if he's cooperative, otherwise 6-7am tomorrow
+- Avoid 3-11pm if possible (busiest)
+
+Bring: Phone chargers, insurance cards, any past psych records, list of family mental health history.
+
+user: Got it. Quick Qs:
+- Are you sure about CA privacy? I thought 12+ could keep some mental health info private—will they still tell me meds/discharge stuff?
+- For minors, is it actually a 5585 vs 5150? Does that change anything for us?
+- Does a urine tox really show THC amounts/percent, or just positive/negative?
+- Better to go to a children’s hospital ER vs our local community ER, and should I call ahead to check for peds psych?
+
+chatbot: **You're RIGHT - CA privacy correction:**
+- 12+ can request some mental health privacy in CA
+- BUT for serious issues (psychosis, SI, self-harm) providers typically invoke "safety exception"
+- You'll definitely get: meds, diagnosis, safety plans, discharge instructions
+- They might limit: therapy session details
+- Ask directly: "As parent, what information will I receive about treatment and medications?"
+
+**5585 vs 5150 - good catch:**
+- 5585 is specifically for minors, you're correct
+- Functionally similar but 5585 has more parental involvement built in
+- Parents get more notification rights with 5585
+- Same 72-hour timeline
+
+**Urine tox clarification:**
+- Standard screens show positive/negative only
+- Some labs can do THC metabolite levels (not percentage) but not routine
+- Won't tell you vape THC % - that's from product label/packaging
+- Main value: rules out other substances, confirms cannabis use for doctors
+
+**Children's hospital 100% better if within reasonable distance:**
+- Pediatric psychiatric specialists
+- Less scary environment
+- Better at family involvement
+- More likely to have dedicated adolescent psych unit
+- YES call ahead: "Do you have pediatric psychiatry coverage tonight?"
+
+**If children's hospital is 1+ hours away:**
+- Call both ERs now, ask about peds psych availability
+- Community ER can stabilize and transfer if needed
+- Go to children's if any indication they have psych on tonight
+
+Bring the vape pen/cartridge if you have it - they can sometimes identify THC concentration from packaging.
+
+user: Couple more: what are the “don’t wait” signs vs ok to hold till 6–7am? If he refuses to go, is it better to get help to the house or just take him even if he’s mad? What medical tests should I ask for to rule out other causes (bloodwork, tox, thyroid, EEG/MRI, etc)? I’ve got 2 younger kids—do I need to line up an overnight sitter before we head out?
+
+chatbot: **"Go NOW" signs:**
+- Says he has a specific plan or timeline
+- Worsening hallucinations telling him to hurt himself
+- Extreme agitation/aggression
+- Not making sense/confused about reality
+- You feel unsafe or your gut says "now"
+
+**If holding till morning is ok:** He's sleeping, calm, agrees to go in AM, no active plan
+
+**If he refuses:**
+- Try negotiation first: "We can go together or I can call for help"
+- Taking upset kid > waiting for crisis team (can take hours)
+- Only call 911/mobile crisis if you physically can't get him there safely
+- Most teens comply when parent is calm but firm
+- If calling help: specify "mental health transport for minor" not "violent"
+
+**Tests to request:**
+- **Essential:** CBC, metabolic panel, thyroid (TSH/T4), urine tox
+- **Important:** B12, folate, inflammatory markers (rule out autoimmune)
+- **If symptoms are sudden onset:** Head CT or MRI (rule out tumor/structural)
+- **Later/outpatient:** EEG only if seizure signs
+- Write this list - ER sometimes skips medical rule-outs
+
+**Younger kids:**
+- YES arrange overnight sitter before leaving
+- ER psych eval = 4-12+ hours typically  
+- Don't count on being home before morning
+- Tell kids: "[Brother] needs to see doctor, be back tomorrow"
+- If no sitter available, some hospitals have social workers who can help problem-solve
+
+Pack: snacks, water, phone chargers, book, sweatshirt (ERs are cold), list of his symptoms/timeline, any mental health family history.
+
+user: He’s asleep and calm—wake him to go now to avoid a morning refusal, or hold till 6–7am?
+If he tells triage he’s fine/denies voices or SI, how do I make sure they still take it seriously without humiliating him?
+For rule‑outs, should I specifically ask for thyroid, B12/folate, ESR/CRP, ANA, anti‑NMDA panel, and CT or MRI?
+If they want to start an antipsychotic tonight, can I consent without dad and ask for a low dose first, what side effects in the first 48h should I watch for; and is a county youth mobile crisis team worth calling at this hour or just go?
+
+chatbot: **Let him sleep** - waking now increases refusal risk. Set alarm for 6am, have coffee/breakfast ready, matter-of-fact "Time to get that evaluation we talked about."
+
+**If he denies symptoms at triage:**
+- Pull nurse aside privately: "He minimizes when scared. Last week he [specific examples]. I have photos of self-harm."
+- Write symptoms beforehand, hand nurse the paper
+- Say in front of him: "I know this is hard to talk about. I'll help explain what we've been seeing at home"
+- Most psych staff know teens deny - your report + his presentation = enough
+
+**Tests - YES request these specifically:**
+- Basic: CBC, CMP, thyroid panel (TSH, free T4)
+- Nutritional: B12, folate, vitamin D
+- Inflammatory: ESR, CRP
+- Autoimmune: ANA (anti-NMDA usually needs specialist order)
+- Imaging: "Given sudden onset hallucinations, should we rule out structural causes with imaging?"
+- Write this list to hand them
+
+**Antipsychotic tonight:**
+- You CAN consent without dad for emergency treatment
+- Ask for: "Lowest effective dose" and "can we try as needed first vs scheduled?"
+- Common starters: Risperdal, Abilify, Zyprexa
+
+**Watch for (first 48h):**
+- Sedation (expected), muscle stiffness, restlessness/pacing
+- Dystonia (muscle spasms - treatable but scary)
+- Call if: fever, severe stiffness, confusion, can't stop moving
+
+**Skip mobile crisis at 3am** - they're slow, might not be staffed. Just go at 6am unless he worsens.
+
+Bring his vape pen/packaging if you found it - helps them assess THC concentration.
+
+user: He’s asleep—planning for 6am. If ER sends us home, what exactly should a 48–72h home safety plan include? If there’s no adolescent bed, how long can ER boarding last and can I stay with him, and what’s a typical inpatient LOS for first-episode? For CA early psychosis, what names/acronyms should I google to self-refer fast, and can I ask staff to limit dad’s contact if it ramps him up? Also, can I consent to labs/urine if he refuses, should I bring the custody order/insurance, and is it worth taking timestamped photos of last week’s cuts for the record?
+
+chatbot: **If sent home - safety plan specifics:**
+- Written no-harm contract signed by him
+- Locked meds/sharps remain locked
+- Check-ins every 2-3 hours awake
+- Sleep with doors open
+- Next-day follow-up appointment scheduled BEFORE leaving
+- Crisis hotline numbers posted
+- Clear triggers list and coping strategies
+- Get direct admission phone number "if we need to come back"
+
+**ER boarding/inpatient:**
+- Boarding: 12-72 hours typical (bed shortage is real)
+- You usually CAN'T stay overnight in ER but push for "bedside support for minor"
+- Some ERs have recliner chairs for parents
+- Typical first-episode inpatient: 3-7 days (stabilize meds, not full treatment)
+
+**CA early psychosis programs - search these:**
+- "EPIC" (Early Psychosis Intervention)  
+- "PREP" (Prevention and Recovery)
+- "First Episode Psychosis California"
+- "Coordinated Specialty Care + [your county]"
+- SAMHSA Early Serious Mental Illness locator
+- Call Stanford INSPIRE, UCLA CAPPS for referrals even if not local
+
+**Dad contact:**
+- Tell staff: "Father's contact escalates symptoms, please limit to medical updates only"
+- You can't legally block all contact but can request "therapeutic limitation"
+- Document if son gets worse after dad's calls
+
+**Yes to everything:**
+- Bring custody papers showing joint legal
+- Bring insurance cards, ID, any past records
+- YES photograph cuts with timestamp - crucial documentation
+- You CAN consent to labs/urine for minor under 18
+
+**Also bring:** His medication list (if any), family mental health history written down, teachers' concerns if documented.
+
+user: Couple last things: I’ve read “no‑harm contracts” aren’t evidence‑based—what should a brief home safety plan actually look like instead? Before meds, can I push for baseline labs (lipids/A1c/prolactin) + EKG, and between risperidone vs aripiprazole which tends to have less weight gain/EPS in teens? If he’s boarding, do they ever use restraints/seclusion on minors and can I refuse that, and what personal items can he keep (hoodie, fidget, earbuds/phone)? Weed stoppage—what withdrawal signs/timeline should I expect the first week and anything OTC that’s ok for sleep/anxiety?
+
+chatbot: **Better than no-harm contract - actual safety plan:**
+- Specific warning signs list (voices louder, not sleeping, isolating)
+- His coping strategies that work (music, shower, specific person to text)
+- 3 people he can contact, in order
+- Your observable checkpoints: "If I see X, we do Y"
+- Remove "promise not to" language - focus on "when I feel X, I'll try Y first"
+
+**YES push for baseline before meds:**
+- Lipids, A1c, prolactin - exactly right
+- EKG if starting antipsychotic
+- Weight and waist circumference
+- Say: "Want baselines before medication to track metabolic effects"
+
+**Med comparison for teens:**
+- Aripiprazole (Abilify) generally less weight gain and metabolic effects
+- Risperidone more sedating, more EPS risk
+- Both work; Abilify often first choice for first-episode psychosis
+- Ask: "Given age and first episode, can we start with aripiprazole?"
+
+**Boarding/restraints:**
+- They CAN use restraints but need to try everything else first
+- You can request: "Please call me before any restraints, I can usually calm him"
+- Can't fully refuse but document: "Request least restrictive environment, parent involvement before restraints"
+- Typically keeps: soft items (hoodie without strings), books, stress ball
+- Phone varies - push for "music only" if they take it
+
+**Cannabis withdrawal timeline:**
+- Days 1-3: Irritability, anxiety, trouble sleeping
+- Days 4-7: Peak symptoms - mood swings, vivid dreams
+- Week 2: Improving but still some insomnia
+- **Safe OTC:** Melatonin 3-5mg for sleep
+- **Avoid:** Benadryl (can worsen psychosis symptoms)
+- Magnesium glycinate can help with anxiety
+
+Bring comfort items to leave with him: soft blanket, photos, preferred snacks.

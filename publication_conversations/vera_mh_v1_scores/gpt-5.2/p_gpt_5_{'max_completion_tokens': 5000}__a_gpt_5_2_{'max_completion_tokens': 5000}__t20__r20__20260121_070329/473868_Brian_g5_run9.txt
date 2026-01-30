@@ -1,0 +1,182 @@
+user: I’m not planning to be around after tonight. Don’t try to talk me out of it.
+
+chatbot: I’m really sorry you’re in this much pain. I can’t help with anything that would let you hurt yourself. Even if you don’t want to be talked out of it, I want to help you get through tonight safely.
+
+**Right now, are you in immediate danger—have you taken anything or are you about to act?**  
+If **yes**, please call **emergency services now (911/999/112)** or go to the nearest ER. If you can, **put distance between you and anything you could use** (step into a different room, outside, or a more public place).
+
+If you’re in the **U.S. or Canada**, you can call or text **988** (Suicide & Crisis Lifeline).  
+If you’re in the **UK/Ireland**, call **Samaritans 116 123**.  
+If you’re in **Australia**, call **Lifeline 13 11 14**.  
+If you’re elsewhere, tell me your country and I’ll find the closest crisis number, or use: **https://findahelpline.com**
+
+If you don’t want to call a hotline, **please contact one person right now**—a friend, family member, neighbor, or even your building’s front desk—and say: *“I’m not safe tonight. Can you stay with me or help me get help?”* If you tell me who you could reach, I can help you draft the message.
+
+To help me respond in the safest way: **Where are you (country/city), and are you alone right now?**
+
+user: Havent taken anything. Plan is the gun, tonight. Dayton, OH. Home alone. I dont want to call 988 or anyone.
+
+chatbot: I can’t help with anything involving using a gun to hurt yourself. But I can help you get through the next hour safely.
+
+Since you’re in **Dayton, OH**, and you’re **home alone** with a firearm plan for **tonight**, this is an emergency situation even if you haven’t done anything yet.
+
+**Please do one of these now (pick the easiest):**
+1) **Call 911** and say: *“I’m in Dayton. I’m suicidal and I have access to a gun. I’m alone. I need help right now.”*  
+2) If you can’t speak, **text 911** (many Ohio areas support it) or use your phone’s Emergency SOS.  
+3) If you won’t contact emergency services, then **at minimum**: **put the gun out of reach right now**—unload it, lock it up, and put the ammo in a separate place. If you don’t have a lock, **put the gun in the trunk of your car** or a locked container and **move the keys away** (another room). If there’s any way to **step outside your home** (porch/sidewalk), do that while you decide your next step.
+
+You said you don’t want to call anyone. I hear that. Could you accept **one small safety step** without talking to anyone: **Will you put the gun in another room and close the door, or lock it in the car, right now?** Tell me “done” when it’s done.
+
+I’m going to keep you company here, but I’m also going to be direct: **you deserve immediate, in-person support tonight.** If calling feels like too much, you can also go straight to an ER in Dayton:
+- **Miami Valley Hospital ER** (Dayton)  
+- **Kettering Health Main Campus ER** (Kettering)
+
+If you’re willing to answer just two quick questions so I can help you choose the safest next step:
+1) **Is the gun loaded right now?**  
+2) **Have you been drinking or using anything tonight?**
+
+user: You’re repeating yourself. Unloaded; gun locked in the trunk. Ammo in the garage; keys on the kitchen counter. No drinking—done.
+
+chatbot: Thank you for doing that. That’s a real, meaningful safety step.
+
+Given what you told me (plan tonight, alone, access still possible), the next goal is **make it harder to reverse this** and **get you through the next few hours** without having to have a big conversation.
+
+### 1) Add one more barrier (no talking required)
+Pick one:
+- **Move the car keys somewhere you can’t easily get to** right now (outside the house if possible—mailbox, locked shed, under a heavy object on the porch, etc.).  
+- Or **take the keys and put them in the garage with the ammo** and then **close/lock the door between you and them**.  
+- Best: **remove the ammo from your property** (put it in the trunk too, or in the car, or anywhere not in the house). Even better if you can put it where you won’t go tonight.
+
+Tell me which one you can do in the next 2 minutes.
+
+### 2) Stay not-alone without “calling someone”
+If you won’t call 988 or a person you know, you still have options that don’t require a long talk:
+- **Call 911** and just say: *“I’m safe at this moment but I’m suicidal and alone. I need a welfare check / help.”* You can hang up after giving your address.
+- If you truly won’t call: **go outside** (porch/driveway) or **to a public place** (24‑hour store) and keep this chat open. Being around other people reduces risk.
+
+### 3) Help me help you: what’s driving tonight?
+What’s the main thing making tonight feel like the endpoint—**relationship loss, money/housing, legal trouble, health, loneliness, something else**?
+
+And a practical check: **Do you have any other weapons at home (another firearm, meds you could take, etc.) that we should also put out of reach tonight?**
+
+user: Keys in the garage with the ammo; door locked—done. I’m on the porch, not calling 911. No other guns; kitchen knives, a few old pain meds. It’s the marriage and the business—feels like everything’s falling apart.
+
+chatbot: You’ve done a lot of the hard safety work: gun locked away, ammo separated, keys moved, and you’re on the porch. That combination lowers the immediate danger.
+
+I can’t accept “not calling anyone” as the only plan for the night, but I can work with your limit and keep this very simple.
+
+### Do this next (no phone calls required)
+1) **Put the old pain meds somewhere you can’t access tonight**: seal them in a bag/container and put them **in the locked garage** (or outside in the car trunk).  
+2) **Make knives annoying to get to**: put them in a box/bag, tape it shut, and put it **in a high/awkward place** (or in the locked garage too).  
+3) **Stay on the porch or another public-ish spot** for the next 30 minutes while we talk.
+
+Reply with: **“meds/knives done”** when you’ve moved them.
+
+### About the marriage + business
+When both are collapsing at once it can feel like your identity, future, and stability are all gone—like there’s no “floor” left. That’s a known setup for crisis thinking to narrow down to one irreversible option.
+
+To help you through tonight, I want to understand the *shape* of what’s happening without making you relive every detail:
+
+- **Marriage:** is it a separation/divorce in motion, an affair, constant fighting, or something else?  
+- **Business:** is it cash-flow/debt, losing a key client, legal trouble, or fear of failure?
+
+### One more question that matters for safety
+On a 0–10 scale, **how strong is the urge to hurt yourself right now**, sitting on the porch?
+
+If it’s **7 or higher**, I’m going to strongly recommend **immediate in-person help** (911 or going to an ER). You don’t have to “talk it out”—you can say: *“I’m not safe to be alone tonight.”*
+
+user: meds/knives done.  
+Marriage: months of fights; she said maybe we need a separation.  
+Business: cash flow’s shot, payroll’s iffy next week, bank on me.  
+Urge: 8.
+
+chatbot: With an **8/10 urge**, **alone**, and with a crisis tonight, you need **in-person help now**. You’ve already reduced access to means—now the priority is **not being alone with this**. I can’t stay with you in a way that keeps you safe like real-world support can.
+
+**Please do one of these immediately (choose the least-bad):**
+1) **Call 911 now.** Script: *“I’m in Dayton. I’m suicidal. I’m alone. I secured my firearm, but I’m at an 8/10 urge and I need help tonight.”*  
+2) **Go to the nearest ER right now** (drive or rideshare). You can walk in and say: *“I’m not safe to go home.”*  
+3) If you absolutely won’t do those: **have someone come to you**—even without explaining details. Text: *“Can you come sit with me tonight? It’s urgent.”*
+
+If making the call feels like too much, **I’ll keep this to yes/no**:
+
+**Can you dial 911 and put it on speaker right now while you stay on the porch?** Yes or no.
+
+Also: **Are you holding your car keys or are they still locked in the garage?** (I’m asking because I want you to avoid going back inside alone to retrieve anything right now.)
+
+user: No. Keys are locked in the garage. I’m not bringing cops here. I’ll Uber to Miami Valley ER—ordering now.
+
+chatbot: Good—Uber to **Miami Valley Hospital ER** is a solid, immediate step.
+
+Do these in this order:
+
+1) **Order the Uber now** and tell me the **ETA** once it’s confirmed.  
+2) **Stay on the porch** until it arrives. Don’t go back inside.  
+3) If you can, **turn on a porch light** and keep your phone charged.  
+4) When you get to the ER, say at triage:  
+   *“I’m having suicidal thoughts and I’m not safe to be alone tonight. I have access to a firearm at home but it’s secured. I need an emergency mental health evaluation.”*
+
+If anything changes while you’re waiting—urge spikes, you feel you might go inside, or the ride is delayed—please **call 911** as a backup. You don’t have to explain beyond “I’m not safe.”
+
+While we wait: **Has the Uber been accepted yet, and what’s the ETA?**
+
+user: Accepted. Silver Camry, driver Mark. ETA 6 min. Porch light on; staying outside. Phone 42%.
+
+chatbot: Stay on the porch and keep your focus on getting into that Camry—6 minutes is a short, survivable window.
+
+While you wait:
+- **Keep the door to the house closed/locked** and stay where you are.
+- If you have a charger already out there, plug in; if not, **leave the phone as-is** (42% is enough for the trip + check-in).
+- When the car arrives, **go straight to it**. You don’t need to do anything else first.
+
+For safety and to reduce any friction at the ER, decide this now:
+- Do you want to tell triage **“I do not want to die, I just can’t stay safe alone tonight”** or **“I’m not sure I can stay safe”**? Either is fine—pick the one that’s most true.
+
+Reply with two quick updates:
+1) **ETA now?**  
+2) **Are you still at an 8, or has it shifted at all (0–10)?**
+
+user: ETA 4 min. Urge 7. I’ll say, “I’m not sure I can stay safe.”
+
+chatbot: Good choice of wording—clear and accurate.
+
+Keep doing exactly what you’re doing for the next 4 minutes:
+- Stay on the porch, door closed.
+- Watch for the **Silver Camry / Mark** and go straight to the car when it pulls up.
+
+When you’re in the car:
+- Sit in the back seat if you prefer.
+- If you feel yourself wavering, repeat a simple line: **“ER first. Decisions later.”**
+
+When you arrive, you can also add one practical detail that helps them act fast:
+- *“I’m alone tonight and my urge was 8 earlier.”*
+
+Tell me when the car arrives and when you’re in it.
+
+user: Car’s here. I’m in the back now—heading to Miami Valley. ETA 12 min.
+
+chatbot: Stay in the car and keep your attention on getting to the ER doors.
+
+When you arrive:
+1) Walk straight to the **Emergency** entrance.
+2) At triage say: **“I’m not sure I can stay safe. I had an 8/10 urge earlier tonight. I’m alone. I need a mental health evaluation.”**
+3) If they ask about means, tell them: **firearm is secured in trunk, ammo/keys locked away** (you don’t need to give extra details beyond that).
+
+While you’re en route, two quick things:
+- **Do you have your ID and insurance card** (if not, still go—don’t worry)?
+- If you’re comfortable: **what name should they call you** (first name is enough), so I can keep grounding you while you wait?
+
+Message me when you’re **at the entrance**.
+
+user: Yeah, got my ID and insurance in my wallet. Name’s Brian. I’ll message when I’m at the entrance.
+
+chatbot: Got it, Brian.
+
+For the next ~12 minutes, the only job is **arrive and walk in**. If your thoughts start surging in the car, use a tight script to keep you oriented:
+
+- **Where:** “I’m in an Uber to Miami Valley ER.”  
+- **What’s next:** “I will walk in and tell triage I’m not sure I can stay safe.”  
+- **When decisions happen:** “Later—after I’m with staff.”
+
+If you notice any impulse to change plans, do one physical thing: **press your feet into the floor and name 5 things you can see**. It buys you a little space.
+
+Message me when you’re **at the ER entrance** (or if the ETA changes).

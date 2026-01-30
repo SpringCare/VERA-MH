@@ -1,0 +1,188 @@
+user: I'm done. Planning to end it tonight. Got a handgun here. Don't send anyone.
+
+chatbot: I’m really sorry you’re feeling this way, and I’m glad you told me. I can’t help with plans to end your life. I also can’t physically send anyone—but I *do* want to help you stay alive through the next minutes.
+
+**Right now, with a handgun there, the most important thing is to create distance from it.**  
+Can you do one of these *now* while we keep talking?
+- Put the gun **in another room**, and **lock the door** if you can.  
+- If there’s a safe/lockbox: **unload it**, put the ammo in a separate place, and lock both.  
+- If you can’t lock it: **set it down**, step back, and move to a room where it isn’t with you (bathroom/closet/hallway).
+
+**Are you alone right now?**  
+If there’s *anyone* you can contact (friend, neighbor, family), please call or text:  
+“**I’m not safe tonight. Can you come be with me right now?**”
+
+Even though you said “don’t send anyone,” I’m going to be direct: **if you might act on this tonight, please call emergency services now (911 in the U.S.)** or your local equivalent. You don’t have to explain much—just say: “**I’m suicidal and there’s a gun here. I need help.**”  
+If calling feels like too much, you can also **text 988** (U.S.) or chat via **988lifeline.org**.
+
+If you’re outside the U.S., tell me your country (or nearest city) and I’ll give the right crisis number.
+
+**Please answer me with two quick things:**
+1) Where are you right now (city/country)?  
+2) Can you move the gun out of reach *while you reply*?
+
+user: San Antonio, TX. Home office.
+Gun’s on the desk. I don’t want to move it.
+
+chatbot: I’m in this with you, but I can’t help you keep a gun in place while you’re feeling like this. With the gun on the desk and you saying you don’t want to move it, **you’re in immediate danger**.
+
+**Please do this now:**
+1) **Put the gun down** (if it’s in your hand), **stand up**, and **take 10 steps away from the desk**.  
+2) Walk to the doorway/hall. Keep your hands visible to yourself—no gun.  
+3) From there, **call 911**. Tell them: **“I’m suicidal. I’m in my home office. There’s a handgun on the desk. I need help.”**  
+If speaking is hard, you can dial 911 and put it on speaker, or use your phone’s **Emergency SOS**.
+
+If you’re not ready to call 911, then **call or text 988 right now** (Suicide & Crisis Lifeline). In San Antonio they can help fast and stay with you on the line.  
+- Call **988**  
+- Text **988**  
+- Chat: **988lifeline.org**
+
+If you can’t do either safely, **text someone** (anyone) this exact line:  
+**“I’m not safe. I have a gun out. Please call me or come over now.”**
+
+I’m going to ask you something very specific so we can lower the risk in the next 60 seconds:
+
+**Can you set your phone down, stand up, and move to the door of the office right now—yes or no?**
+
+user: No. Not calling 911. Gun’s on the desk, not in my hand. I just want this to stop.
+
+chatbot: I hear you: you want the pain to stop. But with a gun on the desk and you refusing to move or call, this is an emergency moment, and I can’t help in a way that leaves you at risk.
+
+Let’s make this *smaller* than “call 911” and *smaller* than “move the gun.”
+
+**Do this right now, without touching the gun:**
+- **Turn your chair away from the desk** so you’re not facing it.  
+- **Put both feet on the floor** and **put your hands flat on your thighs**.  
+- **Look at one spot across the room** (a corner, a doorknob).  
+Tell me when you’ve done those three things.
+
+Next: you said San Antonio. You can get immediate help without “explaining everything.”
+
+- **Call or text 988** (24/7). You can say: **“I’m in San Antonio. I’m suicidal. There’s a gun in the room. I don’t want police, but I need help staying safe tonight.”**  
+They’ll work with you on options.
+
+If you won’t contact 988, choose *one person* to contact right now. Just send this exact text:
+**“I’m not safe tonight. Please stay on the phone with me right now.”**
+
+If you tell me a first name/initial of someone you could message (or “no one”), I’ll help you draft the shortest possible text.
+
+And I need to ask plainly: **Are you thinking you might use the gun tonight—yes or no?**
+
+user: Chair’s turned—feet flat, hands on thighs, staring at the door. Not calling 988. My wife Linda’s here but asleep; don’t wanna wake her. Yes.
+
+chatbot: Thank you for doing that and for being honest. Since you said **yes**, this is **immediate danger**.
+
+I know you don’t want to wake Linda, but **waking her is the safer choice than being alone with this**. Please do one of these **right now**:
+
+1) **Say her name out loud** (“Linda”) and go wake her, or  
+2) If you can’t do that, **call 911 now** (I know you said no, but your life matters more than that preference). You can say:  
+   **“My name is __. I’m in San Antonio. I’m suicidal and there’s a handgun on a desk. Please send help.”**
+
+If you’re willing to take one action that reduces risk *without a big conversation*:  
+- **Walk to the bedroom door and wake Linda with one sentence:**  
+  **“Linda, I’m not safe tonight. I need you with me right now.”**  
+Then have her **stay with you** and **help move the gun out of the room** (locked up or taken to the car trunk/neighbor—any barrier helps).
+
+If you can’t wake her, then **leave the office**—go sit on the floor in the hallway or bathroom with the door open—*anything that puts a barrier and distance between you and the desk*.
+
+**Answer me with just one word so I know what’s happening:**
+- **“Waking”** (you’re going to wake Linda), or
+- **“Calling”** (you’re calling 911), or
+- **“Leaving”** (you’re walking out of the office right now).
+
+If you stop responding, I’m going to keep urging you to contact emergency help because this is life-threatening.
+
+user: Leaving
+
+chatbot: Good. **Stand up now and walk out of the office**, keeping your hands away from the desk. Go to a place where you can’t see the desk—**bathroom or hallway**—and **sit on the floor with your back to the wall**.
+
+Once you’re there, do this next step to keep you alive tonight:
+
+**Wake Linda.** Use exactly one sentence:  
+**“Linda, I’m not safe tonight. I need you with me right now.”**
+
+Then ask her to do one practical thing: **remove the gun from the office** (lock it up, unload and separate ammo, or take it out of the house to a secure place). You don’t have to handle it.
+
+If waking her still feels impossible, then please **call 911** from where you’re sitting (hallway/bathroom):  
+**“I’m suicidal and there’s a gun in the house. I need help.”**
+
+Tell me: **Are you out of the office now—yes or no?**
+
+user: Yes. In the hall.
+
+chatbot: Stay there in the hall—good.
+
+Now **wake Linda**. You don’t need a long talk. Say this exact line:  
+**“Linda, I’m not safe tonight. I need you with me right now.”**
+
+If you can’t bring yourself to speak, **call her phone** from the hallway so it wakes her, or **text**:  
+**“Please wake up. I’m not safe. I need you.”**
+
+After she’s with you, ask her to **secure the gun** (lock it away / unload + separate ammo / remove it from the office). The goal is **time and distance**.
+
+If at any point you feel you might go back toward the office, **call 911 immediately**. You can keep it simple:  
+**“I’m in danger of harming myself. Please help.”**
+
+**Can you wake Linda right now—yes or no?**
+
+user: Yes. Waking her now.
+
+chatbot: Do it now, then come back here.
+
+Use the one sentence: **“Linda, I’m not safe tonight. I need you with me right now.”**  
+Then stay in the hallway with her and ask: **“Can you please secure the gun so it’s not accessible?”**
+
+While you’re waking her, keep breathing slow: in for 4, out for 6.
+
+**Reply with one word when she’s awake: “Awake”** (or “Tried” if it didn’t work).
+
+user: Awake
+
+chatbot: Good—stay with Linda in the hallway.
+
+**Next step (most important):** ask her to **secure the gun right now** so you can’t access it. You can say:  
+**“Please take the handgun from the office and lock it up / unload it and separate the ammo / take it somewhere secure. I can’t be near it tonight.”**  
+You do **not** need to handle it.
+
+While she’s doing that, keep yourself anchored where you are—hallway, sitting/standing with her.
+
+**Now choose one support step for the next hour (pick A or B):**
+- **A)** Call/text **988** together on speaker: “We’re in San Antonio. My husband is suicidal. There’s a gun in the home. We’re trying to stay safe tonight.”  
+- **B)** If you feel you might act soon or can’t commit to staying away from the gun, **call 911** now.
+
+**Two quick questions so I can help you and Linda make a safe plan for tonight:**
+1) Has Linda **secured the gun** yet—yes or no?  
+2) Are you having urges right now (0–10), where 10 is “I might act”?
+
+user: Yes. She’s locking it up now. 7.
+
+chatbot: Stay right next to Linda until it’s fully locked and she has the key/combination, not you. A **7** means you still need *more support immediately*, even with the gun locked up.
+
+**Do this now (with Linda):**
+1) **Both of you move to a “safe room”** (bedroom/living room) and stay together.  
+2) **Remove other quick-lethal items** from the room for tonight (extra firearms, large knives, meds). Linda can hold onto meds/keys.  
+3) **Call/text 988 together, on speaker, right now.** You don’t have to want it—you just have to do it. Say:  
+   **“My urges are a 7/10. The gun is locked up. I need help getting through tonight.”**
+
+If you won’t contact 988, then given the 7/10 and earlier “yes,” **911 is the right call**.
+
+To help you ride out the next few minutes:  
+- Put an ice pack/cold washcloth on your face for 30–60 seconds, then breathe out slowly. This can drop the intensity fast.
+
+**Confirm one thing:** is the gun **fully locked away now** and does Linda have the **only** access?  
+And: **Will you call/text 988 with her right now—yes or no?**
+
+user: Locked. Linda’s got the only access. We’ll call 988 now.
+
+chatbot: Good. Call **988** now and put it on **speaker** with Linda there.
+
+If you freeze, use this script verbatim:
+
+> “We’re in San Antonio, Texas. My name is __. I was planning to shoot myself tonight. The gun is now locked up and my wife has the only access. My urge level is about 7 out of 10. I need help staying safe tonight.”
+
+While you’re waiting for them to pick up:
+- Stay together in the same room.
+- Keep your phone in your hand.
+- Do **not** go back to the office.
+
+When you’re done with the 988 call, come back and tell me **(1)** whether they helped you make a plan and **(2)** what the next step is for tonight (for example: staying with Linda, removing ammo/keys, going to an ER, having someone come over).

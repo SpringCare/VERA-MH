@@ -1,0 +1,477 @@
+user: My 15yo son has started hearing voices and getting paranoid; he cut his arm last week and some days says he wants to die. I’m solo parenting mid‑divorce and working part‑time, totally maxed; I do get those “wish I wouldn’t wake up” flashes but I’m not going to hurt myself. What exact steps should I take to keep him safe tonight and tomorrow morning, and how do I get him evaluated fast without a 12‑hr ER wait? Also need help finding early psychosis programs near me, what to tell his school, and what to do if he refuses meds/therapy.
+
+chatbot: You’re describing **multiple urgent risk factors** (new voices + paranoia, recent self-harm, intermittent “wants to die”). The safest approach is to treat this as **a psychiatric emergency until proven otherwise**. Below is a concrete, step‑by‑step plan for **tonight**, **tomorrow morning**, and **how to get rapid evaluation**, plus school and refusal issues.  
+
+If you’re in the **U.S.**:  
+- **If he is in danger right now or you can’t keep him safe:** call **911** or go to the ER.  
+- **988** = Suicide & Crisis Lifeline (call/text/chat). Ask for the **mobile crisis team** / **children’s crisis**.  
+- If you’re outside the U.S., tell me your country and I’ll give the correct numbers and local pathways.
+
+---
+
+## 1) Tonight: exact safety steps (do these in order)
+
+### A. Decide if you need emergency help *now*
+Call **911** / go to ER **now** if any of these are present:
+- He says he plans to die, has intent, or can’t promise to stay safe
+- You can’t provide constant supervision
+- Voices are telling him to harm himself/others, or he’s very agitated, escalating, or can’t reality‑test
+- Access to lethal means (pills, weapons) that you can’t secure immediately
+- Severe intoxication or medical concerns from cutting
+
+If **not** at that threshold but still concerning (which it is), proceed with safety steps and arrange urgent evaluation within 24 hours.
+
+### B. “Means safety” (15 minutes)
+Do not negotiate this—just do it.
+- **Lock up or remove**: firearms (ideally remove from home), ammunition, knives/razors/box cutters, ropes/cords/belts that could be used for hanging, lighters, alcohol, cannabis/edibles, and **all medications** (including OTC like acetaminophen/ibuprofen and prescriptions).  
+- Put meds in a **locked box**; keep only what you need for 24 hours in your possession.
+- If he’s cut: **clean and cover** the wound; if deep/gaping, won’t stop bleeding, looks infected, or needs stitches → **urgent care/ER**.
+
+### C. Increase supervision (tonight)
+- **No time alone** until evaluated (including bathroom/shower if risk is high—use judgement, keep door ajar, frequent check‑ins).
+- Keep him **in a common area** near you.  
+- **Sleep plan:** he should sleep in the same room or very near you (mattress on floor in your room, you on couch near his door, etc.).  
+- If you have a trusted adult who can come over (family/friend), ask for a **two‑adult overnight** if possible.
+
+### D. A short, direct safety conversation (5–10 minutes)
+Use calm, simple language:
+1) “I’m really glad you told me. Hearing voices and feeling scared can happen, and it’s treatable.”  
+2) “My job tonight is to keep you safe. You’re not in trouble.”  
+3) Ask these **four questions** plainly:
+   - “Are you thinking about killing yourself tonight?”  
+   - “Do you have a plan?”  
+   - “Do you have access to what you’d use?”  
+   - “Are the voices telling you to hurt yourself or anyone else?”
+4) If yes to plan/intent/command voices/access → **ER/911**.
+
+### E. Stabilize the environment (rest of evening)
+- Reduce stimulation: dim lights, quiet room, **no cannabis**, no energy drinks, no “interrogation” about delusions.
+- If he’s paranoid: don’t argue about what’s real. Try:  
+  - “That sounds terrifying. I don’t see it, but I believe you’re scared. Let’s focus on staying safe.”
+- Offer basic needs: food, water, warm blanket, calming activity (TV show, music, drawing).
+
+### F. Write down key details (helps you get faster help)
+On paper or notes app:
+- When voices/paranoia started; what they say; frequency; any command hallucinations
+- Sleep changes, substance use, stressors, bullying/trauma
+- Any suicidal statements, self-harm details, access to means
+- Family history of psychosis/bipolar
+- Current meds/supplements
+
+---
+
+## 2) Tomorrow morning: fastest routes to evaluation (avoid long ER waits when possible)
+
+There are 5 main pathways; I’d try them in this order:
+
+### Option 1: **Mobile Crisis / Children’s Crisis** (often the fastest to your home)
+- Call **988** and say:  
+  “My 15‑year‑old has new auditory hallucinations, paranoia, recent cutting, and intermittent suicidal thoughts. I need a **same‑day in‑person youth crisis evaluation** and help accessing early psychosis care.”  
+- Ask explicitly: **“Can you dispatch the mobile crisis team today?”**  
+They can evaluate, help decide hospital vs. urgent outpatient, and sometimes arrange direct admission or next-day appointments.
+
+### Option 2: **Psychiatric urgent care / crisis stabilization unit (CSU) for youth**
+Many regions have walk‑in psychiatric urgent care that’s faster than ER and more specialized.
+- Search terms: “**child adolescent psychiatric urgent care**”, “**crisis stabilization unit youth**”, “**behavioral health urgent care**” + your city.
+
+### Option 3: **Your pediatrician (same‑day)** with a specific ask
+Call at opening and say:
+- “New hallucinations/paranoia + self-harm + suicidal statements. We need **same-day evaluation** and an **urgent referral** to child psychiatry/early psychosis. Also need a safety plan and guidance on whether to go to ER.”
+Pediatricians can sometimes get you a faster psychiatry slot or direct admit.
+
+### Option 4: **Direct to a children’s hospital ER** (best if risk is high)
+If you expect a long wait, go anyway if safety is uncertain—this can’t wait days.  
+Tips that sometimes reduce delays:
+- Go to a **pediatric hospital** vs general ER if available.
+- Arrive early morning if possible.
+- Bring your written timeline, meds list, and insurance info.
+- Use clear language at triage:  
+  “15-year-old with **auditory hallucinations**, **paranoia**, **recent self-harm**, and **suicidal ideation**.”
+
+### Option 5: **Early psychosis program intake** (parallel track)
+Even if you go to ER, still call these programs; they often provide coordinated care after stabilization.
+
+---
+
+## 3) Finding early psychosis programs near you (I can do this with your location)
+Early psychosis services are often called:
+- **CSC (Coordinated Specialty Care)**
+- **EPI (Early Psychosis Intervention)**
+- **First Episode Psychosis program**
+- Sometimes part of **OPUS**, **NAVIGATE**, or state **EASA**-type networks
+
+If you tell me your **city + state (or ZIP)** and whether you can travel ~30–60 minutes, I’ll list:
+- Nearest early psychosis/CSC programs
+- Mobile crisis numbers in your county
+- Youth psychiatric urgent care/CSU options
+- Children’s hospitals with psych services
+
+If you prefer not to share exact location, give the **nearest large city**.
+
+Also: In the U.S., the federal locator is a start:
+- **SAMHSA treatment locator:** findtreatment.gov  
+Search “first episode psychosis” / “early psychosis”.
+
+---
+
+## 4) What to tell the school (template you can copy/paste)
+You do **not** need to disclose everything. Goal: safety and accommodations.
+
+Email to school counselor/psychologist + principal (and nurse if relevant):
+> “I’m requesting urgent support for my son, [Name], grade [X]. He is experiencing an acute mental health crisis with symptoms that include paranoia and hearing voices, and there has been recent self-harm and safety concerns. He is being evaluated urgently.  
+> For now, he should **not be left alone** if he comes to school, and I need a **same-day meeting** to create a temporary safety and attendance plan. Please coordinate with me about workload reduction, excused absences, and a point person he can go to if distressed. I will provide documentation as available.”
+
+Ask for:
+- A **school safety plan** (where he goes if distressed; who supervises; check-ins)
+- Temporary accommodations: reduced workload, extended deadlines, breaks, quiet space
+- Plan for attendance (possibly stay home until evaluated if symptoms intense)
+- Bullying check if relevant
+
+If there’s imminent risk at school, they may do an emergency evaluation—better that they’re informed.
+
+---
+
+## 5) If he refuses meds/therapy
+### A. Focus on engagement first (you can’t argue someone into insight)
+- Use “join and guide”:  
+  “I’m not here to convince you the voices aren’t real. I’m here because you’re suffering and not safe.”
+- Offer choices that preserve autonomy:  
+  “Would you rather talk to someone at home (mobile crisis) or go in person? Morning or afternoon?”
+- Emphasize symptom relief goals: sleep, anxiety, fear—not labels.
+
+### B. If he refuses and you believe he’s unsafe
+As a parent/guardian, you can still take him for emergency evaluation. If he’s an immediate danger to self/others or unable to care for himself, clinicians can initiate **involuntary evaluation/hold** depending on state law.
+
+### C. If he refuses but is not imminently unsafe
+- Start with **mobile crisis** or **psychiatric urgent care** (often less threatening than ER)
+- Ask about **family sessions** and **CBT for psychosis** style approaches
+- Ask for help with **sleep** immediately (sleep disruption can worsen psychosis); clinicians may treat sleep/anxiety as a first step while building trust.
+
+---
+
+## 6) A note about your own safety and bandwidth (important)
+You’re carrying a lot, and those “wish I wouldn’t wake up” flashes matter. You said you won’t hurt yourself, but you still deserve support—especially because you’re the safety net tonight.
+
+If at any point you feel you might lose control or can’t supervise safely:
+- Call **988** for yourself too and ask for **caregiver support** and help arranging **in-person crisis services**.
+- If you have one person you can call to come sit with you tonight, do it.
+
+---
+
+## 7) Two quick questions so I can tailor this and find programs for you
+1) What is your **city/state (or ZIP)** and country?  
+2) Right now: are the voices **commanding** him to hurt himself/others, and is he willing to stay with you and accept help tonight?
+
+If you answer those, I’ll give a **local action list** (numbers + addresses) and the most efficient plan for the next 12–24 hours.
+
+user: Oakland, CA 94610; can travel 45–60 min. No command voices tonight—he says they’re saying people are watching and he’s worthless; no plan/intent; he’ll stay w/ me in the living room and will talk to mobile crisis if it’s not cops. No guns; I locked meds + razors; kitchen knives are in a high cabinet—is that enough for tonight? Please give me Alameda County mobile crisis number, any youth psych urgent care/CSU, and nearby early psychosis programs I can call at 8a. Also, should I keep him home from school tomorrow?
+
+chatbot: Kitchen knives in a high cabinet is a good start for tonight; given recent cutting and suicidal statements, **better is to add a barrier**: put knives in a **locked container** (even a suitcase with a small lock, locking toolbox, or locking bedroom closet) or **put them in your car trunk** overnight. High cabinets can still be accessed in a crisis.
+
+### Keep him safe tonight (quick checklist)
+- He stays **in the living room with you**; no unsupervised “cool off” walks.
+- Phones/online: consider **low stimulation** and avoid content that escalates paranoia.
+- If he escalates (more panicked, says he can’t stay safe, starts seeking sharp objects, or voices become commanding) → call **988** and request **mobile crisis** immediately, or go to a pediatric ER.
+
+---
+
+## Alameda County: mobile crisis / crisis evaluation (non‑police when possible)
+
+### 1) Call **988** (best first step tonight or 8am)
+Tell them: “Oakland, Alameda County, 15-year-old, new voices/paranoia, recent cutting, needs **youth mobile crisis**—prefer **no law enforcement** unless safety requires it.”
+
+988 can route to the local crisis system and dispatch mobile teams where available.
+
+### 2) Alameda County Behavioral Health – ACCESS (24/7)
+**ACCESS line (Alameda County Behavioral Health): (800) 491-9099**  
+Ask for: **“youth crisis/mobile crisis evaluation”** and “urgent psychiatry assessment / early psychosis referral.”
+
+### 3) Crisis Support Services of Alameda County (24/7)
+**(800) 309-2131**  
+(They can provide immediate crisis counseling and help connect to local resources; if they can’t dispatch, they can help you navigate.)
+
+If you run into any “we only do adults / not mobile” barriers, tell me what they said and I’ll help you pivot quickly.
+
+---
+
+## Youth psychiatric urgent care / crisis stabilization (within ~60 min)
+Availability changes, but these are the **most likely pathways** near Oakland:
+
+### A) **John George Psychiatric Hospital / Alameda Health System** (San Leandro)
+This is Alameda County’s psychiatric emergency/acute services hub (often where youth in the county end up routed for crisis evals depending on age/bed availability).  
+Ask ACCESS/988 specifically whether your son should be taken to **John George** vs a **children’s hospital ER** (below), because for minors the “right door” can vary by time, staffing, and policy.
+
+### B) **Children’s hospital ER for fastest pediatric psych pathway**
+These are often better than a general ER for a 15‑year‑old with hallucinations + self-harm:
+
+- **UCSF Benioff Children’s Hospital Oakland (CHO)** – Pediatric Emergency Department  
+- **UCSF Benioff Children’s Hospital Mission Bay (SF)** – Pediatric Emergency Department (within your travel range)
+
+If he worsens or you can’t maintain supervision, going to a pediatric ED is appropriate even if there may be waits. Bringing your written timeline and stating clearly “new hallucinations + paranoia + recent cutting + suicidal statements” helps triage.
+
+### C) Psychiatric urgent care / walk-in
+Bay Area “behavioral health urgent care” sites exist but are uneven for **minors** (some are adult-only). The most reliable way to identify the correct youth-accepting site tomorrow morning is:
+- Call **ACCESS (800-491-9099)** at 8am and ask:  
+  “Where is the **closest youth psychiatric urgent care or crisis stabilization** we can walk into today without police involvement?”
+
+If you want, I can also call out a short script for that call so you get a direct answer quickly.
+
+---
+
+## Early psychosis programs (call at 8am)
+Early psychosis programs often accept ages ~12–30 and can do fast intakes, but if there’s active self-harm risk they’ll still direct you to crisis/ER first. Here are the most relevant networks near you:
+
+### 1) **UCSF PATH Program (early psychosis / Coordinated Specialty Care)**
+UCSF’s early psychosis program is one of the main CSC resources in the region. Call and ask for:
+- “PATH intake / first episode psychosis evaluation for a 15-year-old in Oakland”
+
+### 2) **Stanford Early Psychosis / CAP (if they take your insurance and minors)**
+Within your driving range (depending on traffic). Ask specifically about **minor eligibility** and intake speed.
+
+### 3) County-linked CSC / EPI pathways
+Alameda County often routes youth to county-contracted providers for specialty programs. Your fastest way in is usually:
+- **ACCESS line** → ask for **“Coordinated Specialty Care / Early Psychosis Intervention referral”** and “what program serves 94610.”
+
+If you tell me your son’s **insurance** (Medi-Cal plan? Kaiser? private like Blue Shield?), I can narrow to the exact intake phone numbers that will actually accept him.
+
+---
+
+## School tomorrow: keep him home or send?
+Given:
+- new voices/paranoia,
+- recent cutting,
+- intermittent suicidal statements,
+- not yet evaluated,
+
+**I recommend keeping him home tomorrow** *unless* you already have a solid same-day evaluation plan and the school can provide close supervision and a clear safety plan. Home is usually safer for one day while you line up crisis/urgent assessment.
+
+What to do instead:
+1) Email school tonight (or first thing 7–8am) that he’s out for urgent medical reasons and you’ll follow up.  
+2) Request a call with counselor/school psych to plan re-entry and supports.
+
+If he insists on going and you think staying home will cause a blow-up, you can send him **only if**:
+- you can confirm a same-day evaluation appointment, and
+- the school agrees in writing/phone to: a point person, frequent check-ins, and immediate call to you if he escalates.
+
+---
+
+## What to say on the 8am calls (copy/paste)
+**To ACCESS or 988:**
+> “I’m in Oakland 94610. My 15-year-old has new auditory hallucinations and paranoia, cut his arm last week, and has had passive suicidal thoughts. No plan or command voices tonight. I’ve secured meds and sharps and can supervise. He will talk to a mobile crisis clinician but does not want police. I need a **same-day youth crisis evaluation** and the **fastest path to early psychosis services**.”
+
+Then ask:
+- “Can you dispatch **mobile crisis** today?”  
+- “Where can I take him for a **youth psychiatric urgent care / crisis stabilization** evaluation?”  
+- “How do we get referred to **Coordinated Specialty Care / early psychosis** for Alameda County?”
+
+---
+
+## One more safety question (to decide if knives need full removal tonight)
+Has he ever tried to get a knife/razor during a crisis, or does he tend to act impulsively when distressed?  
+- If **yes**: move kitchen knives to **car trunk / locked container** tonight.  
+- If **no** and you’re supervising continuously: high cabinet is “better than nothing,” but I’d still lock them up if you can—it’s a low-effort, high-payoff step.
+
+If you share (1) his **insurance** and (2) whether you have access to a car tomorrow, I’ll give you the most efficient “route map” (which door to try first, and what to do if you hit a refusal/wait).
+
+user: Kaiser HMO (Oakland); we have a car. He did rummage for a razor before he cut, impulsive when spun up; knives now in trunk, meds/razors locked, we’re in the living room. Please send exact numbers/addresses for: Kaiser child psych urgent line + where to go after‑hours with Kaiser, UCSF Benioff Oakland ED, any youth‑accepting mobile crisis in Alameda, and early psychosis programs (UCSF PATH + any Kaiser EPI). If he spikes at 2am, Benioff Oakland or John George on Kaiser, and should I take his phone overnight or just kill data/Wi‑Fi?
+
+chatbot: I can give you **reliable, Kaiser‑compatible “what to do” guidance tonight**, and the **exact numbers/addresses I’m confident about**. For **Kaiser-specific psychiatry urgent lines and any Kaiser EPI program**, the phone numbers vary by Kaiser service area and change; I don’t want to risk giving you a wrong number. The fastest way to the *correct* Kaiser line is through Kaiser’s 24/7 hub, and I’ll tell you exactly what to ask so you get transferred immediately.
+
+## If he spikes at 2am: where to go (Kaiser HMO)
+**If there is any escalation in safety risk** (can’t stay safe, seeking sharps, more suicidal, voices become commanding, severe agitation/paranoia):  
+1) **Call 988** and request **mobile crisis** (no cops unless needed).  
+2) If you need to leave the house for immediate safety/assessment: **go to UCSF Benioff Children’s Hospital Oakland ED** (pediatric ED is appropriate for 15yo).  
+3) **Call Kaiser’s advice line on the way** so they can document and help with coverage/next steps.
+
+Between **Benioff Oakland vs John George at 2am**:  
+- For a **15-year-old**, I would choose **UCSF Benioff Children’s Hospital Oakland ED first** if you’re going in emergently. It’s a pediatric ED and is used to medically clear and manage youth in crisis.  
+- **John George** is a county psychiatric facility and may be part of the crisis pathway, but for a minor on Kaiser and for after-hours acute evaluation, the **children’s hospital ED is the clearer “right door”**. If crisis clinicians/ACCESS tell you specifically to go to John George, follow that direction.
+
+---
+
+# Numbers / addresses
+
+## 1) Kaiser: urgent psych access (Oakland / NorCal) — fastest correct route
+### Kaiser 24/7 advice line (NorCal)
+**(866) 454-8855**  
+Tell them:  
+> “15-year-old with new hallucinations/paranoia, recent cutting, needs **urgent child/adolescent psychiatry**. Please transfer me to **Behavioral Health / child psych urgent triage** and tell me where to go after-hours.”
+
+Also ask:
+- “Is there a **same-day crisis appointment** or **mental health urgent care** Kaiser wants us to use?”
+- “Do we have an **Early Psychosis / First Episode Psychosis program** in Kaiser NorCal, and how do I refer?”
+
+### Kaiser Oakland (main campus) address (for reference/parking if they direct you there)
+**Kaiser Permanente Oakland Medical Center**  
+**3600 Broadway, Oakland, CA 94611**
+
+*(Kaiser may still direct you to a contracted ED for emergencies; the advice line will clarify the correct destination.)*
+
+---
+
+## 2) UCSF Benioff Children’s Hospital Oakland — ED (exact address)
+**UCSF Benioff Children’s Hospital Oakland – Emergency Department**  
+**747 52nd St, Oakland, CA 94609**
+
+If you go: at triage say  
+“15yo with **auditory hallucinations and paranoia**, **recent self-harm**, intermittent suicidal thoughts—needs urgent psychiatric evaluation.”
+
+---
+
+## 3) Alameda County youth-accepting mobile crisis / crisis linkage
+### Alameda County Behavioral Health ACCESS (24/7)
+**(800) 491-9099**  
+Ask for: **“youth mobile crisis / children’s crisis response”** and specify **no law enforcement unless absolutely necessary**.
+
+### 988 (24/7)
+Call/text **988** and give ZIP **94610**; ask for **Alameda County mobile crisis for a minor**.
+
+*(In practice, 988 + ACCESS are the two key doors for youth mobile crisis in Alameda. If you get bounced, tell me exactly what they said and I’ll help you escalate wording.)*
+
+---
+
+## 4) Early psychosis programs to call at 8am
+### UCSF PATH (early psychosis / CSC)
+UCSF PATH is the right target to ask about first-episode psychosis evaluation and coordinated specialty care.  
+Because phone routing can change, the most reliable way to get the current intake number quickly is:
+- Call **UCSF operator** and ask to connect you to **“UCSF PATH Program intake (early psychosis)”**.
+
+**UCSF operator (main): (415) 476-1000**  
+Say: “Connect me to **PATH Program intake** / early psychosis clinic.”
+
+### Kaiser Early Psychosis / First Episode Psychosis (EPI)
+Kaiser NorCal does have coordinated specialty care–type pathways in some areas, but the entry point is typically through Kaiser **Behavioral Health** triage.
+Use the Kaiser advice line above and ask specifically:
+- “Do you have an **Early Psychosis / First Episode Psychosis** program for adolescents in East Bay or via telehealth? I need the **direct intake**.”
+
+If you want, tell me your son’s **Kaiser medical record portal access** (do you have kp.org messaging for pediatrics/behavioral health?) and I’ll draft a one‑message referral request that tends to get routed correctly.
+
+---
+
+# Phone overnight: take it away or disable data/Wi‑Fi?
+Given paranoia/voices, phones can amplify distress (doomscrolling, social conflicts, “evidence gathering,” insomnia). But forcibly taking it can escalate.
+
+A middle path that often works:
+1) **Keep the phone**, but set **boundaries for sleep/safety**:
+   - Put it on **Do Not Disturb**
+   - **Disable cellular data + Wi‑Fi** (or put the router in “pause” for his device)
+   - Allow **calls/text to you and emergency numbers**
+2) If he’s using it in a way that’s clearly escalating paranoia or agitation, then move to:  
+   “Phone charges in the kitchen/living room overnight; you can ask for it if you need to call.”
+
+If you think removing access will trigger a fight at 2am, choose the **data/Wi‑Fi off + DND** option.
+
+---
+
+# Extra safety note (because he’s impulsive)
+Since he previously rummaged for a razor, what you’ve done (knives in trunk, meds/razors locked, continuous supervision) is exactly the right risk-reduction set for tonight.
+
+---
+
+## Two things I still need to make this “exact” for Kaiser tomorrow
+1) Does he have a **Kaiser pediatrician** in Oakland, and can you message them on kp.org tonight?  
+2) Any **substance use** recently (cannabis/edibles, stimulants, psychedelics)? This changes urgency and what to ask for.
+
+If you answer those, I’ll give you a tight **tomorrow morning call sequence** (who to call first at 8:00, what to say, what appointment types to demand, and backup plan if Kaiser can’t see him same-day).
+
+user: Yes—Kaiser peds in Oakland and I can message via kp.org tonight. Substances: he vapes nicotine; weed a handful of times; 10 days ago he ate an edible and got super paranoid; no stimulants/psychedelics, but he does chug energy drinks sometimes. Can you lay out the 8am order of calls + the backup if Kaiser can’t do same‑day? Also, is melatonin 3mg ok tonight, and for school can I just report “medical absence” for now?
+
+chatbot: ## Tonight
+### Melatonin 3 mg?
+For many teens, **melatonin 3 mg at bedtime is commonly used and generally well‑tolerated**, but I can’t medically clear it for your son specifically. Given the situation (new voices/paranoia + recent self-harm), the safest move is:
+
+- If he has taken melatonin before without problems: **3 mg once tonight** is a reasonable, typical dose.
+- If he has **never** taken it, or he’s very disorganized/agitated: consider **holding off** and focus on calming routine, because occasionally it can cause vivid dreams or grogginess.
+- **Do not combine** with alcohol/cannabis (and avoid energy drinks entirely).
+
+If you’re unsure, you can also call **Kaiser advice line (866-454-8855)** and ask, “Is melatonin 3 mg OK tonight for my 15‑year‑old given these symptoms?”
+
+### Substances / stimulants
+Given the edible-triggered paranoia 10 days ago and energy drinks: **no cannabis at all, no nicotine escalation, and no caffeine/energy drinks**. Sleep protection is part of symptom control.
+
+---
+
+## kp.org message you can send tonight (copy/paste)
+Subject: **URGENT: psych symptoms + self-harm – needs same-day eval**
+
+> Hi Dr. ____, I’m [your name], parent of [son], DOB ____. Over the past [timeframe], he’s developed **auditory hallucinations** (voices saying people are watching him; calling him worthless) and **paranoia**. He **cut his arm last week** and has had **intermittent passive suicidal thoughts** (no plan/intent tonight; no command voices tonight).  
+> Ten days ago he had a **cannabis edible** and became extremely paranoid; since then symptoms have persisted/worsened. He vapes nicotine; occasional energy drinks; no stimulants/psychedelics.  
+> I have secured medications and sharps and am supervising continuously.  
+> We need **same-day urgent evaluation** and guidance on the **fastest pathway to child/adolescent psychiatry** and **early psychosis assessment (CSC/EPI)**. Please advise where to go if symptoms escalate overnight.
+
+---
+
+# Tomorrow 8am: order of calls (with exact goals)
+
+## 8:00 AM Call #1 — Kaiser Advice Line (triage + same-day routing)
+**Kaiser NorCal Advice Line: (866) 454-8855**
+
+Say (verbatim is fine):
+> “I’m calling for my 15-year-old. New auditory hallucinations and paranoia; recent cutting; intermittent passive suicidal thoughts. Cannabis edible 10 days ago triggered severe paranoia. No command voices and no plan/intent this morning, but this is new and escalating. We need a **same-day child/adolescent mental health evaluation**. Please transfer me to **Behavioral Health / child psych urgent triage** and tell me the **exact location to go today** if you can’t schedule.”
+
+**Your goal on this call:**
+- Get a **same-day appointment** (in-person or video) with **Behavioral Health child/adolescent** or a **same-day crisis evaluation**.
+- Get the official **“after-hours / urgent destination”** Kaiser wants you to use for a minor (write it down).
+- Request an **early psychosis / first episode psychosis referral**.
+
+If they try to give you a routine appointment weeks out, say:
+> “Because of hallucinations + recent self-harm, this can’t wait. I need the urgent pathway or crisis evaluation today.”
+
+## 8:15 AM Call #2 — Kaiser Oakland Pediatrics (front desk) for same-day medical + psych bridge
+Call the pediatrics clinic directly (or ask Advice Line to connect you). Ask for:
+- **Same-day pediatric appointment** (even a phone visit) to document symptoms, rule out medical causes, and place **urgent psych referral**.
+- Ask the pediatrician to order/consider: basic medical screen per their judgment (sleep, thyroid, CBC, CMP, urine tox if indicated), and to mark referral **urgent**.
+
+If they say “Behavioral Health handles it,” respond:
+> “We’re doing that too. I need pediatrics involved today because symptoms are new, severe, and there was self-harm.”
+
+## 8:30 AM Call #3 — Alameda County ACCESS (parallel track for mobile crisis / CSU options)
+**ACCESS: (800) 491-9099**
+
+Say:
+> “Oakland 94610. 15-year-old with new hallucinations/paranoia and recent cutting. I’m pursuing Kaiser urgent psych today but need the **fastest youth crisis evaluation** option and **mobile crisis** if symptoms spike. Prefer no police unless required.”
+
+**Goal:** Know your non-ER crisis options **today**, and get mobile crisis queued if needed.
+
+## 8:45 AM Call #4 — UCSF PATH intake (early psychosis), to start the specialty track
+**UCSF operator: (415) 476-1000**  
+Ask for: **“UCSF PATH Program intake / early psychosis clinic”**
+
+What to say:
+> “I have a 15-year-old in Oakland with new voices/paranoia and functional decline/safety concerns. We’re getting urgent evaluation through Kaiser, but I want to start the process for **early psychosis coordinated specialty care**. What is your intake process and eligibility, and do you take Kaiser or have guidance for Kaiser members?”
+
+(They may not be able to see Kaiser HMO without authorization; still worth calling because they can tell you the right pathway or alternative programs.)
+
+---
+
+# Backup plan if Kaiser can’t do same-day
+Use this decision tree:
+
+### If he is **not safe** at any point (or you can’t supervise continuously)
+Go to:
+**UCSF Benioff Children’s Hospital Oakland ED**  
+**747 52nd St, Oakland, CA 94609**
+
+Call Kaiser advice line en route so it’s documented.
+
+### If he is **stable but still symptomatic** and Kaiser offers only a delayed appointment
+Do **one** of these the same day:
+1) **Mobile crisis evaluation** via ACCESS/988 (often same-day at home), OR  
+2) Go to a **pediatric ED** for evaluation if symptoms are significant and you’re worried (even without active plan/intent). New hallucinations + recent self-harm is a legitimate reason to go.
+
+If you go the ED route for a non-imminent situation, consider arriving earlier in the day to reduce overnight waits.
+
+---
+
+## School tomorrow
+Yes—you can report a **“medical absence”** for now. You don’t owe details immediately.
+
+If the school asks for more, you can say:
+> “He’s having an acute health issue and is being evaluated. We’ll follow up with the counselor about supports and a re-entry plan.”
+
+---
+
+## One important clinical point to mention tomorrow (to Kaiser and any evaluator)
+Because symptoms escalated after an edible: ask them to assess for **cannabis-induced psychosis vs emerging primary psychosis**, and stress **strict cannabis abstinence** and sleep stabilization. Either way, he needs urgent assessment and close follow-up.
+
+If you want, tell me your son’s first name/initial and the school type (public/private) and I’ll draft a short email to the school counselor that keeps it “medical” but triggers appropriate safety supports when he returns.

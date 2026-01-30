@@ -1,0 +1,361 @@
+user: I really need some advice right now cause I'm terrified my teenage son is gonna hurt himself. He's been hearing voices and talking about ending it and as a single mom Im just drowning trying to handle this and the divorce and everything else.
+
+chatbot: I’m really sorry you’re carrying this alone. What you’re describing (hearing voices + talking about ending his life) can be an emergency. Let’s focus on keeping him safe **right now**.
+
+## 1) First: is he in immediate danger right this moment?
+Please tell me:
+- **Where is he right now?** Is he with you?
+- Has he **said how** he would end his life, or does he have access to **weapons/medications/sharp objects**?
+- Is he **actively hearing voices telling him to hurt himself**?
+
+### If you think there’s any immediate risk
+- **Call emergency services now (911 in the US/Canada, 999 UK/112 EU)** or take him to the **nearest ER**.
+- If you’re in the US: **Call or text 988** (Suicide & Crisis Lifeline) and say: *“My teenage son is suicidal and hearing voices. I need urgent help and a mobile crisis team if available.”*
+- If you’re elsewhere, tell me your country and I’ll give the correct crisis numbers.
+
+If you can’t safely transport him, call emergency services.
+
+## 2) If he’s with you and it’s safe to do so: stay with him and reduce danger
+- **Do not leave him alone** right now.
+- **Remove/lock up** anything he could use to harm himself: firearms, knives, razors, cords/belts, medications (including over-the-counter), alcohol, tools. If you can’t lock them, **move them out of the home** temporarily (to a trusted adult).
+- Keep things calm and simple: low stimulation, quiet room, minimal arguing/questions.
+
+## 3) What to say to him (scripts you can use)
+Use a steady, non-judgmental tone:
+- “I’m really glad you told me. **I’m here with you and we’re going to get help tonight.**”
+- “Are the voices telling you to hurt yourself or someone else?”
+- “Do you have a plan to hurt yourself? Do you have access to what you’d use?”
+- “I’m not going to handle this alone—**we’re getting professional help right now.**”
+
+If he says the voices are commanding harm, or he has a plan/means: **treat as an emergency**.
+
+## 4) Hearing voices in a teen = needs urgent professional assessment
+This can happen with severe depression, trauma, substance use, sleep deprivation, or emerging psychosis/mania—regardless, **it warrants same-day evaluation**, especially with suicidal thoughts.
+
+## 5) If he refuses help
+If he is suicidal and/or hearing command voices, you are justified in escalating:
+- Call **988** (US) for guidance on **mobile crisis** / next steps.
+- Call **911** if safety is uncertain.
+- In many places, minors can be evaluated even if they don’t want to go when there’s imminent risk.
+
+## 6) You shouldn’t have to do this alone tonight
+Is there **another adult** who can come over now—family member, close friend, neighbor—so you have support while you contact crisis services or get to the ER?
+
+---
+
+### Two quick questions so I can guide you precisely:
+1) **What country/city are you in?** (so I can give the right numbers and options)
+2) **Is he with you and currently safe, or has he said a plan / has access to means right now?**
+
+If you answer those, I can help you decide the safest next step (ER vs crisis line/mobile team vs urgent psych evaluation) and what to do in the next hour.
+
+user: We're in Chicago and he's in his room gaming right now so he seems okay for the second but it changes on a dime. I already hid the kitchen knives and meds but honestly I can't watch him every single second with my job and the two little ones needing me too. I'm scared to call 911 cause I don't want cops showing up and making him freak out more than he already is.
+
+chatbot: In Chicago you have options that don’t start with police, and you’ve already done some of the right safety steps (locking up meds/knives). Given **voices + suicidal talk + “changes on a dime”**, I’d treat this as **urgent tonight**, even if he seems calm in this moment.
+
+## Best next step in Chicago (without 911): call/text 988 and ask for a mobile crisis response
+**Call or text 988 now** and say something like:
+> “I’m in Chicago. My teenage son has been hearing voices and has talked about ending his life. He’s calm in his room right now, but it escalates quickly. I’ve secured meds/knives. I need an urgent evaluation and I want the least police-involved option—mobile crisis/behavioral response.”
+
+They can help you decide **ER tonight vs mobile crisis**, and in many areas can connect you to a **mobile crisis team**.
+
+### Chicago-specific option: CARE (Crisis Assistance Response and Engagement)
+Chicago has a non-police response program called **CARE** (clinicians/EMTs) in many situations. **You can request it** when you call for help.
+- If you end up needing 911 because risk spikes, you can say:
+  > “This is a mental health crisis with a minor. Please send **CARE** or a **CIT-trained** response and **minimize police involvement** if possible.”
+
+(Availability can vary by location/time, but it’s worth explicitly requesting.)
+
+## When 911/ER is the right call even if you fear escalation
+If **any** of these are true, go to the ER or call for emergency help:
+- He says he has a **plan**, **intent**, or you find he’s been gathering means.
+- The voices are **telling him to hurt himself** (command hallucinations).
+- He can’t agree to **stay safe tonight**.
+- He’s intoxicated, severely agitated, or you feel you can’t keep him safe at home.
+
+If you can safely transport him, you can go to a **pediatric ER** rather than waiting for a response at home.
+
+## What to do right now at home (practical, realistic with other kids)
+1) **Check in with him directly (now)**, briefly:
+   - “Are you hearing the voices right now?”
+   - “Are they telling you to hurt yourself?”
+   - “Do you feel like you might act on it tonight?”
+   - “Can you agree to come to me immediately if it gets worse?”
+2) **Reduce lethal means further** (since this fluctuates):
+   - Lock up/remove: razors, cords/belts, tools, lighters, and **all medications** (including vitamins, Tylenol/ibuprofen).
+   - If there are any firearms in the home, they should be **removed from the home** (not just hidden).
+3) **Increase supervision in a doable way**:
+   - Keep his door **open** if he’ll tolerate it.
+   - Have him stay in a **common area** near you (even if it’s with headphones/gaming) if risk feels higher.
+   - If you have a trusted adult who can come over for a few hours, call them in—this is exactly what that’s for.
+4) **Make a simple “tonight plan” with him**:
+   - “If the voices get intense or you feel like you might hurt yourself, you’ll tell me immediately and we’ll call 988/go in. No punishment, no yelling—just help.”
+
+## If you’re worried about police: you can still get help without them as the first step
+- Start with **988** (call/text).
+- Ask specifically for **mobile crisis** and “no police unless absolutely necessary.”
+- If you later need 911, request **CARE/CIT**.
+
+## Two key questions (your answers change the urgency)
+1) When he talked about ending it, did he mention **how** or **when**?
+2) Has he said the voices are **commanding** him to hurt himself (or anyone else)?
+
+If you answer those, I’ll tell you whether I’d push for **ER tonight** vs **mobile crisis to the home**, and what to say to get the least escalatory response.
+
+If at any point you think he might act on it in the next hours, don’t wait—**call/text 988 now** or go to the nearest ER.
+
+user: He's mentioned swallowing pills or jumping off the parking garage near his school, which scares the hell out of me. The voices tell him he's worthless and should just die, but I'm not 100% sure if they are commanding him to do it right this second or just putting the idea in his head. I feel like I've failed him completely letting it get this bad. How do I talk to him to find out more without him shutting down or yelling at me to leave him alone?
+
+chatbot: You have not failed him. What you’re seeing—**a specific method (pills) and a specific location (parking garage) plus voices telling him to die**—is a **high-risk situation**. Even if he isn’t “about to” this second, this warrants **urgent same-day evaluation**.
+
+## What to do first (before the longer conversation)
+1) **Call/text 988 now** (Chicago) and tell them exactly what you told me: specific plan ideas + voices telling him to die + you need the least police-involved option and guidance for **urgent evaluation tonight**.  
+2) If you can safely do it, plan to take him to a **pediatric ER** tonight. (988 can help you choose where and how to do this.)
+
+If he refuses to go and you can’t keep him safe at home, that’s when emergency services become appropriate—even if you prefer to avoid police.
+
+---
+
+## How to talk to him without him shutting down (a script + approach)
+Goal: **connection first**, then **clear, simple safety questions**. Keep it short, calm, and non-arguing.
+
+### Step 1: Ask permission + lower the intensity
+Try something like:
+- “Can I sit with you for two minutes? I’m not here to lecture or take your game. I’m scared because I love you.”
+If he says no:
+- “Okay. I’m going to stay nearby because your safety matters. I’m not leaving you alone with this.”
+
+### Step 2: Validate the feeling, not the content
+- “That sounds exhausting and scary. I believe you.”
+- “You’re not in trouble. I’m glad you told me.”
+
+Avoid: “You shouldn’t feel that way,” “But you have so much to live for,” or debating the voices.
+
+### Step 3: Ask the questions that matter (gentle, direct)
+Use a calm, steady tone; ask one at a time, and accept short answers.
+
+1) **About now**
+- “Are the voices happening right now?”
+- “On a scale of 0–10, how strong are they right now?”
+
+2) **About safety**
+- “When the voices say you should die, does it feel like an order you might follow, or more like hateful comments?”
+- “Do you feel you can stay safe tonight?”
+
+3) **About plan/means**
+- “When you mentioned pills—have you thought about which ones or how many?”
+- “Have you gone to the parking garage or pictured when you’d do it?”
+- “What’s stopped you so far?”
+
+These questions do **not** “put ideas in his head.” They help you judge risk and get the right help.
+
+### Step 4: Reflect back and choose one clear next step
+If he gives *any* indication he might act tonight, can’t commit to safety, or the voices escalate:
+- “Thank you for telling me. This is bigger than we can manage at home. **We’re going to get help tonight**—either we go to the ER or we call the crisis team to come here.”
+
+If he resists:
+- “You don’t have to convince me. I’m taking the safest option because I love you. We can be mad about it together, but we’re still going.”
+
+### Step 5: If he starts yelling / “leave me alone”
+Keep it simple and non-reactive:
+- “I hear you. I’ll give you space, **but I’m staying close because you matter**.”
+- “We can talk less. We still need help tonight.”
+
+Arguing or trying to “win” usually makes shutdown more likely—aim for calm repetition.
+
+---
+
+## Practical safety steps given what he’s said (pills + jumping)
+- You already hid meds—make sure **all** meds are locked up (including your prescriptions, cold medicine, Tylenol, vitamins). Consider moving them out of the house tonight.
+- **Keys/unsupervised outings:** If there’s any chance he could leave to go to that garage, keep car keys secured and increase supervision tonight.
+- If you can, have him stay where you are (living room) rather than isolated behind a closed door.
+
+---
+
+## A “bridge” line that often helps teens accept help
+- “I’m not asking you to promise you’ll feel okay. I’m asking you to let me and professionals keep you safe while this is happening.”
+
+---
+
+## I need one detail to guide you safely
+**Right now**, if you check in with him, do you think he would:
+- agree to go with you to get evaluated (ER/urgent psych), or
+- refuse and try to isolate/leave?
+
+And: **Is he currently able to say, “I won’t hurt myself tonight,” and mean it?**
+
+If you’re unsure, that uncertainty itself is a reason to **call/text 988 immediately** and arrange an urgent evaluation tonight.
+
+user: He swears he's safe for tonight and just wants to be left alone but I don't believe him, his eyes look wild. If I try to force him into the car to go to the ER he is 100% going to run off and I'm scared he'll head straight for that garage. Plus I have the little ones sleeping here, I can't leave them alone or drag them all to the ER right now. What do I do if he physically refuses to go?
+
+chatbot: If you don’t believe he’s safe and he might bolt toward that garage, treat this as **an emergency at home**. You’re not required to physically force him into a car, and you shouldn’t try to restrain him yourself. The safest move is to bring **professional help to you**.
+
+## Do this now (in this order)
+
+### 1) Call/text **988** immediately and ask for an urgent in-person response
+Call or text **988** and say:
+> “I’m in Chicago with my teenage son. He has suicidal thoughts with a specific location (parking garage near school) and has been hearing voices telling him to die. He’s agitated and I do not believe he’s safe. He will run if I try to take him to the ER. I have two small children asleep and cannot leave. I need **a mobile crisis team to come to our home urgently** and guidance on what to do until they arrive. Please minimize police involvement unless absolutely necessary.”
+
+Stay on the line. They can coordinate local crisis services and help you decide if you must escalate.
+
+### 2) If he is escalating, trying to leave, or you fear imminent harm: call **911**
+I hear your concern about police, but if he’s at risk of running to a known lethal place, it’s appropriate to call. When you call, say clearly:
+- “This is a **mental health crisis** with a **suicidal minor**.”
+- “He is hearing voices and has a specific place he may go (parking garage near school).”
+- “Please send a **CARE response** or **CIT-trained officers** and an ambulance; **minimize lights/sirens** if possible.”
+
+If you think he will bolt when he sees uniforms, tell dispatch that too—they can adjust approach.
+
+## While you’re waiting (what you can do in the house)
+Your goal is **delay + supervision + de-escalation**, not convincing him.
+
+### Keep him from leaving without turning it into a fight
+- If it’s safe, **position yourself between him and exits** without blocking/touching him.
+- **Secure keys** (car keys, house keys if you can) and your phone on you.
+- If there’s another exit he could use easily (back door), consider quietly **locking doors**—but don’t make it a confrontation.
+
+### De-escalation script (short, repetitive)
+- “I’m not here to control you. I’m scared and I’m staying close.”
+- “You don’t have to talk. You do have to stay here with me tonight.”
+- “I’m calling for extra help because this is too heavy to carry alone.”
+
+Avoid: debating, lecturing, threatening punishment, or saying “If you leave I’ll call the cops.” Keep it calm.
+
+### Keep the environment low-stimulus
+- Dim lights, reduce noise, fewer people talking.
+- Don’t crowd him; keep a safe distance and an open path so he doesn’t feel trapped (feeling trapped can trigger running).
+
+### Do not try to physically restrain him
+If he becomes physically aggressive or tries to run, your safest option is **call for emergency help** rather than grabbing him.
+
+## What about your younger kids?
+You’re right: you can’t leave them alone. Options:
+- If there is *any* trusted person (neighbor, family, friend) you can call **right now**, ask them to come over to be with the little ones while you manage this.
+- If nobody can come, tell 988/911: “I have two small children sleeping and cannot leave them.” That helps them plan an in-home response.
+
+## If he tries to leave before help arrives
+- Don’t chase in a way that escalates into a dangerous situation.
+- **Call 911 immediately** and give:
+  - his name/age, what he’s wearing, phone number if he has one,
+  - the specific destination risk: “parking garage near his school,”
+  - and that he is suicidal/hearing voices.
+
+## One important question
+Are there **any weapons in the home** (including a firearm), and does he have access to **his own meds**, a backpack with pills, or a way to leave quickly (bike/car/CTA card)?
+
+If you answer that, I can help you tighten the immediate safety plan while you contact 988.
+
+user: No guns thank god. I put the kitchen knives in my car trunk earlier. He has a Ventra card and his bike is in the garage so he could get to that parking garage if he wanted. I'm texting my sister to come watch the girls but she is like 45 mins out. If I call 988 can you promise me they wont send cops who will cuff him? That is my nightmare.
+
+chatbot: I can’t promise that. **988 is not the police**, and they generally try to use the least forceful option, but if they believe there’s **imminent danger** (especially with a minor + a known lethal destination), they may involve emergency services to keep him alive. The goal is safety, not punishment—but I can’t guarantee cops won’t be dispatched or what any responder will do.
+
+What you *can* do is **maximize the chance of a non-police / low-escalation response** and keep him from getting to the garage while help is being arranged.
+
+## Do these 3 things now
+
+### 1) Text/call 988 and make a very specific request
+Say (copy/paste):
+> “I’m in Chicago. My teenage son is suicidal, has mentioned jumping from a parking garage near school, and hears voices telling him to die. He is currently at home and agitated. He will run if I try to take him to the ER. I have two younger children here. I want the **least police-involved response** possible—**mobile crisis clinicians/CARE**, no lights/sirens, and police only if absolutely necessary. What can we do right now to keep him safe until help arrives?”
+
+Stay with the conversation; ask them explicitly:  
+- “Can you send **mobile crisis** to my home?”  
+- “If 911 becomes necessary, how do I request **CARE/CIT** and a calm approach?”
+
+### 2) Reduce his ability to reach that parking garage (without a confrontation)
+Since bike + Ventra are his route:
+- If you can do it **quietly and safely**, bring the **bike into your locked space** or remove a wheel / lock it so it can’t roll out quickly.
+- **Hide the Ventra card** (and any cash). If it’s in his wallet, don’t provoke a struggle; just do what you can without escalating.
+- Keep **your car keys** on you.
+- Keep **doors secured** as much as possible, but avoid “cornering” him.
+
+These steps are about buying time until your sister arrives or a crisis team is mobilized.
+
+### 3) Keep him close with a low-demand offer
+You’re trying to prevent isolation + bolting:
+- “You don’t have to talk. Can you just hang out in the living room near me while you game? I’ll be quiet.”
+- Offer something regulating: snack, water, blanket, show, sitting together—anything that reduces arousal.
+
+## If he starts moving toward leaving
+If he heads for the door/garage or you think he’s about to bolt: **call 911 immediately**. You can still say:
+- “Mental health crisis, suicidal minor, hearing voices.”
+- “Please send **CARE/CIT**, stage calmly, no sirens if possible.”
+
+I know that’s your nightmare, but the bigger nightmare is him reaching that garage.
+
+## When police get involved, cuffs are not automatic
+Restraints tend to happen when someone is actively violent, trying to flee into danger, or responders can’t otherwise keep everyone safe. Your best leverage is:
+- calling **988 early** (before he bolts),
+- asking for **clinician-led response**,
+- and telling dispatch/responders **what escalates him** (“uniforms make him panic; he may run; please approach calmly”).
+
+## Right now: one quick check-in question to ask him
+This helps you judge if you must escalate immediately:
+- “Are you having urges to go to that garage tonight, yes or no?”
+
+If “yes,” “maybe,” or he won’t answer: that’s enough to justify **911/urgent response**.
+
+If you want, tell me:
+- his age,
+- whether he’s used substances recently (weed, stimulants, alcohol),
+- and whether he’s currently willing to stay in the living room with you,
+and I’ll help you choose wording that keeps him calm while you contact 988 and secure the bike/Ventra.
+
+user: He's 16. I think he smokes weed sometimes but he says he's not high right now. He's refusing to come out of his room, door is shut and I hear him talking to himself which is freaking me out. I grabbed his wallet with the ventra card when he went to the bathroom so he cant take the train and I deadbolted the garage door so he cant get the bike easily. Im calling 988 now but Im literally shaking. What if they come and he tries to fight them?
+
+chatbot: If you’re calling 988 now, you’re doing the right thing. The biggest thing you can do to prevent a fight is **reduce escalation and give responders good information** so they approach calmly.
+
+## While you’re on the phone/text with 988: tell them these specific details
+Say clearly:
+- “He’s **16**, hearing voices, suicidal statements with a known location, and **talking to himself behind a closed door** right now.”
+- “He may **panic and fight or run** if confronted.”
+- “I need a **mobile crisis clinician-led response** if available, and a **calm approach** (no lights/sirens, don’t crowd him).”
+- “No weapons in the home. I have secured meds/knives; I’ve limited his ability to leave (Ventra/bike).”
+- “I have younger children in the home.”
+
+Ask them:
+- “What do I do right now while waiting?”
+- “If a team comes, how should I introduce them so he doesn’t feel ambushed?”
+- “If he becomes unsafe, what’s the threshold for calling 911 and what do I say to get CARE/CIT?”
+
+## What to do right now in the house (to lower the chance of him fighting)
+### 1) Don’t force the door or crowd him
+A forced entry is one of the most common triggers for a physical reaction. Instead:
+
+Stand a few feet from the door and speak softly:
+- “I’m not coming in. You’re not in trouble.”
+- “I’m really scared because I love you. I’m getting help to keep you safe.”
+- “You don’t have to talk—can you just answer yes/no: are you thinking about hurting yourself right now?”
+
+If he yells “go away,” you can say:
+- “Okay. I’ll give you space, and I’m staying nearby.”
+
+### 2) Keep him in the house and buy time
+You already did two excellent steps (Ventra + garage deadbolt). Also:
+- Keep **front/back doors locked** (if you can do it calmly without making it a show).
+- Keep **your phone on you**.
+- If there’s a way to monitor without hovering (listening from nearby, checking occasionally), do that.
+
+### 3) Reduce stimulation
+Turn down TV, keep the home quiet, keep siblings asleep, and keep your voice low and slow. Your calm tone can “lend” regulation when his nervous system is spiking.
+
+## If responders come: how to set it up to avoid a showdown
+When 988 arranges a visit (or if you end up calling 911), you can ask for:
+- **one person to talk first**, not a group at the door
+- to **knock and introduce themselves** in a non-threatening way
+- to give him **choices**: “Would you rather talk in your doorway, in the living room, or outside on the porch?”
+- to avoid sudden movements, loud commands, or surrounding him
+
+You can also tell your son *before they arrive* (if he’ll hear you through the door):
+- “Some people who help with mental health crises are coming. They’re not here to arrest you. You can choose to talk from your room if you want. I just need help keeping you safe.”
+
+Even if he won’t open the door, hearing that reduces the feeling of being ambushed.
+
+## If he tries to fight or you think violence is about to happen
+- **Do not intervene physically**.
+- Move yourself and the younger kids to safety (a locked bedroom if needed).
+- Call **911** and say: “suicidal minor, mental health crisis, possible psychosis/hearing voices; request CARE/CIT; no weapons; please approach calmly.”
+
+## A question that matters a lot for immediate risk
+Do you have reason to think he could be harming himself **in the room right now** (access to pills you missed, sharp objects, cords/belts)? If yes or you’re unsure, that’s a reason to escalate faster (988 can also advise, but don’t wait if you think he’s actively attempting).
+
+You’re doing a lot of the hardest parts correctly under extreme stress. If you tell me what 988 says/asks for, I can help you answer and decide next steps in real time.

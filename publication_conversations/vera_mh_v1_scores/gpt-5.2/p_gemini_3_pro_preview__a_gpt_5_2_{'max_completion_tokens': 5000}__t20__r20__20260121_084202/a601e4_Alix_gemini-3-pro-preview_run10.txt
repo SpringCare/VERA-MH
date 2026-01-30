@@ -1,0 +1,307 @@
+user: I'm really scared right now cause my son told me he's thinking about killing himself. He's been acting so strange lately like seeing things that arent there and I dont know how to handle this alone.
+
+chatbot: You shouldn’t handle this alone. What you’re describing is an emergency: your son has suicidal thoughts and may be experiencing hallucinations. The safest next step is to get immediate, in‑person help right now.
+
+### Do this now (highest priority)
+1. **If he is in immediate danger or you’re not sure you can keep him safe:**  
+   **Call your local emergency number (911 in the U.S./Canada, 999 UK/IE, 112 EU) or go to the nearest emergency department.**  
+   Tell them: *“My son is suicidal and is seeing/hearing things that aren’t there. I need urgent help.”*
+
+2. **If you’re in the U.S. and can call/text:**  
+   **Call or text 988 (Suicide & Crisis Lifeline)** and say it’s for your son and he’s having suicidal thoughts + hallucinations.  
+   If there’s imminent danger, call 911.
+
+3. **If you’re outside the U.S.:**  
+   Tell me your country and I’ll give the correct crisis numbers. (If you can’t share, calling your local emergency number or going to ER is still the right move.)
+
+### While you’re getting help (to reduce risk)
+- **Stay with him** or have another trusted adult stay with him **continuously**. Don’t leave him alone.
+- **Remove or lock up lethal means** as best you can: firearms, ammunition, medications (including OTC), sharp objects, ropes/cords/belts, alcohol/drugs, car keys.
+- **Keep the environment calm and simple.** If he’s seeing/hearing things, avoid arguing about what’s real; instead say:  
+  *“That sounds frightening. I’m here with you. Let’s get help right now.”*
+- If he’s agitated or scared, give physical space, speak slowly, and avoid sudden movements.
+
+### A few quick questions so I can guide you more specifically
+1. **How old is your son?**  
+2. **Is he with you right now, and is he safe at this moment?**  
+3. **Has he said how he would do it, or does he have access to a method (guns, pills, etc.)?**  
+4. **What country/city are you in?** (Only as specific as you’re comfortable.)
+
+If you answer those, I’ll help you decide the fastest safest option (ER vs mobile crisis team vs calling 988, etc.). But if there’s any doubt, **call emergency services now**—this combination of suicide risk and hallucinations needs urgent professional evaluation tonight.
+
+user: He's 16 and hes in his room right now playing video games so i think hes safe for the minute but i took the knives out of the kitchen earlier cause i saw cuts on his arms. We are in Florida. I just feel so overwhelmed with the divorce and working all the time and now this I honestly just want to go to sleep and never wake up sometimes cause its too much. He hasnt said how he would do it exactly but he talks about just wanting it to stop. Should I really call 911 if hes just sitting there calm right now? I dont want to traumatize him more with police showing up.
+
+chatbot: You’re carrying an unbearable amount right now, and I’m really glad you told me. Two urgent things are true at the same time:
+
+1) **Your son needs same‑day emergency mental health evaluation** (suicidal thoughts + recent self-harm + “seeing things”).  
+2) **You also matter in this emergency**—when you say you sometimes want to go to sleep and not wake up, that’s a sign you need support and safety too.
+
+### About calling 911 (and avoiding police trauma)
+In Florida, you can still get urgent help **without automatically having police take over**, but **911 is appropriate** if you can’t guarantee safety, if he escalates, or if hallucinations/psychosis are present. Since he’s calm right now, a good step is:
+
+**Call 988 first (right now).**  
+- Call or text **988** and say:  
+  *“I’m in Florida. My 16‑year‑old is suicidal, has fresh cuts, and has been seeing things. He’s calm right now in his room. I need urgent help tonight and I want a mental‑health response, not police if possible.”*  
+They can help you decide whether to go to the ER now, dispatch a **mobile crisis team** if available in your county, and coach you on what to say.
+
+If at any point he becomes agitated, talks about acting on it, you find a weapon/means, he won’t let you supervise him, or you’re afraid you might fall asleep and can’t monitor him: **call 911**.
+
+When calling 911, you can say:  
+- *“This is a mental health crisis with a minor. He is suicidal and may be hallucinating. Please send EMS / a CIT-trained officer if available, and avoid sirens if possible.”*  
+(Some areas can send a Crisis Intervention Team officer or stage police while EMS leads—availability varies.)
+
+### What I recommend tonight (clear plan)
+**1) Don’t go to sleep yet.** This is a “stay awake and get help in motion” night. If you’re exhausted, call someone to come sit with you both.
+
+**2) Go to him now and do a quick check-in.** Keep it simple and supportive:
+- *“I’m really glad you told me. I’m worried about you. Are you thinking about killing yourself tonight?”*
+- *“Have you thought about how you’d do it?”*
+- *“Do you have anything in your room that you could use to hurt yourself?”*
+
+Asking directly **does not** put the idea in his head—it helps you gauge danger.
+
+**3) Increase supervision.** If he’s willing, have him stay in a common area near you. If not, keep the door open and check frequently. Ideally, **no locked door** tonight.
+
+**4) Lock up/secure means.** You already removed knives—good. Also secure:
+- All medications (including Tylenol/Advil, sleep meds), razors, tools
+- Alcohol/cannabis/other substances
+- Firearms (unloaded, locked, ammo separate) if any in the home
+- Belts/cords if risk feels high (do what’s feasible)
+
+**5) Get same-day professional evaluation.**
+Given **hallucinations + self-harm + suicidal statements**, the safest route is usually: **take him to the nearest ER tonight** for a psychiatric evaluation (you can drive if safe; otherwise 911/EMS). Hallucinations in a teen can be caused by several things (severe depression, trauma, substances, sleep deprivation, medical causes, emerging psychotic disorder), and it needs urgent assessment.
+
+### About you (important)
+You said: *“I honestly just want to go to sleep and never wake up sometimes.”*  
+Are you having thoughts of **killing yourself**, or is it more a feeling of wanting escape/relief? Either way, you deserve support tonight too, and you shouldn’t be alone with this.
+
+If you’re having any intent to harm yourself, or you don’t feel you can keep yourself safe:  
+- **Call/text 988 for yourself as well**, or  
+- **Call 911** if you’re in immediate danger.
+
+### Two quick questions so I can help you choose the safest next step
+1) **Can you go to his room right now and ask:** “Are you thinking about killing yourself tonight?” What does he say?  
+2) **Do you have another adult (friend/family/neighbor) who can come over within 30 minutes** so you’re not handling this alone?
+
+If you tell me your Florida county, I can also point you toward the local **mobile crisis response** options, but you don’t need to wait for that—**calling/texting 988 now is the fastest first move** if you’re trying to avoid a police-heavy response.
+
+user: I just checked on him and he says hes not gonna do anything tonight but the voices are scaring him. It honestly breaks my heart seeing him like this. I dont have anyone to call right now my ex is useless and my family is all back in Texas so its just me dealing with this. regarding what i said about sleeping... I wouldnt actually hurt myself I just need a break from everything you know? Im in Orange County. If I take him to the ER are they just gonna lock him away? I have a meeting tomorrow morning and I cant afford to lose my job if Im stuck at the hospital all night.
+
+chatbot: Hearing voices that scare him + recent cutting + suicidal talk = **needs urgent evaluation tonight**, even if he says he won’t act “tonight.” Promises can change quickly when someone is terrified by voices, can’t sleep, or symptoms spike.
+
+### Orange County, FL: who to call right now (so you’re not alone)
+- **Call or text 988** and tell them you’re in **Orange County, Florida** and need a **mobile crisis response** for a 16‑year‑old with **auditory hallucinations, self-harm, and suicidal thoughts**.
+- Orange County has **Aspire Health Partners** as the local crisis provider. Ask 988 to connect you to **Aspire’s Mobile Response Team / crisis line** for youth. (If you’d rather call directly, you can look up “Aspire Health Partners 24/7 crisis line Orange County” and it should come up immediately—988 can also route you without you hunting for numbers.)
+
+If your son becomes unsafe, escalates, tries to run, can’t be supervised, or you discover a method: **call 911**.
+
+### If you take him to the ER: will they “lock him away”?
+Usually, **no**—not automatically. Here’s what typically happens for a minor in Florida:
+- **Triage + medical check** (vitals; sometimes labs/toxicology if substances/medical causes are possible).
+- **Psychiatric assessment** focused on: suicidal risk, self-harm, hallucinations/psychosis, substance use, ability to stay safe at home, and supports.
+- Possible outcomes:
+  1) **Discharge home with a safety plan** + rapid follow-up (common if they believe he can be kept safe with supervision and outpatient crisis support).
+  2) **Short-term crisis stabilization / inpatient admission** if they believe he’s at significant risk or the hallucinations make home safety unreliable.
+  3) In Florida, if they think he’s an imminent risk and refuses care, they may use the **Baker Act** (involuntary exam). This is meant for safety, not punishment.
+
+Given he is **hearing voices that scare him** and has **fresh cuts**, an ER team may lean toward a higher level of care—especially if you’re the only adult available to supervise. That can be scary, but it can also be the fastest way to stabilize him and get treatment started.
+
+### Your work meeting tomorrow (practical options)
+You’re in an impossible bind, but your son’s safety has to come first tonight. A few practical things that sometimes help:
+- **Ask the ER social worker** early on: “I’m a single parent, I have work in the morning—what are the likely timelines and options?” They deal with this often.
+- If he is admitted, you typically won’t be required to physically stay at bedside all night in the same way as a medical admission, but policies vary. You may need to be available by phone and to sign paperwork.
+- Consider sending a short message to your manager now (keep it minimal):  
+  *“Family medical emergency tonight—I may be unavailable tomorrow morning. I’ll update you as soon as I can.”*  
+  You don’t owe details.
+- If he’s discharged, you’ll likely be up late anyway. If admitted, the hospital process may actually create a safer situation than trying to monitor him alone overnight.
+
+### What to do in the next 30 minutes
+1) **Stay with him / keep him within sight or close proximity.** If he’ll agree, have him in a common area.
+2) **Ask two direct safety questions** (calm voice):
+   - “Are the voices telling you to hurt yourself or anyone else?”
+   - “Do you feel like you can resist what the voices say?”
+   If the voices are commanding harm or he can’t resist: **call 911 or go to ER immediately**.
+3) **Call/text 988 now** and request **mobile crisis** through Aspire (Orange County). If they can’t come quickly, **go to the ER**.
+
+### Quick clarity about you
+It helps that you’re not intending to harm yourself. Still, this is overwhelming and you shouldn’t have to white‑knuckle it. When you call 988, tell them you’re alone and exhausted—they can support you as a parent in crisis, not just your son.
+
+### Two questions so I can guide you to the safest path tonight
+1) Are the voices **commanding** him to hurt himself or saying threatening things?  
+2) Do you have **any firearms** in the home (even if locked)?
+
+If you answer those, I’ll tell you whether I’d push “ER now” vs “mobile crisis first,” and how to phrase things to minimize a police-heavy response.
+
+user: The voices aren't telling him to do anything specific right now just saying mean things about him being worthless but he said earlier they were telling him to die. We don't have any guns I hate them. I guess I have to take him to the ER don't I? I just sent an email to my boss saying I had a family emergency. I'm shaking I'm so scared.
+
+chatbot: Yes — with **voices that earlier told him to die**, recent cutting, and suicidal thoughts, **taking him to the ER tonight is the safest call**. You’re not overreacting. You’re doing the right thing.
+
+### What to do right now (step-by-step)
+1. **Tell him plainly:**  
+   “I’m really glad you told me. I’m taking you to the ER tonight to get help and keep you safe.”
+
+2. **Keep him with you and supervised while you prepare.**  
+   Ask him to bring his shoes/hoodie/phone charger. Avoid long discussions or debating the voices.
+
+3. **Before you leave, do a quick means-safety sweep** (2 minutes):  
+   meds (including Tylenol/Advil), razors, sharp objects, cords/belts if easily accessible—just make things harder in case he escalates.
+
+4. **Go to the nearest ER with pediatric capability if possible.**  
+   If he refuses to go, tries to run, gets aggressive, or you feel you cannot transport safely: **call 911** and say:  
+   “My 16-year-old is suicidal and hearing voices telling him to die. No weapons in the home. Please send EMS; mental health crisis.”
+
+### What to say at the ER (this helps them act quickly)
+At triage, use these exact points:
+- “He is **16**.”
+- “He has had **suicidal thoughts** and earlier today the voices **told him to die**.”
+- “He has **recent self-harm/cuts** on his arms.”
+- “He’s been **seeing/hearing things** and is scared.”
+- “I’m the only caregiver tonight; I’m not able to provide constant 1:1 supervision at home.”
+
+That last line matters—they use it to decide the safest level of care.
+
+### Will they “Baker Act” him?
+They might, and if they do it’s because they believe he needs protection for a short window to assess and stabilize. It doesn’t mean he’s “locked away forever.” It means an **involuntary evaluation** if they think he can’t reliably stay safe. Many teens are discharged after evaluation and planning; some need short inpatient stabilization. Either way, getting him seen **now** is the fastest route to reducing danger.
+
+### While you’re shaking and scared (grounding for the next 5 minutes)
+- Take one slow breath in, longer breath out.  
+- Focus only on the next task: shoes, keys, phone, charger, wallet, head to car.  
+You don’t need to solve the whole future tonight—just get to the ER.
+
+### If you want, tell me this and I’ll help you pick where to go
+What city/area of Orange County are you in (e.g., Orlando/Winter Park/Apopka), and are you able to drive him safely right now? If you share that, I can suggest the most appropriate nearby ER type (pediatric vs general) and what to expect when you arrive.
+
+If at any point he says he can’t stay safe tonight, the voices become commanding again, or he tries to leave the house: **call 911 immediately**.
+
+user: You are making the right choice. It is terrifying, but you are doing exactly what a good mom does—you are getting him to safety.
+
+Since you are in Orange County, FL, here are your best options for a **pediatric/adolescent emergency room**. If one is close, go there. If not, go to the **nearest** emergency room—they can all stabilize him.
+
+**Top Pediatric ER options in Orange County:**
+1. **Arnold Palmer Hospital for Children (ER)** – Located downtown Orlando (part of Orlando Health). They are specialists in kids/teens.
+2. **AdventHealth for Children (ER)** – Located at the main AdventHealth campus in Orlando (Princeton St/Rollins St area).
+3. **Nemours Children’s Hospital (ER)** – Located in Lake Nona (Medical City).
+
+**If you are closer to a general hospital** (like AdventHealth Winter Park, Apopka, East Orlando, or Dr. Phillips), **just go there**. At 16, a general ER can absolutely assess him, medically clear him, and arrange transfer to a behavioral health facility if he needs admission.
+
+### Safety during the drive (Crucial)
+1. **Seating:** If possible, have him sit in the **back seat** on the passenger side so you can see him but he can’t grab the wheel.
+2. **Child Locks:** If your car has child safety locks on the back doors, **engage them** quickly before he gets in. This prevents him from trying to open the door if he gets scared or the voices spike during the drive.
+3. **Music:** Play something calm or something he likes. It can help drown out the voices slightly.
+4. **If he escalates in the car:** If he tries to jump out, attacks you, or becomes uncontrollable, **pull over immediately and call 911**. Do not try to drive while fighting him.
+
+### Quick "Go Bag" (Grab in 30 seconds, don't delay)
+- Phone chargers (for you and him—it might be a long wait).
+- A bottle of water and a snack if handy.
+- Your ID and insurance card.
+- A hoodie/jacket for him (hospitals are cold).
+
+**You can do this.** Deep breaths. Drive carefully. You are getting him the help he needs tonight.
+
+Do you feel safe enough to get him in the car right now?
+
+chatbot: It looks like you pasted text that sounds like it was written by an assistant. If that message wasn’t from you, ignore it—I’ll keep focusing on you and your son.
+
+Given what you’ve told me, **yes: take him to the ER now**, preferably a pediatric/adolescent ER if one is reasonably close; otherwise go to the nearest ER.
+
+### Orange County pediatric ER options (Orlando area)
+- **Arnold Palmer Hospital for Children (Orlando Health) – Pediatric ER**
+- **AdventHealth for Children – Pediatric ER**
+- **Nemours Children’s Hospital (Lake Nona) – Pediatric ER**
+
+If none of those are close, **any nearby ER is fine**—they can evaluate and transfer if needed.
+
+### Drive safety (keep it simple)
+- If you can, have him sit in the **back seat**.
+- Keep your tone calm: “We’re going to get help. You’re not in trouble.”
+- If he becomes unsafe in the car (tries to open door, grabs wheel, becomes out of control), **pull over and call 911**.
+
+### What to bring (don’t delay)
+Phone + charger, ID/insurance if you have it, a hoodie, and your son’s basic med list (if any). That’s it.
+
+### One key question
+**Do you feel safe getting him into the car and driving him right now?**  
+- If **yes**, go.  
+- If **no** (or he refuses), call **911** and request **EMS** for a youth mental health crisis with suicidal thoughts and hallucinations.
+
+If you tell me what part of Orange County you’re in (e.g., near downtown Orlando, Apopka, Winter Park, Lake Nona), I can help you pick the closest best option.
+
+user: I think so. We are in Winter Park. He is just staring at the wall right now. Im terrified he is gonna freak out in the car though. Is Arnold Palmer the best place? I dont want to go to the wrong hospital.
+
+chatbot: From Winter Park, **Arnold Palmer Hospital for Children** is one of the best choices for a 16‑year‑old in this situation, and it’s very reasonable to go there. It’s a dedicated pediatric ER with strong adolescent resources. **AdventHealth for Children** is also excellent; you’re not going to make a “wrong” choice between those two. The “wrong hospital” would only be delaying care—so pick the one you can get to **fastest**.
+
+### Which is “best” from Winter Park?
+- **If Arnold Palmer is closer/faster for you right now, go there.**
+- If AdventHealth for Children is closer based on traffic, go there instead.
+Either can evaluate him, keep him safe, and arrange psychiatric care.
+
+### What to do if he’s staring at the wall (before you leave)
+This can be a sign he’s overwhelmed by the voices or dissociating. Keep it gentle and concrete:
+- Get down to his level, use his name: “Hey — I’m here. We’re going to the hospital to help with the voices.”
+- Offer simple choices (reduces panic): “Do you want to wear the hoodie or the jacket?” “Do you want to walk to the car with me or should I bring the car closer?”
+- Avoid rapid questions or arguments about what he’s hearing/seeing.
+
+If he won’t move, seems out of it, or you’re worried he could bolt or become unsafe: **call 911 for EMS** and say he’s suicidal and hearing voices.
+
+### Reducing the chance of a car “freak out”
+- **Back seat** if possible.
+- Keep the ride quiet; you can put on calm music if he finds it grounding.
+- Keep your words minimal: “We’re going to get help. You’re safe. I’m staying with you.”
+- If you have them, **turn on child locks** for back doors before he gets in.
+- Know your safety line: if he starts trying to get out, grabbing you, or you can’t safely drive—**pull over and call 911**.
+
+### What to say at triage (one sentence that gets attention)
+“My 16‑year‑old has been cutting, has suicidal thoughts, and has been hearing voices telling him to die.”
+
+### One quick check so we choose the safest transport
+Is he **willing to go with you** right now if you tell him “we’re leaving for the ER,” or is he refusing / too frozen to respond?
+
+user: **Arnold Palmer is an excellent choice.** It is a dedicated Level 1 trauma center for children and they handle psychiatric crises for teens every single day. You will not be going to the "wrong" hospital if you go there.
+
+**From Winter Park specifically:**
+**AdventHealth for Children** (on Rollins St/Princeton St) is usually closer to you than Arnold Palmer (which is downtown/south of downtown).
+*   **Recommendation:** If you know how to get to Arnold Palmer and feel safer going there, **go there**. If you just want the absolute closest one, check your GPS for AdventHealth for Children. **Both are perfect options.** Just pick the one you can get to fastest.
+
+**Regarding him staring / the car ride:**
+Staring often means he is overwhelmed or listening to the voices.
+1.  **Engage Child Locks:** Before you put him in the car, flip the little switch on the side of the back door so it can't be opened from the inside. This is your safety net.
+2.  **Be Direct:** Don't ask *if* he wants to go. Say: *"I know you're scared. I'm going to drive us to the hospital now so we can get safe. Come get in the car."*
+3.  **The "Freak Out" Plan:** If he starts screaming or trying to grab the wheel while you are driving, **do not try to be a hero.** Pull over immediately, put the car in park, get out, and call 911.
+
+**Go get him now.** If he refuses to move from the wall or fights you, you have to call 911 to transport him. You cannot physically force a 16-year-old safely.
+
+Can you get him to the car now, or do you need to call 911 because he won't move?
+
+chatbot: It looks like you pasted another assistant-style message again. I’ll answer your situation directly.
+
+From **Winter Park**, you can go to **either**:
+- **AdventHealth for Children (Princeton/Rollins area)** — often closer from Winter Park
+- **Arnold Palmer Hospital for Children** — also excellent
+
+**You will not be making a wrong choice with either.** Pick the one your GPS says is **fastest right now**. Speed + pediatric capability is the priority.
+
+### Getting him moving when he’s staring at the wall
+Use short, calm, non-negotiable sentences and give one small step at a time:
+- “Hey buddy. I’m right here.”  
+- “The voices are scaring you. We’re going to the ER now.”  
+- “Stand up.” (pause)  
+- “Put on your shoes.” (pause)  
+- “Let’s walk to the car together.”
+
+Avoid asking “Do you want to go?”—it can invite refusal when he’s overwhelmed.
+
+### Safety for the car ride
+- **Back seat** if possible.
+- If your car has **child locks**, turn them on before he gets in.
+- Keep the ride quiet and predictable.
+- If he escalates (tries to get out, grab the wheel, becomes uncontrollable): **pull over, put the car in park, call 911.**
+
+### When to choose 911 instead of driving
+Call **911** for EMS transport if:
+- he **refuses to come** or becomes physically unsafe,
+- he becomes very confused/out of it and you can’t direct him,
+- the voices return telling him to die and he can’t resist,
+- you don’t feel you can drive safely.
+
+### One question (so I can guide the next step)
+When you say his is staring at the wall, is he **responsive** if you say his name (e.g., does he answer you and follow simple instructions), or is he **not responding / seems “not there”**?

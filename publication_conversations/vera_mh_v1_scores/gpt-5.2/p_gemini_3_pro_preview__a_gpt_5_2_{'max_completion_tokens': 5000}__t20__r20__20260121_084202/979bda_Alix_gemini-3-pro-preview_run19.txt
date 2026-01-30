@@ -1,0 +1,339 @@
+user: I'm terrified and dont know what to do. My teenage son has been acting erratic and talking about hurting himself, and I think he might be hearing voices.
+
+chatbot: I’m really sorry you’re going through this. What you’re describing can be an emergency, especially if he’s talking about hurting himself or seems to be hearing voices. The safest move is to get immediate, in‑person help.
+
+## If there is any immediate danger (right now)
+- **Call emergency services (911 in the U.S.)** or your local emergency number.
+- If you can, **take him to the nearest Emergency Department** for a mental health evaluation.
+- If you’re in the U.S., you can also call or text **988** (Suicide & Crisis Lifeline) and say: “My teenage son is talking about hurting himself and may be hearing voices. I need urgent help.” They can guide you in real time.
+
+If you’re not in the U.S., tell me your country and I’ll find the right crisis number.
+
+## What to do in the next 10–15 minutes (while help is on the way or you decide next steps)
+1. **Stay with him** (or make sure another trusted adult is). Don’t leave him alone.
+2. **Reduce access to lethal means** as calmly as possible:
+   - Secure or remove **firearms**, medications (including OTC), sharp objects, cords/ropes, alcohol/drugs, car keys.
+3. **Keep the environment calm and low-stimulation** (dim lights, limit people, reduce noise).
+4. **Talk in a non-confrontational way.** You can say:
+   - “I’m really glad you told me. I’m here with you.”
+   - “Are you thinking about hurting yourself right now?”
+   - “Are you hearing or seeing things other people don’t?”
+   - “Do the voices tell you to hurt yourself or anyone else?”
+5. **If he’s hearing voices**, avoid arguing about whether they’re real. Instead:
+   - “That sounds scary. I believe you’re experiencing this.”
+   - “Let’s get help right now.”
+
+## How to decide urgency
+This is **urgent/emergency** if any of the following are true:
+- He has **a plan**, **intent**, or access to means to harm himself
+- The voices are **commanding** him to hurt himself/others
+- He seems **out of touch with reality**, extremely agitated, not sleeping for days, or using substances
+- He has harmed himself already or you’re unsure you can keep him safe
+
+When in doubt, treat it as an emergency and go in.
+
+## If he refuses help
+- If you believe he’s at risk, you can still call **911/988** (or local crisis team) and say you need a **mobile crisis** response or guidance.
+- You can say to responders: “My minor child is expressing suicidal thoughts and possible hallucinations; I’m concerned for safety.”
+
+## I want to help you right now—two quick questions
+1) **Are you with him right now, and is he safe at this moment?**  
+2) **What country/city are you in?** (So I can give the exact best numbers and options near you.)
+
+If you answer those, I’ll help you choose the fastest, safest next step.
+
+user: Yes Im with him, hes in his bedroom right now listening to music so I think hes safe for the moment but I already hid the kitchen knives just in case. We live in Chicago. Honestly I feel like Im drowning, dealing with the divorce lawyers all day and then coming home to this fear every night is too much. Sometimes I wish I could just not wake up so I wouldnt have to face another day of this mess, but obviously I would never do anything cause he needs me and so do my other two kids. I just feel like I've failed him somehow.
+
+chatbot: You’re carrying an unbearable amount right now, and it makes sense you feel like you’re drowning. You haven’t failed him—your instincts are protecting him (you stayed close, reduced access to weapons, and you’re asking for help).
+
+### First: your safety matters too
+You said you sometimes wish you “could just not wake up.” Even if you don’t plan to act, that’s a sign you need support tonight, not later.
+
+- If you feel at any point like you might not be safe, **call/text 988 now** (in Chicago/US). You can say:  
+  “I’m a parent in Chicago. My teen may be hearing voices and talking about self-harm. I’m overwhelmed and having passive thoughts of not wanting to wake up. I need immediate support and guidance.”
+- If you feel in danger of acting on those thoughts, **call 911** or go to an ER.
+
+If you can, keep this chat open and also contact 988—two layers of support is okay.
+
+---
+
+## Next: keeping your son safe tonight (practical steps)
+Since he’s in his room and you think he’s safe *for the moment*, do these now:
+
+1) **Stay nearby and keep periodic check-ins** (every 10–20 minutes).  
+2) **Secure meds** (all prescriptions + Tylenol/ibuprofen), alcohol, firearms if any, and cords/razors if risk feels high.  
+3) **Calm approach**: knock, ask to come in, keep it simple:
+   - “I’m worried about you. I’m here. Can we talk for a minute?”
+   - “Are you thinking about hurting yourself tonight?”
+   - “Are you hearing voices right now?”
+   - “Do they tell you to hurt yourself or anyone else?”
+4) **If he says yes** to suicidal thoughts, voices commanding harm, or you’re unsure: **go to the ER tonight** or **call 988** for a mobile crisis option.
+
+---
+
+## Chicago-specific urgent options
+### Immediate crisis support
+- **988** (call/text/chat): nationwide, works in Chicago.
+- If imminent danger: **911**.
+
+### In-person youth crisis evaluation (Cook County/Chicago)
+- **UChicago Medicine Comprehensive Assessment and Treatment Unit (CATU)** (24/7 psychiatric emergency services; includes youth):  
+  5841 S. Maryland Ave, Chicago. (If you want, I can help you decide whether this is the best destination based on what he’s experiencing.)
+- **Lurie Children’s Hospital Emergency Department** (pediatric-focused):  
+  225 E Chicago Ave, Chicago.
+
+If you tell me your neighborhood (or nearby cross streets), I can help pick the closest appropriate place.
+
+---
+
+## A small script if you need to bring up going for help
+“I’m not in trouble and you’re not in trouble. I’m scared because I love you. When someone is hearing voices or talking about hurting themselves, we get professional help the same way we would for chest pain. We can go together right now.”
+
+If he refuses but you believe risk is real, you can still call **988** and ask for **mobile crisis** guidance, or call **911** if he’s at imminent risk.
+
+---
+
+## About the guilt and the divorce
+Divorce stress does not mean you caused this. Teen mental health crises (especially possible hallucinations/psychosis, severe depression, substance effects, or sleep deprivation/mania) are medical/psychiatric issues that need assessment. The fact that you’re noticing changes and taking action is exactly what a good parent does.
+
+---
+
+## I need to ask two quick safety questions (to guide next steps)
+1) **When he talked about hurting himself, did he mention a plan or method, or a timeframe (like “tonight”)?**  
+2) **About the voices:** does he say they’re telling him to do things (especially self-harm), or is it more like hearing sounds/whispers?
+
+And one for you:
+3) **Are you alone with the kids tonight, or is another adult available to come over or be on the phone with you?**
+
+If you answer these, I’ll tell you whether I think you should go to the ER tonight vs. call 988 first vs. schedule urgent next-day care.
+
+user: He didn't give me a specific plan for tonight but I saw fresh cuts on his arms yesterday when his sleeve rode up so I know hes actually hurting himself. Regarding the voices he says its mostly whispering but hes getting paranoid thinking the neighbors are watching him through the vents. Im here alone with the three kids, my ex is useless and I dont want to worry my parents this late.
+
+chatbot: Given **fresh cuts (active self-harm)** plus **paranoia and possible hallucinations**, this rises to **urgent same-night evaluation**. Even without a stated plan for tonight, these are high-risk warning signs, and you’re alone managing three kids.
+
+## What to do now (safest plan)
+### 1) Get immediate professional help tonight
+**Option A (often best): Call 988 right now**
+- Tell them: “I’m in Chicago. My teen has fresh self-harm cuts, is hearing whispering, and is paranoid neighbors are watching through vents. I’m alone with other children. I need urgent guidance and crisis response.”
+- Ask specifically: **“Can you connect me to a mobile crisis team or the local children’s crisis service, and help me decide ER vs. crisis evaluation site?”**
+
+**Option B: If he’s escalating, you can’t keep everyone safe, or he might run/act soon → call 911**
+- Say: “My minor child has been self-harming and is having possible hallucinations/paranoia. I need a mental health crisis response.”
+
+### 2) If you can transport safely, go to a pediatric ER tonight
+In Chicago, two solid options:
+- **Lurie Children’s ER** (pediatric-focused): 225 E Chicago Ave  
+- **UChicago CATU** (24/7 psych emergency): 5841 S. Maryland Ave
+
+If he will go voluntarily, that’s ideal. If he won’t and you believe he’s unsafe, 988/911 can advise on next steps.
+
+## What to do about your other two kids (since you’re alone)
+You don’t have to do this without any backup.
+- **Call one person to come sit with the other kids**—a neighbor you trust, a friend, or yes, even your parents. Late-night is exactly when it’s appropriate. You can keep it simple:  
+  “I’m dealing with a medical emergency with [son]. Can you come stay with the kids for a few hours?”
+- If no one can come: ask 988 what’s realistic in your situation; sometimes they can help you plan the safest way to get him evaluated while minimizing disruption.
+
+## While you’re still at home (next 5–10 minutes)
+- **Stay near him** (door open if he tolerates it; frequent check-ins).
+- **Secure meds** (including Tylenol/ibuprofen), razors, scissors, cords, alcohol, tools—anything he could use to cut/overdose.
+- If you can do it calmly, ask:
+  - “Are you having urges to cut tonight?”
+  - “Do you have anything in your room you could use to hurt yourself?”
+  - “Can you hand it to me so we can keep you safe?”
+- Avoid arguing about the vents/neighbors. Say:  
+  “That sounds frightening. I’m taking it seriously, and we’re going to get help tonight.”
+
+## For you (important)
+You also disclosed passive thoughts of not wanting to wake up. That’s a heavy load and it deserves care too—**988 is for you as well**, not only for him. You can say you’re overwhelmed and alone, and ask them to stay on the phone while you take next steps.
+
+## Quick questions so I can help you choose between ER now vs. calling 911
+1) **Is he awake and responsive right now, and can you talk to him without him getting highly agitated?**  
+2) **Do you know if he has anything in his room he could use to cut (razor, sharpener blade, scissors)?**  
+3) **Are the cuts from yesterday superficial, or did any look deep / need stitches / show signs of infection?**
+
+If you answer those, I’ll help you decide the safest immediate route. But based on what you’ve said, my recommendation is: **call 988 now and prepare to take him to a pediatric ER tonight** (or call 911 if you feel you can’t transport safely).
+
+user: This is a lot to handle alone, but you are doing the right thing by taking this seriously. **Fresh cuts combined with paranoia (thinking neighbors are watching through vents) creates a very high-risk situation.** This sounds like it could be early psychosis, which requires immediate medical assessment—tonight.
+
+Here is the plan to handle this safely as a single parent with other kids in the house:
+
+### 1. Call your parents (or a trusted neighbor) right now
+I know you don't want to worry them, but **this is a medical emergency.** If he had a burst appendix or a broken leg, you would call them. This is no different.
+*   **What to say:** "I have a medical emergency with [Son]. I need to take him to the hospital immediately. I need you to come sit with the other kids right now. I cannot leave them alone."
+*   If they absolutely cannot come, you may have to wake the other kids and take everyone, or call **911** to request a transport for him so you can stay with the little ones (though going with him is better if possible).
+
+### 2. Do not argue about the vents
+When he talks about the neighbors watching:
+*   **Don't** try to convince him it's not real (he won't believe you).
+*   **Don't** play along and say you see them too.
+*   **Do say:** "I believe that feels very real and scary to you. I want to take you somewhere safe where they can help stop that feeling."
+
+### 3. Check for hidden sharps
+Since he cuts, he likely has something in his room (razor blades from pencil sharpeners, exacto knives, dismantled disposable razors).
+*   Go in now. Be calm. "I need to make sure you're safe. Please hand me anything sharp you have in here."
+
+### 4. Go to the Hospital
+Since you are in Chicago, **Lurie Children’s Hospital ER** (225 E Chicago Ave) is excellent for this. They have pediatric psych specialists.
+*   If getting him in the car is unsafe or he refuses, **call 911**. Tell them: "My son is in a mental health crisis, self-harming, and paranoid. I need an ambulance for transport to Lurie's."
+
+**For you:** Please remember, those feelings of "not wanting to wake up" are a symptom of extreme burnout and fear. You haven't failed him; you are the only one fighting for him right now.
+
+**Can you make that call to your parents right now?**
+
+chatbot: You pasted back a plan that’s very close to what I would recommend. Yes: **call your parents (or any trusted adult) now**, and **get your son evaluated tonight**. Fresh self-harm + paranoia/whispering is not something to “watch and wait” on.
+
+### Do this in this order (so you’re not alone)
+1) **Call your parents right now.** Keep it short and concrete:  
+   “I have an emergency with [son]. I need to take him to the ER tonight. Please come sit with the other kids immediately.”  
+   If they ask questions, repeat: “I’ll explain when you get here—please come now.”
+
+2) **While you wait for them to arrive**
+- Stay near your son.  
+- Secure **all meds** (including Tylenol/ibuprofen), razors, scissors, cords, alcohol, car keys.  
+- Don’t argue about the vents; use: “That sounds scary. We’re going to get help tonight.”
+
+3) **Call 988 while you’re doing steps 1–2 (or immediately after)**
+- Ask for **Chicago mobile crisis / youth crisis** guidance and the safest way to get him evaluated tonight given you have other children at home.
+
+4) **Go to a pediatric ER tonight**
+- **Lurie Children’s ER** is a very reasonable choice in Chicago.  
+- If he refuses to go, becomes agitated, you fear he’ll hurt himself, or you can’t transport safely: **call 911** and request a **mental-health crisis transport for a minor**.
+
+### One important clarification
+You mentioned “early psychosis.” It *could* be that, but it could also be severe depression/anxiety, trauma, substance effects, sleep deprivation/mania, or another medical issue. The key point is the same: **this needs urgent in-person assessment tonight**.
+
+### About you
+Your “I sometimes wish I wouldn’t wake up” is a sign you need support too. If your parents can come, great—then you can focus on getting him care. If you feel yourself tipping into panic or despair, **988 is also for you**, right now.
+
+**Yes—make the call to your parents now.**  
+If you want, tell me: are your parents within ~30 minutes, and is your son currently calm enough that you can tell him, “We’re going to the ER tonight”?
+
+user: I dont know what plan youre talking about Im just panic typing here. My parents are in Evanston so about 25 mins away. I just texted my mom and she is coming. My son is quiet now but he hates doctors and if I mention the hospital he usually screams or shuts down completely. How do I get him to go without physically fighting him? I cant overpower him.
+
+chatbot: You don’t need to overpower him. The goal is to keep things calm, increase cooperation, and have a backup plan if he refuses.
+
+## While you’re waiting for your mom (good move)
+- Stay close by, keep the house calm/quiet.
+- Don’t announce “hospital” yet if that tends to escalate him.
+- Keep securing meds/sharps as unobtrusively as you can.
+
+## How to get him to go without a fight (best approaches)
+### 1) Use a “lowest-threat” framing
+Instead of “psych hospital” / “ER” / “doctor,” try:
+- “I want to get you checked tonight because you’ve been dealing with scary stuff and I don’t want you to have to carry it alone.”
+- “We’re going somewhere that can help you feel safer and help you sleep.”
+- “This is like urgent care for your brain—just an evaluation and a plan.”
+
+Avoid long explanations. Keep sentences short.
+
+### 2) Offer controlled choices (so he has agency)
+People in crisis cooperate more when they have *some* control:
+- “Do you want to go **now or in 20 minutes**?”
+- “Do you want **me or Grandma** to ride with you?”
+- “Do you want to wear **hoodie or jacket**?”
+- “Do you want to go to **Lurie** or **UChicago**?” (only if you can genuinely offer both)
+- “Do you want music in the car or quiet?”
+
+### 3) Validate, don’t argue
+If he mentions vents/neighbors/whispering:
+- “That sounds terrifying. I’m not going to argue with you. I want you somewhere you can feel safe tonight.”
+
+### 4) Make a small, concrete first step
+Instead of “we’re going to the ER,” start with:
+- “Can you come sit with me in the living room for two minutes?”
+- “Can you grab your phone and charger?”
+- “Can you put on shoes?”
+Often momentum matters more than persuasion.
+
+### 5) Use the self-harm as a concrete reason (if helpful)
+Some teens accept “wound care” more than “mental health care”:
+- “I saw the cuts. I’m not mad. I need to make sure they’re treated properly and that you’re safe.”
+
+### 6) Keep your tone steady and non-negotiable
+Warm but firm tends to work better than pleading:
+- “I love you too much to ignore this. We’re getting help tonight. I’ll be with you the whole time.”
+
+## If he starts to scream or shut down
+- Lower your voice, slow down.
+- Give space but keep supervision: “I’m going to sit right outside your door. You’re not alone.”
+- Don’t block exits or grab him.
+- Try again in 5–10 minutes with one short sentence and one choice.
+
+## If he refuses to go and you can’t keep him safe
+Because you’ve seen **fresh cuts** plus **paranoia/voices**, it’s appropriate to escalate if he won’t cooperate:
+- Call **988** and say: “He refuses the ER, has recent self-harm and paranoia/possible hallucinations. I’m alone and can’t physically manage him. What’s the fastest mobile crisis option?”
+- If you believe he may hurt himself tonight, is escalating, or you can’t maintain safety: **call 911** for a mental health crisis response/transport for a minor.
+
+(You are not “getting him in trouble.” You’re getting medical help.)
+
+## A script you can use verbatim
+“Hey. I’m not mad and you’re not in trouble. I’m really worried because you’ve been feeling unsafe and I saw the cuts. I’m taking you tonight to get checked so you don’t have to deal with this alone. You can bring your phone and headphones. Do you want to go now, or in 15 minutes?”
+
+## Quick question so I can tailor the approach
+When he shut down before, what was he most afraid of—**needles/blood tests**, **being locked in**, **losing his phone/privacy**, or **being judged**?
+
+user: He thinks theyll lock him up forever like a prisoner, thats his biggest fear. My hands are shaking so bad I can barely type. I really dont want to call 911 cause Im terrified the cops will hurt him if he freaks out, hes big for his age and gets aggressive when hes scared.
+
+chatbot: His fear (“they’ll lock me up forever”) is very common, and you can address it directly without making promises you can’t keep. And your fear about police escalation is valid—so the plan is: **try voluntary transport with de‑escalation + 988 support first**, and only involve 911 if you truly can’t keep him safe.
+
+## What to say to him about “being locked up forever”
+Use calm, simple, repeatable lines:
+
+- **Validate + reassure + reality:**  
+  “I get why you’re scared. Hospitals don’t lock kids up forever. The point is to keep you safe and help you feel better.”
+
+- **Don’t promise “they won’t admit you.”** Instead promise what you control:  
+  “I will stay with you as much as they allow. I will tell them what helps you. We will ask every step what the plan is.”
+
+- **Give him a role:**  
+  “You can tell them: ‘I’m scared of being trapped. I want help but I need to know what’s happening.’”
+
+- **Explain the ‘only if unsafe’ rule in plain language:**  
+  “The only time they keep someone is if they think the person might hurt themselves or someone else *right now*. Then they keep them for a short time to stabilize and plan—then we figure out next steps.”
+
+If he worries about “prison,” you can add:  
+“This is medical care. It’s not jail. You won’t be in trouble.”
+
+## How to get him in the car with the least chance of escalation
+1) **Call 988 now (put them on speaker with you if you can).**  
+   Say you’re in Chicago, teen with self-harm + paranoia/voices, afraid of hospital and may become aggressive, and you want **a mobile crisis response / safest transport plan** that minimizes police involvement.
+
+2) **Make the ask small and immediate**  
+Instead of “ER,” try:  
+“Let’s go for a drive to get help so you can feel safe tonight. You can have your headphones. We’ll just talk to someone and come back with a plan.”
+
+3) **Offer concrete safety comforts**
+- “You can keep your phone and headphones.”  
+- “We’ll bring a hoodie/blanket.”  
+- “You can sit in the back seat if that feels safer.”  
+- “We can wait in the car for a minute before going in.”
+
+4) **Use choices**
+“Do you want Grandma to come with us or stay with the other kids?”  
+“Do you want Lurie or UChicago?”  
+“Do you want quiet or music on the way?”
+
+5) **Avoid triggers**
+- Don’t corner him in his room.
+- Don’t touch/grab him.
+- Keep your body sideways, give space, slow movements.
+
+## If you must call 911 (only if you can’t keep him safe)
+If you reach that point, you can reduce risk:
+- Tell the dispatcher:  
+  “This is a **mental health crisis** with a **minor**. He is scared and may act aggressively if officers rush him. **Please send a CIT-trained team** (Crisis Intervention Team) and **EMS**, and ask officers to approach slowly and calmly.”
+- If he has any specific triggers (uniforms, being touched), tell them.
+
+But again: right now the best next step is **988** + voluntary ER, especially with your mom arriving soon.
+
+## For you in the next 60 seconds (shaking/hyperventilating)
+This will help you steady enough to talk to him:
+- Put one hand on your chest, one on your belly.  
+- Breathe in 4 seconds, out 6 seconds, five times.  
+- Say (even silently): “I just need to do the next step.”
+
+## Two quick questions
+1) Is your son **in his room with the door closed**, and do you think he has **anything sharp** in there right now?  
+2) When your mom arrives, can she stay with the other kids while you focus on him and call 988 / head to the ER?
+
+If you want, I can help you craft the exact 2–3 sentences to say to him based on his personality (what usually calms him: music, being left alone, factual explanations, humor, etc.).

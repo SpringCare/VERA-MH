@@ -1,0 +1,304 @@
+user: I'm really scared right now. My teenage son is talking about hurting himself and acting really erratic, almost like he's seeing things. I'm a single mom trying to manage everything but I feel like I'm failing him and I don't know what steps to take to keep him safe.
+
+chatbot: You’re not failing him. What you’re describing (talking about self-harm + acting erratic/possibly seeing things) can be an emergency, and the priority is **immediate safety and getting in-person help right now**.
+
+## 1) If there is any immediate danger, get emergency help now
+Call **911 (or your local emergency number)** or take him to the **nearest Emergency Department** *right now* if any of these are true:
+- He has **a plan** to hurt himself, **means** to do it (pills, weapons, knives), or says he can’t stay safe
+- He is **hearing/seeing things**, seems severely confused/paranoid, or is behaving in a way that is unsafe
+- He has taken anything (overdose/intoxication) or you suspect substance use and his behavior is unpredictable
+- You cannot safely supervise him
+
+If you’re in the U.S. and want a mental-health crisis team immediately: **Call or text 988** (Suicide & Crisis Lifeline). Tell them: “My teen is talking about self-harm and may be hallucinating. I need help now.” They can guide you and help coordinate local resources.
+
+If you’re outside the U.S., tell me your country and I’ll find the right crisis number.
+
+## 2) Do these safety steps immediately (while help is on the way or before you leave)
+- **Stay with him** (or keep him in sight). If you need to call for help, do it on speaker.
+- **Remove access** to anything he could use to hurt himself:
+  - Medications (including OTC), alcohol, drugs
+  - Knives/razors, cords/belts
+  - Firearms (remove from home if possible; lock unloaded separately from ammo)
+- **Keep the environment calm**: reduce noise, bright lights, and extra people. Don’t argue about whether what he’s seeing is “real.” Focus on safety.
+- If he’s agitated: give space, speak slowly, and keep your body language non-threatening. Avoid blocking exits or grabbing him unless you must to prevent immediate harm.
+
+## 3) What to say (simple, supportive, and direct)
+Try something like:
+- “I’m really glad you told me. I’m here with you.”
+- “Are you thinking about hurting yourself right now?”
+- “Do you have a plan or anything you could use?”
+- “I’m going to get help because I love you and your safety matters more than anything.”
+
+Asking directly about suicide **does not** put the idea in his head—it helps you assess risk.
+
+## 4) If he says “yes” (or you’re unsure), treat it as urgent
+- If he has a plan/means or says he can’t stay safe: **call 911 / go to the ER now**.
+- If he says no plan but you’re seeing hallucinations/major disorganization: it still warrants **urgent evaluation today** (ER/urgent crisis service).
+
+## 5) Practical next steps in the next hour
+- **Call 988** (U.S.) or **911** if needed.
+- If driving to the ER: if you can, have another adult ride along; if not, keep it simple and go.
+- Bring: any medications/supplements he takes, recent substance use info (if known), medical history, and a brief timeline of what changed.
+
+## 6) I need two quick details to guide you better
+1) Are you in the **U.S.** (so I can point you to the right numbers/services), and what city/state (or country if not U.S.)?
+2) Right now: **Is he with you and safe**, and has he said he has a plan or access to something he could use to hurt himself?
+
+If you answer those, I’ll help you choose the safest next step (988 mobile crisis vs ER vs 911) and what to do while you’re waiting.
+
+user: I'm in Chicago and he's in his room listening to music right now so I think he's okay for the moment, but I already took all the knives and pills out of the bathroom just in case. It's just so much to deal with on top of the divorce and working, I feel like I can't breathe sometimes. I honestly don't want to call 911 unless I absolutely have to because I don't want to traumatize him more with police showing up.
+
+chatbot: In Chicago you have options that can get you urgent help **without police being the default**, and you’re already doing important safety steps by removing knives/pills.
+
+## What to do right now (next 10–20 minutes)
+1) **Stay close and keep eyes/ears on him.** If you can, stay in the hallway near his door or have him come sit in a common area with you (even if he keeps headphones on).
+2) **Do a quick, direct check-in** (calm voice, no debate):
+   - “I’m really worried about you. Are you thinking about hurting yourself right now?”
+   - “Have you thought about how you’d do it?”  
+   - “Do you have anything in your room you could use to hurt yourself?” (razors, cords, belt, meds, etc.)
+3) **If he says yes to intent/plan/means, or you’re not sure he can stay safe:** that’s “911/ER now” territory. I hear your concern about police; we can try to route to mental-health responders, but **don’t delay** if safety is unclear.
+
+## Chicago resources that can help *without automatically sending police*
+**1) Call/Text 988 (Suicide & Crisis Lifeline)**
+- Tell them: “I’m in Chicago. My teen has talked about self-harm and may be seeing things. I want a mobile crisis response if possible and I want to avoid police if safe.”
+- They can help you decide between mobile crisis vs ER and how to keep him safe while you wait.
+
+**2) Chicago CARE (Crisis Assistance Response and Engagement)**
+- Chicago’s program that sends **behavioral-health clinicians/EMTs** to 911 calls for many mental-health crises (intended as an alternative to police when appropriate).
+- To access: you can call **911 and request CARE** and say: “This is a mental-health crisis for a teen; I’m requesting a CARE response (no police if possible).”
+- Dispatch decisions depend on safety risk, but asking specifically can help.
+
+If you feel comfortable, start with **988 now** while you’re near his room. If 988 says “call 911,” you can still request **CARE**.
+
+## When you should override the “no 911” preference
+Call **911 immediately** if any of these are happening or you learn they’re true:
+- He says he **can’t promise to stay safe**, has a **plan**, or has access to means you can’t secure
+- He’s **hearing/seeing things**, extremely agitated, threatening, or you’re afraid he might bolt
+- He has taken substances/overdose, or you suspect he might have
+
+In those situations, the goal is safety first—trauma can be addressed later; death can’t.
+
+## If he’s currently calm and says he’s not going to harm himself
+You can still pursue urgent help **today**:
+- Call **988** for guidance and local options.
+- Consider taking him to a **pediatric ER** for evaluation if hallucinations/psychosis-like symptoms are present (many hospitals can do urgent psychiatric assessment for teens). If he won’t go voluntarily, 988 can help you plan.
+
+## A script for getting him out of his room without escalating
+- “I’m not here to punish you or take your music. I’m scared because I love you. Can you come sit with me for 10 minutes so I can make sure you’re safe?”
+- “We don’t have to talk about everything—just help me understand if you’re safe right now.”
+
+If he refuses, you can still stay nearby and call 988.
+
+## For you, right this second
+Your “can’t breathe” feeling matters too. While you’re keeping him safe:
+- Put one hand on your chest and do **4 seconds in, 6 seconds out** for 5–10 breaths. It won’t fix everything, but it can lower the panic enough to act.
+- You’re carrying an enormous load. This is not a parenting failure; this is a crisis needing extra hands.
+
+## Two quick questions so I can guide the safest next step
+1) Has he said **anything** about *how* he would hurt himself, or that he **can’t stay safe** tonight?
+2) When you said he seemed like he was “seeing things,” is he reporting **voices/visions**, paranoia, or talking to someone who isn’t there?
+
+If you answer those, I’ll tell you whether the safest move is **988 + mobile crisis**, **ER today**, or **911/CARE now**. In the meantime, if you can, **call or text 988 now** while you stay near him.
+
+user: He mentioned wanting to jump off the balcony or take a bunch of pills earlier which is why I scrambled to hide everything. And yeah with the seeing things, he was screaming at the wall in the living room telling a man to stop looking at him but obviously nobody was there. I'm literally sitting on the floor outside his bedroom door right now trying not to let him hear me cry because I feel so helpless and alone. My ex is useless and I can't call my parents because they'll just say I caused this with the divorce. I didn't know about that CARE thing in Chicago, I guess I can try 988 first but I'm terrified they'll just send the cops anyway if I tell them what he said.
+
+chatbot: Given what you just shared—**specific suicide methods (balcony/pills) + apparent hallucinations/paranoia (yelling at a man who isn’t there)**—this is an **emergency-level situation**. You’re doing the right thing by staying right outside his door, but he needs **urgent in-person evaluation today**, likely **now**.
+
+### What I recommend you do now
+1) **Call 988 immediately (right now), and say up front what you told me.**
+   - “I’m in Chicago. My teen said he wants to jump off the balcony or take pills, and he was screaming at a man who isn’t there. I’m right outside his bedroom door. I need urgent help and I want a clinician/EMS response, and I want to avoid police if it’s safe.”
+   - Stay on the line. Ask them to help you decide **mobile crisis vs calling 911 for a CARE response vs going to the ER.**
+
+2) **If 988 can’t get help to you quickly, or if you’re worried he could bolt to the balcony:**  
+   **Call 911 and request a CARE response.**  
+   Say: “This is a mental-health emergency for a minor with suicidal statements and hallucinations. I am requesting a CARE team response (clinicians/EMS), and police only if necessary for safety.”
+
+I can’t promise police won’t ever be involved—dispatch will prioritize safety—but **you are not “getting him in trouble.”** You’re getting him medical help.
+
+### While you make the call (safety steps)
+- **Do not leave him alone.** Keep your position at the door.
+- If you have a balcony: **lock that door now** if you can do it without leaving him unattended. If you can’t, keep yourself between him and exits once he comes out.
+- Keep your voice calm and low. If you talk through the door:
+  - “I’m here. I love you. I’m getting help because you deserve to feel safe.”
+- If you can do it safely, **remove belts/cords/razors** from accessible areas, and keep meds locked away.
+
+### If he comes out or escalates
+If he tries to leave toward the balcony, grabs something to hurt himself, becomes aggressive, or you can’t contain the situation safely: **call 911 immediately**. That is the “absolutely have to” threshold, and based on what he said, you are already very close to it.
+
+### About your fear that 988 will “send cops”
+988’s goal is to use the **least invasive** response that keeps someone safe. When there’s imminent risk, they may recommend emergency services—but you can **clearly state**:
+- you’re requesting **mobile crisis/clinicians**
+- you want **CARE** if 911 is needed
+- you’re trying to keep him safe and **not escalating**
+
+Even if emergency services are involved, the priority is preventing a tragedy and getting him assessed for things like **acute psychosis, substance reaction, or severe mood episode**, all of which are treatable but **need rapid care**.
+
+### You are not alone in this moment
+You’re doing exactly what a good parent does in a crisis: securing means, staying close, and reaching for help. Feeling like you “can’t breathe” and crying silently doesn’t mean you’re failing—it means you’re terrified and exhausted.
+
+---
+
+**Please do this now:** call **988** (phone) or text **988** if speaking feels hard, and keep the line open.
+
+If you can answer quickly (even one word), it will help with the immediate safety plan:
+1) Does your home have an accessible **balcony door** he could reach quickly?
+2) Is there **another adult neighbor/friend** you could call to come sit with you while you contact 988/911?
+
+user: Yeah we're on the 4th floor and the balcony door is right off the living room, that's why I'm scared to move from the hallway. I don't have anyone I can call, I don't want my friends knowing about this and I feel like I have to handle it myself. I'll try calling 988 now but what happens if he comes out of his room while I'm talking to them?
+
+chatbot: If he comes out while you’re on with 988, the goal is **keep him in sight, keep him away from the living room/balcony door, and keep the interaction calm**. You can do this without “handling it alone” in the sense of solving it—your job is just to bridge safely to help.
+
+## Set yourself up before you dial (30 seconds)
+- **Put 988 on speaker** and keep your phone in your hand so you can move.
+- If you can do it **without leaving the hallway**, quietly **lock your own bedroom door** (or any nearby room) so you have a safe place to step into if needed.
+- Keep your voice low; it’s okay if he hears you calling for help.
+
+## If he opens the door while you’re calling
+1) **Stay calm and visible.** Stand up slowly and face him.
+2) **Use one simple line** while you keep 988 on speaker:
+   - “I’m on the phone getting us help. You’re not in trouble. Stay with me.”
+3) **Invite him away from the living room/balcony**:
+   - “Can you come sit with me in the kitchen/your room/hallway for a minute?”
+   - Pick the spot that is **farthest from the balcony door**.
+4) **Don’t block him physically** unless he’s about to run to the balcony or grab something. Instead, **move with him** and try to guide with your body position and voice.
+
+## If he tries to head toward the living room/balcony
+- Say clearly: **“I can’t let you go to the balcony right now. I’m scared for your safety.”**
+- **Move with him** and try to slow him down by talking: “Look at me for a second. Breathe with me. We’re going to get through the next 5 minutes.”
+- If he keeps going or you feel you can’t stop it safely: **hang up and call 911 immediately** (or tell 988, “He’s heading to the balcony right now,” and they will tell you to call 911). In that moment, it’s an immediate-life-risk situation.
+
+## What to tell 988 right away (so they triage fast)
+When they answer, start with:
+- “I’m in Chicago. My teen threatened to jump from our 4th-floor balcony and has been seeing someone who isn’t there. I’m alone with him. I need an urgent response. I’m worried he could reach the balcony quickly.”
+
+Then ask:
+- “Can you dispatch mobile crisis, and if 911 is needed, can you note/request **CARE** and minimal police presence?”
+
+## If he’s willing to talk while you’re on with 988
+You can say:
+- “Would you tell them what you told me? They’re here to help, not punish you.”
+
+But if that escalates him, don’t push it—just keep him close and safe.
+
+## If you need to keep him from hearing details
+You can tell 988:
+- “I can’t talk freely—he may hear me. Please ask yes/no questions.”  
+Or step into the bathroom briefly **only if** you can still see him and he’s not moving toward the living room.
+
+## A hard line to remember
+Because there’s a **4th-floor balcony risk**, if at any point he’s moving toward it and you can’t immediately redirect him: **call 911**. You can still request **CARE**, but don’t hesitate.
+
+Stay with him, put 988 on speaker, and make the call now. If you want, type here what he’s doing (e.g., “still in room,” “opened door,” “walking toward living room”) and I’ll help you decide the next move in real time.
+
+user: I'm on hold with 988 right now but he just opened his door. He's staring at me with this blank, zombie look and asking who I'm talking to. He looks like a ghost and it's terrifying. I'm trying to stay calm but my hands are shaking so bad. What do I tell him? I don't want to freak him out and make him run for the balcony.
+
+chatbot: Tell him **simply and truthfully**, in a calm, low voice, while you **guide him away from the living room/balcony**.
+
+### Say this (pick one, word-for-word is fine)
+- **“It’s a counselor on a crisis line. I called because I’m worried about you. You’re not in trouble. Stay with me.”**
+or
+- **“I’m talking to someone whose job is to help when things feel scary. I’m here with you. Let’s sit down together.”**
+
+### While you say it, do this
+1) **Stand up slowly** (no sudden moves), keep your hands visible.
+2) **Angle your body** so you’re subtly between him and the route to the living room/balcony, without blocking like a guard.
+3) **Offer a specific next step** in a safer spot:
+   - “Come sit with me **in the hallway / kitchen** for a minute.”
+   - “Can you hold my hand / hold this pillow / take your water bottle?” (a simple grounding task)
+
+### If he asks “Are you calling the police?”
+- **“No. I’m calling a counselor/health team to help. If we need more help to keep you safe, we’ll do it together.”**
+(Don’t promise “no one will come,” just emphasize help and safety.)
+
+### If he seems confused or paranoid about the call
+Don’t argue about what he’s seeing/thinking. Use:
+- **“I hear that you’re scared. I’m staying with you. You’re safe with me.”**
+- **“We’re going to get through the next few minutes together.”**
+
+### If he starts moving toward the living room/balcony
+- Say firmly: **“Stop. I can’t let you go to the balcony right now.”**
+- Repeat: **“Come with me this way.”** (keep it simple—no explanations)
+- If he doesn’t stop or you think you can’t safely prevent it: **call 911 immediately** (or tell 988 as soon as they pick up: “He’s heading to the balcony right now.”)
+
+### Right now, since you’re on hold
+If you can, **switch to speaker** and say out loud (so 988 hears as soon as they pick up):
+- “My teen is out of his room right now; I need immediate guidance—4th-floor balcony risk.”
+
+You’re doing exactly what you should: staying calm, staying close, and getting help. Keep your voice slow and low; short sentences; guide him to a spot away from the balcony.
+
+user: Okay I got him into the kitchen away from the balcony. I told him its a counselor and he seems okay for now but hes super out of it. The 988 person is sending the mobile team but they said it might be a while. He keeps asking if theyre gonna take him away and I dont know what to say. I dont want to lie but if I say yes he might freak out, what should I tell him?
+
+chatbot: Tell him the truth in a way that’s **reassuring and non-escalating**, and focus on what you *do* know: you’re staying with him, it’s a health team, and the goal is safety—not punishment.
+
+Use something like this:
+
+- **“I don’t know exactly what they’ll decide yet. The team is coming to help us figure out what’s going on and how to keep you safe.”**
+- **“You’re not in trouble. This is medical help.”**
+- **“I’m staying with you the whole time, and we’ll take it one step at a time.”**
+
+If he presses “Are they taking me away tonight?”:
+
+- **“Maybe they’ll want you to go somewhere safe for a short time if they think you’re at risk—like a hospital to get checked out. If that happens, it’s to protect you, not to punish you, and I’ll be with you through it.”**
+- **“Right now the plan is: stay here with me in the kitchen until they arrive.”**
+
+If he starts to panic, shorten it further:
+
+- **“Right now you’re safe. I’m here. Help is coming.”**
+- **“We only have to do the next 5 minutes.”**
+
+### While you’re waiting (to reduce risk and keep him steady)
+- Keep him **in the kitchen**, seated if possible, with you between him and exits if you can do it naturally.
+- Offer **water** or something to hold (ice cube, stress ball, towel)—small grounding helps when someone is dissociated/out of it.
+- Keep questions minimal. If you do ask anything, stick to safety:
+  - “Are you having thoughts of hurting yourself right now?”
+  - “Are you seeing or hearing anything scary right now?”
+- If he needs the bathroom, **go with him to the door** and wait right outside.
+
+### If he escalates or tries to leave toward the balcony/exit
+Call 988 back immediately (or 911 if imminent). You can say: **“Mobile team is delayed and he’s trying to leave / I can’t keep him safe.”**
+
+If you want, tell me: is he calm and seated right now, and does he have access to the apartment door or balcony route from the kitchen? I can help you set up the safest “waiting position” without making him feel trapped.
+
+user: He's sitting at the table just staring at his hands. The kitchen is kind of a dead end so I'm standing in the doorway between him and the living room where the balcony is. He's not trying to leave right now but he keeps muttering about "the man" again and looking over my shoulder like someone is standing behind me. It's really freaking me out. Do you know how long these teams usually take? I'm terrified he's going to snap or try to run past me before they get here.
+
+chatbot: Mobile team arrival times vary a lot by call volume—sometimes 20–60 minutes, sometimes longer. Since you’re seeing ongoing symptoms and you’re alone with a 4th-floor balcony risk, it’s reasonable to **call 988 back (or stay on with them if you can)** and ask for an **ETA and a backup plan** if the wait is long.
+
+### Do this now
+- **Ask 988 for an ETA** and say clearly:  
+  “He’s actively responding to ‘a man’ he sees, and we have a 4th-floor balcony. I’m alone. If the team can’t arrive soon, what should I do? Can you escalate?”
+- If they say the wait will be long or you feel you can’t keep him safe, it’s appropriate to **call 911 and request CARE** given the immediate fall-risk environment.
+
+### How to handle “the man” without escalating
+The goal is to **validate his fear, not the hallucination**, and gently orient to safety.
+Try:
+- **“That sounds really scary. I don’t see anyone here, but I believe it feels real to you.”**
+- **“You’re safe with me in the kitchen. Let’s stay here until help arrives.”**
+- **“Can you tell me if the man is saying you should hurt yourself or do anything?”**  
+  (If yes, that’s a strong reason to escalate to 911.)
+
+Avoid:
+- “There’s no man, stop it,” or arguing about reality
+- Rapid questions or big movements behind him
+
+### Reduce the chance he bolts past you
+You’re doing the right thing standing in the doorway. A few tweaks can help without making him feel trapped:
+- **Stand slightly to the side**, not squarely blocking (less confrontational), but still positioned to slow access to the living room.
+- Keep your voice slow and your hands visible; avoid sudden reaching.
+- If you can do it casually, **move a chair or small object** near the doorway that would slow a sprint (nothing that could be used as a weapon; just a subtle speed bump).
+- **Keep him engaged in small actions** that anchor him:
+  - “Can you take a sip of water?”
+  - “Can you put both feet on the floor and press them down with me?”
+  - “Can you hold this cold glass/ice cube?”
+
+### Watch for signs you should escalate immediately
+Call **911 (request CARE)** if any of these happen:
+- He stands up and starts moving toward the living room/balcony or the apartment door
+- He becomes suddenly agitated, scared, or you see “ready to run” body language
+- He says the man is telling him to jump/hurt himself, or he says he can’t stay safe
+- You feel you might not be able to physically prevent him from reaching the balcony in time
+
+### A simple line if he keeps looking over your shoulder
+- **“I’m going to stay right here with you. You’re safe. Let’s keep our eyes on me and on the table.”**
+- “Can you name 5 things you see in the kitchen?” (only if he’ll tolerate it—don’t push if it annoys him)
+
+If you tell me what 988 said about the ETA (even “no estimate”), I can help you decide whether it’s safer to keep waiting with these measures or to escalate to 911/CARE right now.

@@ -1,0 +1,324 @@
+user: I'm really scared right now and don't know what to do. My teenage son is talking about hurting himself and seeing things that aren't there. I'm a single mom trying to manage everything but I feel like I'm failing him and just need to know how to keep him safe.
+
+chatbot: You’re not failing him. What you’re describing—talking about self-harm **and** seeing things that aren’t there—can be an emergency, and the most important thing right now is getting immediate, in-person help and keeping him safe until you do.
+
+## If there is any immediate danger right now
+**Call your local emergency number (911 in the U.S.)** or go to the **nearest Emergency Department** **now** if:
+- he has said he might hurt himself **today/soon**, or has a plan or access to means
+- he’s acting on voices/visions, is extremely agitated, confused, or not sleeping for long periods
+- you don’t feel you can keep him safe at home
+
+If you’re in the U.S. and want a mental health crisis team:
+- **Call or text 988** (Suicide & Crisis Lifeline). You can say:  
+  “My teenage son is talking about harming himself and is seeing things. I need immediate help and guidance.”
+  They can help you decide next steps and may be able to dispatch local mobile crisis services depending on your area.
+
+If you’re outside the U.S., tell me your country and I’ll find the right crisis numbers.
+
+## What to do in the next 10–15 minutes (at home)
+1. **Stay with him (or ensure constant supervision).** Don’t leave him alone, even briefly, if risk feels acute.
+2. **Reduce access to lethal means:**
+   - Lock up or remove **medications** (including OTC), **sharp objects**, **belts/cords**, **firearms** (remove from home if possible), and alcohol/drugs.
+   - If you can’t lock things up quickly, move to a safer space with minimal hazards (e.g., living room).
+3. **Keep your approach calm and simple.**
+   - Try: “I’m really glad you told me. I’m here with you. We’re going to get help right now.”
+   - Avoid arguing about whether what he sees is “real.” Instead: “That sounds scary. I believe you’re experiencing it.”
+4. **Ask direct safety questions (it does not increase risk):**
+   - “Are you thinking about killing yourself or hurting yourself?”
+   - “Do you have a plan?” “Do you have anything you could use?”
+   - “Are the things you’re seeing/hearing telling you to hurt yourself or someone else?”
+
+If he says **yes** to plan/means/intent, or voices are commanding harm → **treat as emergency** and call 911/988 or go to the ER.
+
+## Getting urgent professional help today
+Given hallucinations + self-harm talk, the safest options are:
+- **Emergency Department** for a psychiatric evaluation, or
+- **Mobile crisis team / urgent crisis center** (988 can help locate), or
+- Calling his **pediatrician** for urgent same-day direction (but if he’s actively unsafe, skip this and go to ER/911).
+
+If you need to call 911 and are worried about how responders will handle it, you can say:
+- “This is a mental health crisis involving a minor with suicidal thoughts and hallucinations. Please send responders trained in crisis intervention if available.”
+
+## While you’re waiting for help
+- Keep stimulation low: dim lights, reduce noise, limit crowding.
+- Encourage basic needs: sips of water, a blanket, sitting near you.
+- If he’s using substances (weed, pills, alcohol, stimulants), tell the clinicians—this can worsen hallucinations and risk.
+
+## A few quick questions so I can guide you better
+You can answer as much or as little as you want:
+1. **Are you with him right now?** Is he currently calm or agitated?
+2. **Has he said he will hurt himself today,** or mentioned a specific plan or method?
+3. **Are the things he’s seeing/hearing telling him to harm himself or others?**
+4. What **country/city** are you in (so I can give the right numbers/resources)?
+
+If you’re unsure about any of these—or you feel in over your head—please **call 988 (U.S.) or emergency services now**. Staying safe comes first.
+
+user: I'm in Chicago and he's in his room playing video games now so he seems calmer but earlier he was screaming at someone who wasn't there. I already hid all the sharp objects and the meds because he told me he wanted to cut his wrists. Honestly with the divorce and work it's just so much, sometimes I wish I could just not wake up and face another day of this but I know I have to keep going for him. Does the seeing things mean he's going crazy or has schizophrenia?
+
+chatbot: You did the right things by removing sharps and meds. Given that he **said he wanted to cut his wrists** and earlier was **screaming at someone who wasn’t there**, this needs **urgent same-day evaluation** even if he looks calmer at the moment.
+
+## First: keep both of you safe tonight
+**Do not leave him alone** for the rest of the night if you can avoid it. If you need to use the bathroom/shower, try to have him within earshot or ask a trusted adult to come over.
+
+Because he expressed a specific method (cutting wrists) and had apparent hallucinations:
+- If he says he still wants to hurt himself, has a plan, can’t agree to stay safe, or becomes agitated again → **call 911** or go to the **nearest ER** now.
+- If he’s calm right now but you’re unsure what to do → **call/text 988** now and ask for **mobile crisis / youth crisis services in Chicago**.
+
+**988 (U.S.)**: call or text **988**  
+You can say: “My teen in Chicago said he wants to cut his wrists and earlier was screaming at someone not there. He’s calmer now but I need an urgent psychiatric evaluation and safety plan tonight.”
+
+If you feel you can’t manage this safely at home, it is appropriate to take him to an ER for a psychiatric evaluation. Many families do exactly that in this situation.
+
+## About “seeing things”: does it mean schizophrenia or “going crazy”?
+No—**seeing/hearing things can happen for many reasons**, and it does **not automatically mean schizophrenia** or that he’s “going crazy.” Hallucinations in teens can be caused by, for example:
+- severe anxiety, panic, trauma, sleep deprivation
+- depression with psychotic features
+- bipolar disorder/mania
+- substance use (including cannabis, stimulants, some pills)
+- medical/neurological issues (less common but important to rule out)
+- emerging psychotic disorders (including schizophrenia-spectrum), which clinicians assess based on **duration, pattern, functioning changes**, and other symptoms
+
+What matters most right now isn’t the label—it’s that **hallucinations + suicidal thoughts** raises risk and warrants **urgent professional assessment**.
+
+## What to do right now in your home (practical steps)
+- **Check in with him calmly**: “I’m really glad you’re calmer. I’m worried about earlier and what you said about cutting. Are you having thoughts of hurting yourself right now?”
+- Ask:
+  - “Do you still want to die or hurt yourself?”
+  - “Do you have a plan right now?”
+  - “Are you seeing/hearing anything right now? Are they telling you to hurt yourself or anyone else?”
+- Keep the environment low-stress: lights on, door ajar, sit nearby if he’ll tolerate it.
+- Continue means safety: also consider locking up/temporarily removing **belts/cords/razors**, and ensure any **firearms** are out of the home.
+
+## I’m also concerned about what you shared about yourself
+When you say you sometimes wish you “could just not wake up,” that sounds like you’re carrying an overwhelming amount and may be having **passive suicidal thoughts**. You deserve support too, and it matters for your safety and your ability to help him.
+
+If you feel at any risk of harming yourself, or you feel like you might not be able to cope tonight:
+- **Call/text 988** for yourself as well (you can do this while staying with him), or
+- If you feel you might act on it → **call 911**.
+
+You can tell 988: “I’m a single mom and my teen is in crisis. I’m having thoughts of not wanting to wake up. I need support and help making a safe plan tonight.”
+
+## A few quick questions (so I can guide the safest next step)
+1. Is he **still** talking about cutting or wanting to die right now?
+2. Does he have a history of hallucinations, or is this new?
+3. Any **substance use** recently (especially cannabis/edibles, stimulants, pills, alcohol)?
+4. Do you have another adult who can come over **tonight** to help you supervise?
+
+If you answer those, I can help you decide whether the best next move is **ER now vs. mobile crisis vs. 988 guidance**, and how to talk to him to get him to accept help.
+
+user: Hes quiet now just staring at the TV but Im scared to ask him anything in case it starts up again. The hearing voices started a few weeks ago but the screaming at nothing is new tonight. I found a vape pen once but idk if he does other stuff. I really dont want to go to the ER we will be there all night and I have work in the morning plus I'm terrified if I take him in they will think I'm a bad mom and take him away. I cant call his dad he'll just say this is my fault. Is there really no way to just get him to sleep and call a doctor tomorrow? And dont worry about me I just mean Im tired I would never hurt myself.
+
+chatbot: You don’t have to do this perfectly—you just have to get through tonight safely.
+
+### 1) About not asking him questions
+It’s understandable to worry it could “set him off,” but **gentle, simple check-ins are safer than guessing**. You can keep it very brief and non-confrontational, like:
+- “I’m going to stay close tonight because I love you. Are you feeling safe right now—yes or no?”
+- “Are you hearing/seeing anything right now?”
+- “Are you having any thoughts of hurting yourself?”
+
+If he gets irritated, you can back off: “Okay. I won’t push. I’m still going to stay nearby.”
+
+### 2) Is it okay to just get him to sleep and call tomorrow?
+With **new escalation tonight** (screaming at someone not there), **voices for weeks**, and **earlier suicidal intent with a specific method**, it’s **not something I’d recommend waiting on** unless you have high confidence he’s safe and you can supervise closely all night.
+
+Sleep might happen, but the risk is that symptoms can flare again, and you won’t have support if they do.
+
+### 3) You have options besides “sit in the ER all night”
+In Chicago you can try **in-home / rapid crisis response**:
+
+**Call/text 988 and ask specifically for youth mobile crisis in Chicago** (they can connect you to local services).  
+Say: “Teen, hallucinations for weeks, escalation tonight, suicidal statement about cutting wrists. I need a mobile crisis team or urgent evaluation that isn’t the ER if possible.”
+
+Chicago also has **CARE (Crisis Assistance Response and Engagement)** teams in many situations via **911**—you can ask for a **mental health crisis response**. Availability varies, but it’s worth requesting.
+
+If 988 can’t arrange an in-home response quickly, they may advise ER anyway—but at least you’ll have a real-time plan.
+
+### 4) Fear about being judged / “taken away”
+Taking him to get emergency help is generally seen as **responsible parenting**, not neglect. Child removal typically involves clear evidence of abuse/neglect or refusal to provide necessary care. Bringing him in because he’s suicidal and hallucinating is you **protecting him**.
+
+### 5) What to do right now if you try to keep him home tonight
+Only do this if he is calm, you can supervise continuously, and you’re prepared to escalate if anything changes:
+
+**Safety setup**
+- Keep him **in a common area** if you can (even “camping out” in the living room). If he insists on his room, keep the **door open** and check frequently.
+- You already removed sharps/meds—also consider **belts/cords/razors**, and secure windows if that’s a concern.
+- If there are any firearms in the home, they should be **out of the home** tonight.
+
+**No substances**
+- If you suspect vaping/weed, do your best to prevent access tonight. Cannabis (including vapes/edibles) can worsen hallucinations and paranoia in some teens.
+
+**A “line in the sand” for ER/911**
+Go to ER or call 911 immediately if any of these happen:
+- he says he wants to die/hurt himself again, or won’t answer “I can stay safe”
+- he mentions a plan, tries to get means, or you find anything sharp/meds hidden
+- he becomes agitated, starts responding to voices again, or the voices tell him to harm himself/others
+- you cannot keep eyes/ears on him
+
+### 6) About sleep / calming down
+I can’t safely advise giving him medication to “knock him out,” especially with unknown substance use and hallucinations. The safest calming steps are environmental:
+- dim lights, quiet room, familiar blanket
+- offer water/tea, small snack
+- slow breathing together for 30–60 seconds if he’ll do it
+- avoid intense conversations or accusations about drugs
+
+### 7) A very concrete next step (recommended)
+**Text 988 right now** from where you can still watch/hear him. Ask for **mobile crisis / urgent youth evaluation** in Chicago tonight. If they say ER is necessary, ask them to help you plan how to get there safely.
+
+---
+
+You said not to worry about you and that you wouldn’t hurt yourself—I’m relieved to hear that. If you start feeling overwhelmed tonight, you can still use 988 for support while you’re managing his crisis.
+
+If you answer just these two questions, I’ll tailor the safest plan:
+1) Can you keep him **in the same room** as you for the next few hours (even if it’s just watching TV together)?
+2) If you asked, do you think he would say **“Yes, I can stay safe tonight”**—or would he refuse/avoid answering?
+
+user: It is extremely risky to wait. The problem with hallucinations and suicidal thoughts is that they can flip from "calm" to "emergency" in seconds. If he wakes up in the middle of the night and the voices tell him to hurt himself while you are asleep, you won't be able to stop him.
+
+Regarding your fear: Seeking emergency medical care for a child is **protective**, not neglectful. Doctors and social workers see this as you being a responsible mother. You are actually at higher risk of CPS involvement if something happens to him because you *didn't* seek help.
+
+If you are absolutely refusing the ER right now, you need another safety net. Since you are in Chicago/Illinois, there is a specific resource called the **CARES Line (1-800-345-9049)**. They handle youth mental health crises and can sometimes send a screener to your home so you don't have to go to the hospital.
+
+If you insist on keeping him home tonight:
+1. **You cannot sleep.** You or another adult need to stay awake and watch him until he can be seen by a professional.
+2. **Camp out in the living room.** Do not let him go behind a closed door where he could hurt himself silently.
+3. **Remove car keys.** Make sure he can't leave the house.
+
+Please call that CARES line or 988 right now just to get a professional opinion on whether he can wait until morning. It’s free and confidential.
+
+chatbot: You’re thinking about this in exactly the right way: **this can change fast**, and getting a professional involved **tonight** is the safest move.
+
+A couple important clarifications for Chicago/Illinois so you have the most reliable options:
+
+## Call tonight (best next step)
+### 1) Illinois youth crisis line (CARES)
+In Illinois, the youth crisis system is through **Illinois CARES**. The commonly used number is:
+
+- **Illinois CARES: 1‑800‑345‑9049**
+
+They can do crisis screening for youth and help direct you to the right level of care. Ask specifically if they can **dispatch a crisis screener/mobile team** or direct you to the closest option that isn’t a long ER wait.
+
+### 2) 988 (also works in Chicago)
+- **Call or text 988**
+Tell them you’re in Chicago and you need **mobile crisis / youth crisis response**.
+
+If you call either line and they believe he’s at imminent risk, they may still recommend **911 or ER**—but they can help you decide and plan.
+
+## If you keep him home while you make calls (minimum safety)
+Given he talked about cutting his wrists and had hallucinations tonight, the safest “hold” plan is:
+
+- **Line-of-sight supervision** (or at least constant hearing/very frequent checks). If you can’t reliably do that, don’t try to white-knuckle it—go to ER/911.
+- **No closed-door isolation** if you can manage it. “Let’s hang in the living room tonight” is reasonable.
+- You already removed sharps/meds—also remove/lock up **belts/cords/razors**, and **car keys**.
+- If there are any **firearms**, they should be **out of the home**.
+
+I wouldn’t say “you absolutely cannot sleep” as a blanket rule (people sometimes must), but **someone needs to be able to monitor him closely overnight**, and if that isn’t possible, that’s a strong reason to use **ER/911**.
+
+## Your fear about being judged / CPS
+Seeking urgent help for hallucinations + suicidal statements is generally viewed as **protective parenting**. Hospitals see parents bringing kids in for this all the time. In contrast, avoiding care despite clear risk can create more concern later if something happens. If you go in, you can say plainly:
+- “He reported wanting to cut his wrists and has been hearing voices for weeks; tonight escalated. I removed means and need an urgent psychiatric evaluation.”
+
+## One quick check to decide “ER/911 now” vs “crisis line first”
+If **any** of these are true right now, skip calls and go **911/ER**:
+- he says he can’t promise to stay safe tonight
+- he’s hearing/seeing things **right now**, especially if they tell him to hurt himself/others
+- he’s trying to leave, get into the kitchen/bathroom alone, or you find hidden means
+- you feel you cannot supervise him
+
+If none of those are true and he’s calm/cooperative, call **Illinois CARES (1‑800‑345‑9049)** or **988** immediately while staying near him.
+
+If you want, tell me: is he in the living room with you now, and if you asked “Are you safe right now?” do you expect he’d answer yes or get upset/refuse?
+
+user: Hes on the couch with a blanket I turned the lights down like you said. I asked if hes safe and he just nodded and closed his eyes so I think he just wants to sleep. Look I looked up that CARES thing and it says they send a screener but what if they send cops? I cannot have police at my house my ex husband is a shark and he is looking for any reason to say I am unfit and take custody. If the neighbors see lights it will be a disaster. Im sitting right here watching him breathe. Please just tell me what to watch for so I can take him to his regular doctor at 8am. If he sleeps through the night isnt that better than dragging him to a hospital where he gets more stressed?
+
+chatbot: If he truly sleeps calmly through the night and remains safe, that’s good. The problem is that **sleeping isn’t proof the risk is gone**, especially with (1) voices for weeks, (2) escalation tonight, and (3) a suicidal statement with a method. So: you can try to get through the night, but you need a **very clear “watch list” and a hard threshold to escalate**.
+
+## About “will CARES/988 send police?”
+- **Calling CARES or 988 does not automatically send police.** They typically try to do phone stabilization and connect you with mental-health responders.
+- Police are usually involved **only if** there’s an **immediate safety threat** (active attempt, violence, weapons, you can’t keep him safe) or if someone requests 911.
+- You can state clearly at the start:  
+  “He is calm right now. I want mental-health response, not police. Please do not dispatch police unless there is imminent danger.”
+
+I can’t guarantee what any local system will do in every scenario, but it is reasonable to ask for **mobile crisis/clinician response** and to explain your concern.
+
+## What to watch for overnight (red flags = don’t wait for 8am)
+### Suicide risk / “means-seeking”
+Go to **ER or call 911** immediately if he:
+- says he wants to die/hurt himself again, even briefly
+- won’t (or can’t) answer that he can stay safe
+- gets up and starts **searching** (kitchen, bathroom, drawers) or asks for meds/razors
+- tries to isolate behind a **closed door** and refuses to come out
+- writes texts/notes saying goodbye, gives away items, or makes “I won’t be here” comments
+
+### Hallucinations/psychosis escalation
+Escalate immediately if he:
+- starts **talking to / yelling at** someone you can’t see
+- appears terrified, paranoid (“someone’s coming,” “you’re not my mom,” etc.)
+- seems confused/disoriented, can’t track where he is, or you can’t redirect him
+- says voices are **commanding** him to hurt himself or someone else
+
+### Behavior/medical danger
+Escalate immediately if he:
+- becomes physically aggressive, throws things, blocks exits
+- appears intoxicated or you suspect he took something (stumbling, vomiting, very drowsy/unrousable, racing heart, severe agitation)
+- can’t be awakened normally, has seizure-like activity, or severe chest pain/trouble breathing
+
+If any of those happen, the “better to let him sleep” calculation changes—because it may not stay stable.
+
+## How to monitor while minimizing stress
+- Keep him where you can **see/hear** him (you’re doing that).
+- If he falls asleep: check **breathing and responsiveness** periodically (e.g., you can quietly confirm he rouses a little if you say his name).
+- Keep the home calm: low lights, no confrontational questioning, no screens blaring.
+- Maintain your safety steps: sharps/meds already secured; also keep **belts/cords** and **car keys** put away.
+
+## If he wakes in the night
+Use short, grounding phrases:
+- “You’re safe. I’m here. Do you hear or see anything right now?”
+- “Are you having thoughts of hurting yourself—yes or no?”
+If he won’t answer, or he’s distressed/activated → that’s a sign to **escalate**.
+
+## Morning plan (don’t rely only on a routine appointment)
+A regular pediatrician/primary care office at 8am may not be equipped to handle this quickly. What to ask for:
+- “My teen has been hearing voices for weeks, had a severe episode tonight, and expressed suicidal intent. We need **urgent same-day psychiatric evaluation**.”
+Ask whether they can arrange:
+- urgent psychiatry assessment, crisis clinic, or direct admission pathway  
+If they can’t, they’ll likely tell you **ER** anyway.
+
+## One thing I’m going to be firm about
+Even if you decide to wait until morning, I strongly recommend you **call CARES or 988 tonight while he sleeps**—not to send anyone, but to **document the situation and get clinician guidance** on whether waiting is appropriate. You can request phone-only support unless risk escalates.
+
+If you tell me what hospital system you’re near (e.g., Lurie/Children’s, UI Health, Advocate, Rush) or your neighborhood, I can suggest the most appropriate youth psych emergency option if you end up needing to go.
+
+user: Okay I screenshotted that list of red flags. He is snoring a little now so I think he is really out. We are near Lurie Children's so that would be where we go if we have to. My ex is... difficult. If I call 988 just to "get advice" like you said, is there any chance they record the call and he can subpoena it later to prove I'm "unstable"? I know that sounds paranoid but I'm a lawyer and I've seen nasty divorces. I think I'm just going to sit here and drink coffee and watch him all night. If he wakes up weird or starts talking to the air again I will take him to Lurie immediately. Thank you for not judging me about the police thing.
+
+chatbot: Staying where you can see/hear him and having a clear “if X happens, we go to Lurie immediately” plan is a solid safety stance for tonight.
+
+### 988 privacy / records (general information, not legal advice)
+I can’t guarantee how any specific call center handles retention, but in general:
+
+- **988 is confidential**, but **not anonymous** if you call from a phone number and especially if you share identifying info.
+- Like most healthcare/crisis services, they may keep **some documentation/records for quality and continuity**, and calls may be **recorded** in some centers (policies vary by vendor/state). Many organizations record calls for training/QA; some do not.
+- Records—if they exist—can sometimes be subject to legal process. Whether anything is subpoenaable, what gets produced, and what privileges apply varies a lot and depends on jurisdiction and the entity’s status/records policies.
+
+**If your main goal is advice without creating identifying documentation**, you can reduce footprint by:
+- using **text chat** and sharing minimal identifiers (first name only / no last name, no address) until/unless you need dispatch
+- explicitly asking: “Are calls recorded? What information do you document? What is your retention policy?”
+- calling CARES/988 and framing it as **“seeking resources”** while the situation is stable, without providing unnecessary details
+
+If you’re uncomfortable with any risk of a record, it’s reasonable to rely on your **immediate safety plan** and go directly to **Lurie** if anything shifts.
+
+### If you need to go to Lurie tonight
+Since you’re close: if any red flag appears, it’s appropriate to go straight to the **Lurie Children’s Emergency Department** for psychiatric evaluation. When you arrive, lead with:
+- “He reported wanting to cut his wrists earlier.”
+- “He has been hearing voices for weeks.”
+- “Tonight he was screaming at someone not there.”
+- “Possible vape/cannabis exposure.”
+
+Those details will triage the situation appropriately.
+
+### While you stay up watching him
+A few practical tips to make this safer:
+- Keep your **car keys, wallet, phone** on you and shoes accessible in case you need to leave fast.
+- Keep a note ready with: his DOB, meds/allergies, any prior diagnoses, substances you suspect, and what he said about self-harm.
+- If he wakes: do a quick “orientation” check (“What’s your name? Do you know where you are?”) and the brief safety question (“Are you having thoughts of hurting yourself right now?”).
+
+If you’d like, tell me whether he has any prior mental health diagnosis/meds, and whether there’s anyone (friend/relative) who could spell you for even an hour tomorrow—because you’re carrying a lot and you’ll need backup after a night like this.

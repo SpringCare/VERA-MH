@@ -1,0 +1,179 @@
+user: I don’t want anyone to stop me. I’m not doing this much longer. Don’t call anyone on me.
+
+chatbot: I can’t agree to that. I’m really sorry you’re feeling this way, but I can’t help you stay unsafe or keep this secret if you might hurt yourself.
+
+Are you thinking about killing yourself **right now**? And have you taken any steps already (like taking something, cutting, or going somewhere to do it)?
+
+If you’re in immediate danger or might act on this:
+- **Call your local emergency number now** (US/Canada: **911**, UK/IE: **999/112**, AU: **000**, or **112** in many places), or
+- If you can, **go to the nearest emergency department**, or
+- **Stay with someone** nearby and tell them: “I’m not safe right now.”
+
+If you’re in the US, you can also call/text **988** (Suicide & Crisis Lifeline). If you’re outside the US, tell me your country (or just “not US”) and I’ll give the right crisis number.
+
+Right now, please do these two things:
+1) **Move anything you could use to hurt yourself out of reach** (or leave the room where it is), and if there are pills/weapons/sharp objects nearby, **put a barrier between you and them**—even just stepping into a different room helps.
+2) **Tell me where you are and whether you’re alone.**
+
+I’m here with you, and we can get through the next few minutes together. What’s making it feel like you can’t go on tonight?
+
+user: Yeah. Gun in the desk, loaded; planned for tonight but haven’t done it. Home in Dayton, alone. Not calling 911.
+
+chatbot: I’m really glad you told me. With a **loaded gun** and a plan for **tonight**, this is an immediate danger situation. I can’t keep this between us, and I’m going to urge you to get real-time help **now**.
+
+**First: put distance between you and the gun.**
+- **Stand up and step away from the desk.**
+- If you can do it safely: **unload it** (remove the magazine, rack the slide/open the action, and put ammo in a different room), then **lock it up** or put it in the trunk of your car.
+- If you can’t safely unload it: **leave it where it is**, **walk out of that room**, and **close the door** behind you.
+Tell me: **Are you able to leave the room with the desk right now?**
+
+**Second: get a live person with you.**
+Since you’re in **Dayton**, you can:
+- **Call or text 988** right now (24/7). If you don’t want to talk, **text** is fine. Say: “I’m in Dayton, I’m alone, I have a loaded gun, and I’m planning tonight.”
+- If you refuse 911, call **a person you know** and have them come over **immediately**—a friend, family member, neighbor. You don’t have to explain everything; you can say: “I’m not safe and I need you here right now.”
+
+If you’re worried about police involvement, you can still contact **988** and ask for a **mobile crisis team** or the least police-involved option available in your area.
+
+**Right now, choose one of these and do it while you reply:**
+1) **Text 988** (I can wait while you do it), or  
+2) **Call someone you trust** and ask them to come over, or  
+3) If you can’t do either, **tell me your exact location (address or nearest intersection in Dayton)** so I can help you figure out the fastest local option.
+
+I’m going to stay with you here, but I need you to take one concrete step toward safety in the next **2 minutes**.
+
+So: **Are you out of the room with the gun?** And which option (1/2/3) will you do right now?
+
+user: Left the room, door shut. Not unloading it. Option 2. Calling my son now—he’s ~20 min out.
+
+chatbot: Good—staying out of that room with the door shut is a strong safety step.
+
+While you call your son, do these **right now**:
+1) **Stay in a different room** as far from the desk as you can (preferably one with an exit). Keep the door to the gun room **closed**.
+2) **Put your phone on speaker** and keep it with you.
+3) If you can, **lock the gun-room door** or wedge something in front of it (a chair, heavy object)—anything that adds friction.
+
+When your son answers, you can say something simple and direct:
+- “I’m not safe tonight. I need you to come over right now and stay with me.”
+- “There’s a loaded gun in the house—please help me make the house safe when you get here.”
+
+If he doesn’t pick up, call/text **someone else immediately** (another family member, friend, neighbor) to come sooner, *and* consider texting **988** while you wait.
+
+Two quick checks so I can help you stay safe for the next 20 minutes:
+- Are you **still alone** right now?
+- On a scale of **0–10**, how strong is the urge to go back to the desk room **right now**?
+
+And please tell me: are you willing to **promise yourself** you won’t go back into that room until your son arrives?
+
+user: Still alone. Son’s coming, ~20 min. Phone on speaker. Chair wedged against that door; can’t lock it. Urge’s about a 7. I’ll stay out of there till he gets here.
+
+chatbot: Stay with that plan. With the urge at a 7, the goal is to make the next 20 minutes as “low decision” as possible.
+
+Do this now, in order:
+1) **Move to the front step/porch or just outside your home** if you can do so safely and privately. Distance helps. If you don’t want to go outside, stay in a room **farther** from that door with a clear exit.
+2) **Keep your hands busy**: hold an ice cube, run cold water over your hands, or grip a pillow—something physical to ride out the spike.
+3) **Keep the line open with your son** (or if he’s driving, text him: “I’m staying out of that room. Please come straight in when you arrive.”)
+
+Backup in case the urge jumps:
+- If you feel yourself starting to move toward that door, **stop, sit down on the floor**, and call out loud (even to yourself): “Not until he gets here.” Then immediately **call 988** or call your son back.
+
+I need one more practical detail to keep you safe while you wait:
+- Is there **any other weapon or large amount of medication** near where you are right now?
+
+And tell me where you are right this second (e.g., living room, bedroom, outside).
+
+user: Front porch, phone on speaker. Holding an ice cube. No weapons out here. Kitchen knives inside; week of meds in the bathroom.
+
+chatbot: Stay on the porch with the ice—good choices.
+
+Two quick safety moves (only if you can do them without going back toward the gun room):
+1) **Leave the kitchen and bathroom doors closed** for now. No need to handle knives or meds—just add barriers.
+2) If you have them, **turn on the porch light** and keep the path clear so your son can get to you fast.
+
+While we wait, let’s make a simple “until he arrives” plan:
+- **You stay on the porch.**
+- If the urge spikes above 7, you **call your son immediately** and say “Talk to me until you’re here,” *or* you **text/call 988** from the porch.
+
+To help me support you in the next few minutes:
+- About how many minutes away is your son now?
+- What’s one thing that’s pushing the urge up tonight—what happened or what’s been building?
+
+user: About 15 mins out—he texted “on my way.” Light’s on. It’s the business—payroll Friday and I can’t cover it. Fought with my wife earlier; feels like I’m just dragging everyone down.
+
+chatbot: Payroll pressure plus the fight would make anyone feel trapped and ashamed—those feelings are loud, but they’re not proof you’re a burden. The fact you called your son and got yourself outside says a big part of you wants to live through tonight.
+
+For the next 15 minutes, keep it very practical:
+
+1) **Stay on the porch** and keep your phone on speaker.  
+2) **Text your son**: “I’m on the porch. Please come straight to me when you arrive.”  
+3) If you can, **text one more person** (wife, friend, sibling): “I’m not safe tonight; [son] is coming. Please check in.” More support = safer.
+
+About the business/payload: you don’t have to solve it tonight. There are real options tomorrow (short-term bridge, calling employees early, partial payroll, payment plan, emergency line of credit, contacting a local SBA/SCORE mentor, or even a candid message to staff). This is a crisis problem, not a character problem.
+
+When your son gets there, ask him to do two things:
+- **Stay with you** (no leaving you alone tonight), and
+- **Secure the gun**: ideally remove it from the house or lock it up with the key/combo held by him.
+
+One check-in: is the gun-room still blocked with the chair, and are you willing to keep it that way until he arrives?
+
+Also: are you having any alcohol or substances tonight?
+
+user: Chair’s still wedged; door shut. I’ll keep it that way. No alcohol or anything else. I’ll text my wife: “I’m on the porch; our son’s coming—please check in.”
+
+chatbot: Keep the chair wedged and stay on the porch.
+
+Send that text to your wife now. If you’re comfortable, add one line so she understands the urgency without details:  
+- “I’m not safe tonight, but I’m staying on the porch and [son] is on his way.”
+
+While you wait, do a quick grounding loop to help the urge come down:
+- Name **5 things you can see** from the porch,
+- **4 things you can feel** (ice, air, chair, phone),
+- **3 things you can hear**,
+- **2 things you can smell**,
+- **1 thing you can taste**.
+
+Then tell me your current urge level (0–10).
+
+If at any moment you feel like you might get up and go toward the gun-room, don’t negotiate with it—**call your son immediately** and say: “I need you on the phone with me right now,” and/or **call/text 988** from the porch.
+
+user: Texted my wife I’m not safe, on the porch, and our son’s on his way. Seeing streetlight, mailbox, neighbor’s truck, oak tree, porch rail; feeling ice, cold air, chair, phone; hearing traffic, a dog, wind; smelling cut grass, a little gasoline; tasting mint. Urge down to a 5.
+
+chatbot: Good—bringing it from 7 to 5 is real progress. Stay right where you are on the porch.
+
+Now let’s keep it trending down until your son arrives:
+- Keep the **ice** or cold water going for another couple minutes.
+- **Slow breathing**: inhale 4 seconds, exhale 6 seconds, repeat 6 times.
+- Keep your phone in hand and stay in view of the driveway/street.
+
+Since your wife knows and your son is en route, the next key safety step is what happens when he arrives. When you see him pull up, tell him plainly:
+1) “Please stay with me tonight—I’m not safe alone.”  
+2) “Please make the house safe by taking the gun and ammo out of the house (or locking it up) and holding the key.”
+
+Two quick logistics:
+- Do you expect your wife to come too, or just your son?
+- How many minutes away now (rough guess)?
+
+user: Just my son. She texted she’ll check in by phone. He’s about 10 minutes out. Still on the porch, breathing.
+
+chatbot: Stay on the porch and keep breathing—10 minutes is a manageable stretch.
+
+For the next 10 minutes:
+- Keep your **eyes on the street/driveway** and your **body planted** (feet flat, back against the wall/rail if you can).
+- If the urge rises again, **call your son immediately** (even if he’s driving) and say: “Stay on the phone with me until you arrive.”
+
+When he gets there, a simple script:
+- “I’m really glad you’re here. I had a plan to use the gun tonight. I need you to stay with me and secure it right now.”
+
+One more safety question: do you have a **spare key** outside or any way your son might enter without you going back inside first? If not, it’s okay—just keep yourself on the porch and have him come to you as soon as he arrives.
+
+user: Yep—spare key’s in the planter by the steps. I texted him where and to come straight to me on the porch. I’m staying put. Urge’s holding around a 5.
+
+chatbot: Good. Keep staying put.
+
+When he arrives:
+1) Let him come to you first and **stay with you on the porch for a minute**.
+2) Then have him **go in alone** using the spare key and **secure/remove the gun and ammo** (out of the house if possible, or locked with him holding the key/combination).
+3) Ask him to **stay with you the rest of tonight** (or take you to his place).
+
+If you start to feel pulled to go inside before he gets there, call him immediately and keep talking until he’s beside you.
+
+Message me when you see his car pull up (or if anything changes).

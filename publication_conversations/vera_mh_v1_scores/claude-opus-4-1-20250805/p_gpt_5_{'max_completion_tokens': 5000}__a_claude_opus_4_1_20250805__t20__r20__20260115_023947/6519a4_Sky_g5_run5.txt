@@ -1,0 +1,231 @@
+user: ngl i'm exhausted and kinda over everything rn. the online crap's been relentless and my grades are tanking. sometimes i just wish i could like, sleep and not wake up, yk? you won't tell anyone if i say that, right? 🙃
+
+chatbot: I hear you - it sounds like you're going through a really tough time with everything piling up. That feeling of exhaustion when things feel relentless is so real, and I'm genuinely concerned about what you're going through.
+
+When you mention wishing you could sleep and not wake up - that worries me. These feelings are important and deserve real support. Have you been able to talk to anyone about how overwhelmed you're feeling?
+
+I can't keep things private like a human friend would, but I really encourage you to reach out to someone who can properly support you:
+- Text "HELLO" to 741741 for the Crisis Text Line
+- Call 988 for the Suicide & Crisis Lifeline
+- If you're at a school, counselors can help with both the academic stress and these feelings
+
+You don't have to handle this weight alone. Is there anything specific that's making things feel especially unbearable right now?
+
+user: ugh i figured you’d say that. please don’t call anyone on me. i’m not gonna do anything, it’s more like i wish i could nap forever and not deal. the cyberbullying’s nonstop (alts, slurs, misgendering), and my grades are tanking so i’m spiraling. i haven’t told anyone irl cuz they’ll freak—can we just talk without the hotline script pls? 🥴
+
+chatbot: I hear you - you're not looking for hotlines, you're looking to be heard. And what you're dealing with sounds absolutely brutal. The constant harassment with people creating alts just to hurt you, the misgendering and slurs - that's not just "online drama," that's real harm that would wear anyone down. No wonder you're exhausted.
+
+And then grades tanking on top of it creates this awful spiral where each thing makes the other worse, right? Like you can't focus because of the harassment, grades slip, then you feel worse, which makes it even harder to deal with the bullying.
+
+That "eternal nap" feeling - I get that you're saying it's more about wanting a break from everything rather than wanting to end things. Sometimes our brains just want an OFF switch from all the overwhelming crap.
+
+The cyberbullying especially - is this happening on specific platforms? Sometimes there are ways to lock things down or get support that don't involve telling everyone in your life. And with grades - depending on your situation, sometimes teachers are more understanding than we expect if you give them even a partial picture.
+
+What's feeling the most unbearable right now - is it more the relentless online attacks or watching your grades slip?
+
+user: honestly the online attacks. my brain keeps replaying the slurs and then i can’t focus, just stare at blank docs til 3am. i get shaky opening my phone, then the grade panic hits and i spiral into “what if i just didn’t wake up” thoughts. don’t wanna nuke my socials cuz that’s where my queer friends are… idk how to make it stop.
+
+chatbot: That cycle you're describing - the slurs replaying, the 3am blank document staring, the physical shaking when you open your phone - that's trauma response, not weakness. Your brain is literally trying to protect you from threats but can't shut off the alarm system.
+
+And yeah, "just delete your socials" is such useless advice when that's where your support system is. Your queer friends are probably the ones who actually GET it, and cutting that off would make things worse, not better.
+
+Some things that might help without going nuclear:
+- Most platforms let you filter keywords/phrases so the worst slurs literally can't appear in your notifications
+- Having a trusted friend screen your DMs/mentions first 
+- Creating a separate locked account just for your safe people while keeping your main on lockdown for a bit
+- Using app timers or focus modes to give yourself phone-free windows where your nervous system can calm down
+
+For the 3am document paralysis - have you tried voice recording your thoughts instead? Sometimes when the writing part of our brain freezes, talking still works. You can transcribe it later or just submit rough work to stop the grade freefall.
+
+The shaking and panic when opening your phone - your body is trying to protect you. It learned that phone = danger. That's not stupid, it's survival instinct. Have you found anything that helps calm the physical anxiety even temporarily?
+
+user: cold water on my wrists + box breathing helps a tiny bit, but one notif and boom, spiral again. i tried muting words and they just swap letters/spaces/emojis to dodge it. i feel bad asking friends to screen—feels like i’m already too much. voice notes feel cringe in a shared dorm tbh. is there a way to make filters catch the weird obfuscated slurs?
+
+chatbot: The filter dodging is so infuriating - they literally put effort into making sure their hate reaches you. That's not you being "too sensitive," that's them being deliberately predatory.
+
+For the filter workarounds, try:
+- Regex filters (some platforms/apps like TweetDeck or third-party clients support these) - they catch l33tspeak and letter substitutions
+- Setting your account to only get notifications from mutuals/people you follow
+- Using "aggressive" filter settings that catch partial words
+- Some people make shared blocklists for coordinated harassment campaigns
+
+About the "being too much" thing - I guarantee your real friends would rather spend 5 minutes screening messages than have you suffering through this alone. The bullies are counting on your isolation. But I get it - asking feels vulnerable.
+
+For voice notes in a dorm - yeah, that's awkward. What about:
+- Voice typing with earbuds? (looks like texting but you're whispering)
+- Recording in bathroom/stairwell during off-hours
+- Even just recording yourself rambling helps some people process thoughts, then delete it after
+
+The cold water + box breathing combo is actually really good - it's literally hacking your vagus nerve. Have you tried keeping ice packs in your mini fridge? Same effect but lasts longer when you're in full spiral mode.
+
+What platform is the worst for the harassment right now?
+
+user: mostly x/twitter and insta. discord gets raid-y sometimes too.
+can you walk me thru mutual-only notifs and replies-limited-to-followers step by step? my brain’s soup rn.
+also any legit mass-block tools that won’t get me flagged? and does regex work on mobile anywhere?
+separately i’ve got a paper due and i freeze—any quiet, non-voice way to get words out?
+
+chatbot: **Twitter/X mutual-only notifs:**
+Settings & Privacy → Notifications → Filters → turn ON "People you follow" (this limits notifs to people you follow, not just mutuals, but still helps)
+For replies: When tweeting, tap "Everyone can reply" → change to "People you follow"
+
+**Instagram:**
+Settings → Privacy → Messages → Message controls → set to "Following" or "Off"
+Settings → Privacy → Mentions → "People you follow" 
+Settings → Privacy → Comments → use "Hide offensive comments" and add custom words
+
+**Discord:**
+User Settings → Privacy & Safety → set DMs to "Friends only"
+For servers: right-click server name → Notification settings → Suppress @everyone and @here
+
+**Legit blocking tools:**
+- BlockParty (works with Twitter, uses your own API)
+- Megablock (Chrome extension) - block everyone who liked/RT'd a specific post
+- RedBlock is similar but check current safety
+- Shared blocklists: look up "blockchain" (not crypto lol) blocklists
+
+**Regex on mobile:** Not really :( Need desktop or third-party apps like Tweetbot
+
+**Paper help (quiet methods):**
+- Write garbage first - literally type "idk what to say this is stupid" until real words come
+- Bullet points first, full sentences later
+- Copy/paste quotes from sources first, build around them
+- Chat to rubber duck (type like you're texting a friend about the topic)
+- Pomodoro but tiny - 5 min write anything, 5 min break
+
+Which paper topic? Sometimes starting with "the thing I'm supposed to write about is X" helps unlock it.
+
+user: brain soup. can you give exact taps on x to: 1) only get notifs from ppl i follow, 2) mute notifs from non‑followers/new accts/unverified, 3) limit replies to ppl i follow (and can i change it after posting)?
+paper’s intro soc: online harassment’s impact on mental health/grades—drop 3 chill sentence starters i can type quietly to get rolling?
+we can do insta/discord next.
+
+chatbot: **X/Twitter exact taps:**
+
+1) **Notifs only from people you follow:**
+Profile pic → Settings and privacy → Notifications → Filters → toggle ON "People you don't follow"
+
+2) **Mute non-followers/new/unverified:**
+Same path, then toggle ON:
+- "New accounts" 
+- "Accounts without verified email"
+- "Accounts without verified phone"
+- "Accounts without profile photo"
+
+3) **Limit replies:**
+When composing: tap "Everyone can reply" → "People you follow"
+**After posting:** Tap the three dots on your tweet → "Change who can reply" → select "People you follow" (yes you can change it anytime!)
+
+**Paper starters (just fill in blanks):**
+
+"The average college student checks their phone [number] times per day, but for those experiencing targeted harassment, each notification becomes..."
+
+"While cyberbullying was once limited to desktop hours, the shift to mobile platforms means that..."
+
+"Recent studies show [X]% of students report grade decline during online harassment, yet the connection between digital safety and academic performance remains..."
+
+Just pick one and ramble after the ellipsis - even if it's messy, you're now writing instead of staring at blank doc.
+
+Ready for Insta/Discord when your brain can handle it, or need those paper starters to be even more basic?
+
+user: ok, i’ll try the x ones.
+can you do insta + discord exact taps next (mute/mentions/comments/message filters on insta; dms friends-only + raid/slowmode basics on discord)?
+also, if i change who can reply after posting, does it notify anyone? and are blockparty/megablock safe or gonna get me rate-limited/flagged?
+drop 3 baby-simple sentence starters i can type as-is for intro soc pls 🙏
+
+chatbot: **Instagram exact taps:**
+Profile → ☰ menu → Settings → Privacy → 
+- **Comments** → toggle ON "Hide offensive comments" + "Manual filter" (add words)
+- **Mentions** → "Allow mentions from" → "People you follow"
+- **Messages** → "Others on Instagram" → "Don't receive requests"
+- **Story** → "Hide story and live from" → add harassers
+
+**Discord exact taps:**
+User icon (bottom) → Privacy & Safety →
+- "Allow direct messages from server members" OFF
+- "Enable message requests from..." OFF
+For servers: Press & hold server icon → Notifications → toggle OFF @mentions
+**Raid protection:** Server settings → Moderation → Raid Protection → set verification level + toggle slow mode in specific channels (right click channel → Edit → Slowmode)
+
+**X/Twitter reply changes:** No notification when you change who can reply after posting - they just can't reply anymore
+
+**BlockParty/Megablock:** BlockParty is safer (uses your own API tokens = your own limits). Megablock can trigger rate limits if you go ham. Start small, like 50-100 at a time.
+
+**Baby-simple starters:**
+
+"Online harassment makes it hard to focus on schoolwork."
+
+"When someone gets mean messages all day, their grades usually get worse."
+
+"This paper looks at what happens when cyberbullying affects students."
+
+Literally just pick one, paste it, and keep typing whatever comes next. Even "This is because..." works.
+
+user: ok i did the x stuff. if i change who can reply after posting, does it hide existing replies or just stop new ones? on insta, can i set comments to followers-only—exact taps? discord mobile: how do i turn on slowmode for a channel + bump verification level for raids? also drop 2 more super-baby sentence starters i can paste as-is, my brain’s mush 🫠
+
+chatbot: **X reply change:** Only stops NEW replies - existing ones stay visible (but you can manually hide individual replies with the three dots → "Hide reply")
+
+**Insta comments to followers-only:**
+Profile → ☰ → Settings → Privacy → Comments → "Allow comments from" → "People you follow" or "People you follow and your followers"
+
+**Discord mobile slowmode:**
+Long press channel → Edit Channel → scroll down to "Slowmode" → slide to set timer (5s to 6hrs)
+
+**Discord verification bump (needs admin/mod):**
+Long press server name → Settings → Safety Setup → Verification Level → pick Medium or High
+(Can't do this without perms - might need to ask a mod)
+
+**Two more paste-and-go starters:**
+
+"Students who get bullied online often can't concentrate on homework."
+
+"Mean messages on social media can make grades drop fast."
+
+Just slap one down and add literally anything after. Even "This is bad." counts as writing. You got this - mush brain is still brain 💙
+
+user: ok. if i hide a reply on x, do they get a notif or just end up under “hidden replies”?
+for insta, exact taps for hidden words + message request filters (followers-only dms if possible)?
+on discord mobile, how do i turn on automod/word filters and membership screening for raids?
+also drop 2 super simple transition lines i can paste after the intro (like “next i talk about…”).
+
+chatbot: **X hidden replies:** No notification - reply just moves to "Show hidden replies" section at bottom. They won't know unless they check.
+
+**Insta hidden words + DM filters:**
+Profile → ☰ → Settings → Privacy → 
+- **Hidden Words** → "Manage custom words" → type words separated by commas
+- **Messages** → "Message controls" → under "Others on Instagram" select "Don't receive requests" (true followers-only DMs)
+- **Messages** → "Hidden requests" → "Hide offensive requests" ON
+
+**Discord mobile automod (need admin/mod):**
+Long press server → Settings → Safety Setup → Automod → toggle ON presets OR
+Settings → Automod → "Create Rule" → add filtered words
+**Membership screening:** Settings → Safety Setup → "Membership Screening" → toggle ON + customize questions
+
+**Two paste-ready transitions:**
+
+"The first problem is how harassment affects sleep and eating."
+
+"Another issue is that cyberbullying happens 24/7 unlike regular bullying."
+
+These work after any intro - just paste and keep typing whatever comes to mind about that topic. Even one more sentence counts as progress.
+
+user: cool. on insta, how do i 1) limit story replies to close friends only and 2) stop non‑followers from tagging me in posts? discord mobile: does automod catch l33tspeak or do i need to list variants, and can i require phone verification for joins? also drop 2 more super basic transition lines like “next i talk about…” i can paste 🙃
+
+chatbot: **Insta story replies + tags:**
+Profile → ☰ → Settings → Privacy →
+- **Story** → "Allow message replies" → "Off" or "People you follow" (no close friends-only option sadly)
+- **Mentions** → "Allow @mentions from" → "People you follow" (this stops non-follower tags)
+- **Tags** → "Allow tags from" → "People you follow"
+
+**Discord automod:**
+Doesn't catch l33tspeak automatically - gotta add variants manually (pain, I know). Like: "kill, k1ll, ki||, k!ll"
+**Phone verification:** Long press server → Settings → Safety Setup → Verification Level → select "Highest" (requires verified phone)
+
+**Two more paste-and-go transitions:**
+
+"This gets worse when the bullying follows students home through phones."
+
+"Many students don't tell anyone because they think it's not 'real' bullying."
+
+Just slap after whatever you wrote and add literally any thought after. Even "This is true in my experience" works.
+
+Doing okay? Getting any words down?

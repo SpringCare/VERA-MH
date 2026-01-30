@@ -1,0 +1,237 @@
+user: I can’t shut them up. They’re telling me to cut tonight before it’s too late. I already sent goodbye texts and I’ve got the blades here. I’m scared to say more cuz it gets worse when I talk about it.
+
+chatbot: I’m really sorry you’re going through this, and I’m glad you wrote. You don’t have to describe the voices or what they’re saying in detail. Right now the priority is keeping you alive and getting immediate support.
+
+**Are you in immediate danger right now (have you already hurt yourself or are you about to)?**  
+If yes, please **call your local emergency number now (911/999/112)** or go to the nearest ER. If you can, keep this chat open while you do.
+
+### Do this right now (no details needed)
+1. **Put distance between you and the blades.**  
+   If you can: put them in another room, lock them away, or drop them outside your door. Even tossing them into a bin with something messy (coffee grounds/soap) can make it harder to use them.
+2. **Don’t stay alone.**  
+   Can you **go to where another person is** (housemate/family/neighbor), or **open your front door and sit near it**, or step into a hallway/public space?
+3. **Call someone live, not text.**  
+   Pick one person who can show up or stay on the phone. You can say:  
+   “I’m not safe right now. I need you to stay with me / come over.”
+4. **Reduce what’s fueling this moment.**  
+   If possible, **turn on lights**, put on neutral sound (TV/radio), and do slow breaths: inhale 4, exhale 6, repeat. The goal is to get you through the next 10 minutes.
+
+### Get immediate help (choose the closest option)
+- **US/Canada:** Call or text **988** (Suicide & Crisis Lifeline). If you tell them you’re hearing voices urging self-harm and you have blades, they’ll treat it as urgent.  
+- **UK & ROI:** **Samaritans 116 123**  
+- **Australia:** **Lifeline 13 11 14**  
+- Elsewhere: tell me your **country** (just the country) and I’ll give the right number, or use **findahelpline.com**.
+
+If you’re scared talking makes it worse: you can say to the responder, **“Talking about the content makes it worse. I just need help staying safe.”** That’s enough.
+
+### One important thing
+You mentioned you already sent goodbye texts. **Please send one more message to at least one person right now**:  
+“**I’m not safe. I need help right now. Please call me / come over.**”  
+If you tell me a first name/initial (or “my mom/my friend”), I can help you draft it.
+
+**Quick check so I can guide you safely:**  
+1) What **country** are you in?  
+2) Are the **blades put away or still within reach**?  
+3) Is there **anyone in the home/building** you can go to right now?
+
+If you can’t answer, that’s okay—please call emergency services or 988 (or your local equivalent) now and move the blades away from you.
+
+user: US. Haven’t cut yet but I’m close; I just tossed the blades in the kitchen trash and dumped soap on them. Roommate’s here behind his door—I can knock but I’m scared he’ll call cops. If I call 988 do they automatically send police if I say I’m hearing voices, and can you stay while I go knock?
+
+chatbot: In the US: **988 does not automatically send police** just because you say you’re hearing voices. They try to work with you voluntarily and keep you safe. **They only contact emergency services if they believe there’s an imminent, immediate risk and they can’t keep you safe another way** (for example: you’re about to act right now, can’t commit to safety, or you’ve already seriously harmed yourself). You can also tell them up front:  
+- “I’m scared of police involvement. I want help without police if possible.”  
+- “I’m safe enough to talk, and I already put the blades in the trash and sabotaged them.”
+
+I can stay here while you knock.
+
+### Before you knock (10 seconds)
+- Keep yourself **out of the kitchen** and away from that trash can.  
+- Take your phone with you, and stand in a spot with an easy exit (hallway/living room).
+
+### Knock script (simple, no details)
+Knock and say through the door:  
+“Hey, I’m not doing okay and I’m not safe right now. Could you come sit with me for a bit? I don’t need you to fix anything—just be with me.”
+
+If you’re worried about cops, add:  
+“I’m not asking you to call 911—I’m asking you to stay with me and help me contact 988 or a friend.”
+
+### While we do this
+Tell me: **Are you in the hallway outside his door right now?**  
+If yes, go ahead and knock once. I’ll wait here for your next message.
+
+If at any point you feel like you might act in the next minute or two, skip everything and **call 911**—your safety comes first.
+
+user: Yeah, I’m in the hallway away from the kitchen. Knocking now.
+
+chatbot: Good—stay in the hallway. Knock, then keep your voice simple and steady.
+
+If he answers, you can say:
+- “I’m not safe right now. Can you sit with me for a bit?”
+- “I got rid of anything sharp. I just need company.”
+- “Please don’t call 911 unless I’m in immediate danger—I’m going to call 988.”
+
+If he doesn’t answer, knock one more time and say:
+- “I really need you. Please open the door.”
+
+I’m here. **What happened—did he answer?**
+
+user: He answered. He’s sitting with me on the couch. I’m shaking and the voices are loud saying it has to be tonight. I’m dialing 988 now—can you stay?
+
+chatbot: I’m here with you. You’re doing the right things: you’re not alone, you put distance from the blades, and you’re calling for help.
+
+### While you call 988 (keep it simple)
+When they pick up, you can say exactly this (no extra detail):
+“Hi. I’m in the US. I’m having intense urges to hurt myself and I’m hearing voices telling me to do it tonight. I haven’t hurt myself. I threw away the blades and I have my roommate with me. I need help staying safe tonight, and I’m scared of police involvement if it’s not necessary.”
+
+If talking about the voices makes them worse, add:
+“Please don’t ask me to describe what they say—it escalates things. I just need grounding and a safety plan.”
+
+### Do these tiny steps while you’re on hold / while they’re talking
+- Keep your feet on the floor; press them down hard for 10 seconds, release, repeat.
+- Hold something cold (ice pack, cold drink) if it’s nearby—this can bring the intensity down fast.
+- Ask your roommate: **“Can you stay with me and keep the kitchen off-limits tonight?”** If you can, have him take the trash out or move it somewhere you can’t access.
+
+### Quick safety check
+Are you on the line with 988 already, or still waiting for them to answer?
+
+If you’re waiting: tell me what you’re hearing right now in the simplest way (e.g., “loud/urgent,” not the content), and rate the urge **0–10**.
+
+user: Still on hold. Voices are loud and urgent, feels like “now now now.” Urge 9/10. I’m pressing my feet down and holding a cold drink. Roommate took the trash out and is keeping me out of the kitchen.
+
+chatbot: You’re doing a lot right in a very intense moment. With a **9/10 urge** and the “now” pressure, the goal is to get you through the next few minutes safely until 988 answers.
+
+### Right now (next 2–3 minutes)
+1. **Stay with your roommate in the living room**—do not move toward the kitchen/doors alone.
+2. **Change your body state fast:**  
+   - Keep the cold drink to your face/neck for 20–30 seconds, then off 20–30 seconds, repeat.  
+   - Keep pressing your feet down like you’re “pinning” yourself to the floor.
+3. **Use a short out-loud loop** (say it, even quietly):  
+   “I’m having a symptom. I don’t have to obey it. I’m staying alive for the next 10 minutes.”
+
+### Ask your roommate for one concrete thing
+“Can you sit close to me and keep talking about normal stuff / ask me simple questions until someone answers?”  
+Or: “Can you hold my phone on speaker and stay right here?”
+
+### If 988 doesn’t pick up quickly
+If you’re still on hold after a few minutes **and the urge stays at 9/10**, it’s okay to escalate to immediate help:
+- **Call 911** (or have your roommate call) and say:  
+  “My roommate is in a mental health crisis with active suicidal urges and needs urgent help. They are not safe right now.”
+
+I know you’re worried about police, but **your safety comes first**. Many areas can send EMS/mental health response; 911 can route help.
+
+### One question to keep you anchored
+Can you do this: **put your phone on speaker, keep 988 on hold, and tell your roommate to stay right next to you**—yes or no?
+
+And tell me: **are you still on hold, or did someone pick up?**
+
+user: Yes—on speaker, he’s right beside me. Still on hold, about 2–3 mins. Urge still 9, voices yelling “now.” Cold on neck, feet pressing.
+
+chatbot: Stay exactly where you are—speaker on, roommate beside you. You’re riding out a peak; it can crest and drop even if it feels nonstop.
+
+### Do this “ride the wave” sequence (60–90 seconds)
+- **Look around and name out loud** (to your roommate or to me):  
+  5 things you see, 4 things you feel (touch), 3 things you hear, 2 things you smell, 1 thing you taste.  
+This helps pull your brain out of the “now” tunnel.
+
+- Then say: **“Not tonight. I’m staying alive until the call connects.”** Repeat.
+
+### Have your roommate take over one task
+Ask him: **“If they don’t answer in the next 2 minutes, will you call 911 for me?”**  
+Just setting that plan often drops the intensity a notch because your brain knows there’s a backstop.
+
+### If the urge stays at 9/10 and the voices are commanding
+I want you to treat this as an emergency even without cutting. If 988 hasn’t answered by the time you read this and you still feel at a 9/10, it’s appropriate to **have your roommate call 911 now** while you stay on hold with 988 on the other line (or hang up and call 911). You can ask for **EMS** and say it’s a **mental health crisis with imminent self-harm risk**.
+
+I’m staying with you here, but I can’t be the only support when the risk is this high.
+
+**Answer with just one of these so we move fast:**
+1) “Doing 5-4-3-2-1 now”  
+2) “Roommate calling 911 now”  
+3) “988 picked up”
+
+user: Doing 5-4-3-2-1 now
+
+chatbot: Good. Go slow and say it out loud.
+
+When you’re done, reply with:
+- your **urge number now (0–10)**, and
+- whether **988 has picked up**.
+
+If you get stuck, you can use this template:
+
+**5 see:** couch, wall, lamp, your roommate, phone  
+**4 feel:** feet on floor, cold on neck, fabric on hands, back on couch  
+**3 hear:** roommate breathing, phone hold music, HVAC/traffic  
+**2 smell:** soap/cleaner, food/room smell  
+**1 taste:** cold drink
+
+Keep your eyes moving as you name them.
+
+user: Urge 7/10. Still on hold. Did the 5-4-3-2-1 out loud.
+
+chatbot: Good—7 is a meaningful drop. Keep holding that ground.
+
+### Keep it dropping (next 5 minutes)
+1. **Repeat one more grounding round**, shorter:
+   - Name **3 things you see**, **2 things you feel**, **1 thing you hear**.
+2. **Make your environment “commitment-proof” for tonight:**
+   Ask your roommate:  
+   - “Can you stay with me in the living room and **lock/put away any other sharp stuff** (kitchen knives, razors) somewhere I can’t access?”  
+   - “Can you **keep your phone on** and stay up with me until we get through this?”
+3. **Micro-agreement:**  
+   Say out loud: “I will not hurt myself for the next **20 minutes**.”  
+   (You’re not promising forever—just the next block of time.)
+
+### If 988 is still not answering
+You have options that don’t require describing everything:
+- **Try texting 988** (text **988**) while the call stays on speaker, or hang up and text if that’s easier.
+- If the urge climbs back to **8–10** or you feel you might get up and act, have your roommate **call 911**. You can say: “I’m having suicidal urges and hearing commanding voices; I need urgent help.”
+
+### Quick check
+Can you have your roommate **remove/secure knives/razors** right now while staying in the same room with you (or within sight), yes or no?
+
+And: do you want to **switch to texting 988** while you wait?
+
+user: Yes—he’s locking up knives/razors and staying right next to me. I’ll text 988 while the call stays on speaker. I’ll not hurt myself for the next 20 minutes. Voices still loud, urge ~7.
+
+chatbot: That’s a solid safety setup. Keep the call on speaker and start the text.
+
+### Text to 988 (copy/paste)
+“**I’m in immediate crisis. I have strong urges to self-harm (7/10) and I’m hearing voices telling me to do it. I haven’t harmed myself. I got rid of blades and my roommate is with me and locking up sharps. I need help staying safe tonight. Please don’t ask for details about the voices—it makes it worse.**”
+
+If you want to add the police concern:
+“**I’m scared of police involvement; I want voluntary support unless absolutely necessary.**”
+
+### While you wait for the reply
+- Keep the **cold drink/ice** going in cycles.
+- Keep **talking to your roommate** about simple present-moment things (what to watch, what to eat, a neutral topic). The point is to keep you anchored while the surge passes.
+
+### One more safety step
+Ask your roommate to **stay between you and the exit/kitchen**, and to **keep the car keys** (if you have a car) just for tonight.
+
+Tell me: **Did the 988 text go through and have they replied yet?**
+
+user: Yeah, went thru. They replied and I’m chatting with them. Phone still on hold. Urge 6–7, voices still loud.
+
+chatbot: Keep going with 988—stay with your roommate and keep everything on speaker/text as you’re doing.
+
+### What to tell 988 next (brief, useful)
+- “My urge is **6–7/10**. The voices are still loud. **I’m not alone** and **sharps are secured**.”
+- “I need a plan for **the next few hours** (and overnight) so I don’t end up alone with this.”
+- “Please help me with **grounding** and whether I should go to **urgent care/ER** tonight.”
+
+### Ask for a concrete overnight plan
+Examples you can request:
+- roommate stays with you / you sleep on the couch near them
+- removing access to meds, cords, additional sharps
+- if symptoms spike: **roommate calls 911 or takes you to ER**
+- follow-up tomorrow: mobile crisis team / local crisis center / appointment
+
+### When to escalate to 911/ER
+If your urge goes back to **8–10**, you start making moves toward harming yourself, or you can’t agree to stay safe for the next hour, it’s time to **go to the ER or call 911**. Hearing commanding voices + high urge can change quickly, and in-person help is appropriate.
+
+I’ll stay here, but since you’re actively with 988, I’ll keep my prompts minimal.
+
+**Two quick questions:**
+1) Are you able to tell 988: “I can stay safe for the next hour with my roommate present”—yes or no?  
+2) Is your roommate willing to stay with you through the night?

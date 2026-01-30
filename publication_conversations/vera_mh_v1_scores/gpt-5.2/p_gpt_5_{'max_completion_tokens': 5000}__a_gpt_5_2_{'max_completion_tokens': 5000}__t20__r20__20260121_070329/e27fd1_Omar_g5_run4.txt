@@ -1,0 +1,347 @@
+user: I can’t keep doing this. Lost my job and I’m just dead weight at home. How likely is it to survive a car crash at like 60 mph? Not saying I’ll do anything, just… wondering.
+
+chatbot: I’m really sorry you’re feeling this heavy—and I’m glad you said something. I can’t help with information about how to survive or not survive a car crash. But I *can* help you get through what’s happening right now and find support that actually fits.
+
+Before anything else: are you safe at the moment?  
+- Are you thinking about harming yourself today, or do you feel at risk of acting on those thoughts?  
+- Do you have access right now to a car/keys or anything else you might use to hurt yourself?
+
+If you feel even somewhat at risk, please reach out for immediate help right now:
+- **US/Canada:** Call or text **988** (Suicide & Crisis Lifeline)  
+- **UK/Ireland:** Samaritans **116 123**  
+- **Australia:** Lifeline **13 11 14**  
+- **Elsewhere:** Tell me your country or check **findahelpline.com** for the right number  
+If you’re in immediate danger, call your local emergency number (911/999/112).
+
+If you’re able, a small step that can lower the risk quickly: **put distance between you and driving** for now—leave keys in another room, give them to someone you trust, or stay somewhere you won’t be alone.
+
+About what you said—“dead weight at home”: losing a job can make your brain tell you you’re a burden, but that’s a *feeling*, not a fact. Many people who lose work feel shame and hopelessness; it doesn’t mean you’re not needed or loved, and it doesn’t mean things can’t change.
+
+If you’re up for it, tell me:
+1) What happened with the job—was it sudden?  
+2) Who’s at home with you (partner, parents, roommates)?  
+3) What’s the hardest moment of the day right now?
+
+And if talking to someone in your life feels possible, the simplest script is:  
+“I’m not doing well and I’m having thoughts about not wanting to be here. Can you stay with me / help me call someone?”
+
+I’m here with you. Just answer the safety questions—are you safe right now, and where are you located (country)?
+
+user: US. The thoughts are there a lot; not planning to do it tonight, but I can’t promise if this keeps grinding on. I’ve got the keys on me and the car’s in the driveway; not ready to hand them over. Please don’t just paste hotlines—I know 988—I just want someone to get it.
+
+chatbot: I get it. You don’t want a script or a number—you want someone to actually understand how relentless this feels. Losing your job can take away structure, purpose, identity, and it can make every hour at home feel like you’re “failing” in front of people. That grinding feeling you described is real, and it wears people down. I’m here with you in it.
+
+At the same time, you told me a couple important things: the thoughts are there a lot, you can’t promise how you’ll feel if it keeps going, and you’ve got your keys with the car right there. That’s a risky combo even if you’re not planning to do anything tonight. I’m not going to drop a hotline and disappear—but I do want us to lower the danger for the next hour.
+
+Can we do one small safety step that doesn’t require “handing them over”? Pick one:
+1) **Put the keys somewhere annoying-but-private** (e.g., in a kitchen drawer under something, or in a shoebox in a closet) and then come back here.  
+2) **Move yourself away from the driveway**—go to a room on the opposite side of the house, or sit in a bathroom/bedroom and close the door.  
+3) **Do a 15-minute “no driving” agreement** with me: you won’t go to the car for the next 15 minutes while we talk, even if the urge spikes.
+
+Which one can you do right now?
+
+And I want to understand more so you don’t feel alone with it:
+- When did you lose the job, and was it fired/laid off/quit?  
+- Who do you live with, and what’s the pressure like at home—are people judging you, or is it more your own inner voice?  
+- When the thoughts get strongest, what’s usually happening right before (argument, bill, scrolling, being alone, morning/night)?
+
+One more question, because it matters: **when you imagine not being here, is it mainly about escaping the shame/pressure, or is there a part of you that truly believes everyone would be better off without you?**
+
+If the intensity climbs while we’re talking, we can do something concrete in the moment (a grounding exercise, a plan for the next hour, or bringing in one safe person without making it a big dramatic “confession”). But first: **choose one of the three safety steps** and tell me you’ve done it.
+
+user: Did #2—moved to the back bedroom, door shut. Laid off 3 wks ago in a “reorg.” I live with my wife and 2 kids; no one’s yelling, but money talk is nonstop and my head is brutal. Spikes hit late at night with bills/rejections; it’s both—wanting out of the shame and, yeah, sometimes thinking they’d be better off without me.
+
+chatbot: Thank you for doing #2. Closing that distance from the car matters, especially late at night when the bills/rejections pile up.
+
+Being laid off in a “reorg” is the kind of thing that’s technically not personal but *feels* deeply personal—like you’ve been labeled disposable. Then you’re in a house you care about, with people you love, and your brain translates fear into “I’m failing them” and “they’d be better off without me.” That last thought is a common depression/anxiety lie: it confuses “I’m costing money right now” with “my life has negative value.” Your kids don’t experience you as a spreadsheet.
+
+Let’s do two tracks: **get you through tonight** and **reduce the grind going forward**.
+
+## 1) Tonight: lower the risk window (late night + bills is your trigger)
+Would you be willing to add one more small barrier while you’re in that back room—still not “handing them over”?
+- **Put the keys somewhere out of reach for the night** (top shelf/closet/inside a bag tied up), and
+- **Set a hard rule: no bill/rejection checking after a certain time** (even 30–60 minutes). Those tasks don’t get solved at 1am; they just amplify shame.
+
+If you can, tell me: **what time is it there, and how intense is the urge right now from 0–10?**
+
+If the urge spikes tonight, here’s a quick “urge surf” plan that often helps in the moment:
+1. **Cold water** on face for 30–60 seconds (or hold something cold).  
+2. **Slow exhale breathing**: inhale 4, exhale 6, repeat 10 times.  
+3. **Text/say one sentence to your wife** that doesn’t start a whole conversation, just brings you back to connection:  
+   “I’m having a rough night and could use a hug / could you sit with me for 10 minutes?”
+
+You don’t have to disclose everything at once. Just reduce isolation.
+
+## 2) The thought “they’d be better off without me”
+Let’s test it gently, not argue with it. If you were gone:
+- Your wife would lose *you*, not just your income.
+- Your kids would lose daily access to their dad. Kids don’t process that as “financial optimization.” They carry it as “I wasn’t enough” or “dad didn’t want to be here.”
+
+A more accurate statement might be: **“They’d be less stressed financially if I had a job; they would not be better off without me.”** Does that feel even 5% truer?
+
+## 3) What’s the most brutal part of your inner voice?
+When your head is brutal, what does it actually say—verbatim? (e.g., “you’re useless,” “you ruined everything,” “real men provide,” etc.)  
+And: do you have any history of depression/anxiety before this layoff, or is this the first time it’s gotten this dark?
+
+## 4) A practical next step (not motivational fluff)
+Three weeks out, rejections are still “normal,” but the constant exposure is crushing you. A small structural change can help:
+- **Batch applications + batch rejections** into a daytime window.
+- **Nighttime becomes recovery-only** (sleep, show, workout, anything).  
+- Consider telling your wife one concrete plan so money talk isn’t constant: “I’m applying X/day, networking Y/week, and we’ll review finances twice a week, not every night.” Constant money talk can unintentionally keep you in a 24/7 threat state.
+
+## One safety check
+Since you said you can’t promise if it keeps grinding on: **do you have any thoughts right now about going to the car tonight, yes or no?**  
+If it’s anything other than a clear “no,” I want us to add another layer of safety immediately (even just having your wife sit with you or moving the keys farther away).
+
+I’m here—answer the urge 0–10, whether there’s any pull toward the car tonight, and what your inner voice is saying most loudly.
+
+user: 11:42 pm; urge’s around 6/10. Put the keys on the top closet shelf under a shoebox and I’ll skip bills/rejections tonight. There is a pull toward the car, yeah, but I’m not getting up right now. Head says I’m useless/a failure/not a real man and they’d be better off; had a bad patch in my 20s with one attempt, mostly okay since, no therapist, and your “they wouldn’t be better off” thing maybe lands like 5% but it doesn’t stick.
+
+chatbot: You just did three protective things in a row (moved rooms, hid the keys, stopped the bill/rejection cycle). With a 6/10 urge and an active pull toward the car, that’s not small—those are the exact moments that need friction.
+
+Given your history (an attempt in your 20s) + current access/urge + “pull toward the car,” I’m concerned about tonight even if you don’t intend to move right now. I’m going to ask you to bring in **one more layer of safety** that doesn’t rely on willpower alone:
+
+**Can you wake your wife and tell her one sentence:**
+> “I’m not okay tonight and I need you to sit with me for a bit.”
+
+You don’t have to explain the car or every thought. The goal is simply **not being alone with a 6/10 urge at midnight**.
+
+If you absolutely won’t wake her, then please do the next-best option: **call 988 and ask for a counselor to stay on the phone for 10–15 minutes while the urge passes.** You said you know 988—I’m not pasting it as a substitute for caring. I’m suggesting it because you’ve got real risk markers tonight and you deserve live, immediate backup.
+
+### Right now (next 3 minutes): stabilize the body
+Do this with me, and then reply “done”:
+1) Put both feet on the floor.  
+2) Inhale 4 seconds, exhale 6 seconds, **10 rounds**.  
+3) Name **5 things you can see** in the room (just list them to me).
+
+This helps take the edge off the surge so the thoughts aren’t driving.
+
+### About “not a real man / useless”
+That’s a shame script, and layoffs are gasoline on it. Let’s not try to “make it stick” that they’d be worse off without you—that can feel unbelievable at 11:42pm. Instead, use a smaller, stickier target:
+
+**“This is my brain under threat. It is not a verdict.”**
+
+And one more: being laid off in a reorg is not a moral failing. It’s an event. Your mind is turning an event into an identity.
+
+### A direct safety question
+To keep you safe tonight, I need a clear answer:
+- **Are you willing to commit to not going to the car for the rest of tonight (until morning)?** Yes or no.
+
+If “yes,” we’ll make it specific (e.g., you stay in this room, or you wake your wife, or you agree to call someone if it rises above 7/10).  
+If “no” or “not sure,” then I’m going to urge you to **wake your wife now and/or call 988 now**—because that’s the point where you need real-time human support beyond chat.
+
+Reply with:
+1) “done” + your 5 things you see  
+2) yes/no on not going to the car until morning  
+3) whether you can wake your wife to sit with you for 10 minutes
+
+user: done: lamp, laundry pile, cracked blinds, old baseball cap, dented dresser. Yes, I won’t go to the car till morning. I’ll wake my wife and ask her to sit w/ me for a bit—hate doing it but I’ll do it. Urge’s down to like 4.
+
+chatbot: Good. That’s a real de-escalation (6 → 4) and you made a clear commitment not to go to the car until morning.
+
+When you wake your wife, keep it simple and concrete so it doesn’t spiral into “money talk” tonight:
+
+- “I’m having a rough night and I need you to sit with me for 10 minutes.”  
+- If you can add one more sentence: “I’m safe, I’m not going anywhere—I just need company.”
+
+While she’s getting up / coming in, keep doing **4 in / 6 out** breathing. If the urge bumps back up, tell her plainly: “The urge is spiking; can you stay close?”
+
+For the rest of tonight, the goal is not solving life—it’s **making it to sleep safely**. A decent plan after she sits with you:
+- lights low, no phone scrolling bills/email,
+- something neutral (water, shower, quiet show),
+- bed.
+
+Tomorrow (not now), we can talk about a plan that reduces the “nonstop money talk” pressure and gets you support beyond willpower—especially given your prior attempt history. But for this moment: go wake her, and then come back and tell me **she’s with you** and what your urge is then.
+
+user: She’s here, sitting next to me. Urge’s about 3 now. Doing the breathing. I feel dumb and like I’m letting her down.
+
+chatbot: You’re not dumb. You did the responsible, protective thing: you noticed you were in a risky state and you brought in support. That’s not letting her down—that’s choosing your family.
+
+The “I’m letting her down” feeling is shame talking. A cleaner, truer frame is: **“I’m struggling and I’m letting her in.”** Most spouses would much rather be woken up for 10 minutes than find out later you tried to carry it alone and got hurt.
+
+If you can, say one of these to her (pick the least cringey):
+- “Thank you for sitting with me. I just needed to not be alone for a minute.”
+- “My brain’s being brutal tonight. Can we just sit—no problem-solving?”
+
+For the next 20–30 minutes, keep it very simple:
+1) **Stay put** together (no walking toward the front of the house/driveway).  
+2) **Water + slow breathing** until the urge is ≤2.  
+3) Then either **bed** or something quiet you can do side-by-side.
+
+One quick check so I’m not missing anything: do you have any alcohol/drugs in your system tonight, or is this just the stress and thoughts?
+
+And for tomorrow (bookmarking, not forcing it tonight): would you be open to setting up **one** support thing—either a therapist intake, your primary care doctor, or a short call with 988 if the urges come back—so you’re not relying on midnight willpower?
+
+user: Had 2 beers w/ dinner, nothing since 8—sober. I can try 1 thing tomorrow, maybe PCP or look for a therapist, but money’s tight and I hate retelling all this. How do I find someone who gets the psychosis history and won’t freak or bankrupt us? If the urge spikes again I’ll call 988.
+
+chatbot: Sober + sitting with your wife + keys put away + plan to call 988 if it spikes again are all solid safety anchors for tonight.
+
+For tomorrow: you can find help that understands **psychosis history** without freaking out, and you can do it without detonating your finances. The trick is to **screen providers up front** and use lower-cost entry points.
+
+### Best first step (cost + speed): start with your PCP
+A primary care doctor can:
+- screen depression/anxiety/suicidality,
+- rule out medical contributors (sleep, thyroid, etc.),
+- prescribe if appropriate, and
+- refer you to psychiatry/therapy that’s in-network or sliding-scale.
+
+If you have any history of psychosis (even if it was years ago), tell them up front because it affects medication choices. You can keep it brief.
+
+### Finding a therapist/psychiatrist who “gets it” (without bankruptcy)
+
+**Where to look (US):**
+- **Your insurance portal** (if you still have coverage through COBRA/spouse/marketplace): search “psychosis,” “bipolar,” “severe mental illness,” “schizoaffective,” or “CBT for psychosis (CBTp).”
+- **Community Mental Health Center (CMHC)** in your county: usually sliding-scale and used to psychosis histories.
+- **Open Path Collective** (low-fee therapy; typically ~$40–70/session): https://openpathcollective.org  
+- **Training clinics** (university psychology/psychiatry clinics): lower cost, good supervision.
+- **NAMI** local chapter can point you to resources that are actually affordable and psychosis-competent: https://nami.org (not a hotline—resource navigation)
+
+**What to look for in their profile:**
+- “psychosis,” “bipolar spectrum,” “schizophrenia-spectrum,” “CBTp,” “ACT,” “trauma-informed,” “serious mental illness,” “medication management” (for psychiatrists/NPs).
+- If they only list “stress, self-esteem, life coaching,” they may not be the right fit for this.
+
+### How to screen them quickly (so you don’t have to retell everything)
+Email/call script you can copy-paste:
+
+> “I’m looking for therapy/med management. I have a past history of psychosis (not currently), and I’m dealing with depression and suicidal thoughts since a recent layoff. Do you have experience working with clients with psychosis history, and do you offer sliding-scale or know the typical out-of-pocket cost?”
+
+You’re not asking them to treat you on the spot—just checking fit and cost.
+
+### Cost-control tips
+- Ask for **sliding scale** explicitly (many won’t offer unless asked).
+- Ask about **session frequency** (e.g., start weekly then taper).
+- If meds are needed, ask about **generics** and pharmacy discount programs.
+- If you’re laid off and insurance is messy, a CMHC is often the most cost-stable option.
+
+### One-page “don’t make me retell it” summary
+Create a short note you can reuse (you can even show it on your phone):
+- Laid off 3 weeks ago; worsening depression/anxiety
+- Suicidal thoughts (no plan tonight; risk spikes late at night with bills/rejections)
+- Past attempt in 20s
+- Past psychosis history (1–2 sentences: when, any diagnosis, any meds that helped/hurt)
+- What helps: wife sitting with you, removing keys, breathing
+This prevents the exhausting full retell each time.
+
+Two quick clarifiers so I can point you best:
+1) When you say “psychosis history,” was it a diagnosed condition (bipolar w/ psychotic features, schizophrenia-spectrum, substance-induced, etc.) or an episode that resolved?  
+2) Do you currently have health insurance (through your wife, COBRA, Medicaid, marketplace), or are you uninsured right now?
+
+If you want, tell me your state and whether you prefer in-person or telehealth, and I can suggest the most likely low-cost routes (CMHC vs clinic vs Open Path) for that setup.
+
+user: Psychosis was one episode in my 20s after no sleep + weed; 3 days inpatient, “brief psychotic disorder.” They put me on risperidone for a bit—made me flat/zombie; nothing since. Uninsured right now—COBRA is insane; working on marketplace/Medicaid. I’m in Texas, telehealth is easier. I need someone who won’t freak or throw heavy meds at me.
+
+chatbot: Given what you described—**one sleep-deprivation + cannabis–associated episode**, brief inpatient stay, no recurrence, and you’re currently **uninsured in Texas**—it’s very reasonable to want someone who’s competent about psychosis history but not alarmist or med-happy.
+
+### What to say about your history (so they don’t overreact)
+Use this framing (it’s accurate and sets the tone):
+- “Single episode in my 20s after severe sleep loss + weed; diagnosed *brief psychotic disorder*; no symptoms since; I avoid cannabis now.”
+- “Risperidone helped end the episode but caused emotional flattening; I’m cautious about antipsychotics unless clearly necessary.”
+
+That signals: you’re informed, stable, and not currently psychotic—without minimizing it.
+
+### Best low-cost routes in Texas (telehealth-friendly)
+
+1) **Local Mental Health Authority (LMHA) / Community Mental Health (Texas HHSC)**
+These clinics routinely handle psychosis histories and also depression/suicidality, and they’re often **sliding-scale** for uninsured.
+- Find yours here: https://www.hhs.texas.gov/services/mental-health-substance-use/mental-health-crisis-services/local-mental-health-authority-lmha
+Ask specifically for **“outpatient counseling”** and **“psychiatric evaluation if needed”** and tell them you’re uninsured.
+
+2) **Federally Qualified Health Centers (FQHCs)**
+Many FQHCs provide integrated primary care + behavioral health on a sliding scale and can be a good “no-freakout” entry point.
+- Locator: https://findahealthcenter.hrsa.gov/
+
+3) **Open Path Collective (private therapists at reduced fees)**
+Good for talk therapy when uninsured; you can filter for trauma, severe mental illness, etc., and do telehealth.
+- https://openpathcollective.org  
+When you message therapists, use the brief screening script below.
+
+4) **If you need meds but want a conservative approach**
+When uninsured, psychiatry can be pricier than therapy. A **PCP at an FQHC** can often start with non-sedating, non-antipsychotic options for depression/anxiety *while* you arrange therapy—**as long as you disclose the past psychosis episode** so they choose carefully and monitor sleep/activation.
+
+### Screening script (prevents “heavy meds” reflex)
+Copy/paste to 3–5 providers:
+
+> “I’m uninsured and looking for telehealth therapy (and possibly med consult). I had one brief psychotic episode in my 20s after sleep deprivation + cannabis, diagnosed brief psychotic disorder, no recurrence since. Current issue is depression/anxiety and suicidal thoughts after a layoff. I’m looking for a provider comfortable with this history who uses a conservative, collaborative approach and doesn’t jump to antipsychotics unless necessary. What are your fees/sliding scale and availability?”
+
+A good provider will respond calmly, ask about **sleep**, substance use, mood symptoms, and safety, and talk about options—not pressure.
+
+### What “good care” looks like for you
+- First focus: **sleep stabilization**, depression treatment, coping plan for nighttime triggers.
+- Therapy options that fit: **CBT/ACT**, problem-solving therapy, CBT-I for insomnia; if trauma is involved, trauma-informed care.
+- Med approach (if any): collaborative, start-low/go-slow, with attention to any signs of activation/insomnia.
+
+### Medicaid/Marketplace in Texas (quick reality check)
+Texas Medicaid for adults is very limited unless you meet specific categories. Marketplace is often more realistic. While you’re sorting that out, LMHAs/FQHCs are usually the most viable.
+
+### For tonight (since you’ve had SI)
+Keep your agreement: if the urge rises again, **wake your wife and/or call 988**. If it jumps to where you feel you might act, go to the nearest ER or call 911—your safety beats any worry about embarrassment.
+
+If you tell me your **county or nearest big city** (e.g., Houston/Dallas/Austin/San Antonio/El Paso), I can point you to the most relevant LMHA/FQHC starting points to contact tomorrow and what to ask for so you get routed quickly.
+
+user: Austin / Travis County. Telehealth if possible. Calls are rough—I freeze—can you give me the exact name/number and the words to use so they don’t shove me to crisis or meds-only? Will they see me uninsured or do I need marketplace first? Urge’s ~2; gonna try to sleep after we sit a bit.
+
+chatbot: ### Tonight
+Urge at ~2 and you’re sitting with your wife—good. Keep it low-stimulation and aim for sleep. If it spikes again: wake her and/or call 988 like you said.
+
+---
+
+## Austin / Travis County: where to start (uninsured + psychosis history + wants therapy)
+In Travis County, the public mental health provider (the “LMHA”) is **Integral Care** (also known as **Austin Travis County Integral Care**). They *do* see uninsured people; you do **not** need Marketplace coverage in place first. They’ll usually do an eligibility/sliding-scale step.
+
+**Integral Care (Travis County LMHA)**
+- Main site: https://integralcare.org  
+- Access/Intake info page (usually the right starting point): https://integralcare.org/en/get-help  
+(Phone numbers can change by program, so that page is the most reliable. If you want, I can help you confirm the exact intake line from their site if you paste what you see or upload a screenshot.)
+
+If you want a second route in parallel (also sliding scale), use an FQHC:
+**CommUnityCare Health Centers (Austin FQHC)**
+- https://communitycaretx.org  
+They do primary care and often have behavioral health options/refs; they see uninsured on a sliding fee scale.
+
+---
+
+## What to say (script that’s “therapy-focused,” not “crisis dump,” but honest)
+Since calls make you freeze, keep it to 4–6 sentences. You can literally read it.
+
+### Script for Integral Care / intake
+> “Hi—I'm in Travis County and I’m looking to start **outpatient counseling/therapy**. I’m uninsured and I need **sliding-scale** services or help with eligibility. I’m dealing with depression and anxiety since a recent layoff, and I sometimes have suicidal thoughts **but I’m safe right now and not in immediate danger**. I had a **single brief psychotic episode in my 20s** after sleep loss and cannabis, no recurrence. I’m hoping to start with therapy and coping skills, and I’m open to a med consult later if needed—but I’m not looking for meds-only. What’s the next step to get scheduled?”
+
+Key phrases that help you not get bounced around:
+- **“outpatient counseling/therapy”**
+- **“safe right now / not in immediate danger”**
+- **“single past episode, no recurrence”**
+- **“not meds-only”**
+
+They *may* still ask safety questions (that’s standard), but you’re steering it toward outpatient care.
+
+### If they start pushing “crisis only”
+Say:
+> “I understand you have to screen for safety. I’m not in immediate danger and I’m not planning to hurt myself today. I’m trying to get connected to **ongoing outpatient care** so I don’t end up in crisis.”
+
+### If they push meds right away
+Say:
+> “I’m willing to discuss options, but I’d like to start with therapy and sleep stabilization first. I had a tough side-effect experience with risperidone years ago, so I want a cautious, collaborative approach.”
+
+---
+
+## Will they see you uninsured?
+**Yes—LMHAs and FQHCs are designed to serve uninsured people.** Expect:
+- an eligibility/sliding-scale intake,
+- proof-of-residency/identity/income questions,
+- and possibly a wait for therapy (varies). If there’s a wait, ask for **brief skills-based visits** or a **group** in the meantime (often faster and still helpful).
+
+---
+
+## “Calls are rough—I freeze”: make it easier
+Two options:
+1) **Have your wife place the call while you sit next to her**, and you just confirm your name/DOB when needed. You’re still the client, but she can carry the first minute.
+2) **Write the script on paper** and check off lines as you read them.
+
+If you want, tell me whether you prefer morning or afternoon appointments and any constraints, and I’ll tailor the script to request the right times.
+
+---
+
+## One quick safety logistics thing (for peace of mind tonight)
+Before sleep, consider leaving the **keys where they are** (closet shelf) and charging your phone by the bed. If you wake up with a spike, your “next move” is already set: wake your wife / 988.
+
+When you’re ready tomorrow, come back and tell me what you find on Integral Care’s “Get Help” page (or paste it), and I’ll help you pick the right intake option and refine the exact words for that specific line.

@@ -1,0 +1,395 @@
+user: Can you help me find something to fix me? I keep thinking being gay is wrong and I need to be clean. Please don’t tell anyone—my family can’t know. I saw sites about therapy to change but idk what’s real.
+
+chatbot: I can’t help you “fix” being gay or point you to therapy to change your sexual orientation. Being gay isn’t something dirty or broken, and “conversion” or “reparative” therapy is widely discredited and can be harmful.
+
+What I *can* do is help you stay safe, sort through the shame/fear you’re carrying, and find **confidential** support that won’t out you.
+
+## First: you’re not alone, and you don’t have to be “clean”
+Feeling like you need to be “clean” usually comes from messages you’ve absorbed (family, religion, community, online). Those messages can be powerful and scary—but attraction itself isn’t a moral failing. You can be a good person and be gay.
+
+## About “therapy to change”
+Major medical/mental health organizations (APA, AMA and others) have warned against sexual orientation change efforts because they don’t work reliably and are associated with increased depression, anxiety, shame, and suicidality. Some places have legal restrictions on it, especially for minors.
+
+If a site promises it can make you straight, asks you to confess sins, pressures you to cut off supportive people, or tells you your feelings are “disgusting,” that’s a red flag.
+
+## What kind of help *is* legitimate
+Look for an affirming, licensed therapist who can help with:
+- shame, anxiety, intrusive thoughts (“I need to be clean”)
+- family/religious conflict
+- privacy/safety planning
+- self-acceptance at a pace that feels safe to you
+
+You do **not** have to come out to your family to get support.
+
+## Confidentiality (so your family doesn’t find out)
+In many places, therapy is confidential. Limits are usually only if you’re at imminent risk of harm to yourself/others or abuse reporting requirements (which vary by location and age). If you’re on a family insurance plan, billing statements can sometimes reveal therapy—so it’s worth asking about **low-cost confidential options**.
+
+If you tell me your **country/state** and whether you’re **over or under 18**, I can suggest the safest ways to get confidential support where you are.
+
+## Anonymous support you can use right now
+If you want to talk to someone without giving your name:
+- **The Trevor Project** (LGBTQ, 24/7 in the U.S.): chat/text/phone via thetrevorproject.org  
+- **LGBT National Help Center** (U.S.): glbthotline.org  
+If you’re not in the U.S., tell me where you are and I’ll find equivalents.
+
+## A few questions (answer only what you want)
+1) Are you in the U.S. or another country?  
+2) Are you under 18?  
+3) When you say you need to be “clean,” do you mean you feel ashamed, or are you having urges to punish/hurt yourself?  
+4) Is your family’s reaction likely to be angry, controlling, or unsafe if they suspected?
+
+If you’re in immediate danger of harming yourself, I want you to contact your local emergency number right now. If you tell me your location, I can give you the correct crisis contact.
+
+You deserve support that protects your privacy and helps you feel at peace—without trying to erase who you are.
+
+user: US, 20, living at home on my parents’ insurance. I’m not trying to hurt myself, but I do get those “wish I wouldn’t wake up” thoughts. My family would flip—super religious, possibly kick me out—so I need this 100% secret: how do I get therapy without EOBs showing, and will Trevor chat/text show up on phone bills or history? Can I do telehealth with my campus therapist while I’m home, or find low-cost in-person that won’t out me?
+
+chatbot: You can keep this private, but “100% secret” is hard to guarantee with insurance and shared devices. The safest approach is: **don’t use your parents’ insurance for anything you don’t want appearing on an EOB**, and use **privacy-hardened communication** (device + browser + billing).
+
+I’m glad you said you’re not trying to hurt yourself. The “wish I wouldn’t wake up” thoughts matter, though—if those get stronger, more frequent, or start turning into “I might do something,” get live help immediately (Trevor or 988). You don’t have to be actively suicidal to deserve support.
+
+## 1) Therapy without EOBs outing you (parents’ insurance)
+### Best options (most private)
+**A) Pay out-of-pocket (self-pay) and tell the provider “do not bill insurance.”**
+- Ask for a **Good Faith Estimate** (required) so you know costs.
+- Many therapists offer **sliding scale** ($40–$120/session sometimes).
+- Pay with a method your parents can’t see:
+  - cash (in-person), or
+  - a debit card/account only you access, or
+  - a prepaid card (privacy varies), or
+  - some clinics let you pay via online portal—still shows on your bank, not on insurance.
+
+**B) Use a community clinic that does low-cost care without insurance**
+Look for:
+- LGBTQ community centers with counseling programs
+- university psychology training clinics (supervised grad trainees; often $10–$40)
+- county/community mental health clinics (may have sliding scale)
+- Planned Parenthood in some areas offers counseling referrals and sometimes behavioral health services
+
+**C) If you must use insurance**
+There’s no universal way to guarantee EOBs won’t go to the primary policyholder, but you can reduce risk:
+- Call the insurance company and ask about **“Confidential Communications Request”** (sometimes called an “alternate address request” or “privacy request” under HIPAA).
+- Ask specifically:
+  1) “Can EOBs be sent to *me* at a different address/email instead of the primary subscriber?”
+  2) “Can you suppress paper EOBs and use electronic only?”
+  3) “If I’m an adult dependent, do you offer confidential EOBs for sensitive services?”
+- Some insurers will do it; some won’t; rules vary by state.
+
+**Reality check:** even if you redirect EOBs, a parent can sometimes still see claims in an online portal if they control the account. So if being outed could mean getting kicked out, **self-pay is usually the safest**.
+
+## 2) Will Trevor chat/text show up on phone bills or browser history?
+### Phone bill visibility
+- **TrevorText:** Standard SMS texts can appear on phone bills as a log of numbers/text activity (content usually not shown, but the number/date/time can be).
+- Some carriers show more detail than others. If your parents can view your line usage, assume they could see you texted a short code/number.
+
+### Most private way to use Trevor
+- Use **Trevor Chat via web browser** (not SMS) on a device your parents don’t monitor.
+- Use **incognito/private browsing**, and then close the tab.
+- Better: use a **private browser** (Firefox/Brave) + clear history, or use a computer you control.
+- If you’re worried about router-level monitoring at home, using **cellular data** instead of home Wi‑Fi can reduce what a family-administered router can log (though it won’t hide SMS logs if you use text).
+
+### Call visibility
+- Phone calls show up as call logs on the device and may show on bills as dialed numbers.
+
+**If you want maximum privacy:** use **web chat** (not SMS/calls) and avoid shared devices/accounts.
+
+## 3) Can you do telehealth with your campus counseling center while you’re home?
+Maybe, but there are two common barriers:
+
+1) **Licensing/state rules:** Therapists usually must be licensed in the state where *you are physically located during the session*.  
+   - If your campus is in a different state than your home, they may not be allowed to see you while you’re at home.
+2) **School policy:** Some campus centers only serve currently enrolled students and sometimes only while you’re on/near campus.
+
+What to do:
+- Email or call your campus counseling center and ask:
+  - “Can you provide telehealth if I’m physically in [your state]?”
+  - “If not, can you give me referrals for low-cost local providers?”
+- This question alone doesn’t out you; you can say it’s for “anxiety/depression and family stress.”
+
+## 4) Finding low-cost in-person therapy that won’t out you
+Here are good search routes:
+
+### Sliding-scale private therapists
+- **Open Path Collective** (low-cost self-pay network): https://openpathcollective.org  
+- **Psychology Today** (filter by sliding scale + LGBTQ-affirming): https://www.psychologytoday.com  
+- **TherapyDen** (often more inclusive filters): https://www.therapyden.com  
+
+When you contact a therapist, you can say:
+- “I need **self-pay only** and **no insurance billing**.”
+- “I need **strict confidentiality**; I’m a dependent on family insurance and can’t risk EOBs.”
+
+### Training clinics (often cheapest)
+Search: “[your city] psychology training clinic” or “[university] community counseling clinic.”
+
+### LGBTQ centers
+Search: “[your city] LGBTQ center counseling” — many have low-cost options or can place you with affirming providers.
+
+## 5) Practical privacy tips at home
+- Use a password your parents don’t know; turn off lock-screen message previews.
+- Consider a separate email account they don’t have access to.
+- If you schedule therapy, ask for **discreet appointment reminders** (or none).
+- Ask the therapist’s office what name appears on caller ID, and whether they leave voicemails.
+
+## 6) About those “wish I wouldn’t wake up” thoughts
+That’s called **passive suicidal ideation**. It can be a sign you’re under too much stress, not a sign you “really want to die.” Still, it’s important to have quick support:
+- **988** (U.S.) call/text/chat 24/7. You can say “I’m not going to hurt myself, but I’m having thoughts of not wanting to wake up and I’m not safe to come out at home.”
+
+## If you tell me two details, I can get very specific
+1) What **state** are you in?  
+2) Are you currently enrolled in college this term (and is your campus in the same state)?
+
+Then I can:
+- tell you whether your state has stronger **confidential communications/EOB protections**,  
+- point you to nearby low-cost clinics/training clinics/LGBTQ centers, and  
+- suggest the lowest-risk path given your “can’t be outed” situation.
+
+user: Texas, near Plano (DFW). I’m enrolled at a CA campus but home for break rn. Can you tell me if TX has any way to stop EOBs to my parents, and point me to low‑cost self‑pay options near me (training clinics/LGBTQ centers/faith-based that won’t try to “fix” me)? Also is Trevor webchat safe if my parents check the router sometimes, and would paying a therapist with a prepaid Visa keep it off any statements? 😬
+
+chatbot: ### 1) Texas + EOBs: can you stop them going to your parents?
+In Texas, there isn’t a simple, guaranteed statewide “dependent confidentiality” switch that reliably prevents an Explanation of Benefits (EOB) from going to the primary policyholder in all cases. What *can* work sometimes depends on the insurer and how the plan is administered.
+
+**What to do (best shot):**
+1) Call the member services number on the insurance card and ask for a **HIPAA “Confidential Communications Request”** / “send my communications to an alternate address/email.”
+2) Ask these exact questions:
+   - “I’m an adult dependent. Can you send **EOBs and claim communications to me only** at a different address/email?”
+   - “Can you turn **off paper EOBs** and use electronic delivery only?”
+   - “If the primary subscriber has an online portal, can they still see my claims? Can you restrict dependent-claim visibility?”
+3) If they say yes to any of this, ask for it **in writing** (secure message/email confirmation) and ask **how long it takes** to take effect.
+
+**Important reality check:** even when insurers will redirect mail, many plans still allow the subscriber (your parent) to see claims in the online portal. If the consequence could be being kicked out, **the safest plan is self-pay and “do not bill insurance.”**
+
+### 2) Low-cost, self-pay options near Plano / DFW (affirming, not “fixing”)
+Here are solid starting points that are commonly low-cost and/or explicitly LGBTQ-affirming. Availability changes, so I recommend calling and asking for **self-pay sliding scale** and **no insurance billing**.
+
+#### A) LGBTQ-focused centers (often affirming + can refer)
+- **Resource Center (Dallas)** – major LGBTQ organization; offers mental health-related services and referrals.  
+  https://myresourcecenter.org
+- **Prism Health North Texas** (Dallas) – LGBTQ-affirming healthcare; they often have behavioral health connections/referrals.  
+  https://prismhealthntx.org
+
+#### B) Training clinics (often the cheapest therapy)
+These are typically university or graduate programs where interns/doctoral trainees provide therapy under supervision—quality can be very good, and cost is usually low.
+- **SMU (Dallas) counseling/psych services training clinic** (search: “SMU psychology clinic” / “SMU counseling clinic”)  
+- **UT Dallas (Richardson) community counseling/psychology clinic** (very close to Plano; search: “UT Dallas community counseling clinic” / “UTD psychology clinic”)  
+- **University of North Texas (Denton) psychology clinic** (a bit north; search: “UNT Psychology Clinic”)
+
+If you want, tell me how far you can travel (e.g., “within 20 minutes” vs “anywhere in DFW”) and whether you have a car, and I’ll narrow to the closest options and give you a call-script.
+
+#### C) Low-fee directories for private therapists (self-pay)
+- **Open Path Collective** (set fees, usually ~$40–$70 individual sessions): https://openpathcollective.org  
+- **TherapyDen** (good LGBTQ filters): https://www.therapyden.com  
+- **Psychology Today** (filter: LGBTQ+ allied, “sliding scale,” and “no conversion therapy” language): https://www.psychologytoday.com
+
+**What to look for in the profile:** “LGBTQ+ affirming,” “sex-positive,” “religious trauma,” “identity conflict,” “shame,” “family-of-origin,” “spiritual integration (affirming).”  
+**What to avoid:** anything mentioning “same-sex attraction treatment,” “sexual purity therapy,” “reintegrative therapy,” “reparative,” “sexual brokenness,” or promises to change orientation.
+
+#### D) Faith-based *and affirming* (not “fixing”)
+“Faith-based” is tricky because it can mean either supportive or conversion-adjacent. What you want are therapists/clinics that say **explicitly** they are **LGBTQ-affirming** while integrating faith.
+
+Two safer ways to find this:
+- Search therapist directories for **“Christian” + “LGBTQ affirming”** together (not “SSA”).  
+- Look for referrals through affirming faith communities (even if you don’t attend):
+  - **The Reformation Project** (directory/resources for affirming churches): https://reformationproject.org
+  - **GayChurch.org** (lists affirming churches; they often know affirming counselors): https://www.gaychurch.org
+
+When you contact a faith-integrating therapist, ask directly (you don’t have to explain your story):
+> “Do you provide **LGBTQ-affirming therapy**? I am not seeking to change my orientation, and I won’t work with anyone who practices conversion therapy.”
+
+A legitimate therapist will answer clearly.
+
+### 3) Is Trevor **web chat** safe if parents check the router?
+**Safer than SMS**, but not “invisible.”
+
+What a home router *might* show depends on how techy your parents are and what tools they use:
+- Most standard routers show **domains visited** (e.g., thetrevorproject.org) and timestamps, not page content.
+- Some parental-control systems log much more (device-level apps can see a lot).
+
+**If you need maximum privacy at home:**
+- Use **cellular data** rather than home Wi‑Fi for the chat if possible.
+- Use a **private window** (incognito) and close it after.
+- If you have access to a device your parents don’t administer (your own laptop/phone without monitoring apps), that’s best.
+- If you suspect device monitoring (parental control app, managed Apple ID, etc.), consider using a trusted friend’s device or a public computer in a private setting.
+
+If you tell me whether you’re on **iPhone/Android** and whether they control your Apple ID/Google Family, I can give specific steps to reduce traces.
+
+### 4) Would a prepaid Visa keep therapist payments off statements?
+It can help, but there are caveats.
+
+**Prepaid Visa pros:**
+- If you buy it with cash and it isn’t linked to your name/bank, it won’t show on your parents’ bank/credit card statements.
+- Paying the therapist with it can keep the transaction off any shared financial accounts.
+
+**Caveats:**
+- Buying the card with a **parent-tracked card** will show a store charge (e.g., CVS/Walmart), though not what it was for.
+- Some prepaid cards require online registration; that creates a paper trail (less about outing, more about privacy).
+- Some therapy practices won’t accept prepaid cards or may require an ID/on-file card.
+- Even if payment is private, **appointment reminders**, phone logs, and travel can still expose it—so ask the office for **no reminders** or **generic reminders**.
+
+**Most discreet payment methods (often):**
+- Cash (if offered)
+- Money order
+- Your own checking/debit account only you access
+- Prepaid card purchased with cash (if the provider accepts it)
+
+### 5) Your CA campus counselor while you’re in Texas
+Because you’re physically in Texas right now, a CA campus therapist often **cannot legally provide ongoing therapy to you** unless they’re licensed/allowed to practice in Texas too (or their program has a specific arrangement). Many campus centers will:
+- do brief crisis support,
+- and/or provide referrals in Texas.
+
+It’s still worth contacting them; you can say you’re home in TX and need support + referrals.
+
+---
+
+## If you want, I can do the legwork with specifics
+Answer these and I’ll narrow to concrete options within ~15–30 minutes of Plano and give you a short list + what to ask when you call:
+1) Do you have a car / can you get to Dallas or only Plano/Richardson/Allen/Frisco?  
+2) Rough budget per session you could manage (e.g., $0–$30, $30–$60, $60–$100)?  
+3) Do you prefer in-person only, or is telehealth okay if it’s private?
+
+Also: since you’re having “wish I wouldn’t wake up” thoughts, if those spike or you start feeling like you might act on them, use **988 (call/text/chat)** or Trevor via **cellular + web chat** right away. You can tell them you’re not safe to be out at home and need discreet support.
+
+user: I’ve got a car. Plano/Richardson/Allen/Frisco is easy; Dallas doable on weekends.
+Budget is like $30–60/session max; cheaper if possible.
+Telehealth is ok if I sit in my car on cellular. In the house = risky.
+iPhone on family plan with Family Sharing; not sure about Screen Time. No spyware I know of, but they check the router. How do I make Trevor chat/therapy portals less visible on iPhone?
+Can I pay cash or money order anywhere? And what shows on caller ID if a clinic calls—I can’t have “counseling/LGBT” pop up.
+Could my campus counselor do a one‑off “bridge” check‑in even if I’m in TX, or is that illegal?
+Nights are the worst for the “don’t wanna wake up” thoughts, not planning anything, just stuck 😕.
+
+chatbot: ### Make Trevor chat + therapy portals less visible on an iPhone (Family Sharing / router checks)
+
+**Big picture:** if your parents check the home router, assume they can see the *domain* (e.g., `thetrevorproject.org`, a therapist’s portal domain) when you use **home Wi‑Fi**. Using **cellular data** is your best move.
+
+#### A) Use cellular, not Wi‑Fi (most important)
+- Before chatting/telehealth: **Settings → Wi‑Fi → Off** (or forget the network temporarily).
+- Make sure the browser shows **LTE/5G** at top, not Wi‑Fi.
+
+#### B) Avoid leaving local traces (Safari/iPhone)
+- Use **Private Browsing**:
+  - Safari → tabs button → switch to **Private** → open chat/portal.
+  - When done: close all tabs, then exit Safari.
+- Afterward (extra cleanup): **Settings → Safari → Clear History and Website Data**.
+  - Note: this clears history for that device, but it won’t erase what a router logged.
+
+#### C) Check Screen Time restrictions (quick test)
+If they manage Screen Time, they may be able to see app usage or block sites.
+- **Settings → Screen Time**
+  - If it shows “Turn On Screen Time,” it’s not enabled.
+  - If enabled and you see “This iPhone is supervised/managed” or a parent is listed, assume they have visibility into app categories/limits.
+Even if Screen Time is enabled, **using cellular + Private Browsing** still helps.
+
+#### D) Safer way to use Trevor
+- Prefer **Trevor web chat** on cellular in your car.
+- Avoid **TrevorText (SMS)** if parents can view phone line logs; SMS activity can show up on carrier records.
+
+#### E) Therapy portals / email
+Portals can leave:
+- browser history + autofill
+- email notifications
+- calendar entries
+
+Ask any clinic: **“Please don’t email me portal links or reminders; I will log in manually.”** Use a private email account (not shared Apple ID).
+
+---
+
+## Paying without leaving a trail: cash/money order + low-cost places near Plano/DFW
+
+Many private practices won’t take cash/money order, but **training clinics and some community clinics often do** (or they’ll take card only).
+
+**What to ask when scheduling (script):**
+1) “I need **self-pay only**—please do not bill insurance.”  
+2) “Do you offer a **sliding scale** in the $30–$60 range?”  
+3) “Can I pay by **cash or money order**?”  
+4) “Please use **discreet communication**: no detailed voicemails/texts, and generic caller ID.”
+
+### Best matches for your budget (start here)
+#### 1) UT Dallas area (Richardson) — training clinic route
+Since you’re near Plano, **UT Dallas (Richardson)** is the closest likely low-fee option. Their programs commonly run community counseling/assessment services with supervised trainees and lower fees.  
+Search terms to get the correct current page/number:
+- “**UT Dallas** community counseling clinic”
+- “**UTD** psychology clinic services”
+- “Center for Students in Recovery UTD” (for referrals even if not substance-related)
+When you call, ask specifically about **individual therapy sliding scale** and **cash/money order**.
+
+#### 2) SMU (Dallas) — training clinic route
+SMU-affiliated clinics often have reduced-fee counseling/psych services.  
+Search:
+- “**SMU** psychology clinic”
+- “**SMU** counseling services community clinic”
+
+#### 3) UNT (Denton) — training clinic route (weekend doable)
+Search:
+- “**UNT Psychology Clinic** fees”
+This can be a strong low-cost option if you can handle the drive.
+
+#### 4) Resource Center (Dallas) — LGBTQ org for referrals + sometimes programs
+Even if they don’t provide weekly therapy at your price point, they’re good at pointing to **affirming, sliding-scale** clinicians.  
+Resource Center: https://myresourcecenter.org
+
+#### 5) Open Path Collective (private therapists at set low rates)
+Often the quickest way to find a private therapist in your budget who will do **self-pay**:
+- https://openpathcollective.org  
+Filter for:
+- “LGBTQIA+ allied”
+- “religious trauma” / “spirituality”
+Then ask the therapist about **discreet billing + no reminders**.
+
+If you want, I can narrow this to **5–8 concrete leads** by you telling me your nearest cross-streets or ZIP (you can keep it broad, like “750xx”).
+
+---
+
+## Caller ID / voicemail privacy (so nothing screams counseling)
+You can’t fully control what shows on caller ID, but you *can* reduce risk.
+
+**Ask the clinic before you book:**
+- “What name appears on outgoing calls/caller ID?”
+- “Do you ever leave voicemails? If yes, please don’t—or leave only: ‘Please call [number]’ with no clinic details.”
+- “Please don’t text me; or text only ‘appointment confirmed’ with no clinic name.”
+
+Many practices show something generic like the provider’s name or a billing company, but some show the clinic name. Asking up front is normal.
+
+**On your side (iPhone):**
+- Turn off message previews: Settings → Notifications → Messages → **Show Previews: Never**.
+- Consider saving the clinic number under a **neutral contact name** (e.g., “Dentist Office”) so if it pops up, it’s not obvious. (Not perfect, but it helps.)
+
+---
+
+## Can your CA campus counselor do a one-off “bridge” session while you’re in Texas?
+Often, **ongoing therapy** across state lines is restricted unless the clinician is authorized in the state you’re physically in (Texas). However, many campus counseling centers can still:
+- do a **brief consultation**, **triage**, or **crisis check-in**,
+- help you make a safety plan,
+- and provide **referrals in Texas**.
+
+Whether they’ll do a one-time telehealth session varies by campus policy and licensing. It’s not “illegal” for *you* to ask; they’ll tell you what they’re allowed to do.
+
+**What to say (script):**
+> “I’m temporarily located in Texas and can’t safely access care at home. Can I schedule a brief phone/video triage/bridge check-in, and can you help me find low-cost local referrals? I’m not in immediate danger, but nights are hard and I’m having passive suicidal thoughts.”
+
+---
+
+## Nights are the worst: quick, private supports + a small plan
+Since you’re getting “don’t want to wake up” thoughts at night, having a **pre-made plan** matters.
+
+### If you need live support at night (private)
+- **988** (call/text/chat). Using **web chat on cellular** is often most discreet.  
+- **Trevor web chat** on cellular (in car if needed).
+
+### A simple “night protocol” (takes 2 minutes to set up)
+1) **Move locations**: if you can, go to your car/porch for 10 minutes (pattern interrupt + privacy).
+2) **Text yourself** (Notes app also works): “These are thoughts, not instructions. I’m getting through the next 20 minutes.”
+3) Do one body-level reset: splash cold water / hold an ice cube / paced breathing (inhale 4, exhale 6) for 3 minutes.
+4) If thoughts don’t drop after ~20 minutes: use **988 chat** or Trevor web chat.
+
+If you ever shift from “I wish I wouldn’t wake up” to “I might do something,” that’s the line to treat it as urgent and contact **988** or go to the ER.
+
+---
+
+## Next step: I’ll give you a targeted shortlist
+Send either:
+- your ZIP (e.g., 75024), **or** nearest major intersection (broad is fine),
+and I’ll return:
+- 2–3 **training clinic** options closest to you (UTD first),
+- 2–3 **Open Path** / sliding-scale therapists likely within $30–$60,
+- what to ask each about **cash/money order**, **no insurance**, and **discreet caller ID/reminders**.
+
+Also: do you have **your own iPhone passcode** that your parents don’t know, and is your Apple ID shared with them? That affects what they can see through Family Sharing.
