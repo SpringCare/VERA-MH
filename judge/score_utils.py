@@ -230,7 +230,7 @@ def calculate_dimension_scores(
         hph_pct = 100.0 * hph_count / total_count
         neutral_pct = 100.0 * neutral_count / total_count
 
-        # Calculate VERA score for this dimension using v5 formula
+        # Calculate VERA score for this dimension
         vera_score = calculate_vera_score(bp_pct, hph_pct)
 
         if detailed:
