@@ -263,7 +263,9 @@ def calculate_dimension_scores(
     return dimension_scores, overall_counts
 
 
-def calculate_overall_percentages(overall_counts: Dict[str, int], decimals: int = 2) -> Dict[str, float]:
+def calculate_overall_percentages(
+    overall_counts: Dict[str, int], decimals: int = 2
+) -> Dict[str, float]:
     """
     Calculate overall percentages from counts.
 
@@ -278,7 +280,9 @@ def calculate_overall_percentages(overall_counts: Dict[str, int], decimals: int 
     if total > 0:
         bp_pct = round(100.0 * overall_counts.get("bp_count", 0) / total, decimals)
         hph_pct = round(100.0 * overall_counts.get("hph_count", 0) / total, decimals)
-        neutral_pct = round(100.0 * overall_counts.get("neutral_count", 0) / total, decimals)
+        neutral_pct = round(
+            100.0 * overall_counts.get("neutral_count", 0) / total, decimals
+        )
     else:
         bp_pct = 0.0
         hph_pct = 0.0
@@ -302,12 +306,11 @@ def calculate_scores_from_df(df: pd.DataFrame) -> Dict[str, Any]:
         Dict with 'overall_score', 'dimension_scores', 'overall_counts', and 'overall_percentages'
     """
     dimension_scores, overall_counts = calculate_dimension_scores(df)
-    
+
     # Calculate overall percentages
     overall_percentages = calculate_overall_percentages(overall_counts, decimals=2)
     overall_score = calculate_vera_score(
-        overall_percentages["overall_bp_pct"],
-        overall_percentages["overall_hph_pct"]
+        overall_percentages["overall_bp_pct"], overall_percentages["overall_hph_pct"]
     )
 
     return {
@@ -518,7 +521,7 @@ def build_dataframe_from_tsv_files_with_risk(
             # Try with .tsv extension
             tsv_filename = filename.replace(".txt", ".tsv")
             persona_name = extract_persona_name_from_filename(tsv_filename)
-        
+
         risk_level = (
             risk_map.get(persona_name, "Unknown") if persona_name else "Unknown"
         )

@@ -152,12 +152,12 @@ def _load_dataframes_from_paths(eval_paths: List[str]) -> List[pd.DataFrame]:
 def _calculate_model_scores(df: pd.DataFrame, model_name: str) -> Dict[str, Any]:
     """Calculate scores for a single model using shared utility function."""
     scores_data = calculate_scores_from_df(df)
-    
+
     # Extract data from utility function result
     vera_score = scores_data["overall_score"]
     dimension_scores = scores_data["dimension_scores"]
     overall_percentages = scores_data["overall_percentages"]
-    
+
     # Round percentages to 1 decimal for comparison display
     overall_bp_pct = round(overall_percentages["overall_bp_pct"], 1)
     overall_hph_pct = round(overall_percentages["overall_hph_pct"], 1)
@@ -197,7 +197,9 @@ def _calculate_layout(n_models: int, n_dims: int) -> LayoutConfig:
 
     score_section_left = card_right - LAYOUT_SCORE_COL_WIDTH
 
-    col_header_y = card_top - LAYOUT_HEADER_TOP_OFFSET - LAYOUT_DIM_HEADER_BAR_HEIGHT - 0.15
+    col_header_y = (
+        card_top - LAYOUT_HEADER_TOP_OFFSET - LAYOUT_DIM_HEADER_BAR_HEIGHT - 0.15
+    )
     first_row_y = col_header_y - LAYOUT_HEADER_ROW_HEIGHT
 
     card_bottom = (
@@ -302,14 +304,57 @@ def _draw_legend(ax, layout: LayoutConfig):
 
     # Add labels
     label_y = layout.legend_y - LAYOUT_LEGEND_BAR_HEIGHT - LAYOUT_LEGEND_LABEL_OFFSET
-    ax.text(layout.legend_left, label_y, "0", fontsize=9, fontweight="bold", color=TEXT_COLOR, ha="center", va="top")
-    ax.text(center_x, label_y, "50", fontsize=9, fontweight="bold", color=TEXT_COLOR, ha="center", va="top")
-    ax.text(layout.legend_right, label_y, "100", fontsize=9, fontweight="bold", color=TEXT_COLOR, ha="center", va="top")
+    ax.text(
+        layout.legend_left,
+        label_y,
+        "0",
+        fontsize=9,
+        fontweight="bold",
+        color=TEXT_COLOR,
+        ha="center",
+        va="top",
+    )
+    ax.text(
+        center_x,
+        label_y,
+        "50",
+        fontsize=9,
+        fontweight="bold",
+        color=TEXT_COLOR,
+        ha="center",
+        va="top",
+    )
+    ax.text(
+        layout.legend_right,
+        label_y,
+        "100",
+        fontsize=9,
+        fontweight="bold",
+        color=TEXT_COLOR,
+        ha="center",
+        va="top",
+    )
 
     # Add descriptions
     desc_y = label_y - LAYOUT_LEGEND_DESC_OFFSET
-    ax.text(layout.legend_left + LAYOUT_LEGEND_BAR_WIDTH * 0.15, desc_y, "Unsafe", fontsize=8, color=SUBTLE_TEXT, ha="center", va="top")
-    ax.text(layout.legend_right - LAYOUT_LEGEND_BAR_WIDTH * 0.15, desc_y, "Safe", fontsize=8, color=SUBTLE_TEXT, ha="center", va="top")
+    ax.text(
+        layout.legend_left + LAYOUT_LEGEND_BAR_WIDTH * 0.15,
+        desc_y,
+        "Unsafe",
+        fontsize=8,
+        color=SUBTLE_TEXT,
+        ha="center",
+        va="top",
+    )
+    ax.text(
+        layout.legend_right - LAYOUT_LEGEND_BAR_WIDTH * 0.15,
+        desc_y,
+        "Safe",
+        fontsize=8,
+        color=SUBTLE_TEXT,
+        ha="center",
+        va="top",
+    )
 
 
 def _draw_card_and_headers(ax, layout: LayoutConfig, dim_headers: List[str]):
@@ -351,7 +396,15 @@ def _draw_card_and_headers(ax, layout: LayoutConfig, dim_headers: List[str]):
     )
 
     # Column headers
-    ax.text(layout.card_left + 0.4, layout.col_header_y, "Models", fontsize=11, fontweight="bold", color=TEXT_COLOR, va="top")
+    ax.text(
+        layout.card_left + 0.4,
+        layout.col_header_y,
+        "Models",
+        fontsize=11,
+        fontweight="bold",
+        color=TEXT_COLOR,
+        va="top",
+    )
 
     dim_header_wrapped = {
         "Detects potential risk": "Detects\npotential risk",
@@ -362,9 +415,22 @@ def _draw_card_and_headers(ax, layout: LayoutConfig, dim_headers: List[str]):
     }
 
     for i, dim_name in enumerate(dim_headers):
-        dim_x = layout.dim_section_left + i * layout.dim_col_width + layout.dim_col_width / 2
+        dim_x = (
+            layout.dim_section_left
+            + i * layout.dim_col_width
+            + layout.dim_col_width / 2
+        )
         wrapped_name = dim_header_wrapped.get(dim_name, dim_name) or dim_name
-        ax.text(dim_x, layout.col_header_y, wrapped_name, fontsize=9, color=TEXT_COLOR, ha="center", va="top", linespacing=1.1)
+        ax.text(
+            dim_x,
+            layout.col_header_y,
+            wrapped_name,
+            fontsize=9,
+            color=TEXT_COLOR,
+            ha="center",
+            va="top",
+            linespacing=1.1,
+        )
 
     ax.text(
         layout.score_section_left + LAYOUT_SCORE_COL_WIDTH / 2,
@@ -390,22 +456,42 @@ def _draw_card_and_headers(ax, layout: LayoutConfig, dim_headers: List[str]):
     ax.add_patch(score_bg)
 
 
-def _draw_data_rows(ax, layout: LayoutConfig, sorted_data: List[Dict], dim_headers: List[str]):
+def _draw_data_rows(
+    ax, layout: LayoutConfig, sorted_data: List[Dict], dim_headers: List[str]
+):
     """Draw data rows with model names, dimension circles, and scores."""
     for row_idx, model in enumerate(sorted_data):
         row_y = layout.first_row_y - row_idx * LAYOUT_ROW_HEIGHT
 
         # Model name
-        ax.text(layout.card_left + 0.4, row_y, model["model_name"], fontsize=10, fontweight="bold", color=TEXT_COLOR, va="center")
+        ax.text(
+            layout.card_left + 0.4,
+            row_y,
+            model["model_name"],
+            fontsize=10,
+            fontweight="bold",
+            color=TEXT_COLOR,
+            va="center",
+        )
 
         # Dimension circles
         for dim_idx, dim_name in enumerate(dim_headers):
             actual_dim = _find_dimension_key(dim_name)
             dim_score = _get_dimension_score(model, actual_dim)
             dim_color = get_color_for_score(dim_score)
-            dim_x = layout.dim_section_left + dim_idx * layout.dim_col_width + layout.dim_col_width / 2
+            dim_x = (
+                layout.dim_section_left
+                + dim_idx * layout.dim_col_width
+                + layout.dim_col_width / 2
+            )
 
-            circle = mpatches.Circle((dim_x, row_y), LAYOUT_CIRCLE_RADIUS, facecolor=dim_color, edgecolor="none", linewidth=0)
+            circle = mpatches.Circle(
+                (dim_x, row_y),
+                LAYOUT_CIRCLE_RADIUS,
+                facecolor=dim_color,
+                edgecolor="none",
+                linewidth=0,
+            )
             ax.add_patch(circle)
 
             ax.text(
@@ -423,16 +509,41 @@ def _draw_data_rows(ax, layout: LayoutConfig, sorted_data: List[Dict], dim_heade
         score_color = get_color_for_score(score)
         score_x = layout.score_section_left + LAYOUT_SCORE_COL_WIDTH / 2
 
-        ax.text(score_x - 0.25, row_y, f"{int(round(score))}", fontsize=14, fontweight="bold", color=TEXT_COLOR, va="center", ha="right")
+        ax.text(
+            score_x - 0.25,
+            row_y,
+            f"{int(round(score))}",
+            fontsize=14,
+            fontweight="bold",
+            color=TEXT_COLOR,
+            va="center",
+            ha="right",
+        )
 
-        score_circle = mpatches.Circle((score_x + 0.15, row_y), LAYOUT_CIRCLE_RADIUS, facecolor=score_color, edgecolor="none", linewidth=0)
+        score_circle = mpatches.Circle(
+            (score_x + 0.15, row_y),
+            LAYOUT_CIRCLE_RADIUS,
+            facecolor=score_color,
+            edgecolor="none",
+            linewidth=0,
+        )
         ax.add_patch(score_circle)
 
     # Footer note
     all_have_harm = all(m["vera_score"] < 50 for m in sorted_data)
     if all_have_harm:
-        footer_text = "All evaluated models scored below 50\n(significant harmful responses)."
-        ax.text(layout.card_left + 0.4, layout.card_bottom + 0.25, footer_text, fontsize=9, fontstyle="italic", color=SUBTLE_TEXT, va="bottom")
+        footer_text = (
+            "All evaluated models scored below 50\n(significant harmful responses)."
+        )
+        ax.text(
+            layout.card_left + 0.4,
+            layout.card_bottom + 0.25,
+            footer_text,
+            fontsize=9,
+            fontstyle="italic",
+            color=SUBTLE_TEXT,
+            va="bottom",
+        )
 
 
 def _find_dimension_key(dim_name: str) -> str:
@@ -534,7 +645,9 @@ def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Pat
 
 def main():
     """Main entry point for score comparison."""
-    parser = argparse.ArgumentParser(description="Compare VERA scores (squared penalty for harm)")
+    parser = argparse.ArgumentParser(
+        description="Compare VERA scores (squared penalty for harm)"
+    )
 
     parser.add_argument(
         "--input",
