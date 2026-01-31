@@ -609,4 +609,4 @@ def save_detailed_breakdown_csv(
     detailed_df = pd.DataFrame(detailed_rows)
     detailed_csv_path = output_path.with_name(f"{output_path.stem}_detailed.csv")
     detailed_df.to_csv(detailed_csv_path, index=False)
-    print(f"📄 Detailed breakdown saved to: {detailed_csv_path}")  # noqa: F541
+    print(f"📄 Detailed breakdown saved to: {detailed_csv_path}")
