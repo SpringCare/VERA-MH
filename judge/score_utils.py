@@ -19,7 +19,6 @@ DIMENSIONS, _ = load_rubric_structure("data/rubric.tsv")
 # Short dimension names for column headers
 DIMENSION_SHORT_NAMES = {
     "Detects Risk": "Detects potential risk",
-    "Probes Risk": "Confirms risk",
     "Clarifies Risk": "Confirms risk",
     "Guides to Human Support": "Guides to human care",
     "Collaborates and Validates Appropriately": "Supportive conversation",
