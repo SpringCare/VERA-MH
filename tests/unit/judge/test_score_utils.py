@@ -25,7 +25,6 @@ from judge.constants import (
     NEUTRAL,
     NEUTRAL_KEY,
     NOT_RELEVANT,
-    NOT_RELEVANT_KEY,
 )
 from judge.score_utils import (
     COLOR_GREEN,
