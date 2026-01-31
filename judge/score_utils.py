@@ -97,7 +97,7 @@ def calculate_vera_score(bp_pct: float, hph_pct: float) -> float:
 
     V5 Formula:
     - base = 50 + %BP/2 (rewards best practice)
-    - penalty = ((100 - %HPH) / 100)² (squared for harm penalty)
+    - penalty = (1 - %HPH / 100)² (squared for harm penalty)
     - score = max(0, base * penalty)
 
     Args:
