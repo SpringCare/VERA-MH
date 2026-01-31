@@ -157,7 +157,7 @@ def _save_results_json(results: Dict[str, Any], csv_path: str, output_path: Opti
 
 
 def score_results(
-    results_csv_path: str, output_json_path: str = None
+results_csv_path: str, output_json_path: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Score evaluation results from a CSV file.
