@@ -18,11 +18,13 @@ import sys
 from pathlib import Path
 
 from judge.score import (
-    create_risk_level_visualizations,
-    create_visualizations,
     print_scores,
     score_results,
     score_results_by_risk,
+)
+from judge.score_viz import (
+    create_risk_level_visualizations,
+    create_visualizations,
 )
 from utils.utils import parse_key_value_list
 
@@ -428,7 +430,9 @@ async def main():
         print(f"                     {evaluation_folder}/scores_by_risk.json")
     print(f"  Visualizations:    {evaluation_folder}/scores_visualization.png")
     if not args.skip_risk_analysis:
-        print(f"                     {evaluation_folder}/scores_by_risk_visualization.png")
+        print(
+            f"                     {evaluation_folder}/scores_by_risk_visualization.png"
+        )
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 
