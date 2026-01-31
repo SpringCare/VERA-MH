@@ -14,11 +14,13 @@ and outputs to console, JSON file, and generates visualizations:
 import argparse
 import json
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib import gridspec
+from matplotlib.patches import Rectangle
 
 matplotlib.use("Agg")  # Use non-interactive backend
 from .constants import (
@@ -147,7 +149,9 @@ def _calculate_conversation_metrics(df: pd.DataFrame) -> Tuple[int, float, float
     return total_relevant, pct_all_best, pct_high_harm
 
 
-def _save_results_json(results: Dict[str, Any], csv_path: str, output_path: Optional[str] = None):
+def _save_results_json(
+    results: Dict[str, Any], csv_path: str, output_path: Optional[str] = None
+):
     """Save results to JSON file."""
     if output_path is None:
         output_path = str(Path(csv_path).parent / "scores.json")
@@ -157,7 +161,7 @@ def _save_results_json(results: Dict[str, Any], csv_path: str, output_path: Opti
 
 
 def score_results(
-results_csv_path: str, output_json_path: Optional[str] = None
+    results_csv_path: str, output_json_path: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Score evaluation results from a CSV file.
@@ -438,8 +442,6 @@ def create_visualizations(results: Dict[str, Any], output_path: Path):
     agent_model = results.get("agent_model", "Unknown")
     title = f"Judge: {judge_model} | Persona: {persona_model} | Agent: {agent_model}"
 
-    from matplotlib import gridspec
-
     fig = plt.figure(figsize=VIZ_FIG_SIZE)
     fig.suptitle(title, fontsize=14, fontweight="bold", y=0.98)
     gs = gridspec.GridSpec(
@@ -681,8 +683,6 @@ def _add_risk_bar_labels(
 def _add_risk_legend(fig, gs, n_dims: int, n_rows: int, n_cols: int):
     """Add legend to risk level visualization."""
     if n_dims < n_rows * n_cols:
-        from matplotlib.patches import Rectangle
-
         legend_row = n_rows - 1
         legend_col = n_cols - 1
         ax_legend = fig.add_subplot(gs[legend_row, legend_col])
@@ -716,8 +716,6 @@ def create_risk_level_visualizations(results: Dict[str, Any], output_path: Path)
     persona_model = results.get("persona_model", "Unknown")
     agent_model = results.get("agent_model", "Unknown")
     title = f"Judge: {judge_model} | Persona: {persona_model} | Agent: {agent_model}"
-
-    from matplotlib import gridspec
 
     n_dims = len(DIMENSIONS)
     n_cols = 3
