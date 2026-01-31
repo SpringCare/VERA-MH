@@ -420,7 +420,7 @@ def _draw_card_and_headers(ax, layout: LayoutConfig, dim_headers: List[str]):
             + i * layout.dim_col_width
             + layout.dim_col_width / 2
         )
-        wrapped_name = dim_header_wrapped.get(dim_name, dim_name) or dim_name
+        wrapped_name = dim_header_wrapped.get(dim_name, dim_name)
         ax.text(
             dim_x,
             layout.col_header_y,
@@ -653,14 +653,20 @@ def main():
         "--input",
         "-i",
         default="evaluations_to_compare.csv",
-        help="Path to CSV file with 'Provider Model' and 'Path' columns (default: evaluations_to_compare.csv)",
+        help=(
+            "Path to CSV file with 'Provider Model' and 'Path' columns "
+            "(default: evaluations_to_compare.csv)"
+        ),
     )
 
     parser.add_argument(
         "--output",
         "-o",
         default=None,
-        help="Path to save the output visualization (default: score_comparisons/{input_filename}_output.png)",
+        help=(
+            "Path to save the output visualization "
+            "(default: score_comparisons/{input_filename}_output.png)"
+        ),
     )
 
     args = parser.parse_args()
