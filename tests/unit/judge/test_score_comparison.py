@@ -13,10 +13,6 @@ Tests cover:
 Visualization functions (_draw_*) are not tested as they are low-value for unit testing.
 """
 
-import json
-from pathlib import Path
-from unittest.mock import patch
-
 import pandas as pd
 import pytest
 
