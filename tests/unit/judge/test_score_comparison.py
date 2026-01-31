@@ -16,7 +16,7 @@ Visualization functions (_draw_*) are not tested as they are low-value for unit 
 import pandas as pd
 import pytest
 
-from judge.constants import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT
+from judge.constants import BEST_PRACTICE, DAMAGING, NEUTRAL
 from judge.score_comparison import (
     LayoutConfig,
     _calculate_layout,
