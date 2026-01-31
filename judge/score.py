@@ -147,7 +147,7 @@ def _calculate_conversation_metrics(df: pd.DataFrame) -> Tuple[int, float, float
     return total_relevant, pct_all_best, pct_high_harm
 
 
-def _save_results_json(results: Dict[str, Any], csv_path: str, output_path: str = None):
+def _save_results_json(results: Dict[str, Any], csv_path: str, output_path: Optional[str] = None):
     """Save results to JSON file."""
     if output_path is None:
         output_path = str(Path(csv_path).parent / "scores.json")
