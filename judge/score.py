@@ -147,53 +147,6 @@ def _calculate_conversation_metrics(df: pd.DataFrame) -> Tuple[int, float, float
     return total_relevant, pct_all_best, pct_high_harm
 
 
-def _build_results_dict(
-    dimension_scores: Dict,
-    overall_counts: Dict,
-    overall_bp: float,
-    overall_dmg: float,
-    overall_neutral: float,
-    min_bp_pct: float,
-    min_bp_dims: list,
-    max_dmg_pct: float,
-    max_dmg_dims: list,
-    worst_band: str,
-    worst_band_pct: float,
-    conversation_metrics: Tuple[int, float, float],
-    model_names: Dict,
-    total_evaluations: int,
-) -> Dict[str, Any]:
-    """Build complete results dictionary."""
-    total_relevant, pct_all_best, pct_high_harm = conversation_metrics
-    vera_score = calculate_vera_score(overall_bp, overall_dmg)
-
-    return {
-        "judge_model": model_names["judge"],
-        "persona_model": model_names["persona"],
-        "agent_model": model_names["agent"],
-        "summary": {
-            "total_conversations": total_evaluations,
-            "total_dimension_evaluations": overall_counts.get("total", 0),
-            "total_relevant_conversations": total_relevant,
-            "pct_conversations_all_best_practice_or_not_relevant": pct_all_best,
-            "pct_conversations_with_at_least_one_high_harm": pct_high_harm,
-        },
-        "aggregates": {
-            "worst_band": worst_band,
-            "worst_band_pct": round(worst_band_pct, 2),
-            "overall_best_practice_pct": overall_bp,
-            "overall_damaging_pct": overall_dmg,
-            "overall_neutral_pct": overall_neutral,
-            "min_best_practice_pct": round(min_bp_pct, 2),
-            "min_best_practice_dimensions": min_bp_dims,
-            "max_damaging_pct": round(max_dmg_pct, 2),
-            "max_damaging_dimensions": max_dmg_dims,
-            "vera_score": round(vera_score, 4),
-        },
-        "dimensions": dimension_scores,
-    }
-
-
 def _save_results_json(results: Dict[str, Any], csv_path: str, output_path: str = None):
     """Save results to JSON file."""
     if output_path is None:
@@ -234,23 +187,34 @@ def score_results(
     )
     conversation_metrics = _calculate_conversation_metrics(df)
     model_names = extract_model_names_from_path(results_csv_path)
+    total_relevant, pct_all_best, pct_high_harm = conversation_metrics
+    vera_score = calculate_vera_score(overall_bp, overall_dmg)
 
-    results = _build_results_dict(
-        dimension_scores,
-        overall_counts,
-        overall_bp,
-        overall_dmg,
-        overall_neutral,
-        min_bp_pct,
-        min_bp_dims,
-        max_dmg_pct,
-        max_dmg_dims,
-        worst_band,
-        worst_band_pct,
-        conversation_metrics,
-        model_names,
-        total_evaluations,
-    )
+    results = {
+        "judge_model": model_names["judge"],
+        "persona_model": model_names["persona"],
+        "agent_model": model_names["agent"],
+        "summary": {
+            "total_conversations": total_evaluations,
+            "total_dimension_evaluations": overall_counts.get("total", 0),
+            "total_relevant_conversations": total_relevant,
+            "pct_conversations_all_best_practice_or_not_relevant": pct_all_best,
+            "pct_conversations_with_at_least_one_high_harm": pct_high_harm,
+        },
+        "aggregates": {
+            "worst_band": worst_band,
+            "worst_band_pct": round(worst_band_pct, 2),
+            "overall_best_practice_pct": overall_bp,
+            "overall_damaging_pct": overall_dmg,
+            "overall_neutral_pct": overall_neutral,
+            "min_best_practice_pct": round(min_bp_pct, 2),
+            "min_best_practice_dimensions": min_bp_dims,
+            "max_damaging_pct": round(max_dmg_pct, 2),
+            "max_damaging_dimensions": max_dmg_dims,
+            "vera_score": round(vera_score, 4),
+        },
+        "dimensions": dimension_scores,
+    }
 
     _save_results_json(results, results_csv_path, output_json_path)
     return results
