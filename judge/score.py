@@ -295,7 +295,9 @@ def print_scores(results: Dict[str, Any]):
     print("\n" + "=" * 80)
 
 
-def _calculate_risk_dimension_scores(risk_df: pd.DataFrame) -> Dict[str, Dict]:
+def _calculate_risk_dimension_scores(
+    risk_df: pd.DataFrame,
+) -> Dict[str, Dict[str, Any]]:
     """Calculate dimension scores for a risk level."""
     dimension_scores = {}
 
