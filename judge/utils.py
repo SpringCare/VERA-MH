@@ -107,8 +107,10 @@ def extract_persona_name_from_filename(filename: str) -> Optional[str]:
     """
     Extract persona name from TSV filename.
 
-    Filename format: {hash}_{persona_name}_{model}_run{number}_iterative.tsv
-    Example: 1a84d1_Brian_g4o_run3_iterative.tsv -> "Brian"
+    Filename format: {hash}_{persona_name}_{model}_run{number}.tsv
+    Example: 1a84d1_Brian_g4o_run3.tsv -> "Brian"
+
+    Works with any file extension (.tsv, .txt, etc.) since it splits on "_".
 
     Args:
         filename: TSV filename (with or without extension)
@@ -117,7 +119,8 @@ def extract_persona_name_from_filename(filename: str) -> Optional[str]:
         Persona name or None if not found
     """
     # Format: {hash}_{persona}_{model}_run{number} or
-    # {hash}_{persona}_{model}_run{number}_iterative.tsv
+    # {hash}_{persona}_{model}_run{number}.tsv
+    # Extension doesn't matter since we split on "_"
     try:
         parts = filename.split("_")
         if len(parts) >= 2:

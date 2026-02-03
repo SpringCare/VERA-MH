@@ -486,28 +486,13 @@ def build_dataframe_from_tsv_files_with_risk(
     # Load risk level mapping
     risk_map = load_personas_risk_levels(personas_tsv_path)
 
-    # Add persona_name and risk_level columns
-    persona_names = []
-    risk_levels = []
+    # Extract persona name from filename column (pandas-native)
+    persona_names = df["filename"].apply(
+        lambda filename: extract_persona_name_from_filename(filename) or "Unknown"
+    )
 
-    for _, row in df.iterrows():
-        # Extract persona name from filename
-        # The filename is already converted to .txt, but
-        # extract_persona_name_from_filename should work with either extension.
-        # If not, we can convert back.
-        filename = row["filename"]
-        # Try with .txt first, if that doesn't work, try with .tsv
-        persona_name = extract_persona_name_from_filename(filename)
-        if not persona_name:
-            # Try with .tsv extension
-            tsv_filename = filename.replace(".txt", ".tsv")
-            persona_name = extract_persona_name_from_filename(tsv_filename)
-
-        risk_level = (
-            risk_map.get(persona_name, "Unknown") if persona_name else "Unknown"
-        )
-        persona_names.append(persona_name or "Unknown")
-        risk_levels.append(risk_level)
+    # Map persona_name to risk_level using risk_map
+    risk_levels = persona_names.map(lambda name: risk_map.get(name, "Unknown"))
 
     # Insert persona_name and risk_level columns after run_id
     df.insert(2, "persona_name", persona_names)
