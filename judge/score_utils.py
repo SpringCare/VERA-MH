@@ -354,7 +354,7 @@ def build_results_csv_from_tsv_files(evaluations_dir) -> pd.DataFrame:
 
     This function reads all .tsv files in the given directory and combines
     them into a single DataFrame suitable for VERA score calculation.
-    Useful when results.csv is missing or needs to be regenerated.
+    Useful when results.csv is missing or has empty dimension columns.
 
     Args:
         evaluations_dir: Path to directory containing TSV evaluation files
