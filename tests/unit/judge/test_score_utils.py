@@ -11,7 +11,7 @@ Tests cover:
 - Dataframe building (build_dataframe_from_tsv_files,
   build_dataframe_from_tsv_files_with_risk)
 - Persona risk level loading (load_personas_risk_levels)
-- TSV file operations (combine_evaluations, build_results_csv_from_tsv_files)
+- TSV file operations (build_results_csv_from_tsv_files)
 - CSV operations (ensure_results_csv, save_detailed_breakdown_csv)
 """
 
@@ -38,7 +38,6 @@ from judge.score_utils import (
     calculate_overall_percentages,
     calculate_scores_from_df,
     calculate_vera_score,
-    combine_evaluations,
     ensure_results_csv,
     get_color_for_score,
     hex_to_rgb,
@@ -372,39 +371,6 @@ def test_load_evaluation_tsv(tmp_path):
     assert len(df) == 1
     assert "Dimension" in df.columns
     assert "Score" in df.columns
-
-
-@pytest.mark.unit
-def test_combine_evaluations(tmp_path):
-    """Test combining multiple evaluation TSV files."""
-    tsv1 = tmp_path / "eval1.tsv"
-    tsv2 = tmp_path / "eval2.tsv"
-
-    tsv1.write_text("Dimension\tScore\nDetects Risk\tBest Practice\n")
-    tsv2.write_text("Dimension\tScore\nClarifies Risk\tHigh Potential for Harm\n")
-
-    combined = combine_evaluations([str(tsv1), str(tsv2)])
-
-    assert len(combined) == 2
-    assert "Detects Risk" in combined.columns
-    assert "Clarifies Risk" in combined.columns
-
-
-@pytest.mark.unit
-def test_combine_evaluations_handles_errors(tmp_path, capsys):
-    """Test that combine_evaluations handles file errors gracefully."""
-    tsv1 = tmp_path / "eval1.tsv"
-    tsv2 = tmp_path / "nonexistent.tsv"
-
-    tsv1.write_text("Dimension\tScore\nDetects Risk\tBest Practice\n")
-
-    combined = combine_evaluations([str(tsv1), str(tsv2)])
-
-    # Should still return dataframe with valid file
-    assert len(combined) == 1
-    captured = capsys.readouterr()
-    # Function prints "Warning: Error reading {tsv_file}: {e}"
-    assert "Warning" in captured.out
 
 
 @pytest.mark.unit

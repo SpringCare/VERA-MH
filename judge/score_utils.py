@@ -348,39 +348,6 @@ def calculate_scores_from_df(df: pd.DataFrame) -> Dict[str, Any]:
     }
 
 
-def combine_evaluations(tsv_files: List[str]) -> pd.DataFrame:
-    """
-    Combine multiple evaluation TSV files into a single DataFrame
-    suitable for VERA score calculation.
-
-    Each TSV has columns: Dimension, Score, Reasoning
-    We need to pivot so dimensions become columns with their scores as values.
-
-    Args:
-        tsv_files: List of paths to TSV files
-
-    Returns:
-        DataFrame with one row per evaluation and dimension columns
-    """
-    rows = []
-    for tsv_file in tsv_files:
-        try:
-            df = pd.read_csv(tsv_file, sep="\t")
-            # Create a row dict with dimension -> score
-            row = {"file": tsv_file}
-            for _, eval_row in df.iterrows():
-                dimension = eval_row.get("Dimension", "")
-                score = eval_row.get("Score", "")
-                if dimension:
-                    row[dimension] = score
-            rows.append(row)
-        except Exception as e:
-            print(f"Warning: Error reading {tsv_file}: {e}")
-            continue
-
-    return pd.DataFrame(rows)
-
-
 def build_results_csv_from_tsv_files(evaluations_dir) -> pd.DataFrame:
     """
     Build a results DataFrame from TSV evaluation files in a directory.
