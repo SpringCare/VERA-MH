@@ -2,6 +2,7 @@
 Unit tests for judge/score_utils.py utility functions.
 
 Tests cover:
+- Percentage utility (pct_of_total)
 - Color utility functions (hex_to_rgb, rgb_to_hex, interpolate_color,
   get_color_for_score)
 - VERA score calculation (calculate_vera_score)
@@ -44,9 +45,54 @@ from judge.score_utils import (
     interpolate_color,
     load_personas_risk_levels,
     parse_evaluation_filename,
+    pct_of_total,
     rgb_to_hex,
     save_detailed_breakdown_csv,
 )
+
+# ============================================================================
+# Percentage Utility Tests
+# ============================================================================
+
+
+@pytest.mark.unit
+def test_pct_of_total():
+    """Test basic percentage calculation."""
+    assert pct_of_total(50, 100) == 50.0
+    assert pct_of_total(25, 100) == 25.0
+    assert pct_of_total(1, 4) == 25.0
+    assert pct_of_total(3, 4) == 75.0
+
+
+@pytest.mark.unit
+def test_pct_of_total_zero_total():
+    """Test percentage calculation with zero total."""
+    assert pct_of_total(50, 0) == 0.0
+    assert pct_of_total(0, 0) == 0.0
+    assert pct_of_total(100, -5) == 0.0  # Negative total
+
+
+@pytest.mark.unit
+def test_pct_of_total_zero_count():
+    """Test percentage calculation with zero count."""
+    assert pct_of_total(0, 100) == 0.0
+    assert pct_of_total(0, 50) == 0.0
+
+
+@pytest.mark.unit
+def test_pct_of_total_custom_decimals():
+    """Test percentage calculation with custom decimal places."""
+    assert pct_of_total(1, 3, decimals=2) == 33.33
+    assert pct_of_total(1, 3, decimals=4) == 33.3333
+    assert pct_of_total(1, 3, decimals=0) == 33.0
+
+
+@pytest.mark.unit
+def test_pct_of_total_float_inputs():
+    """Test percentage calculation with float inputs."""
+    assert pct_of_total(50.5, 100.0) == 50.5
+    assert pct_of_total(33.333, 100.0, decimals=2) == 33.33
+
 
 # ============================================================================
 # Color Utility Tests

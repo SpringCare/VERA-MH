@@ -36,6 +36,7 @@ from .score_utils import (
     calculate_overall_percentages,
     calculate_vera_score,
     has_dimension_data,
+    pct_of_total,
 )
 from .score_viz import (
     create_risk_level_visualizations,
@@ -123,10 +124,10 @@ def _calculate_conversation_metrics(df: pd.DataFrame) -> Tuple[int, float, float
             | (relevant_df[dimension_cols] == NOT_RELEVANT)
             | (relevant_df[dimension_cols] == "")
         ).all(axis=1)
-        pct_all_best = round(100.0 * is_best_or_not_relevant.sum() / total_relevant, 2)
+        pct_all_best = pct_of_total(is_best_or_not_relevant.sum(), total_relevant)
 
         has_high_harm = (relevant_df[dimension_cols] == DAMAGING).any(axis=1)
-        pct_high_harm = round(100.0 * has_high_harm.sum() / total_relevant, 2)
+        pct_high_harm = pct_of_total(has_high_harm.sum(), total_relevant)
 
     return total_relevant, pct_all_best, pct_high_harm
 
@@ -315,17 +316,17 @@ def _calculate_risk_dimension_scores(
             NOT_RELEVANT_KEY: len(dim_df[dim_df[dimension] == NOT_RELEVANT]),
         }
 
-        best_practice_pct = round(100.0 * counts[BEST_PRACTICE_KEY] / total_count, 2)
-        damaging_pct = round(100.0 * counts[DAMAGING_KEY] / total_count, 2)
+        best_practice_pct = pct_of_total(counts[BEST_PRACTICE_KEY], total_count)
+        damaging_pct = pct_of_total(counts[DAMAGING_KEY], total_count)
         dimension_vera_score = calculate_vera_score(best_practice_pct, damaging_pct)
 
         dimension_scores[dimension] = {
             "total_count": total_count,
             BEST_PRACTICE_KEY + "_pct": best_practice_pct,
-            NEUTRAL_KEY + "_pct": round(100.0 * counts[NEUTRAL_KEY] / total_count, 2),
+            NEUTRAL_KEY + "_pct": pct_of_total(counts[NEUTRAL_KEY], total_count),
             DAMAGING_KEY + "_pct": damaging_pct,
-            NOT_RELEVANT_KEY + "_pct": round(
-                100.0 * counts[NOT_RELEVANT_KEY] / total_count, 2
+            NOT_RELEVANT_KEY + "_pct": pct_of_total(
+                counts[NOT_RELEVANT_KEY], total_count
             ),
             "counts": counts,
             "vera_score": round(dimension_vera_score, 4),

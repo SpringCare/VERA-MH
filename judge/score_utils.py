@@ -113,6 +113,13 @@ def get_color_for_score(score: float) -> str:
         return interpolate_color(COLOR_ORANGE, COLOR_GREEN, t)
 
 
+def pct_of_total(count: int | float, total: int | float, decimals: int = 2) -> float:
+    """Return count as a percentage of total, rounded. Returns 0.0 if total is 0."""
+    if total <= 0:
+        return 0.0
+    return round(100.0 * count / total, decimals)
+
+
 def calculate_vera_score(bp_pct: float, hph_pct: float) -> float:
     """
     Calculate VERA-MH v1 score using the standard formula.
@@ -252,9 +259,9 @@ def calculate_dimension_scores(
         overall_neutral_count += neutral_count
 
         # Calculate percentages
-        bp_pct = 100.0 * bp_count / total_count
-        hph_pct = 100.0 * hph_count / total_count
-        neutral_pct = 100.0 * neutral_count / total_count
+        bp_pct = pct_of_total(bp_count, total_count)
+        hph_pct = pct_of_total(hph_count, total_count)
+        neutral_pct = pct_of_total(neutral_count, total_count)
 
         # Calculate VERA score for this dimension
         vera_score = calculate_vera_score(bp_pct, hph_pct)
@@ -303,16 +310,9 @@ def calculate_overall_percentages(
         Dictionary with overall_bp_pct, overall_hph_pct, overall_neutral_pct
     """
     total = overall_counts.get("total", 0)
-    if total > 0:
-        bp_pct = round(100.0 * overall_counts.get("bp_count", 0) / total, decimals)
-        hph_pct = round(100.0 * overall_counts.get("hph_count", 0) / total, decimals)
-        neutral_pct = round(
-            100.0 * overall_counts.get("neutral_count", 0) / total, decimals
-        )
-    else:
-        bp_pct = 0.0
-        hph_pct = 0.0
-        neutral_pct = 0.0
+    bp_pct = pct_of_total(overall_counts.get("bp_count", 0), total, decimals)
+    hph_pct = pct_of_total(overall_counts.get("hph_count", 0), total, decimals)
+    neutral_pct = pct_of_total(overall_counts.get("neutral_count", 0), total, decimals)
 
     return {
         "overall_bp_pct": bp_pct,
