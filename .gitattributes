@@ -1,0 +1,2 @@
+publication_conversations/vera_mh_v1_scores_conversations.tar.gz filter=lfs diff=lfs merge=lfs -text
+publication_evaluations/vera_mh_v1_scores.tar.gz filter=lfs diff=lfs merge=lfs -text
