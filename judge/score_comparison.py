@@ -29,6 +29,8 @@ import pandas as pd
 
 matplotlib.use("Agg")  # Use non-interactive backend
 
+from utils.conversation_utils import add_timestamp_to_path
+
 from .score_utils import (
     BG_COLOR,
     DIMENSION_SHORT_NAMES,
@@ -623,15 +625,18 @@ def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Pat
     _draw_card_and_headers(ax, layout, dim_headers)
     _draw_data_rows(ax, layout, sorted_data, dim_headers)
 
+    # Add timestamp to output path
+    timestamped_path = add_timestamp_to_path(output_path)
+
     # Save figure
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=300, bbox_inches="tight", facecolor=BG_COLOR)
+    timestamped_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(timestamped_path, dpi=300, bbox_inches="tight", facecolor=BG_COLOR)
     plt.close()
 
-    print(f"📊 Comparison graphic saved to: {output_path}")
+    print(f"📊 Comparison graphic saved to: {timestamped_path}")
 
-    # Save CSV data
-    _save_comparison_csv(sorted_data, output_path)
+    # Save CSV data (uses timestamped path for consistency)
+    _save_comparison_csv(sorted_data, timestamped_path)
 
 
 def main():

@@ -11,6 +11,22 @@ from llm_clients.llm_interface import Role
 from .debug import debug_print
 
 
+def add_timestamp_to_path(path: Path) -> Path:
+    """
+    Add timestamp to filename before extension.
+
+    Args:
+        path: Original path
+
+    Returns:
+        Path with timestamp inserted before extension (format: YYYYMMDD_HHMMSS)
+    """
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    stem = path.stem
+    suffix = path.suffix
+    return path.parent / f"{stem}_{timestamp}{suffix}"
+
+
 def generate_conversation_filename(prefix: str = "conversation") -> str:
     """
     Generate a timestamped filename for conversation logs.
@@ -21,8 +37,9 @@ def generate_conversation_filename(prefix: str = "conversation") -> str:
     Returns:
         Formatted filename with timestamp
     """
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    return f"{prefix}_{timestamp}.txt"
+    temp_path = Path(f"{prefix}.txt")
+    timestamped_path = add_timestamp_to_path(temp_path)
+    return timestamped_path.name
 
 
 def save_conversation_to_file(
