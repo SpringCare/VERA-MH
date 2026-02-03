@@ -56,11 +56,6 @@ OPTION_MAP = {
 REVERSE_OPTION_MAP = {v: k for k, v in OPTION_MAP.items()}
 
 
-def _read_evaluation_data(csv_path: str) -> pd.DataFrame:
-    """Read and return evaluation dataframe."""
-    return pd.read_csv(csv_path)
-
-
 def _warn_missing_dimensions(df: pd.DataFrame, dimension_scores: Dict):
     """Warn about missing dimensions in the dataframe."""
     for dimension in DIMENSIONS:
@@ -162,7 +157,7 @@ def score_results(
     Returns:
         Dictionary containing all scores
     """
-    df = _read_evaluation_data(results_csv_path)
+    df = pd.read_csv(results_csv_path)
     dimension_scores, overall_counts = calculate_dimension_scores(df, detailed=True)
     _warn_missing_dimensions(df, dimension_scores)
 
