@@ -295,9 +295,6 @@ def _calculate_risk_dimension_scores(
     dimension_scores = {}
 
     for dimension in DIMENSIONS:
-        if dimension not in risk_df.columns:
-            continue
-
         dim_df = risk_df[risk_df[dimension].notna() & (risk_df[dimension] != "")].copy()
         if len(dim_df) == 0:
             continue
