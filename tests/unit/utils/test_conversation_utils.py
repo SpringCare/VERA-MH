@@ -1,10 +1,13 @@
 """Unit tests for conversation utility functions."""
 
+from pathlib import Path
+
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
 from llm_clients.llm_interface import Role
 from utils.conversation_utils import (
+    add_timestamp_to_path,
     build_langchain_messages,
     format_conversation_as_string,
     format_conversation_summary,
@@ -662,3 +665,35 @@ class TestFormatConversationAsString:
             "Assistant:"
         )
         assert result == expected
+
+
+class TestAddTimestampToPath:
+    """Test add_timestamp_to_path function."""
+
+    def test_timestamp_format(self):
+        """Test that timestamp uses correct format (YYYYMMDD_HHMMSS)."""
+        path = Path("test.csv")
+        result = add_timestamp_to_path(path)
+
+        # Extract timestamp from stem
+        # Result format: test_YYYYMMDD_HHMMSS
+        stem_parts = result.stem.split("_")
+        assert len(stem_parts) == 3
+        assert stem_parts[0] == "test"
+        date_part = stem_parts[1]
+        time_part = stem_parts[2]
+
+        # Verify format: YYYYMMDD_HHMMSS
+        assert len(date_part) == 8  # YYYYMMDD
+        assert len(time_part) == 6  # HHMMSS
+        assert date_part.isdigit()
+        assert time_part.isdigit()
+
+    def test_preserves_parent_directory_and_suffix(self):
+        """Test that parent directory is preserved."""
+        path = Path("folder/subfolder/file.txt")
+        result = add_timestamp_to_path(path)
+
+        assert result.parent == path.parent
+        assert result.name.startswith("file_")
+        assert result.suffix == ".txt"
