@@ -292,7 +292,14 @@ def print_scores(results: Dict[str, Any]):
 def _calculate_risk_dimension_scores(
     risk_df: pd.DataFrame,
 ) -> Dict[str, Dict[str, Any]]:
-    """Calculate dimension scores for a risk level."""
+    """
+    Calculate dimension scores for each persona risk level.
+
+    Here we include NOT_RELEVANT results in the calculations, so we can
+    see how the persona risk level does or does not align with
+    expected "Not Relevant" ratings.  (E.g. we expect personas with no SI risk
+    to have conversations with NOT_RELEVANT ratings.)
+    """
     dimension_scores = {}
 
     for dimension in DIMENSIONS:
