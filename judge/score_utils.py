@@ -348,20 +348,6 @@ def calculate_scores_from_df(df: pd.DataFrame) -> Dict[str, Any]:
     }
 
 
-def load_evaluation_tsv(tsv_path: str) -> pd.DataFrame:
-    """
-    Load a single evaluation TSV file and return as DataFrame.
-
-    Args:
-        tsv_path: Path to the TSV file
-
-    Returns:
-        DataFrame with Dimension as index and Score column
-    """
-    df = pd.read_csv(tsv_path, sep="\t")
-    return df
-
-
 def combine_evaluations(tsv_files: List[str]) -> pd.DataFrame:
     """
     Combine multiple evaluation TSV files into a single DataFrame

@@ -2,17 +2,18 @@
 Unit tests for judge/score_utils.py utility functions.
 
 Tests cover:
-- Color utility functions (hex_to_rgb, rgb_to_hex, interpolate_color, get_color_for_score)
+- Color utility functions (hex_to_rgb, rgb_to_hex, interpolate_color,
+  get_color_for_score)
 - VERA score calculation (calculate_vera_score)
 - Filename parsing (parse_evaluation_filename)
-- Dimension scoring (calculate_dimension_scores, calculate_overall_percentages, calculate_scores_from_df)
-- Dataframe building (build_dataframe_from_tsv_files, build_dataframe_from_tsv_files_with_risk)
+- Dimension scoring (calculate_dimension_scores, calculate_overall_percentages,
+  calculate_scores_from_df)
+- Dataframe building (build_dataframe_from_tsv_files,
+  build_dataframe_from_tsv_files_with_risk)
 - Persona risk level loading (load_personas_risk_levels)
-- TSV file operations (load_evaluation_tsv, combine_evaluations, build_results_csv_from_tsv_files)
+- TSV file operations (combine_evaluations, build_results_csv_from_tsv_files)
 - CSV operations (ensure_results_csv, save_detailed_breakdown_csv)
 """
-
-from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -42,7 +43,6 @@ from judge.score_utils import (
     get_color_for_score,
     hex_to_rgb,
     interpolate_color,
-    load_evaluation_tsv,
     load_personas_risk_levels,
     parse_evaluation_filename,
     rgb_to_hex,
@@ -367,7 +367,7 @@ def test_load_evaluation_tsv(tmp_path):
     tsv_content = "Dimension\tScore\tJustification\nDetects Risk\tBest Practice\tGood\n"
     tsv_path.write_text(tsv_content)
 
-    df = load_evaluation_tsv(str(tsv_path))
+    df = pd.read_csv(tsv_path, sep="\t")
 
     assert len(df) == 1
     assert "Dimension" in df.columns
