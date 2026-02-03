@@ -35,6 +35,7 @@ from .score_utils import (
     calculate_dimension_scores,
     calculate_overall_percentages,
     calculate_vera_score,
+    has_dimension_data,
 )
 from .score_viz import (
     create_risk_level_visualizations,
@@ -377,24 +378,10 @@ def score_results_by_risk(
     return results
 
 
-def _check_dimension_columns_empty(df: pd.DataFrame) -> bool:
-    """Check if dimension columns are empty."""
-    dimension_columns_exist = all(dim in df.columns for dim in DIMENSIONS)
-    if not dimension_columns_exist:
-        return True
-
-    for dimension in DIMENSIONS:
-        if dimension in df.columns:
-            col_values = df[dimension].fillna("").astype(str).str.strip()
-            if (col_values != "").any():
-                return False
-    return True
-
-
 def _rebuild_dataframe_if_needed(results_csv_path: Path) -> bool:
     """Rebuild dataframe from TSV files if dimension columns are empty."""
     df = pd.read_csv(results_csv_path)
-    if not _check_dimension_columns_empty(df):
+    if has_dimension_data(df):
         return False
 
     print(f"⚠️  Dimension columns are empty in {results_csv_path}")
@@ -457,7 +444,7 @@ def main():
 
     if not _rebuild_dataframe_if_needed(results_csv_path):
         # If rebuild failed, exit
-        if _check_dimension_columns_empty(pd.read_csv(results_csv_path)):
+        if not has_dimension_data(pd.read_csv(results_csv_path)):
             return 1
 
     results = score_results(str(results_csv_path), args.output_json)

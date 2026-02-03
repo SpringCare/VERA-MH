@@ -558,6 +558,19 @@ def build_dataframe_from_tsv_files_with_risk(
     return df
 
 
+def has_dimension_data(df: pd.DataFrame) -> bool:
+    """
+    Check if dataframe has any dimension columns with data.
+
+    Args:
+        df: DataFrame to check
+
+    Returns:
+        True if any dimension column has non-null data, False otherwise
+    """
+    return any(dim in df.columns and df[dim].notna().any() for dim in DIMENSIONS)
+
+
 def ensure_results_csv(eval_path) -> pd.DataFrame:
     """
     Ensure results.csv exists and is valid, regenerating from TSV files if needed.
@@ -577,10 +590,7 @@ def ensure_results_csv(eval_path) -> pd.DataFrame:
         try:
             df = pd.read_csv(results_csv_path)
             # Check if it has dimension columns with data
-            has_dimension_data = any(
-                dim in df.columns and df[dim].notna().any() for dim in DIMENSIONS
-            )
-            if has_dimension_data and len(df) > 0:
+            if has_dimension_data(df) and len(df) > 0:
                 return df
             else:
                 print("⚠️  results.csv exists but is empty, regenerating...")
