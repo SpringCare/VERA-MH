@@ -5,7 +5,7 @@ Provides unified interface for different LLM providers
   - Claude (claude-*)
   - Gemini (gemini-*)
   - Azure (azure-*)
-  - Llama (llama-*)
+  - Ollama (ollama-*)
 """
 
 from .config import Config

@@ -50,16 +50,18 @@ class TestConfig:
         assert "temperature" not in config
         assert "max_tokens" not in config
 
-    def test_get_llama_config(self):
-        """Test get_llama_config returns expected structure."""
-        config = Config.get_llama_config()
+    def test_get_ollama_config(self):
+        """Test get_ollama_config returns expected structure."""
+        config = Config.get_ollama_config()
 
         assert isinstance(config, dict)
         assert "model" in config
         assert config["model"] == "llama3:8b"
-        # Temperature and base_url should NOT be in config
+        # Temperature should NOT be in config
         assert "temperature" not in config
-        assert "base_url" not in config
+        # base_url should be in config
+        assert "base_url" in config
+        assert config["base_url"] == "http://localhost:11434"
 
     @patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-anthropic-key"})
     def test_anthropic_api_key_from_env(self):

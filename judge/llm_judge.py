@@ -145,7 +145,7 @@ class LLMJudge:
                 f"structured output support. Supported models: "
                 f"Claude (claude-*), OpenAI (gpt-*), "
                 "Gemini (gemini-*), Azure (azure-*). "
-                f"Not supported: Llama/Ollama models."
+                f"Not supported: Ollama models."
             )
 
         return llm

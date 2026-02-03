@@ -30,7 +30,6 @@ class Config:
     AZURE_API_KEY = os.getenv("AZURE_API_KEY")
     AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT")
     AZURE_API_VERSION = os.getenv("AZURE_API_VERSION")  # Optional
-    # Note: Llama via Ollama doesn't require an API key
 
     @classmethod
     def get_claude_config(cls) -> Dict[str, Any]:
@@ -60,16 +59,6 @@ class Config:
         return {"model": "gemini-1.5-pro"}
 
     @classmethod
-    def get_llama_config(cls) -> Dict[str, Any]:
-        """Get default Llama model name.
-
-        Returns only the model name. Runtime parameters (temperature, max_tokens)
-        should be passed explicitly via CLI arguments. The base_url for Ollama
-        is hardcoded in llama_llm.py for connectivity purposes.
-        """
-        return {"model": "llama3:8b"}
-
-    @classmethod
     def get_azure_config(cls) -> Dict[str, Any]:
         """Get default Azure model name.
 
@@ -78,3 +67,16 @@ class Config:
         are loaded from environment variables.
         """
         return {"model": "azure-gpt-4"}
+
+    @classmethod
+    def get_ollama_config(cls) -> Dict[str, Any]:
+        """Get default Ollama configuration.
+
+        Returns model name and base_url. Runtime parameters (temperature, max_tokens)
+        should be passed explicitly via CLI arguments. This is a general config
+        for any Ollama-hosted model (llama, phi4, mistral, etc.).
+        """
+        return {
+            "model": "llama3:8b",
+            "base_url": "http://localhost:11434",  # Default Ollama URL
+        }

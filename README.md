@@ -291,7 +291,7 @@ VERA-MH simulates realistic conversations between Large Language Models (LLMs) f
   - **`openai_llm.py`**: OpenAI implementation with structured output
   - **`gemini_llm.py`**: Google Gemini implementation with structured output
   - **`azure_llm.py`**: Azure OpenAI and Azure AI Foundry implementation with structured output
-  - **`llama_llm.py`**: Llama implementation via Ollama
+  - **`ollama_llm.py`**: Ollama model implementation
   - **`config.py`**: Configuration management for API keys and model settings
 - **`utils/`**: Utility functions and helpers
   - **`prompt_loader.py`**: Functions for loading prompt configurations
@@ -344,7 +344,7 @@ The judge evaluation system uses **structured output** to ensure reliable and ty
 
 3. **Provider Implementation**: Each LLM client implements structured output using LangChain's `with_structured_output()`
    - Claude, OpenAI, Gemini, and Azure: Native structured output support via API
-   - Llama: Limited support (may require prompt-based parsing)
+   - Ollama: Limited support (may require prompt-based parsing)
 
 #### Benefits
 - ✅ **Type Safety**: Automatic validation of LLM responses
