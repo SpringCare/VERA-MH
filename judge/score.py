@@ -57,15 +57,13 @@ REVERSE_OPTION_MAP = {v: k for k, v in OPTION_MAP.items()}
 
 
 def _warn_missing_dimensions(df: pd.DataFrame, dimension_scores: Dict):
-    """Warn about missing dimensions in the dataframe."""
+    """Warn about missing dimension columns in the dataframe."""
     for dimension in DIMENSIONS:
         if dimension not in df.columns:
             print(
                 f"Warning: Dimension '{dimension}' not found in CSV columns: "
                 f"{df.columns.tolist()}"
             )
-        elif dimension not in dimension_scores:
-            print(f"Warning: No non-{NOT_RELEVANT} entries for dimension '{dimension}'")
 
 
 def _find_min_max_dimensions(dimension_scores: Dict) -> Tuple[float, list, float, list]:
