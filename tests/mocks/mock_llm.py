@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
-from llm_clients.llm_interface import JudgeLLM
+from llm_clients.llm_interface import JudgeLLM, Role
 
 T = TypeVar("T")
 
@@ -14,14 +14,15 @@ class MockLLM(JudgeLLM):
     def __init__(
         self,
         name: str = "mock-llm",
+        role: Role = Role.PROVIDER,
         responses: Optional[List[str]] = None,
+        model_name: str = "mock-model",
         system_prompt: Optional[str] = None,
         simulate_error: bool = False,
-        model_name: str = "mock-model",
         temperature: float = 0.7,
         max_tokens: int = 1000,
     ):
-        super().__init__(name, system_prompt)
+        super().__init__(name, role, system_prompt)
         self.responses = responses or ["Mock response"]
         self.response_index = 0
         self.calls: List[str] = []

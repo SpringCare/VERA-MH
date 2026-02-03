@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from llm_clients import Role
 from llm_clients.gemini_llm import GeminiLLM
 
 
@@ -14,7 +15,7 @@ class TestGeminiLLM:
     def test_init_missing_api_key_raises_error(self):
         """Test that missing GOOGLE_API_KEY raises ValueError (line 25)."""
         with pytest.raises(ValueError) as exc_info:
-            GeminiLLM(name="TestGemini")
+            GeminiLLM(name="TestGemini", role=Role.PERSONA)
 
         assert "GOOGLE_API_KEY not found" in str(exc_info.value)
 
@@ -25,7 +26,9 @@ class TestGeminiLLM:
         mock_llm = MagicMock()
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", system_prompt="Test prompt")
+        llm = GeminiLLM(
+            name="TestGemini", role=Role.PERSONA, system_prompt="Test prompt"
+        )
 
         assert llm.name == "TestGemini"
         assert llm.system_prompt == "Test prompt"
@@ -39,7 +42,9 @@ class TestGeminiLLM:
         mock_llm = MagicMock()
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", model_name="gemini-1.5-flash")
+        llm = GeminiLLM(
+            name="TestGemini", role=Role.PERSONA, model_name="gemini-1.5-flash"
+        )
 
         assert llm.model_name == "gemini-1.5-flash"
 
@@ -50,7 +55,13 @@ class TestGeminiLLM:
         mock_llm = MagicMock()
         mock_chat_gemini.return_value = mock_llm
 
-        GeminiLLM(name="TestGemini", temperature=0.5, max_tokens=500, top_p=0.9)
+        GeminiLLM(
+            name="TestGemini",
+            role=Role.PERSONA,
+            temperature=0.5,
+            max_tokens=500,
+            top_p=0.9,
+        )
 
         # Verify kwargs were passed to ChatGoogleGenerativeAI
         call_kwargs = mock_chat_gemini.call_args[1]
@@ -95,11 +106,13 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", system_prompt="You are a helpful assistant.")
+        llm = GeminiLLM(
+            name="TestGemini",
+            role=Role.PERSONA,
+            system_prompt="You are a helpful assistant.",
+        )
         response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "Hello, Gemini!"}
-            ]
+            conversation_history=[{"turn": 0, "response": "Hello, Gemini!"}]
         )
 
         assert response == "This is a Gemini response"
@@ -132,11 +145,9 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")  # No system prompt
+        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)  # No system prompt
         response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "Test message"}
-            ]
+            conversation_history=[{"turn": 0, "response": "Test message"}]
         )
 
         assert response == "Response without system prompt"
@@ -144,7 +155,7 @@ class TestGeminiLLM:
         # Verify ainvoke was called with only HumanMessage (no SystemMessage)
         call_args = mock_llm.ainvoke.call_args[0][0]
         assert len(call_args) == 1
-        assert call_args[0].content == "Test message"
+        assert call_args[0].text == "Test message"
 
     @pytest.mark.asyncio
     @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
@@ -168,9 +179,9 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
         response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         assert response == "Response with fallback"
@@ -195,9 +206,9 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
         response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         assert response == "Response"
@@ -219,9 +230,9 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
         response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         assert response == "Response"
@@ -241,11 +252,9 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(side_effect=Exception("API quota exceeded"))
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
         response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "Test message"}
-            ]
+            conversation_history=[{"turn": 0, "response": "Test message"}]
         )
 
         # Should return error message instead of raising
@@ -277,9 +286,9 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -294,7 +303,7 @@ class TestGeminiLLM:
                 mock_llm = MagicMock()
                 mock_chat.return_value = mock_llm
 
-                llm = GeminiLLM(name="TestGemini")
+                llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
                 llm.last_response_metadata = {"test": "value"}
 
                 metadata1 = llm.get_last_response_metadata()
@@ -315,7 +324,9 @@ class TestGeminiLLM:
                 mock_llm = MagicMock()
                 mock_chat.return_value = mock_llm
 
-                llm = GeminiLLM(name="TestGemini", system_prompt="Initial prompt")
+                llm = GeminiLLM(
+                    name="TestGemini", role=Role.PERSONA, system_prompt="Initial prompt"
+                )
                 assert llm.system_prompt == "Initial prompt"
 
                 llm.set_system_prompt("Updated prompt")
@@ -336,9 +347,9 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -360,9 +371,9 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -395,9 +406,9 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -422,9 +433,9 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini")
+        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -453,13 +464,13 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", system_prompt="Test")
+        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA, system_prompt="Test")
 
         # Provide conversation history including the current turn
         history = [
             {
                 "turn": 1,
-                "speaker": "persona",
+                "speaker": Role.PERSONA,
                 "input": "Start",
                 "response": "Hello",
                 "early_termination": False,
@@ -467,7 +478,7 @@ class TestGeminiLLM:
             },
             {
                 "turn": 2,
-                "speaker": "agent",
+                "speaker": Role.PROVIDER,
                 "input": "Hello",
                 "response": "Hi there",
                 "early_termination": False,
@@ -475,7 +486,7 @@ class TestGeminiLLM:
             },
             {
                 "turn": 3,
-                "speaker": "persona",
+                "speaker": Role.PERSONA,
                 "input": "Hi there",
                 "response": "How are you?",
                 "early_termination": False,
@@ -510,10 +521,10 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", system_prompt="Test")
+        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA, system_prompt="Test")
 
         response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Hi"}]
+            conversation_history=[{"turn": 0, "response": "Hi"}]
         )
 
         assert response == "Response"
@@ -539,10 +550,10 @@ class TestGeminiLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", system_prompt="Test")
+        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA, system_prompt="Test")
 
         response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Hi"}]
+            conversation_history=[{"turn": 0, "response": "Hi"}]
         )
 
         assert response == "Response"
@@ -572,12 +583,35 @@ class TestGeminiLLM:
 
         # Persona system prompt should trigger message type flipping
         persona_prompt = "You are roleplaying as a human user"
-        llm = GeminiLLM(name="TestGemini", system_prompt=persona_prompt)
+        llm = GeminiLLM(
+            name="TestGemini", system_prompt=persona_prompt, role=Role.PERSONA
+        )
 
         history = [
-            {"turn": 1, "speaker": "persona", "response": "Hello"},
-            {"turn": 2, "speaker": "provider", "response": "Hi there"},
-            {"turn": 3, "speaker": "persona", "response": "How are you?"},
+            {
+                "turn": 1,
+                "speaker": Role.PERSONA,
+                "input": "",
+                "response": "Hello",
+                "early_termination": False,
+                "logging": {},
+            },
+            {
+                "turn": 2,
+                "speaker": Role.PROVIDER,
+                "input": "Hello",
+                "response": "Hi there",
+                "early_termination": False,
+                "logging": {},
+            },
+            {
+                "turn": 3,
+                "speaker": Role.PERSONA,
+                "input": "Hi there",
+                "response": "How are you?",
+                "early_termination": False,
+                "logging": {},
+            },
         ]
 
         response = await llm.generate_response(conversation_history=history)
@@ -593,10 +627,10 @@ class TestGeminiLLM:
         assert isinstance(messages[0], SystemMessage)
         # Turn 1 (persona, odd) should be AIMessage when persona role
         assert isinstance(messages[1], AIMessage)
-        assert messages[1].content == "Hello"
+        assert messages[1].text == "Hello"
         # Turn 2 (provider, even) should be HumanMessage when persona role
         assert isinstance(messages[2], HumanMessage)
-        assert messages[2].content == "Hi there"
+        assert messages[2].text == "Hi there"
         # Turn 3 (persona, odd) should be AIMessage when persona role
         assert isinstance(messages[3], AIMessage)
-        assert messages[3].content == "How are you?"
+        assert messages[3].text == "How are you?"

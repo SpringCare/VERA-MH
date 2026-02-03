@@ -6,7 +6,25 @@ from typing import Any, Dict, List, Optional
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
+from llm_clients.llm_interface import Role
+
 from .debug import debug_print
+
+
+def add_timestamp_to_path(path: Path) -> Path:
+    """
+    Add timestamp to filename before extension.
+
+    Args:
+        path: Original path
+
+    Returns:
+        Path with timestamp inserted before extension (format: YYYYMMDD_HHMMSS)
+    """
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    stem = path.stem
+    suffix = path.suffix
+    return path.parent / f"{stem}_{timestamp}{suffix}"
 
 
 def generate_conversation_filename(prefix: str = "conversation") -> str:
@@ -19,45 +37,44 @@ def generate_conversation_filename(prefix: str = "conversation") -> str:
     Returns:
         Formatted filename with timestamp
     """
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    return f"{prefix}_{timestamp}.txt"
+    temp_path = Path(f"{prefix}.txt")
+    timestamped_path = add_timestamp_to_path(temp_path)
+    return timestamped_path.name
 
 
 def save_conversation_to_file(
     conversation_history: List[Dict[str, Any]],
     filename: str,
     folder: str,
-    llm1_name: Optional[str] = None,
 ) -> None:
     """
     Save conversation history to a text file.
 
     Args:
-        conversation_history: List of conversation turns
+        conversation_history: List of conversation turns (speaker is role value)
         filename: Output filename
         folder: Output folder
-        llm1_name: Name of LLM1 to identify it as 'user'
     """
     # Ensure folder exists
     Path(folder).mkdir(parents=True, exist_ok=True)
 
-    summary = format_conversation_summary(conversation_history, llm1_name)
+    summary = format_conversation_summary(conversation_history)
     with open(f"{folder}/{filename}", "w", encoding="utf-8") as f:
         f.write(summary)
 
 
 def format_conversation_summary(
-    conversation_history: List[Dict[str, Any]], llm1_name: Optional[str] = None
+    conversation_history: List[Dict[str, Any]],
 ) -> str:
     """
     Format conversation history into a readable summary.
 
     Args:
-        conversation_history: List of conversation turns
-        llm1_name: Name of LLM1 to identify it as 'user'
+        conversation_history: List of conversation turns (speaker is role value)
 
     Returns:
-        Formatted conversation summary
+        Formatted conversation summary. Persona turns are labeled "user:",
+        other roles (e.g. provider) are labeled "chatbot:".
     """
     if not conversation_history:
         return "No conversation recorded."
@@ -65,20 +82,22 @@ def format_conversation_summary(
     summary = ""
 
     for i, turn in enumerate(conversation_history):
-        speaker_name = turn["speaker"]
+        # Get speaker value (Role enum value string: "persona", "provider", etc.)
+        speaker_value = turn.get("speaker")
 
-        # Determine if this is LLM1 (user) or LLM2 (agent)
-        if llm1_name and llm1_name in speaker_name:
-            prefix = "user:"
-        else:
-            prefix = "chatbot:"
+        # Persona -> "user:", any other role -> "chatbot:"
+        try:
+            turn_role = Role(speaker_value)
+            prefix = "user:" if turn_role == Role.PERSONA else "chatbot:"
+        except (ValueError, TypeError):
+            raise ValueError(f"Invalid role value '{speaker_value}' for turn {i}")
 
         # Add the response with proper formatting
         summary += f"{prefix} {turn['response']}\n"
 
         # Check for early termination flag
         if turn.get("early_termination", False):
-            summary += f"[CONVERSATION ENDED - {speaker_name} signaled termination]\n"
+            summary += f"[CONVERSATION ENDED - {speaker_value} signaled termination]\n"
 
         # Add empty line between speakers, but not after the last turn
         if i < len(conversation_history) - 1:
@@ -90,11 +109,9 @@ def format_conversation_summary(
 def build_persona_role_reminder() -> str:
     """
     Build a role reminder message for personas to prevent role confusion.
-
     This reminder is injected before conversation history to reinforce that
     the persona should maintain their character as a user in distress, not
     adopt the chatbot's supportive counselor role.
-
     Returns:
         The role reminder text to inject as a HumanMessage
     """
@@ -108,40 +125,25 @@ def build_persona_role_reminder() -> str:
 
 
 def build_langchain_messages(
+    role: Role,
     conversation_history: Optional[List[Dict[str, Any]]] = None,
-    system_prompt: Optional[str] = None,
 ) -> List[BaseMessage]:
     """
-    Build a list of LangChain messages from conversation history.
-
-    Uses turn indices to determine message type since speaker names can be custom:
-    - Turn 0: Initial message (HumanMessage)
-
-    When LLM is playing persona role (is_persona=True):
-    - Odd turns (1, 3, 5...): Persona responses (AIMessage)
-    - Even turns (2, 4, 6...): Provider responses (HumanMessage)
-
-    When LLM is playing provider role (is_persona=False):
-    - Odd turns (1, 3, 5...): Persona responses (HumanMessage)
-    - Even turns (2, 4, 6...): Provider responses (AIMessage)
-
-    IMPORTANT: This assumes persona always speaks first (see ConversationSimulator
-    line 90-92). If the speaker order changes, this logic must be updated.
+    Build a list of LangChain messages from conversation history for the given role.
 
     Args:
         conversation_history: Optional list of previous conversation turns.
             Each turn is a dict with keys: 'turn', 'speaker', 'response'.
             Turn 0 contains the initial message with speaker="system".
-        system_prompt: Optional system prompt to detect persona role.
-            If provided and contains "roleplaying as a human user", message
-            types will be flipped (persona turns become AIMessage, provider
-            turns become HumanMessage).
+        role: Optional role of the LLM (Role.PERSONA, Role.PROVIDER, or None).
+            Messages from the same role are converted to AIMessage (what "I"
+            said), messages from the other role are converted to HumanMessage
+            (what "they" said).
 
     Returns:
         List of LangChain message objects (HumanMessage, AIMessage)
     """
     messages = []
-    is_persona = system_prompt and "roleplaying as a human user" in system_prompt
 
     # Add conversation history if provided
     if conversation_history:
@@ -155,31 +157,31 @@ def build_langchain_messages(
             if turn_number is None or text is None:
                 continue
 
-            # Handle turn 0 (initial message) specially
+            # Special case: turn 0 is the trigger for the LLM to start the conversation.
             if turn_number == 0:
                 debug_print(f"  Turn 0 -> HumanMessage (initial): {text[:50]}...")
                 messages.append(HumanMessage(content=text))
                 continue
 
-            # Determine message type based on turn number and role
-            # Persona speaks on odd turns (1, 3, 5...), provider on even (2, 4, 6...)
-            is_persona_turn = turn_number % 2 == 1
-
-            # Flip message types when LLM is playing persona role
-            if is_persona:
-                # Persona responses are AIMessage, provider inputs are HumanMessage
-                message = (
-                    AIMessage(content=text)
-                    if is_persona_turn
-                    else HumanMessage(content=text)
-                )
+            # Determine message type based on role comparison
+            turn_speaker = turn.get("speaker")
+            if turn_speaker is not None:
+                try:
+                    turn_role = Role(turn_speaker)
+                    # If the message's role matches the requesting role, it's an
+                    # AIMessage (what "I" said). Otherwise, it's a HumanMessage
+                    # (what "they" said).
+                    if turn_role == role:
+                        message = AIMessage(content=text)
+                    else:
+                        message = HumanMessage(content=text)
+                except (ValueError, TypeError):
+                    raise ValueError(
+                        f"Invalid role value '{turn_speaker}' "
+                        f"for turn {turn_number}"
+                    )
             else:
-                # Persona inputs are HumanMessage, provider responses are AIMessage
-                message = (
-                    HumanMessage(content=text)
-                    if is_persona_turn
-                    else AIMessage(content=text)
-                )
+                raise ValueError(f"Speaker is not provided for turn {turn_number}")
 
             msg_type = type(message).__name__
             preview = text[:50] + "..." if len(text) > 50 else text
@@ -190,6 +192,7 @@ def build_langchain_messages(
 
 
 def format_conversation_as_string(
+    role: Role,
     conversation_history: Optional[List[Dict[str, Any]]] = None,
     system_prompt: Optional[str] = None,
 ) -> str:
@@ -200,6 +203,7 @@ def format_conversation_as_string(
     a string format with Human/Assistant labels.
 
     Args:
+        role: Role of the LLM (Role.PERSONA or Role.PROVIDER)
         conversation_history: Optional list of previous conversation turns
         system_prompt: Optional system prompt to prepend
 
@@ -213,14 +217,14 @@ def format_conversation_as_string(
         full_message = f"System: {system_prompt}\n\n"
 
     # Build LangChain messages using existing utility
-    messages = build_langchain_messages(conversation_history, system_prompt)
+    messages = build_langchain_messages(role, conversation_history)
 
     # Convert messages to string format
     for message in messages:
         if isinstance(message, HumanMessage):
-            full_message += f"Human: {message.content}\n\n"
+            full_message += f"Human: {message.text}\n\n"
         elif isinstance(message, AIMessage):
-            full_message += f"Assistant: {message.content}\n\n"
+            full_message += f"Assistant: {message.text}\n\n"
 
     # Add "Assistant:" prompt at the end to signal the LLM should respond
     if messages and full_message.endswith("\n\n"):

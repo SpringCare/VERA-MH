@@ -1,0 +1,11 @@
+Provider Model,Path
+Claude Opus 4.1,publication_evaluations/vera_mh_v1_scores/claude-opus-4-1-20250805/j_gpt-4ox5_20260115_112740_528__p_gpt_5_{'max_completion_tokens': 5000}__a_claude_opus_4_1_20250805__t20__r20__20260115_023947
+Claude Opus 4.5,publication_evaluations/vera_mh_v1_scores/claude-opus-4-5-20251101/j_gpt-4ox5_20260121_072707_081__p_gpt_5_{'max_completion_tokens': 5000}__a_claude_opus_4_5_20251101__t20__r20__20260120_181154
+Claude Sonnet 4.5,publication_evaluations/vera_mh_v1_scores/claude-sonnet-4-5-20250929/j_gpt-4ox5_20260115_114830_598__p_gpt_5_{'max_completion_tokens': 5000}__a_claude_sonnet_4_5_20250929__t20__r20__20260115_043438
+GPT 4o,publication_evaluations/vera_mh_v1_scores/gpt-4o/j_gpt-4ox5_20260115_124932_600__p_gpt_5_{'max_completion_tokens': 5000}__a_gpt_4o__t20__r20__20260114_205742
+GPT 5,publication_evaluations/vera_mh_v1_scores/gpt-5/j_gpt-4ox5_20260115_130825_255__p_gpt_5_{'max_completion_tokens': 5000}__a_gpt_5_{'max_completion_tokens': 5000}__t20__r20__20260114_223300
+GPT 5.2,publication_evaluations/vera_mh_v1_scores/gpt-5.2/j_gpt-4ox5_20260121_084528_483__p_gpt_5_{'max_completion_tokens': 5000}__a_gpt_5_2_{'max_completion_tokens': 5000}__t20__r20__20260121_070329
+Gemini 2.5 Flash,publication_evaluations/vera_mh_v1_scores/gemini-2.5-flash/j_gpt-4ox5_20260115_120952_291__p_gpt_5_{'max_completion_tokens': 5000}__a_gemini_2_5_flash__t20__r20__20260115_062752
+Gemini 3 Pro Preview,publication_evaluations/vera_mh_v1_scores/gemini-3-pro-preview/j_gpt-4ox5_20260115_122941_748__p_gpt_5_{'max_completion_tokens': 5000}__a_gemini_3_pro_preview__t20__r20__20260115_081251
+Grok 4,publication_evaluations/vera_mh_v1_scores/azure-grok-4/j_gpt-4ox5_20260120_180400_642__p_gpt_5_{'max_completion_tokens': 5000}__a_azure_grok_4__t20__r20__20260120_144847
+Phi 4,publication_evaluations/vera_mh_v1_scores/phi4/j_gpt-4ox5_20260122_141352_885__p_gpt_5_{'max_completion_tokens': 5000}__a_phi4__t20__r20__20260120_215842

@@ -5,11 +5,11 @@ Provides unified interface for different LLM providers
   - Claude (claude-*)
   - Gemini (gemini-*)
   - Azure (azure-*)
-  - Llama (llama-*)
+  - Ollama (ollama-*)
 """
 
 from .config import Config
 from .llm_factory import LLMFactory
-from .llm_interface import JudgeLLM, LLMInterface
+from .llm_interface import JudgeLLM, LLMInterface, Role
 
-__all__ = ["LLMInterface", "JudgeLLM", "LLMFactory", "Config"]
+__all__ = ["LLMInterface", "JudgeLLM", "LLMFactory", "Config", "Role"]

@@ -8,7 +8,7 @@ from judge.constants import BEST_PRACTICE, DAMAGING, NEUTRAL
 from judge.question_navigator import QuestionNavigator
 from judge.response_models import QuestionResponse
 from judge.rubric_config import ConversationData, RubricConfig
-from llm_clients import LLMFactory
+from llm_clients import LLMFactory, Role
 from llm_clients.llm_interface import JudgeLLM
 
 
@@ -132,6 +132,7 @@ class LLMJudge:
         llm = LLMFactory.create_llm(
             model_name=self.judge_model,
             name="Question Flow Evaluator",
+            role=Role.JUDGE,
             system_prompt=conversation_context_prompt,
             **self.judge_model_extra_params,
         )
@@ -144,7 +145,7 @@ class LLMJudge:
                 f"structured output support. Supported models: "
                 f"Claude (claude-*), OpenAI (gpt-*), "
                 "Gemini (gemini-*), Azure (azure-*). "
-                f"Not supported: Llama/Ollama models."
+                f"Not supported: Ollama models."
             )
 
         return llm

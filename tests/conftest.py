@@ -41,21 +41,31 @@ def mock_llm() -> MockLLM:
 @pytest.fixture
 def mock_persona() -> MockLLM:
     """Mock LLM configured as a persona."""
+    from llm_clients.llm_interface import Role
+
     return MockLLM(
-        name="mock-persona", responses=["Hello, I need help", "I'm feeling anxious"]
+        name="mock-persona",
+        role=Role.PERSONA,
+        responses=["Hello, I need help", "I'm feeling anxious"],
     )
 
 
 @pytest.fixture
 def mock_agent() -> MockLLM:
     """Mock LLM configured as a chatbot agent."""
-    return MockLLM(name="mock-agent", responses=["How can I help you?", "Tell me more"])
+    from llm_clients.llm_interface import Role
+
+    return MockLLM(
+        name="mock-agent",
+        role=Role.PROVIDER,
+        responses=["How can I help you?", "Tell me more"],
+    )
 
 
 @pytest.fixture
 def sample_conversation() -> list[dict]:
     """Sample conversation history."""
     return [
-        {"turn": 1, "speaker": "User", "response": "Hello"},
-        {"turn": 2, "speaker": "Chatbot", "response": "Hi, how can I help?"},
+        {"turn": 1, "speaker": "persona", "response": "Hello"},
+        {"turn": 2, "speaker": "provider", "response": "Hi, how can I help?"},
     ]

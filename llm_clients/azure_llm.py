@@ -8,6 +8,7 @@ from langchain_azure_ai.chat_models import AzureAIChatCompletionsModel
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 
+from llm_clients import Role
 from utils.conversation_utils import build_langchain_messages
 from utils.debug import debug_print
 
@@ -26,11 +27,12 @@ class AzureLLM(JudgeLLM):
     def __init__(
         self,
         name: str,
+        role: Role,
         system_prompt: Optional[str] = None,
         model_name: Optional[str] = None,
         **kwargs,
     ):
-        super().__init__(name, system_prompt)
+        super().__init__(name, role, system_prompt)
 
         if not Config.AZURE_API_KEY:
             raise ValueError("AZURE_API_KEY not found in environment variables")
@@ -142,21 +144,19 @@ class AzureLLM(JudgeLLM):
 
         # Build messages from history
         # Role reminder is automatically added for personas by build_langchain_messages
-        messages.extend(
-            build_langchain_messages(conversation_history, self.system_prompt)
-        )
+        messages.extend(build_langchain_messages(self.role, conversation_history))
 
         # Debug: Print messages being sent to LLM
-        debug_print(f"\n[DEBUG {self.name}] Messages sent to LLM:")
+        debug_print(f"\n[DEBUG {self.name} - {self.role.value}] Messages sent to LLM:")
         for i, msg in enumerate(messages):
             msg_type = type(msg).__name__
-            preview = msg.content[:100]
-            content_preview = preview + "..." if len(msg.content) > 100 else msg.content
+            preview = msg.text[:100]
+            content_preview = preview + "..." if len(msg.text) > 100 else msg.text
             debug_print(f"  {i+1}. {msg_type}: {content_preview}")
 
         try:
             # Debug: Print what we're about to send
-            debug_print(f"\n[DEBUG {self.name}] Calling Azure LLM:")
+            debug_print(f"\n[DEBUG {self.name} - {self.role.value}] Calling Azure:")
             debug_print(f"  Model: {self.model_name}")
             debug_print(f"  Endpoint: {self.endpoint}")
             debug_print(f"  API Version: {self.api_version}")
@@ -242,7 +242,9 @@ class AzureLLM(JudgeLLM):
                     "with current credentials\n"
                     f"\n  Error details: {error_details}"
                 )
-                debug_print(f"\n[DEBUG {self.name}] {helpful_msg}")
+                debug_print(
+                    f"\n[DEBUG {self.name} - {self.role.value}] " f"{helpful_msg}"
+                )
                 return f"Error generating response: {helpful_msg}"
 
             return f"Error generating response: {error_msg}"

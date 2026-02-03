@@ -94,13 +94,14 @@ def log_conversation_turn(
     logging: dict = {},
 ):
     """Log individual conversation turn."""
-    logger.info(f"TURN {turn_number} - {speaker}")
+    speaker_upper = speaker.upper()
+    logger.info(f"TURN {turn_number} - {speaker_upper}")
     logger.info(f"Input: {input_message}")
     logger.info(f"Response: {response}")
     logger.info(f"response_id: {logging.get('response_id')}")
     logger.info(f"logging: {logging}")
     if early_termination:
-        logger.warning(f"EARLY TERMINATION detected by {speaker}")
+        logger.warning(f"EARLY TERMINATION detected by {speaker_upper}")
     logger.info("-" * 40)
 
 

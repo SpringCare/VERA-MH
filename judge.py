@@ -91,8 +91,8 @@ if __name__ == "__main__":
     source_group.add_argument(
         "--folder",
         "-f",
-        default="conversations",
-        help="Folder containing conversation files (default: conversations)",
+        help="Path to a conversation run folder "
+        "(e.g. conversations/p_model__a_model__t6__r1__timestamp/)",
     )
 
     # rubrics
@@ -163,6 +163,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--per-judge",
+        "-pj",
         action="store_true",
         help=(
             "If set, --max-concurrent applies per judge model. "
@@ -172,6 +173,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--verbose-workers",
+        "-vw",
         action="store_true",
         help="Enable verbose worker logging to show concurrency behavior",
     )

@@ -2,14 +2,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from llm_clients import Role
 from llm_clients.llm_interface import LLMInterface
 
 
 class ConcreteLLM(LLMInterface):
     """Concrete implementation for testing abstract base class."""
 
-    def __init__(self, name: str, system_prompt: str = None):
-        super().__init__(name, system_prompt)
+    def __init__(self, name: str, role: Role, system_prompt: str = None):
+        super().__init__(name, role, system_prompt)
         # Add a mock llm object for __getattr__ testing
         self.llm = MagicMock(spec=["temperature", "max_tokens", "custom_method"])
         self.llm.temperature = 0.7
@@ -36,7 +37,7 @@ class TestLLMInterface:
 
     def test_init_with_name_only(self):
         """Test initialization with only name parameter."""
-        llm = ConcreteLLM(name="TestLLM")
+        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
 
         assert llm.name == "TestLLM"
         assert llm.system_prompt == ""
@@ -44,31 +45,26 @@ class TestLLMInterface:
     def test_init_with_name_and_system_prompt(self):
         """Test initialization with name and system prompt."""
         prompt = "You are a helpful assistant."
-        llm = ConcreteLLM(name="TestLLM", system_prompt=prompt)
+        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER, system_prompt=prompt)
 
         assert llm.name == "TestLLM"
         assert llm.system_prompt == prompt
 
-    def test_get_name(self):
-        """Test get_name method (line 30)."""
-        llm = ConcreteLLM(name="MyLLM")
-        assert llm.get_name() == "MyLLM"
-
     @pytest.mark.asyncio
     async def test_generate_response_abstract_method(self):
         """Test that generate_response is implemented in concrete class (line 21)."""
-        llm = ConcreteLLM(name="TestLLM")
+        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
         response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "test message"}
-            ]
+            conversation_history=[{"turn": 0, "response": "test message"}]
         )
 
         assert response == "test response"
 
     def test_set_system_prompt_abstract_method(self):
         """Test that set_system_prompt is implemented in concrete class (line 26)."""
-        llm = ConcreteLLM(name="TestLLM", system_prompt="Initial prompt")
+        llm = ConcreteLLM(
+            name="TestLLM", role=Role.PROVIDER, system_prompt="Initial prompt"
+        )
         assert llm.system_prompt == "Initial prompt"
 
         llm.set_system_prompt("Updated prompt")
@@ -77,20 +73,20 @@ class TestLLMInterface:
     def test_cannot_instantiate_abstract_class(self):
         """Test that LLMInterface cannot be instantiated directly."""
         with pytest.raises(TypeError) as exc_info:
-            LLMInterface(name="Test")
+            LLMInterface(name="Test", role=Role.PROVIDER)
 
         assert "Can't instantiate abstract class" in str(exc_info.value)
 
     def test_incomplete_implementation_raises_error(self):
         """Test that incomplete implementations raise TypeError."""
         with pytest.raises(TypeError) as exc_info:
-            IncompleteLLM(name="Incomplete")
+            IncompleteLLM(name="Incomplete", role=Role.PROVIDER)
 
         assert "Can't instantiate abstract class" in str(exc_info.value)
 
     def test_getattr_delegates_to_llm(self):
         """Test that __getattr__ delegates to self.llm (lines 40-41)."""
-        llm = ConcreteLLM(name="TestLLM")
+        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
 
         # Access attributes that exist on llm
         assert llm.temperature == 0.7
@@ -98,7 +94,7 @@ class TestLLMInterface:
 
     def test_getattr_raises_attribute_error_for_missing_attribute(self):
         """Test that __getattr__ raises AttributeError for missing attributes."""
-        llm = ConcreteLLM(name="TestLLM")
+        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
 
         # Try to access attribute that doesn't exist on llm (spec prevents it)
         with pytest.raises(AttributeError) as exc_info:
@@ -119,7 +115,7 @@ class TestLLMInterface:
             def set_system_prompt(self, system_prompt: str) -> None:
                 self.system_prompt = system_prompt
 
-        llm = MinimalLLM(name="Minimal")
+        llm = MinimalLLM(name="Minimal", role=Role.PROVIDER)
 
         # Should raise AttributeError
         with pytest.raises(AttributeError):
@@ -131,8 +127,8 @@ class TestLLMInterface:
         class NullLLM(LLMInterface):
             """Implementation with None llm."""
 
-            def __init__(self, name: str, system_prompt: str = None):
-                super().__init__(name, system_prompt)
+            def __init__(self, name: str, role: Role, system_prompt: str = None):
+                super().__init__(name, role, system_prompt)
                 self.llm = None
 
             async def generate_response(self, conversation_history=None):
@@ -141,7 +137,7 @@ class TestLLMInterface:
             def set_system_prompt(self, system_prompt: str) -> None:
                 self.system_prompt = system_prompt
 
-        llm = NullLLM(name="Null")
+        llm = NullLLM(name="Null", role=Role.PROVIDER)
 
         # Should raise AttributeError since llm is None
         with pytest.raises(AttributeError):
@@ -149,8 +145,8 @@ class TestLLMInterface:
 
     def test_multiple_instances_have_independent_state(self):
         """Test that multiple LLM instances maintain independent state."""
-        llm1 = ConcreteLLM(name="LLM1", system_prompt="Prompt 1")
-        llm2 = ConcreteLLM(name="LLM2", system_prompt="Prompt 2")
+        llm1 = ConcreteLLM(name="LLM1", role=Role.PROVIDER, system_prompt="Prompt 1")
+        llm2 = ConcreteLLM(name="LLM2", role=Role.PROVIDER, system_prompt="Prompt 2")
 
         assert llm1.name == "LLM1"
         assert llm2.name == "LLM2"
@@ -164,7 +160,7 @@ class TestLLMInterface:
 
     def test_getattr_with_callable_attribute(self):
         """Test __getattr__ works with callable attributes."""
-        llm = ConcreteLLM(name="TestLLM")
+        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
         llm.llm.custom_method = MagicMock(return_value="method result")
 
         # Access callable attribute through delegation
@@ -174,7 +170,7 @@ class TestLLMInterface:
 
     def test_system_prompt_default_empty_string(self):
         """Test that system_prompt defaults to empty string, not None."""
-        llm = ConcreteLLM(name="TestLLM")
+        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
         assert llm.system_prompt == ""
         assert llm.system_prompt is not None
 
@@ -183,8 +179,8 @@ class TestLLMInterface:
 
         # Create a fresh mock without spec for this test
         class FlexibleLLM(LLMInterface):
-            def __init__(self, name: str, system_prompt: str = None):
-                super().__init__(name, system_prompt)
+            def __init__(self, name: str, role: Role, system_prompt: str = None):
+                super().__init__(name, role, system_prompt)
                 self.llm = MagicMock()
                 self.llm.string_attr = "test string"
                 self.llm.int_attr = 42
@@ -198,7 +194,7 @@ class TestLLMInterface:
             def set_system_prompt(self, system_prompt: str) -> None:
                 self.system_prompt = system_prompt
 
-        llm = FlexibleLLM(name="TestLLM")
+        llm = FlexibleLLM(name="TestLLM", role=Role.PROVIDER)
 
         assert isinstance(llm.string_attr, str)
         assert isinstance(llm.int_attr, int)

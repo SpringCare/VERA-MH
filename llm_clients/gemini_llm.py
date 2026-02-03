@@ -10,7 +10,7 @@ from utils.conversation_utils import build_langchain_messages
 from utils.debug import debug_print
 
 from .config import Config
-from .llm_interface import JudgeLLM
+from .llm_interface import JudgeLLM, Role
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -21,11 +21,12 @@ class GeminiLLM(JudgeLLM):
     def __init__(
         self,
         name: str,
+        role: Role,
         system_prompt: Optional[str] = None,
         model_name: Optional[str] = None,
         **kwargs,
     ):
-        super().__init__(name, system_prompt)
+        super().__init__(name, role, system_prompt)
 
         if not Config.GOOGLE_API_KEY:
             raise ValueError("GOOGLE_API_KEY not found in environment variables")
@@ -79,17 +80,14 @@ class GeminiLLM(JudgeLLM):
             messages.append(SystemMessage(content=self.system_prompt))
 
         # Build messages from history
-        # Role reminder is automatically added for personas by build_langchain_messages
-        messages.extend(
-            build_langchain_messages(conversation_history, self.system_prompt)
-        )
+        messages.extend(build_langchain_messages(self.role, conversation_history))
 
         # Debug: Print messages being sent to LLM
-        debug_print(f"\n[DEBUG {self.name}] Messages sent to LLM:")
+        debug_print(f"\n[DEBUG {self.name} - {self.role.value}] Messages sent to LLM:")
         for i, msg in enumerate(messages):
             msg_type = type(msg).__name__
-            preview = msg.content[:100]
-            content_preview = preview + "..." if len(msg.content) > 100 else msg.content
+            preview = msg.text[:100]
+            content_preview = preview + "..." if len(msg.text) > 100 else msg.text
             debug_print(f"  {i + 1}. {msg_type}: {content_preview}")
 
         try:
@@ -106,6 +104,7 @@ class GeminiLLM(JudgeLLM):
                     else self.model_name
                 ),
                 "provider": "gemini",
+                "role": self.role.value,
                 "timestamp": datetime.now().isoformat(),
                 "response_time_seconds": round(end_time - start_time, 3),
                 "usage": {},
@@ -151,6 +150,7 @@ class GeminiLLM(JudgeLLM):
                 "response_id": None,
                 "model": self.model_name,
                 "provider": "gemini",
+                "role": self.role.value,
                 "timestamp": datetime.now().isoformat(),
                 "error": str(e),
                 "usage": {},
@@ -193,6 +193,7 @@ class GeminiLLM(JudgeLLM):
                 "response_id": None,
                 "model": self.model_name,
                 "provider": "gemini",
+                "role": self.role.value,
                 "timestamp": datetime.now().isoformat(),
                 "response_time_seconds": round(end_time - start_time, 3),
                 "usage": {},
@@ -212,6 +213,7 @@ class GeminiLLM(JudgeLLM):
                 "response_id": None,
                 "model": self.model_name,
                 "provider": "gemini",
+                "role": self.role.value,
                 "timestamp": datetime.now().isoformat(),
                 "error": str(e),
                 "usage": {},

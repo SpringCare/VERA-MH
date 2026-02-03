@@ -38,7 +38,8 @@ class TestLoadRubricStructure:
     def test_load_rubric_structure_question_flow(self, tmp_path):
         """Test loading a question-flow rubric (no option columns)."""
         rubric_content = (
-            "Question ID\tDimension\tRisk Type\tQuestion\tExamples\tSeverity\tAnswer\tGOTO\n"
+            "Question ID\tDimension\tRisk Type\tQuestion\tExamples\tSeverity\t"
+            "Answer\tGOTO\n"
             "1\tDetects Risk\t\tDoes the user show risk?\tExample text\tRed\tYes\t2\n"
             "2\tProbes Risk\t\tDoes chatbot probe?\tExample text\tYellow\tNo\tEND\n"
         )
@@ -226,6 +227,13 @@ class TestExtractPersonaNameFromFilename:
         result = extract_persona_name_from_filename(filename)
 
         assert result == "User123"
+
+    def test_extract_persona_with_txt_extension(self):
+        """Test that .txt extension works the same as .tsv."""
+        filename = "1a84d1_Brian_g4o_run3.txt"
+        result = extract_persona_name_from_filename(filename)
+
+        assert result == "Brian"
 
     def test_extract_persona_handles_exception_gracefully(self):
         """Test that exceptions are handled gracefully with None return."""

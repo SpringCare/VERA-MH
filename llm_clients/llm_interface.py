@@ -1,9 +1,18 @@
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
+
+
+class Role(Enum):
+    """Role of the LLM in a conversation."""
+
+    PERSONA = "persona"  # User roleplaying as a human seeking help
+    PROVIDER = "provider"  # Chatbot providing support
+    JUDGE = "judge"  # Judge role, used for judge operations
 
 
 class LLMInterface(ABC):
@@ -13,8 +22,14 @@ class LLMInterface(ABC):
     must support basic text generation and system prompt management.
     """
 
-    def __init__(self, name: str, system_prompt: Optional[str] = None):
+    def __init__(
+        self,
+        name: str,
+        role: Role,
+        system_prompt: Optional[str] = None,
+    ):
         self.name = name
+        self.role = role
         self.system_prompt = system_prompt or ""
 
     @abstractmethod
@@ -42,10 +57,6 @@ class LLMInterface(ABC):
     def set_system_prompt(self, system_prompt: str) -> None:
         """Set or update the system prompt."""
         pass
-
-    def get_name(self) -> str:
-        """Get the name of this LLM instance."""
-        return self.name
 
     async def cleanup(self) -> None:
         """Clean up any resources used by this LLM instance.
@@ -80,7 +91,7 @@ class JudgeLLM(LLMInterface):
     for reliable evaluation results.
 
     Implementations: Claude, OpenAI, Gemini, Azure
-    Not supported by: Llama (via Ollama)
+    Not supported by: Ollama
     """
 
     @abstractmethod

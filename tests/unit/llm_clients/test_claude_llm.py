@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from llm_clients import Role
 from llm_clients.claude_llm import ClaudeLLM
 
 
@@ -14,7 +15,7 @@ class TestClaudeLLM:
     def test_init_missing_api_key_raises_error(self):
         """Test that missing ANTHROPIC_API_KEY raises ValueError (line 25)."""
         with pytest.raises(ValueError) as exc_info:
-            ClaudeLLM(name="TestClaude")
+            ClaudeLLM(name="TestClaude", role=Role.PERSONA)
 
         assert "ANTHROPIC_API_KEY not found" in str(exc_info.value)
 
@@ -26,7 +27,9 @@ class TestClaudeLLM:
         mock_llm.model = "claude-sonnet-4-5-20250929"
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", system_prompt="Test prompt")
+        llm = ClaudeLLM(
+            name="TestClaude", role=Role.PERSONA, system_prompt="Test prompt"
+        )
 
         assert llm.name == "TestClaude"
         assert llm.system_prompt == "Test prompt"
@@ -41,7 +44,9 @@ class TestClaudeLLM:
         mock_llm.model = "claude-3-opus-20240229"
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", model_name="claude-3-opus-20240229")
+        llm = ClaudeLLM(
+            name="TestClaude", role=Role.PERSONA, model_name="claude-3-opus-20240229"
+        )
 
         assert llm.model_name == "claude-3-opus-20240229"
 
@@ -53,7 +58,13 @@ class TestClaudeLLM:
         mock_llm.model = "claude-sonnet-4-5-20250929"
         mock_chat_anthropic.return_value = mock_llm
 
-        ClaudeLLM(name="TestClaude", temperature=0.5, max_tokens=500, top_p=0.9)
+        ClaudeLLM(
+            name="TestClaude",
+            role=Role.PERSONA,
+            temperature=0.5,
+            max_tokens=500,
+            top_p=0.9,
+        )
 
         # Verify kwargs were passed to ChatAnthropic
         call_kwargs = mock_chat_anthropic.call_args[1]
@@ -84,11 +95,13 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", system_prompt="You are a helpful assistant.")
+        llm = ClaudeLLM(
+            name="TestClaude",
+            role=Role.PERSONA,
+            system_prompt="You are a helpful assistant.",
+        )
         response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "Hello, Claude!"}
-            ]
+            conversation_history=[{"turn": 0, "response": "Hello, Claude!"}]
         )
 
         assert response == "This is a test response"
@@ -122,11 +135,9 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude")  # No system prompt
+        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)  # No system prompt
         response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "Test message"}
-            ]
+            conversation_history=[{"turn": 0, "response": "Test message"}]
         )
 
         assert response == "Response without system prompt"
@@ -134,7 +145,7 @@ class TestClaudeLLM:
         # Verify ainvoke was called with only HumanMessage (no SystemMessage)
         call_args = mock_llm.ainvoke.call_args[0][0]
         assert len(call_args) == 1
-        assert call_args[0].content == "Test message"
+        assert call_args[0].text == "Test message"
 
     @pytest.mark.asyncio
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
@@ -153,9 +164,9 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude")
+        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
         response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         assert response == "Response"
@@ -181,9 +192,9 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude")
+        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
         response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         assert response == "Response"
@@ -204,11 +215,9 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(side_effect=Exception("API rate limit exceeded"))
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude")
+        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
         response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "Test message"}
-            ]
+            conversation_history=[{"turn": 0, "response": "Test message"}]
         )
 
         # Should return error message instead of raising
@@ -241,9 +250,9 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude")
+        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -259,7 +268,7 @@ class TestClaudeLLM:
                 mock_llm.model = "claude-sonnet-4-5-20250929"
                 mock_chat.return_value = mock_llm
 
-                llm = ClaudeLLM(name="TestClaude")
+                llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
                 llm.last_response_metadata = {"test": "value"}
 
                 metadata1 = llm.get_last_response_metadata()
@@ -281,7 +290,9 @@ class TestClaudeLLM:
                 mock_llm.model = "claude-sonnet-4-5-20250929"
                 mock_chat.return_value = mock_llm
 
-                llm = ClaudeLLM(name="TestClaude", system_prompt="Initial prompt")
+                llm = ClaudeLLM(
+                    name="TestClaude", role=Role.PERSONA, system_prompt="Initial prompt"
+                )
                 assert llm.system_prompt == "Initial prompt"
 
                 llm.set_system_prompt("Updated prompt")
@@ -309,9 +320,9 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude")
+        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
         response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         assert response == "Partial usage response"
@@ -336,9 +347,9 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude")
+        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -361,9 +372,9 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude")
+        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -397,9 +408,9 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude")
+        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -425,9 +436,9 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude")
+        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -454,13 +465,13 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", system_prompt="Test")
+        llm = ClaudeLLM(name="TestClaude", system_prompt="Test", role=Role.PROVIDER)
 
         # Provide conversation history including the current turn
         history = [
             {
                 "turn": 1,
-                "speaker": "persona",
+                "speaker": Role.PERSONA,
                 "input": "Start",
                 "response": "Hello",
                 "early_termination": False,
@@ -468,7 +479,7 @@ class TestClaudeLLM:
             },
             {
                 "turn": 2,
-                "speaker": "agent",
+                "speaker": Role.PROVIDER,
                 "input": "Hello",
                 "response": "Hi there",
                 "early_termination": False,
@@ -476,7 +487,7 @@ class TestClaudeLLM:
             },
             {
                 "turn": 3,
-                "speaker": "persona",
+                "speaker": Role.PERSONA,
                 "input": "Hi there",
                 "response": "How are you?",
                 "early_termination": False,
@@ -511,11 +522,9 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", system_prompt="Test")
+        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA, system_prompt="Test")
 
-        response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Hello"}]
-        )
+        response = await llm.generate_response(conversation_history=[])
 
         assert response == "Response"
 
@@ -523,8 +532,9 @@ class TestClaudeLLM:
         call_args = mock_llm.ainvoke.call_args
         messages = call_args[0][0]
 
-        # Should have: SystemMessage + current message only
-        assert len(messages) == 2
+        # Should have: SystemMessage only (no history messages)
+        assert len(messages) == 1
+        assert messages[0].text == "Test"
 
     @pytest.mark.asyncio
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
@@ -542,11 +552,10 @@ class TestClaudeLLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", system_prompt="Test")
+        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA, system_prompt="Test")
 
-        response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Hello"}]
-        )
+        # Test with None explicitly passed
+        response = await llm.generate_response(conversation_history=None)
 
         assert response == "Response"
 
@@ -554,8 +563,9 @@ class TestClaudeLLM:
         call_args = mock_llm.ainvoke.call_args
         messages = call_args[0][0]
 
-        # Should have: SystemMessage + current message only
-        assert len(messages) == 2
+        # Should have: SystemMessage only (no history messages)
+        assert len(messages) == 1
+        assert messages[0].text == "Test"
 
     @pytest.mark.asyncio
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
@@ -576,13 +586,38 @@ class TestClaudeLLM:
         mock_chat_anthropic.return_value = mock_llm
 
         # Persona system prompt should trigger message type flipping
+        from llm_clients.llm_interface import Role
+
         persona_prompt = "You are roleplaying as a human user"
-        llm = ClaudeLLM(name="TestClaude", system_prompt=persona_prompt)
+        llm = ClaudeLLM(
+            name="TestClaude", system_prompt=persona_prompt, role=Role.PERSONA
+        )
 
         history = [
-            {"turn": 1, "speaker": "persona", "response": "Hello"},
-            {"turn": 2, "speaker": "provider", "response": "Hi there"},
-            {"turn": 3, "speaker": "persona", "response": "How are you?"},
+            {
+                "turn": 1,
+                "speaker": Role.PERSONA,
+                "input": "",
+                "response": "Hello",
+                "early_termination": False,
+                "logging": {},
+            },
+            {
+                "turn": 2,
+                "speaker": Role.PROVIDER,
+                "input": "Hello",
+                "response": "Hi there",
+                "early_termination": False,
+                "logging": {},
+            },
+            {
+                "turn": 3,
+                "speaker": Role.PERSONA,
+                "input": "Hi there",
+                "response": "How are you?",
+                "early_termination": False,
+                "logging": {},
+            },
         ]
 
         response = await llm.generate_response(conversation_history=history)
@@ -598,10 +633,10 @@ class TestClaudeLLM:
         assert isinstance(messages[0], SystemMessage)
         # Turn 1 (persona, odd) should be AIMessage when persona role
         assert isinstance(messages[1], AIMessage)
-        assert messages[1].content == "Hello"
+        assert messages[1].text == "Hello"
         # Turn 2 (provider, even) should be HumanMessage when persona role
         assert isinstance(messages[2], HumanMessage)
-        assert messages[2].content == "Hi there"
+        assert messages[2].text == "Hi there"
         # Turn 3 (persona, odd) should be AIMessage when persona role
         assert isinstance(messages[3], AIMessage)
-        assert messages[3].content == "How are you?"
+        assert messages[3].text == "How are you?"

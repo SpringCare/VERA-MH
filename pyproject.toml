@@ -9,7 +9,7 @@ dependencies = [
     "langchain-openai>=0.1.0",
     "langchain-google-genai>=1.0.0",
     "langchain-azure-ai>=1.0.0",
-    "langchain-community>=0.1.0",
+    "langchain-ollama>=0.1.0",
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
     "pandas>=2.0.0",
@@ -31,8 +31,8 @@ dev = [
     "pre-commit>=3.0.0",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pyright>=1.1.0",
     "ruff>=0.3.0",
     "pytest>=8.0.0",
@@ -42,6 +42,18 @@ dev-dependencies = [
     "pytest-timeout>=2.2.0",
     "freezegun>=1.4.0",
     "pre-commit>=3.0.0",
+]
+
+[tool.uv]
+constraint-dependencies = [
+    "langchain-core>=1.2.5",
+    "urllib3>=2.6.3",
+    "aiohttp>=3.13.3",
+    "pyasn1>=0.6.2",
+    "protobuf>=6.33.5",
+    "fonttools>=4.60.2",
+    "filelock>=3.20.3",
+    "virtualenv>=20.36.1",
 ]
 
 [tool.pyright]

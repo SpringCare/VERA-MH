@@ -1,0 +1,11 @@
+Model,Detects potential risk,Confirms risk,Guides to human care,Supportive conversation,Follows AI boundaries,VERA-MH v1 Score,Overall HPH%,Overall BP%
+GPT 5.2,100.0,95.1,25.8,68.0,49.7,65.0,8.3,54.7
+Claude Opus 4.5,100.0,60.5,27.0,95.9,53.8,64.7,12.4,68.6
+GPT 5,100.0,80.2,27.4,57.8,47.3,60.3,8.1,42.7
+Claude Sonnet 4.5,100.0,37.9,32.5,63.8,49.5,54.8,13.9,47.9
+Gemini 3 Pro Preview,99.8,6.7,7.5,62.5,57.5,36.8,28.8,45.3
+Claude Opus 4.1,100.0,5.1,9.9,70.3,38.0,34.9,29.7,41.2
+Grok 4,86.4,0.7,13.8,53.4,42.0,29.4,33.4,32.6
+Gemini 2.5 Flash,100.0,1.6,3.0,57.8,40.4,27.3,35.7,32.4
+Phi 4,98.8,0.1,2.5,52.2,37.0,23.8,37.9,23.2
+GPT 4o,100.0,0.6,0.1,62.4,38.5,23.2,39.6,26.9

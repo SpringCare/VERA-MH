@@ -60,25 +60,19 @@ class ConversationSimulator:
         if initial_message is None:
             initial_message = "Start the conversation based on the system prompt"
 
-        # IMPORTANT: Persona always starts first (turn 1, 3, 5...)
-        # This determines the odd/even pattern in build_langchain_messages()
-        # If you change this order, update utils/conversation_utils.py accordingly
+        # Start with persona by default, but this can be changed
+        # The role-based logic in build_langchain_messages() handles any starting order
         current_speaker = self.persona
         next_speaker = self.agent
 
         total_words = 0
         for turn in range(max_turns):
-            # Record start time for this turn
-
             # Generate response with conversation history
             # On turn 0, create a "turn 0" entry for the initial message
-            # This provides context without being a real conversation turn
+            # This acts as a trigger for the LLM to start the conversation
+            # without counting as a real conversation turn
             if turn == 0:
-                initial_turn = {
-                    "turn": 0,
-                    "speaker": "system",
-                    "response": initial_message,
-                }
+                initial_turn = {"turn": 0, "response": initial_message}
                 history_dicts = [initial_turn]
             else:
                 # Convert conversation history to dict format for LLM interface
@@ -103,18 +97,17 @@ class ConversationSimulator:
                 input_msg = initial_message
             else:
                 # Get the last turn's response as input for this turn
-                input_msg = (
-                    self.conversation_history[-1].response
-                    if self.conversation_history
-                    else ""
-                )
+                if self.conversation_history:
+                    input_msg = self.conversation_history[-1].response
+                else:
+                    raise ValueError(f"Conversation history is empty on turn {turn}")
 
             # Record this turn using ConversationTurn
             turn_obj = ConversationTurn(
                 turn=turn + 1,
-                speaker=current_speaker.get_name(),
+                speaker=current_speaker.role,
                 input_message=input_msg,
-                message=lc_message,
+                response_message=lc_message,
                 early_termination=False,
                 logging_metadata=current_speaker.get_last_response_metadata(),
             )
@@ -146,6 +139,4 @@ class ConversationSimulator:
         # TODO: why is this two functions
         # Convert to dict format for file saving
         history_dicts = [t.to_dict() for t in self.conversation_history]
-        save_conversation_to_file(
-            history_dicts, filename, folder, self.persona.get_name()
-        )
+        save_conversation_to_file(history_dicts, filename, folder)

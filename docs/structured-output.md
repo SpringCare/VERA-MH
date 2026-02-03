@@ -70,6 +70,12 @@ Each LLM client implements structured output using LangChain's `with_structured_
 async def generate_structured_response(
     self, message: Optional[str], response_model: Type[T]
 ) -> T:
+    # Build messages list (include system prompt if needed)
+    messages = []
+    if self.system_prompt:
+        messages.append(SystemMessage(content=self.system_prompt))
+    messages.append(HumanMessage(content=message))
+    
     structured_llm = self.llm.with_structured_output(response_model)
     response = await structured_llm.ainvoke(messages)
     return response
@@ -175,6 +181,13 @@ T = TypeVar("T", bound=BaseModel)
 async def generate_structured_response(
     self, message: Optional[str], response_model: Type[T]
 ) -> T:
+    # Build messages list (include system prompt if needed)
+    from langchain_core.messages import SystemMessage, HumanMessage
+    messages = []
+    if self.system_prompt:
+        messages.append(SystemMessage(content=self.system_prompt))
+    messages.append(HumanMessage(content=message))
+    
     # Use LangChain's with_structured_output if available
     structured_llm = self.llm.with_structured_output(response_model)
     response = await structured_llm.ainvoke(messages)

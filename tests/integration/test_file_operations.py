@@ -22,15 +22,13 @@ class TestConversationFileOperations:
     def test_save_and_load_conversation(self, tmp_path: Path) -> None:
         """Test round-trip save and load of a conversation."""
         conversation = [
-            {"speaker": "ModelA", "response": "Hello, how are you?"},
-            {"speaker": "ModelB", "response": "I'm doing well, thanks for asking!"},
-            {"speaker": "ModelA", "response": "That's great to hear."},
+            {"speaker": "persona", "response": "Hello, how are you?"},
+            {"speaker": "provider", "response": "I'm doing well, thanks for asking!"},
+            {"speaker": "persona", "response": "That's great to hear."},
         ]
 
         filename = "test_conversation.txt"
-        save_conversation_to_file(
-            conversation, filename, str(tmp_path), llm1_name="ModelA"
-        )
+        save_conversation_to_file(conversation, filename, str(tmp_path))
 
         # Verify file exists
         file_path = tmp_path / filename
@@ -45,24 +43,22 @@ class TestConversationFileOperations:
     def test_save_handles_unicode(self, tmp_path: Path) -> None:
         """Test saving conversation with Unicode (emojis and accents)."""
         conversation = [
-            {"speaker": "ModelX", "response": "Hello 👋 I'm feeling anxious 😟"},
+            {"speaker": "persona", "response": "Hello 👋 I'm feeling anxious 😟"},
             {
-                "speaker": "ModelY",
+                "speaker": "provider",
                 "response": (
                     "I understand. Let's work through this together. "
                     "C'est normal d'avoir peur."
                 ),
             },
             {
-                "speaker": "ModelX",
+                "speaker": "persona",
                 "response": "Merci! That means a lot. 🙏 Ich bin dankbar.",
             },
         ]
 
         filename = "unicode_conversation.txt"
-        save_conversation_to_file(
-            conversation, filename, str(tmp_path), llm1_name="ModelX"
-        )
+        save_conversation_to_file(conversation, filename, str(tmp_path))
 
         file_path = tmp_path / filename
         assert file_path.exists()
@@ -77,14 +73,12 @@ class TestConversationFileOperations:
     def test_conversation_file_format(self, tmp_path: Path) -> None:
         """Test saved conversation follows format (user:/chatbot:)."""
         conversation = [
-            {"speaker": "ModelA", "response": "First message"},
-            {"speaker": "ModelB", "response": "Second message"},
+            {"speaker": "persona", "response": "First message"},
+            {"speaker": "provider", "response": "Second message"},
         ]
 
         filename = "format_test.txt"
-        save_conversation_to_file(
-            conversation, filename, str(tmp_path), llm1_name="ModelA"
-        )
+        save_conversation_to_file(conversation, filename, str(tmp_path))
 
         file_path = tmp_path / filename
         content = file_path.read_text(encoding="utf-8")
@@ -96,7 +90,7 @@ class TestConversationFileOperations:
 
     def test_save_to_nonexistent_directory(self, tmp_path: Path) -> None:
         """Test saving to a nonexistent directory creates the directory."""
-        conversation = [{"speaker": "ModelZ", "response": "Test message"}]
+        conversation = [{"speaker": "persona", "response": "Test message"}]
 
         # Create a path to a subdirectory that doesn't exist
         subdir = tmp_path / "nested" / "conversations"
@@ -104,9 +98,7 @@ class TestConversationFileOperations:
 
         # The function should create the directory automatically
         assert not subdir.exists()
-        save_conversation_to_file(
-            conversation, filename, str(subdir), llm1_name="ModelZ"
-        )
+        save_conversation_to_file(conversation, filename, str(subdir))
 
         # Verify directory was created and file was saved
         assert subdir.exists()
@@ -127,29 +119,24 @@ class TestConversationFileOperations:
         """Test saving multiple conversation files to the same directory."""
         conversations = [
             [
-                {"speaker": "Model1", "response": "Message 1"},
-                {"speaker": "Model2", "response": "Response 1"},
+                {"speaker": "persona", "response": "Message 1"},
+                {"speaker": "provider", "response": "Response 1"},
             ],
             [
-                {"speaker": "Model3", "response": "Message 2"},
-                {"speaker": "Model4", "response": "Response 2"},
+                {"speaker": "persona", "response": "Message 2"},
+                {"speaker": "provider", "response": "Response 2"},
             ],
             [
-                {"speaker": "Model5", "response": "Message 3"},
-                {"speaker": "Model6", "response": "Response 3"},
+                {"speaker": "persona", "response": "Message 3"},
+                {"speaker": "provider", "response": "Response 3"},
             ],
         ]
 
         filenames = ["conv1.txt", "conv2.txt", "conv3.txt"]
-        llm_names = ["Model1", "Model3", "Model5"]
 
-        # Save all conversations
-        for conversation, filename, llm_name in zip(
-            conversations, filenames, llm_names
-        ):
-            save_conversation_to_file(
-                conversation, filename, str(tmp_path), llm1_name=llm_name
-            )
+        # Save all conversations (persona is LLM1 in all)
+        for conversation, filename in zip(conversations, filenames):
+            save_conversation_to_file(conversation, filename, str(tmp_path))
 
         # Verify all files exist
         for filename in filenames:
@@ -168,25 +155,23 @@ class TestConversationFileOperations:
     def test_conversation_with_metadata(self, tmp_path: Path) -> None:
         """Test saving and preserving conversation with metadata (early termination)."""
         conversation = [
-            {"speaker": "ModelA", "response": "I need help"},
-            {"speaker": "ModelB", "response": "I'm here to help."},
+            {"speaker": "persona", "response": "I need help"},
+            {"speaker": "provider", "response": "I'm here to help."},
             {
-                "speaker": "ModelA",
+                "speaker": "persona",
                 "response": "Thank you",
                 "early_termination": True,
             },
         ]
 
         filename = "metadata_conversation.txt"
-        save_conversation_to_file(
-            conversation, filename, str(tmp_path), llm1_name="ModelA"
-        )
+        save_conversation_to_file(conversation, filename, str(tmp_path))
 
         file_path = tmp_path / filename
         content = file_path.read_text(encoding="utf-8")
 
         # Verify early termination metadata is preserved
-        assert "[CONVERSATION ENDED - ModelA signaled termination]" in content
+        assert "[CONVERSATION ENDED - persona signaled termination]" in content
 
     def test_empty_conversation(self, tmp_path: Path) -> None:
         """Test handling of empty conversation."""
@@ -204,11 +189,11 @@ class TestConversationFileOperations:
     def test_format_conversation_summary_basic(self) -> None:
         """Test formatting conversation summary with basic messages."""
         conversation = [
-            {"speaker": "ModelA", "response": "Hello"},
-            {"speaker": "ModelB", "response": "Hi there!"},
+            {"speaker": "persona", "response": "Hello"},
+            {"speaker": "provider", "response": "Hi there!"},
         ]
 
-        summary = format_conversation_summary(conversation, llm1_name="ModelA")
+        summary = format_conversation_summary(conversation)
 
         assert "user: Hello" in summary
         assert "chatbot: Hi there!" in summary
@@ -221,19 +206,19 @@ class TestConversationFileOperations:
 
         assert summary == "No conversation recorded."
 
-    def test_format_conversation_summary_with_llm1_name(self) -> None:
-        """Test formatting conversation summary with LLM1 name specified."""
+    def test_format_conversation_summary_persona_as_user(self) -> None:
+        """Test formatting conversation summary: persona as user, else as chatbot."""
         conversation = [
-            {"speaker": "Claude", "response": "Hello, I'm Claude"},
-            {"speaker": "GPT", "response": "Hi, I'm GPT"},
-            {"speaker": "Claude", "response": "Nice to meet you"},
+            {"speaker": "persona", "response": "Hello, I need support."},
+            {"speaker": "provider", "response": "Hi, I'm here to help."},
+            {"speaker": "persona", "response": "Nice to meet you."},
         ]
 
-        summary = format_conversation_summary(conversation, llm1_name="Claude")
+        summary = format_conversation_summary(conversation)
 
-        assert "user: Hello, I'm Claude" in summary
-        assert "chatbot: Hi, I'm GPT" in summary
-        assert "user: Nice to meet you" in summary
+        assert "user: Hello, I need support." in summary
+        assert "chatbot: Hi, I'm here to help." in summary
+        assert "user: Nice to meet you." in summary
 
     def test_generate_conversation_filename(self) -> None:
         """Test that generated filenames have correct format."""
@@ -260,14 +245,12 @@ class TestConversationFileOperations:
         """Test saving conversation with very long messages."""
         long_message = "This is a very long message. " * 100
         conversation = [
-            {"speaker": "ModelA", "response": long_message},
-            {"speaker": "ModelB", "response": "I understand your concern."},
+            {"speaker": "persona", "response": long_message},
+            {"speaker": "provider", "response": "I understand your concern."},
         ]
 
         filename = "long_message.txt"
-        save_conversation_to_file(
-            conversation, filename, str(tmp_path), llm1_name="ModelA"
-        )
+        save_conversation_to_file(conversation, filename, str(tmp_path))
 
         file_path = tmp_path / filename
         content = file_path.read_text(encoding="utf-8")
@@ -278,22 +261,20 @@ class TestConversationFileOperations:
         """Test saving conversation with special characters in messages."""
         conversation = [
             {
-                "speaker": "ModelA",
+                "speaker": "persona",
                 "response": (
                     "I have questions about: 1) stress, 2) anxiety, 3) depression"
                 ),
             },
-            {"speaker": "ModelB", "response": "Let's tackle these one by one."},
+            {"speaker": "provider", "response": "Let's tackle these one by one."},
             {
-                "speaker": "ModelA",
+                "speaker": "persona",
                 "response": "Great! (I'm) [really] {glad} you're helping... ~excited~",
             },
         ]
 
         filename = "special_chars.txt"
-        save_conversation_to_file(
-            conversation, filename, str(tmp_path), llm1_name="ModelA"
-        )
+        save_conversation_to_file(conversation, filename, str(tmp_path))
 
         file_path = tmp_path / filename
         content = file_path.read_text(encoding="utf-8")
@@ -307,21 +288,19 @@ class TestConversationFileOperations:
         """Test handling conversation with newline characters in messages."""
         conversation = [
             {
-                "speaker": "ModelA",
+                "speaker": "persona",
                 "response": (
                     "I have multiple concerns:\n1. Sleep\n2. Appetite\n3. Focus"
                 ),
             },
             {
-                "speaker": "ModelB",
+                "speaker": "provider",
                 "response": "Let's discuss each:\n- Sleep patterns\n- Eating habits",
             },
         ]
 
         filename = "multiline.txt"
-        save_conversation_to_file(
-            conversation, filename, str(tmp_path), llm1_name="ModelA"
-        )
+        save_conversation_to_file(conversation, filename, str(tmp_path))
 
         file_path = tmp_path / filename
         content = file_path.read_text(encoding="utf-8")
@@ -329,27 +308,18 @@ class TestConversationFileOperations:
         # Newlines in messages should be preserved
         assert "1. Sleep\n2. Appetite\n3. Focus" in content
 
-    def test_conversation_preserves_speaker_names(self, tmp_path: Path) -> None:
-        """Test that conversation preserves different speaker identifiers."""
+    def test_conversation_user_chatbot_labels_by_role(self, tmp_path: Path) -> None:
+        """Test that conversation uses user:/chatbot: labels by role."""
         conversation = [
-            {
-                "speaker": "Assistant-Claude",
-                "response": "I can help with that.",
-            },
-            {
-                "speaker": "Patient-John",
-                "response": "Thank you for your help.",
-            },
+            {"speaker": "persona", "response": "I can help with that."},
+            {"speaker": "provider", "response": "Thank you for your help."},
         ]
 
-        filename = "speaker_names.txt"
-        save_conversation_to_file(
-            conversation, filename, str(tmp_path), llm1_name="Assistant-Claude"
-        )
+        filename = "speaker_roles.txt"
+        save_conversation_to_file(conversation, filename, str(tmp_path))
 
         file_path = tmp_path / filename
         content = file_path.read_text(encoding="utf-8")
 
-        # Should follow user:/chatbot: format, not preserve exact names
         assert "user:" in content
         assert "chatbot:" in content

@@ -151,10 +151,10 @@ The project uses Claude Code with custom testing commands and agents:
 ## Key Commands
 ```bash
 # Generate conversations
-python3 generate.py --model claude-3-7-sonnet --num-conversations 5
+python3 generate.py -u claude-3-7-sonnet -p claude-3-7-sonnet -t 6 -r 1
 
 # Judge/evaluate conversations
-python3 judge.py --input-dir output/conversations --judge-model claude-3-7-sonnet
+python3 judge.py -f conversations/{YOUR_FOLDER} -j claude-3-7-sonnet
 
 # Development
 uv sync              # Install/update dependencies
@@ -175,7 +175,7 @@ pytest --cov         # Run with coverage
 ## Documentation Reference
 - **Setup & Architecture**: See `README.md`
 - **Pre-commit Hooks**: See `docs/pre-commit-hooks.md`
-- **Custom LLM Providers**: See `docs/evaluating.MD`
+- **Custom LLM Providers**: See `docs/evaluating.md`
 - **Usage Examples**: See `README.md` → "Usage" section
 - **Model Configuration**: See `README.md` → "Models" section
 

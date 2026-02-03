@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from llm_clients import Role
 from llm_clients.openai_llm import OpenAILLM
 
 
@@ -14,7 +15,7 @@ class TestOpenAILLM:
     def test_init_missing_api_key_raises_error(self):
         """Test that missing OPENAI_API_KEY raises ValueError (line 25)."""
         with pytest.raises(ValueError) as exc_info:
-            OpenAILLM(name="TestOpenAI")
+            OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
 
         assert "OPENAI_API_KEY not found" in str(exc_info.value)
 
@@ -25,7 +26,9 @@ class TestOpenAILLM:
         mock_llm = MagicMock()
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", system_prompt="Test prompt")
+        llm = OpenAILLM(
+            name="TestOpenAI", role=Role.PERSONA, system_prompt="Test prompt"
+        )
 
         assert llm.name == "TestOpenAI"
         assert llm.system_prompt == "Test prompt"
@@ -39,7 +42,7 @@ class TestOpenAILLM:
         mock_llm = MagicMock()
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", model_name="gpt-4-turbo")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA, model_name="gpt-4-turbo")
 
         assert llm.model_name == "gpt-4-turbo"
 
@@ -50,7 +53,13 @@ class TestOpenAILLM:
         mock_llm = MagicMock()
         mock_chat_openai.return_value = mock_llm
 
-        OpenAILLM(name="TestOpenAI", temperature=0.5, max_tokens=500, top_p=0.9)
+        OpenAILLM(
+            name="TestOpenAI",
+            role=Role.PERSONA,
+            temperature=0.5,
+            max_tokens=500,
+            top_p=0.9,
+        )
 
         # Verify kwargs were passed to ChatOpenAI
         call_kwargs = mock_chat_openai.call_args[1]
@@ -90,11 +99,13 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", system_prompt="You are a helpful assistant.")
+        llm = OpenAILLM(
+            name="TestOpenAI",
+            role=Role.PERSONA,
+            system_prompt="You are a helpful assistant.",
+        )
         response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "Hello, GPT!"}
-            ]
+            conversation_history=[{"turn": 0, "response": "Hello, GPT!"}]
         )
 
         assert response == "This is an OpenAI response"
@@ -131,11 +142,9 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")  # No system prompt
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)  # No system prompt
         response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "Test message"}
-            ]
+            conversation_history=[{"turn": 0, "response": "Test message"}]
         )
 
         assert response == "Response without system prompt"
@@ -144,7 +153,7 @@ class TestOpenAILLM:
         # (turn 0 message, no SystemMessage)
         call_args = mock_llm.ainvoke.call_args[0][0]
         assert len(call_args) == 1
-        assert call_args[0].content == "Test message"
+        assert call_args[0].text == "Test message"
 
     @pytest.mark.asyncio
     @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
@@ -161,9 +170,9 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
         response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         assert response == "Response"
@@ -184,9 +193,9 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
         response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         assert response == "Response"
@@ -218,9 +227,9 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
         response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         assert response == "Response"
@@ -241,11 +250,9 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(side_effect=Exception("API rate limit exceeded"))
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
         response = await llm.generate_response(
-            conversation_history=[
-                {"turn": 0, "speaker": "system", "response": "Test message"}
-            ]
+            conversation_history=[{"turn": 0, "response": "Test message"}]
         )
 
         # Should return error message instead of raising
@@ -277,9 +284,9 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -294,7 +301,7 @@ class TestOpenAILLM:
                 mock_llm = MagicMock()
                 mock_chat.return_value = mock_llm
 
-                llm = OpenAILLM(name="TestOpenAI")
+                llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
                 llm.last_response_metadata = {"test": "value"}
 
                 metadata1 = llm.get_last_response_metadata()
@@ -315,7 +322,9 @@ class TestOpenAILLM:
                 mock_llm = MagicMock()
                 mock_chat.return_value = mock_llm
 
-                llm = OpenAILLM(name="TestOpenAI", system_prompt="Initial prompt")
+                llm = OpenAILLM(
+                    name="TestOpenAI", role=Role.PERSONA, system_prompt="Initial prompt"
+                )
                 assert llm.system_prompt == "Initial prompt"
 
                 llm.set_system_prompt("Updated prompt")
@@ -336,9 +345,9 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -360,9 +369,9 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -392,9 +401,9 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", model_name="gpt-4")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA, model_name="gpt-4")
         await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Test"}]
+            conversation_history=[{"turn": 0, "response": "Test"}]
         )
 
         metadata = llm.get_last_response_metadata()
@@ -421,13 +430,13 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", system_prompt="Test")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PROVIDER, system_prompt="Test")
 
         # Provide conversation history including the current turn
         history = [
             {
                 "turn": 1,
-                "speaker": "persona",
+                "speaker": Role.PERSONA,
                 "input": "Start",
                 "response": "Hello",
                 "early_termination": False,
@@ -435,7 +444,7 @@ class TestOpenAILLM:
             },
             {
                 "turn": 2,
-                "speaker": "agent",
+                "speaker": Role.PROVIDER,
                 "input": "Hello",
                 "response": "Hi there",
                 "early_termination": False,
@@ -443,7 +452,7 @@ class TestOpenAILLM:
             },
             {
                 "turn": 3,
-                "speaker": "persona",
+                "speaker": Role.PERSONA,
                 "input": "Hi there",
                 "response": "How are you?",
                 "early_termination": False,
@@ -478,10 +487,10 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", system_prompt="Test")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA, system_prompt="Test")
 
         response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Hi"}]
+            conversation_history=[{"turn": 0, "response": "Hi"}]
         )
 
         assert response == "Response"
@@ -507,10 +516,10 @@ class TestOpenAILLM:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", system_prompt="Test")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA, system_prompt="Test")
 
         response = await llm.generate_response(
-            conversation_history=[{"turn": 0, "speaker": "system", "response": "Hi"}]
+            conversation_history=[{"turn": 0, "response": "Hi"}]
         )
 
         assert response == "Response"
@@ -540,12 +549,35 @@ class TestOpenAILLM:
 
         # Persona system prompt should trigger message type flipping
         persona_prompt = "You are roleplaying as a human user"
-        llm = OpenAILLM(name="TestOpenAI", system_prompt=persona_prompt)
+        llm = OpenAILLM(
+            name="TestOpenAI", role=Role.PERSONA, system_prompt=persona_prompt
+        )
 
         history = [
-            {"turn": 1, "speaker": "persona", "response": "Hello"},
-            {"turn": 2, "speaker": "provider", "response": "Hi there"},
-            {"turn": 3, "speaker": "persona", "response": "How are you?"},
+            {
+                "turn": 1,
+                "speaker": Role.PERSONA,
+                "input": "",
+                "response": "Hello",
+                "early_termination": False,
+                "logging": {},
+            },
+            {
+                "turn": 2,
+                "speaker": Role.PROVIDER,
+                "input": "Hello",
+                "response": "Hi there",
+                "early_termination": False,
+                "logging": {},
+            },
+            {
+                "turn": 3,
+                "speaker": Role.PERSONA,
+                "input": "Hi there",
+                "response": "How are you?",
+                "early_termination": False,
+                "logging": {},
+            },
         ]
 
         response = await llm.generate_response(conversation_history=history)
@@ -561,10 +593,10 @@ class TestOpenAILLM:
         assert isinstance(messages[0], SystemMessage)
         # Turn 1 (persona, odd) should be AIMessage when persona role
         assert isinstance(messages[1], AIMessage)
-        assert messages[1].content == "Hello"
+        assert messages[1].text == "Hello"
         # Turn 2 (provider, even) should be HumanMessage when persona role
         assert isinstance(messages[2], HumanMessage)
-        assert messages[2].content == "Hi there"
+        assert messages[2].text == "Hi there"
         # Turn 3 (persona, odd) should be AIMessage when persona role
         assert isinstance(messages[3], AIMessage)
-        assert messages[3].content == "How are you?"
+        assert messages[3].text == "How are you?"
