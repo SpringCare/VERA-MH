@@ -8,12 +8,18 @@ This test:
 
 import ast
 import os
-import shutil
 import subprocess
 from pathlib import Path
 
 import pandas as pd
 import pytest
+
+from judge.constants import (
+    BEST_PRACTICE,
+    DAMAGING,
+    NEUTRAL,
+    NOT_RELEVANT,
+)
 
 # Map clinician dimension names to judge dimension names
 DIMENSION_MAPPING = {
@@ -139,7 +145,10 @@ class TestJudgeAgainstClinicianRatings:
         # Run judge.py as subprocess
         print(f"\nRunning judge.py on conversations in {conversations_dir}...")
         project_root = Path(__file__).parent.parent.parent
-        output_dir = tmp_path / "evaluations"
+        # For debugging: output to fixtures/conversations folder
+        output_dir = conversations_dir / "evaluations"
+        # For production: use temp folder (uncomment when done debugging)
+        # output_dir = tmp_path / "evaluations"
         output_dir.mkdir(parents=True, exist_ok=True)
 
         cmd = [
@@ -174,7 +183,7 @@ class TestJudgeAgainstClinicianRatings:
 
         # Find the output folder (judge.py creates a timestamped subdirectory)
         # Look for directories matching the pattern j_*__conversations
-        # Assume there's only one new output folder for this test
+        # Use the most recently created folder
         output_folders = [
             d
             for d in output_dir.iterdir()
@@ -184,13 +193,8 @@ class TestJudgeAgainstClinicianRatings:
         if not output_folders:
             pytest.fail(f"No output folder found in {output_dir}")
 
-        if len(output_folders) > 1:
-            pytest.fail(
-                f"Expected exactly one output folder, found {len(output_folders)}: "
-                f"{output_folders}"
-            )
-
-        output_folder = output_folders[0]
+        # Use the most recently created folder
+        output_folder = max(output_folders, key=lambda p: p.stat().st_mtime)
 
         try:
             # Read from results.csv (created by judge.py)
@@ -206,6 +210,19 @@ class TestJudgeAgainstClinicianRatings:
             results_df = pd.read_csv(results_csv)
             print(f"Found {len(results_df)} conversation results")
             print(f"Columns in results.csv: {list(results_df.columns)}")
+
+            # Verify number of TSV files matches number of rows in results.csv
+            tsv_files = list(output_folder.glob("*.tsv"))
+            num_tsv_files = len(tsv_files)
+            num_csv_rows = len(results_df)
+            print(
+                f"Found {num_tsv_files} TSV files, {num_csv_rows} rows in results.csv"
+            )
+            if num_tsv_files != num_csv_rows:
+                pytest.fail(
+                    f"Mismatch: {num_tsv_files} TSV files found but "
+                    f"{num_csv_rows} rows in results.csv. Expected them to match."
+                )
 
             # Add transcript_id column
             results_df["transcript_id"] = results_df["filename"].apply(
@@ -236,6 +253,28 @@ class TestJudgeAgainstClinicianRatings:
                 pytest.fail(
                     f"results.csv has empty dimension columns: {empty_dimensions}. "
                     f"judge.py should populate these with evaluation scores."
+                )
+
+            # Validate that all dimension values are in the expected set
+            valid_values = {BEST_PRACTICE, NEUTRAL, DAMAGING, NOT_RELEVANT}
+            invalid_values = []
+            for dim in DIMENSION_MAPPING.values():
+                if dim in results_df.columns:
+                    dim_values = results_df[dim].dropna().astype(str).str.strip()
+                    invalid = dim_values[
+                        ~dim_values.isin(valid_values) & (dim_values != "")
+                    ]
+                    if not invalid.empty:
+                        for idx, val in invalid.items():
+                            filename = results_df.loc[idx, "filename"]
+                            invalid_values.append(
+                                f"{filename} - {dim}: '{val}' (not in {valid_values})"
+                            )
+
+            if invalid_values:
+                pytest.fail(
+                    "results.csv contains invalid dimension values:\n"
+                    + "\n".join(f"  - {v}" for v in invalid_values)
                 )
 
             # Merge expected and actual ratings on transcript_id
@@ -325,5 +364,6 @@ class TestJudgeAgainstClinicianRatings:
             )
         finally:
             # Clean up: delete the output folder
-            if output_folder.exists():
-                shutil.rmtree(output_folder)
+            # if output_folder.exists():
+            #     shutil.rmtree(output_folder)
+            pass
