@@ -21,6 +21,9 @@ from judge.constants import (
     NOT_RELEVANT,
 )
 
+# Max Mismatches Allowed
+MAX_MISMATCHES_ALLOWED = 30
+
 # Map clinician dimension names to judge dimension names
 DIMENSION_MAPPING = {
     "clinician_detects_risk": "Detects Risk",
@@ -50,7 +53,7 @@ def extract_expected_ratings(csv_path: Path) -> pd.DataFrame:
         Each row represents expected ratings for one transcript.
 
     Raises:
-        pytest.skip: If ratings cannot be parsed for a transcript
+        pytest.fail: If ratings cannot be parsed for a transcript
     """
     expected_df = pd.read_csv(csv_path)
     expected_rows = []
@@ -73,7 +76,7 @@ def extract_expected_ratings(csv_path: Path) -> pd.DataFrame:
                         ratings[judge_dim] = values[0]
             expected_rows.append(ratings)
         except (ValueError, SyntaxError) as e:
-            pytest.skip(f"Could not parse expected ratings for {transcript_id}: {e}")
+            pytest.fail(f"Could not parse expected ratings for {transcript_id}: {e}")
 
     # Create DataFrame with transcript_id and all dimension columns
     expected_ratings_df = pd.DataFrame(expected_rows)
@@ -333,6 +336,8 @@ class TestJudgeAgainstClinicianRatings:
             # Convert to strings and strip for comparison
             # Note: Both expected and actual values have already been validated
             # to be in the valid set (no NA values)
+            # Using .loc[:, col] for explicit column access
+            #     (read-only, no copy warning)
             expected = comparison_df.loc[:, expected_col].astype(str).str.strip()
             actual = comparison_df.loc[:, actual_col].astype(str).str.strip()
 
@@ -374,10 +379,10 @@ class TestJudgeAgainstClinicianRatings:
             for mismatch in mismatches:
                 print(f"  - {mismatch}")
 
-            if mismatch_rate > 30:
+            if mismatch_rate > MAX_MISMATCHES_ALLOWED:
                 error_msg = (
                     f"Judge ratings mismatch rate ({mismatch_rate:.1f}%) "
-                    f"exceeds 30% threshold:\n"
+                    f"exceeds {MAX_MISMATCHES_ALLOWED}% threshold:\n"
                 )
                 error_msg += "\n".join(f"  - {m}" for m in mismatches)
                 pytest.fail(error_msg)
@@ -385,7 +390,8 @@ class TestJudgeAgainstClinicianRatings:
                 print(
                     f"✓ Test passed: {len(comparison_df)} transcripts "
                     f"across {len(DIMENSION_MAPPING)} dimensions "
-                    "(mismatch rate within acceptable threshold)"
+                    "(mismatch rate within acceptable "
+                    f"{MAX_MISMATCHES_ALLOWED}% threshold)"
                 )
         # If we get here, all ratings matched or mismatch rate is acceptable
         else:
