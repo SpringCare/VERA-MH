@@ -17,6 +17,7 @@ spring_scripts/
 .coverage
 coverage.json
 htmlcov/
+!tests/fixtures/conversations/
 
 # Claude Code - personal settings and local files only
 .claude/settings.local.json
