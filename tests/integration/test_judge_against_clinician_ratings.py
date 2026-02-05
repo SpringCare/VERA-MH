@@ -96,12 +96,6 @@ def extract_expected_ratings(csv_path: Path) -> pd.DataFrame:
 
 
 @pytest.fixture
-def fixtures_dir() -> Path:
-    """Path to test fixtures directory."""
-    return Path(__file__).parent.parent / "fixtures"
-
-
-@pytest.fixture
 def conversations_dir(fixtures_dir: Path) -> Path:
     """Path to conversations fixtures directory."""
     return fixtures_dir / "conversations"
