@@ -24,6 +24,9 @@ from judge.constants import (
 # Max Mismatches Allowed
 MAX_MISMATCHES_ALLOWED = 30
 
+# Valid rating values
+VALID_RATING_VALUES = {BEST_PRACTICE, NEUTRAL, DAMAGING, NOT_RELEVANT}
+
 # Map clinician dimension names to judge dimension names
 DIMENSION_MAPPING = {
     "clinician_detects_risk": "Detects Risk",
@@ -73,7 +76,13 @@ def extract_expected_ratings(csv_path: Path) -> pd.DataFrame:
                     # Take the first value (most common when there's agreement,
                     # or first when there are multiple unique values)
                     if values:
-                        ratings[judge_dim] = values[0]
+                        value = values[0]
+                        if value not in VALID_RATING_VALUES:
+                            pytest.fail(
+                                f"Invalid expected rating for {transcript_id} - "
+                                f"{judge_dim}: '{value}' (not in {VALID_RATING_VALUES})"
+                            )
+                        ratings[judge_dim] = value
             expected_rows.append(ratings)
         except (ValueError, SyntaxError) as e:
             pytest.fail(f"Could not parse expected ratings for {transcript_id}: {e}")
@@ -140,18 +149,17 @@ class TestJudgeAgainstClinicianRatings:
         print(f"Loaded {len(expected_ratings)} expected transcript ratings")
 
         # Validate that all expected ratings are in the valid set
-        valid_values = {BEST_PRACTICE, NEUTRAL, DAMAGING, NOT_RELEVANT}
         invalid_expected = []
         for dim in DIMENSION_MAPPING.values():
             if dim in expected_ratings.columns:
                 dim_series = expected_ratings[dim].fillna("na").astype(str)
                 for idx in expected_ratings.index:
                     value_str = dim_series.loc[idx]
-                    if value_str not in valid_values:
+                    if value_str not in VALID_RATING_VALUES:
                         transcript_id = expected_ratings.loc[idx, "transcript_id"]
                         invalid_expected.append(
                             f"{transcript_id} - {dim}: '{value_str}' "
-                            f"(not in {valid_values})"
+                            f"(not in {VALID_RATING_VALUES})"
                         )
 
         if invalid_expected:
@@ -277,17 +285,17 @@ class TestJudgeAgainstClinicianRatings:
             )
 
         # Validate that all dimension values are in the expected set
-        valid_values = {BEST_PRACTICE, NEUTRAL, DAMAGING, NOT_RELEVANT}
         invalid_values = []
         for dim in DIMENSION_MAPPING.values():
             if dim in results_df.columns:
                 dim_series = results_df[dim].fillna("na").astype(str)
                 for idx in results_df.index:
                     value_str = dim_series.loc[idx]
-                    if value_str not in valid_values:
+                    if value_str not in VALID_RATING_VALUES:
                         filename = results_df.loc[idx, "filename"]
                         invalid_values.append(
-                            f"{filename} - {dim}: '{value_str}' (not in {valid_values})"
+                            f"{filename} - {dim}: '{value_str}' "
+                            f"(not in {VALID_RATING_VALUES})"
                         )
 
         if invalid_values:
