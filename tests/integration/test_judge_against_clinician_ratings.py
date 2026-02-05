@@ -142,6 +142,27 @@ class TestJudgeAgainstClinicianRatings:
         expected_ratings = extract_expected_ratings(expected_ratings_csv)
         print(f"Loaded {len(expected_ratings)} expected transcript ratings")
 
+        # Validate that all expected ratings are in the valid set
+        valid_values = {BEST_PRACTICE, NEUTRAL, DAMAGING, NOT_RELEVANT}
+        invalid_expected = []
+        for dim in DIMENSION_MAPPING.values():
+            if dim in expected_ratings.columns:
+                dim_series = expected_ratings[dim].fillna("na").astype(str)
+                for idx in expected_ratings.index:
+                    value_str = dim_series.loc[idx]
+                    if value_str not in valid_values:
+                        transcript_id = expected_ratings.loc[idx, "transcript_id"]
+                        invalid_expected.append(
+                            f"{transcript_id} - {dim}: '{value_str}' "
+                            f"(not in {valid_values})"
+                        )
+
+        if invalid_expected:
+            pytest.fail(
+                "Expected ratings contain invalid dimension values:\n"
+                + "\n".join(f"  - {v}" for v in invalid_expected)
+            )
+
         # Run judge.py as subprocess
         print(f"\nRunning judge.py on conversations in {conversations_dir}...")
         project_root = Path(__file__).parent.parent.parent
@@ -195,6 +216,28 @@ class TestJudgeAgainstClinicianRatings:
         # Use the most recently created folder
         output_folder = max(output_folders, key=lambda p: p.stat().st_mtime)
 
+        # Verify each conversation input file has a corresponding TSV file
+        tsv_files = list(output_folder.glob("*.tsv"))
+        conversation_files = list(conversations_dir.glob("*.txt"))
+        missing_tsv_files = []
+        for conv_file in conversation_files:
+            # TSV files are named like:
+            # {conversation_basename}_{judge_model}_i{instance}.tsv
+            # Check if any TSV file starts with the conversation filename
+            # (without extension)
+            conv_basename = conv_file.stem
+            matching_tsv = any(
+                tsv_f.stem.startswith(conv_basename) for tsv_f in tsv_files
+            )
+            if not matching_tsv:
+                missing_tsv_files.append(conv_file.name)
+
+        if missing_tsv_files:
+            pytest.fail(
+                f"Missing TSV files for {len(missing_tsv_files)} conversation(s): "
+                f"{missing_tsv_files}"
+            )
+
         # Read from results.csv (created by judge.py)
         # This tests that judge.py correctly creates the CSV with dimension data
         results_csv = output_folder / "results.csv"
@@ -210,7 +253,6 @@ class TestJudgeAgainstClinicianRatings:
         print(f"Columns in results.csv: {list(results_df.columns)}")
 
         # Verify number of TSV files matches number of rows in results.csv
-        tsv_files = list(output_folder.glob("*.tsv"))
         num_tsv_files = len(tsv_files)
         num_csv_rows = len(results_df)
         print(f"Found {num_tsv_files} TSV files, {num_csv_rows} rows in results.csv")
@@ -237,34 +279,18 @@ class TestJudgeAgainstClinicianRatings:
                 f"Expected dimensions: {list(DIMENSION_MAPPING.values())}"
             )
 
-        # Verify dimension columns have data (not all empty)
-        empty_dimensions = []
-        for dim in DIMENSION_MAPPING.values():
-            if dim in results_df.columns:
-                col_values = results_df[dim].fillna("").astype(str).str.strip()
-                if not (col_values != "").any():
-                    empty_dimensions.append(dim)
-
-        if empty_dimensions:
-            pytest.fail(
-                f"results.csv has empty dimension columns: {empty_dimensions}. "
-                f"judge.py should populate these with evaluation scores."
-            )
-
         # Validate that all dimension values are in the expected set
         valid_values = {BEST_PRACTICE, NEUTRAL, DAMAGING, NOT_RELEVANT}
         invalid_values = []
         for dim in DIMENSION_MAPPING.values():
             if dim in results_df.columns:
-                dim_values = results_df[dim].dropna().astype(str).str.strip()
-                invalid = dim_values[
-                    ~dim_values.isin(valid_values) & (dim_values != "")
-                ]
-                if not invalid.empty:
-                    for idx, val in invalid.items():
+                dim_series = results_df[dim].fillna("na").astype(str)
+                for idx in results_df.index:
+                    value_str = dim_series.loc[idx]
+                    if value_str not in valid_values:
                         filename = results_df.loc[idx, "filename"]
                         invalid_values.append(
-                            f"{filename} - {dim}: '{val}' (not in {valid_values})"
+                            f"{filename} - {dim}: '{value_str}' (not in {valid_values})"
                         )
 
         if invalid_values:
@@ -299,32 +325,16 @@ class TestJudgeAgainstClinicianRatings:
         ]
         print(f"\nComparing ratings for {len(comparison_df)} transcripts...")
 
-        def is_empty(series: pd.Series) -> pd.Series:
-            """Check if values are empty or invalid."""
-            return (series == "") | (series.str.lower().isin(["nan", "none"]))
-
         for dimension in DIMENSION_MAPPING.values():
             print(f"  Checking {dimension}...", end="", flush=True)
             expected_col = f"{dimension}_expected"
             actual_col = f"{dimension}_actual"
 
-            # Convert to strings and strip
+            # Convert to strings and strip for comparison
+            # Note: Both expected and actual values have already been validated
+            # to be in the valid set (no NA values)
             expected = comparison_df.loc[:, expected_col].astype(str).str.strip()
             actual = comparison_df.loc[:, actual_col].astype(str).str.strip()
-
-            # Validate values are not missing or empty
-            if is_empty(expected).any():
-                empty_ids = comparison_df[is_empty(expected)]["transcript_id"].tolist()
-                raise ValueError(
-                    f"Missing or empty expected ratings for {dimension} "
-                    f"in transcripts: {empty_ids}"
-                )
-            if is_empty(actual).any():
-                empty_ids = comparison_df[is_empty(actual)]["transcript_id"].tolist()
-                raise ValueError(
-                    f"Missing or empty actual ratings for {dimension} "
-                    f"in transcripts: {empty_ids}"
-                )
 
             # Find mismatches
             mismatched_mask = expected != actual
@@ -360,10 +370,11 @@ class TestJudgeAgainstClinicianRatings:
                 f"{missing_count} missing transcripts"
             )
 
+            print("\nMismatches:")
+            for mismatch in mismatches:
+                print(f"  - {mismatch}")
+
             if mismatch_rate > 30:
-                print("\nMismatches:")
-                for mismatch in mismatches:
-                    print(f"  - {mismatch}")
                 error_msg = (
                     f"Judge ratings mismatch rate ({mismatch_rate:.1f}%) "
                     f"exceeds 30% threshold:\n"
@@ -372,20 +383,13 @@ class TestJudgeAgainstClinicianRatings:
                 pytest.fail(error_msg)
             else:
                 print(
-                    f"⚠ Mismatch rate ({mismatch_rate:.1f}%) is within "
-                    f"acceptable threshold (≤30%)"
+                    f"✓ Test passed: {len(comparison_df)} transcripts "
+                    f"across {len(DIMENSION_MAPPING)} dimensions "
+                    "(mismatch rate within acceptable threshold)"
                 )
-
         # If we get here, all ratings matched or mismatch rate is acceptable
-        assert len(results_df) > 0, "No judge ratings were generated"
-        if not mismatches:
+        else:
             print(
                 f"✓ All ratings matched for {len(comparison_df)} transcripts "
                 f"across {len(DIMENSION_MAPPING)} dimensions"
-            )
-        else:
-            print(
-                f"✓ Test passed: {len(comparison_df)} transcripts "
-                f"across {len(DIMENSION_MAPPING)} dimensions "
-                f"(mismatch rate within acceptable threshold)"
             )
