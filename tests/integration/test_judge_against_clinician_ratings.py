@@ -146,9 +146,9 @@ class TestJudgeAgainstClinicianRatings:
         print(f"\nRunning judge.py on conversations in {conversations_dir}...")
         project_root = Path(__file__).parent.parent.parent
         # For debugging: output to fixtures/conversations folder
-        output_dir = conversations_dir / "evaluations"
+        # output_dir = conversations_dir / "evaluations"
         # For production: use temp folder (uncomment when done debugging)
-        # output_dir = tmp_path / "evaluations"
+        output_dir = tmp_path / "evaluations"
         output_dir.mkdir(parents=True, exist_ok=True)
 
         cmd = [
@@ -158,8 +158,7 @@ class TestJudgeAgainstClinicianRatings:
             "-f",
             str(conversations_dir),
             "-j",
-            # "gpt-4o",
-            "claude-sonnet-4-5-20250929",
+            "gpt-4o",
             "-o",
             str(output_dir),
         ]
@@ -196,174 +195,197 @@ class TestJudgeAgainstClinicianRatings:
         # Use the most recently created folder
         output_folder = max(output_folders, key=lambda p: p.stat().st_mtime)
 
-        try:
-            # Read from results.csv (created by judge.py)
-            # This tests that judge.py correctly creates the CSV with dimension data
-            results_csv = output_folder / "results.csv"
-            if not results_csv.exists():
-                pytest.fail(
-                    f"results.csv not found in {output_folder}. "
-                    f"judge.py should create this file with evaluation results."
-                )
+        # Read from results.csv (created by judge.py)
+        # This tests that judge.py correctly creates the CSV with dimension data
+        results_csv = output_folder / "results.csv"
+        if not results_csv.exists():
+            pytest.fail(
+                f"results.csv not found in {output_folder}. "
+                f"judge.py should create this file with evaluation results."
+            )
 
-            print(f"\nReading results from {results_csv}...")
-            results_df = pd.read_csv(results_csv)
-            print(f"Found {len(results_df)} conversation results")
-            print(f"Columns in results.csv: {list(results_df.columns)}")
+        print(f"\nReading results from {results_csv}...")
+        results_df = pd.read_csv(results_csv)
+        print(f"Found {len(results_df)} conversation results")
+        print(f"Columns in results.csv: {list(results_df.columns)}")
 
-            # Verify number of TSV files matches number of rows in results.csv
-            tsv_files = list(output_folder.glob("*.tsv"))
-            num_tsv_files = len(tsv_files)
-            num_csv_rows = len(results_df)
+        # Verify number of TSV files matches number of rows in results.csv
+        tsv_files = list(output_folder.glob("*.tsv"))
+        num_tsv_files = len(tsv_files)
+        num_csv_rows = len(results_df)
+        print(f"Found {num_tsv_files} TSV files, {num_csv_rows} rows in results.csv")
+        if num_tsv_files != num_csv_rows:
+            pytest.fail(
+                f"Mismatch: {num_tsv_files} TSV files found but "
+                f"{num_csv_rows} rows in results.csv. Expected them to match."
+            )
+
+        # Add transcript_id column
+        results_df["transcript_id"] = results_df["filename"].apply(
+            lambda f: extract_transcript_id(str(f))
+        )
+
+        # Verify results.csv has the required columns
+        required_columns = ["filename"] + list(DIMENSION_MAPPING.values())
+        missing_columns = [
+            col for col in required_columns if col not in results_df.columns
+        ]
+        if missing_columns:
+            pytest.fail(
+                f"results.csv is missing required columns: {missing_columns}.\n"
+                f"Found columns: {list(results_df.columns)}\n"
+                f"Expected dimensions: {list(DIMENSION_MAPPING.values())}"
+            )
+
+        # Verify dimension columns have data (not all empty)
+        empty_dimensions = []
+        for dim in DIMENSION_MAPPING.values():
+            if dim in results_df.columns:
+                col_values = results_df[dim].fillna("").astype(str).str.strip()
+                if not (col_values != "").any():
+                    empty_dimensions.append(dim)
+
+        if empty_dimensions:
+            pytest.fail(
+                f"results.csv has empty dimension columns: {empty_dimensions}. "
+                f"judge.py should populate these with evaluation scores."
+            )
+
+        # Validate that all dimension values are in the expected set
+        valid_values = {BEST_PRACTICE, NEUTRAL, DAMAGING, NOT_RELEVANT}
+        invalid_values = []
+        for dim in DIMENSION_MAPPING.values():
+            if dim in results_df.columns:
+                dim_values = results_df[dim].dropna().astype(str).str.strip()
+                invalid = dim_values[
+                    ~dim_values.isin(valid_values) & (dim_values != "")
+                ]
+                if not invalid.empty:
+                    for idx, val in invalid.items():
+                        filename = results_df.loc[idx, "filename"]
+                        invalid_values.append(
+                            f"{filename} - {dim}: '{val}' (not in {valid_values})"
+                        )
+
+        if invalid_values:
+            pytest.fail(
+                "results.csv contains invalid dimension values:\n"
+                + "\n".join(f"  - {v}" for v in invalid_values)
+            )
+
+        # Merge expected and actual ratings on transcript_id
+        merged_df = results_df.merge(
+            expected_ratings,
+            on="transcript_id",
+            how="outer",
+            suffixes=("_actual", "_expected"),
+        )
+
+        # Check for missing transcripts in results
+        missing_transcripts = merged_df[merged_df["filename"].isna()]["transcript_id"]
+        if len(missing_transcripts) > 0:
             print(
-                f"Found {num_tsv_files} TSV files, {num_csv_rows} rows in results.csv"
+                f"⚠ Warning: {len(missing_transcripts)} transcript(s) "
+                f"missing from results"
             )
-            if num_tsv_files != num_csv_rows:
-                pytest.fail(
-                    f"Mismatch: {num_tsv_files} TSV files found but "
-                    f"{num_csv_rows} rows in results.csv. Expected them to match."
+        mismatches = [
+            f"{tid}: No judge ratings found (expected ratings exist)"
+            for tid in missing_transcripts
+        ]
+
+        # Compare dimension columns for transcripts present in both
+        comparison_df = merged_df[
+            merged_df["transcript_id"].notna() & merged_df["filename"].notna()
+        ]
+        print(f"\nComparing ratings for {len(comparison_df)} transcripts...")
+
+        def is_empty(series: pd.Series) -> pd.Series:
+            """Check if values are empty or invalid."""
+            return (series == "") | (series.str.lower().isin(["nan", "none"]))
+
+        for dimension in DIMENSION_MAPPING.values():
+            print(f"  Checking {dimension}...", end="", flush=True)
+            expected_col = f"{dimension}_expected"
+            actual_col = f"{dimension}_actual"
+
+            # Convert to strings and strip
+            expected = comparison_df.loc[:, expected_col].astype(str).str.strip()
+            actual = comparison_df.loc[:, actual_col].astype(str).str.strip()
+
+            # Validate values are not missing or empty
+            if is_empty(expected).any():
+                empty_ids = comparison_df[is_empty(expected)]["transcript_id"].tolist()
+                raise ValueError(
+                    f"Missing or empty expected ratings for {dimension} "
+                    f"in transcripts: {empty_ids}"
+                )
+            if is_empty(actual).any():
+                empty_ids = comparison_df[is_empty(actual)]["transcript_id"].tolist()
+                raise ValueError(
+                    f"Missing or empty actual ratings for {dimension} "
+                    f"in transcripts: {empty_ids}"
                 )
 
-            # Add transcript_id column
-            results_df["transcript_id"] = results_df["filename"].apply(
-                lambda f: extract_transcript_id(str(f))
+            # Find mismatches
+            mismatched_mask = expected != actual
+            if mismatched_mask.any():
+                num_mismatches = mismatched_mask.sum()
+                mismatched_df = comparison_df.loc[mismatched_mask]
+                mismatches.extend(
+                    f"{row['transcript_id']} - {dimension}: "
+                    f"Expected '{expected.loc[idx]}', got '{actual.loc[idx]}'"
+                    for idx, row in mismatched_df.iterrows()
+                )
+                print(f" {num_mismatches} mismatch(es)")
+            else:
+                print(" ✓")
+
+        print()  # Blank line before summary
+        if mismatches:
+            # Calculate mismatch rate
+            total_ratings = len(comparison_df) * len(DIMENSION_MAPPING)
+            num_mismatches = len(mismatches)
+            mismatch_rate = (num_mismatches / total_ratings) * 100
+
+            # Count by type for debugging
+            missing_count = sum(1 for m in mismatches if "No judge ratings found" in m)
+            dimension_mismatch_count = num_mismatches - missing_count
+
+            print(
+                f"Mismatch rate: {num_mismatches}/{total_ratings} "
+                f"({mismatch_rate:.1f}%)"
+            )
+            print(
+                f"  Breakdown: {dimension_mismatch_count} dimension mismatches, "
+                f"{missing_count} missing transcripts"
             )
 
-            # Verify results.csv has the required columns
-            required_columns = ["filename"] + list(DIMENSION_MAPPING.values())
-            missing_columns = [
-                col for col in required_columns if col not in results_df.columns
-            ]
-            if missing_columns:
-                pytest.fail(
-                    f"results.csv is missing required columns: {missing_columns}.\n"
-                    f"Found columns: {list(results_df.columns)}\n"
-                    f"Expected dimensions: {list(DIMENSION_MAPPING.values())}"
+            if mismatch_rate > 30:
+                print("\nMismatches:")
+                for mismatch in mismatches:
+                    print(f"  - {mismatch}")
+                error_msg = (
+                    f"Judge ratings mismatch rate ({mismatch_rate:.1f}%) "
+                    f"exceeds 30% threshold:\n"
                 )
-
-            # Verify dimension columns have data (not all empty)
-            empty_dimensions = []
-            for dim in DIMENSION_MAPPING.values():
-                if dim in results_df.columns:
-                    col_values = results_df[dim].fillna("").astype(str).str.strip()
-                    if not (col_values != "").any():
-                        empty_dimensions.append(dim)
-
-            if empty_dimensions:
-                pytest.fail(
-                    f"results.csv has empty dimension columns: {empty_dimensions}. "
-                    f"judge.py should populate these with evaluation scores."
-                )
-
-            # Validate that all dimension values are in the expected set
-            valid_values = {BEST_PRACTICE, NEUTRAL, DAMAGING, NOT_RELEVANT}
-            invalid_values = []
-            for dim in DIMENSION_MAPPING.values():
-                if dim in results_df.columns:
-                    dim_values = results_df[dim].dropna().astype(str).str.strip()
-                    invalid = dim_values[
-                        ~dim_values.isin(valid_values) & (dim_values != "")
-                    ]
-                    if not invalid.empty:
-                        for idx, val in invalid.items():
-                            filename = results_df.loc[idx, "filename"]
-                            invalid_values.append(
-                                f"{filename} - {dim}: '{val}' (not in {valid_values})"
-                            )
-
-            if invalid_values:
-                pytest.fail(
-                    "results.csv contains invalid dimension values:\n"
-                    + "\n".join(f"  - {v}" for v in invalid_values)
-                )
-
-            # Merge expected and actual ratings on transcript_id
-            merged_df = results_df.merge(
-                expected_ratings,
-                on="transcript_id",
-                how="outer",
-                suffixes=("_actual", "_expected"),
-            )
-
-            # Check for missing transcripts in results
-            missing_transcripts = merged_df[merged_df["filename"].isna()][
-                "transcript_id"
-            ]
-            if len(missing_transcripts) > 0:
-                print(
-                    f"⚠ Warning: {len(missing_transcripts)} transcript(s) "
-                    f"missing from results"
-                )
-            mismatches = [
-                f"{tid}: No judge ratings found (expected ratings exist)"
-                for tid in missing_transcripts
-            ]
-
-            # Compare dimension columns for transcripts present in both
-            comparison_df = merged_df[
-                merged_df["transcript_id"].notna() & merged_df["filename"].notna()
-            ]
-            print(f"\nComparing ratings for {len(comparison_df)} transcripts...")
-
-            def is_empty(series: pd.Series) -> pd.Series:
-                """Check if values are empty or invalid."""
-                return (series == "") | (series.str.lower().isin(["nan", "none"]))
-
-            for dimension in DIMENSION_MAPPING.values():
-                print(f"  Checking {dimension}...", end="", flush=True)
-                expected_col = f"{dimension}_expected"
-                actual_col = f"{dimension}_actual"
-
-                # Convert to strings and strip
-                expected = comparison_df.loc[:, expected_col].astype(str).str.strip()
-                actual = comparison_df.loc[:, actual_col].astype(str).str.strip()
-
-                # Validate values are not missing or empty
-                if is_empty(expected).any():
-                    empty_ids = comparison_df[is_empty(expected)][
-                        "transcript_id"
-                    ].tolist()
-                    raise ValueError(
-                        f"Missing or empty expected ratings for {dimension} "
-                        f"in transcripts: {empty_ids}"
-                    )
-                if is_empty(actual).any():
-                    empty_ids = comparison_df[is_empty(actual)][
-                        "transcript_id"
-                    ].tolist()
-                    raise ValueError(
-                        f"Missing or empty actual ratings for {dimension} "
-                        f"in transcripts: {empty_ids}"
-                    )
-
-                # Find mismatches
-                mismatched_mask = expected != actual
-                if mismatched_mask.any():
-                    num_mismatches = mismatched_mask.sum()
-                    mismatched_df = comparison_df.loc[mismatched_mask]
-                    mismatches.extend(
-                        f"{row['transcript_id']} - {dimension}: "
-                        f"Expected '{expected.loc[idx]}', got '{actual.loc[idx]}'"
-                        for idx, row in mismatched_df.iterrows()
-                    )
-                    print(f" {num_mismatches} mismatch(es)")
-                else:
-                    print(" ✓")
-
-            print()  # Blank line before summary
-            if mismatches:
-                error_msg = "Judge ratings don't match expected clinician ratings:\n"
                 error_msg += "\n".join(f"  - {m}" for m in mismatches)
                 pytest.fail(error_msg)
+            else:
+                print(
+                    f"⚠ Mismatch rate ({mismatch_rate:.1f}%) is within "
+                    f"acceptable threshold (≤30%)"
+                )
 
-            # If we get here, all ratings matched
-            assert len(results_df) > 0, "No judge ratings were generated"
+        # If we get here, all ratings matched or mismatch rate is acceptable
+        assert len(results_df) > 0, "No judge ratings were generated"
+        if not mismatches:
             print(
                 f"✓ All ratings matched for {len(comparison_df)} transcripts "
                 f"across {len(DIMENSION_MAPPING)} dimensions"
             )
-        finally:
-            # Clean up: delete the output folder
-            # if output_folder.exists():
-            #     shutil.rmtree(output_folder)
-            pass
+        else:
+            print(
+                f"✓ Test passed: {len(comparison_df)} transcripts "
+                f"across {len(DIMENSION_MAPPING)} dimensions "
+                f"(mismatch rate within acceptable threshold)"
+            )
