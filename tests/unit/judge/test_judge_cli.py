@@ -1,25 +1,16 @@
-"""Unit tests for judge.py CLI and main entrypoint."""
+"""Unit tests for judge CLI and main entrypoint (judge.cli)."""
 
-import importlib.util
-from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-# Load judge.py script (project root) so we can test get_parser and main
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
-_JUDGE_SCRIPT = _PROJECT_ROOT / "judge.py"
-_spec = importlib.util.spec_from_file_location("judge_script", _JUDGE_SCRIPT)
-assert _spec is not None and _spec.loader is not None
-_judge_script = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_judge_script)
-get_parser = _judge_script.get_parser
-main = _judge_script.main
+from judge import cli as judge_cli
+from judge.cli import get_parser, main
 
 
 @pytest.mark.unit
 class TestJudgeParser:
-    """Test judge.py argument parser (get_parser())."""
+    """Test judge CLI argument parser (get_parser())."""
 
     def test_requires_conversation_or_folder(self):
         """Parser requires exactly one of --conversation or --folder."""
@@ -132,11 +123,11 @@ class TestJudgeMain:
             ]
         )
         with (
-            patch.object(_judge_script, "RubricConfig") as RubricConfig,
-            patch.object(_judge_script, "ConversationData") as ConversationData,
-            patch.object(_judge_script, "LLMJudge") as LLMJudge,
+            patch.object(judge_cli, "RubricConfig") as RubricConfig,
+            patch.object(judge_cli, "ConversationData") as ConversationData,
+            patch.object(judge_cli, "LLMJudge") as LLMJudge,
             patch.object(
-                _judge_script,
+                judge_cli,
                 "judge_single_conversation",
                 new_callable=AsyncMock,
             ) as judge_single,
@@ -180,14 +171,14 @@ class TestJudgeMain:
             ]
         )
         with (
-            patch.object(_judge_script, "RubricConfig") as RubricConfig,
+            patch.object(judge_cli, "RubricConfig") as RubricConfig,
             patch.object(
-                _judge_script,
+                judge_cli,
                 "load_conversations",
                 new_callable=AsyncMock,
             ) as load_convos,
             patch.object(
-                _judge_script,
+                judge_cli,
                 "judge_conversations",
                 new_callable=AsyncMock,
             ) as judge_convos,

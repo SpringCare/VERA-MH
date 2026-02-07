@@ -647,15 +647,13 @@ class TestPipelineValidation:
         with patch("generate.main", side_effect=mock_generate):
             # Mock sys.exit to raise SystemExit instead of actually exiting
             with patch.object(sys, "exit", side_effect=SystemExit) as mock_exit:
-                # Mock importlib to avoid judge loading (not needed for step 1 test)
-                with patch("importlib.util.spec_from_file_location"):
-                    with patch("sys.argv", valid_pipeline_args):
-                        # Pipeline should raise SystemExit when folder doesn't exist
-                        with pytest.raises(SystemExit):
-                            await pipeline_main()
+                with patch("sys.argv", valid_pipeline_args):
+                    # Pipeline should raise SystemExit when folder doesn't exist
+                    with pytest.raises(SystemExit):
+                        await pipeline_main()
 
-                        # Verify sys.exit(1) was called
-                        mock_exit.assert_called_once_with(1)
+                # Verify sys.exit(1) was called
+                mock_exit.assert_called_once_with(1)
 
     @pytest.mark.asyncio
     async def test_step1_validation_no_conversation_files(
@@ -678,14 +676,13 @@ class TestPipelineValidation:
         with patch("generate.main", side_effect=mock_generate):
             # Mock sys.exit to raise SystemExit instead of actually exiting
             with patch.object(sys, "exit", side_effect=SystemExit) as mock_exit:
-                with patch("importlib.util.spec_from_file_location"):
-                    with patch("sys.argv", valid_pipeline_args):
-                        # Pipeline should raise SystemExit
-                        with pytest.raises(SystemExit):
-                            await pipeline_main()
+                with patch("sys.argv", valid_pipeline_args):
+                    # Pipeline should raise SystemExit
+                    with pytest.raises(SystemExit):
+                        await pipeline_main()
 
-                        # Verify sys.exit(1) was called
-                        mock_exit.assert_called_once_with(1)
+                    # Verify sys.exit(1) was called
+                    mock_exit.assert_called_once_with(1)
 
     @pytest.mark.asyncio
     async def test_step1_validation_only_log_files(self, tmp_path, valid_pipeline_args):
@@ -708,14 +705,13 @@ class TestPipelineValidation:
         with patch("generate.main", side_effect=mock_generate):
             # Mock sys.exit to raise SystemExit instead of actually exiting
             with patch.object(sys, "exit", side_effect=SystemExit) as mock_exit:
-                with patch("importlib.util.spec_from_file_location"):
-                    with patch("sys.argv", valid_pipeline_args):
-                        # Pipeline should raise SystemExit
-                        with pytest.raises(SystemExit):
-                            await pipeline_main()
+                with patch("sys.argv", valid_pipeline_args):
+                    # Pipeline should raise SystemExit
+                    with pytest.raises(SystemExit):
+                        await pipeline_main()
 
-                        # Verify sys.exit(1) was called
-                        mock_exit.assert_called_once_with(1)
+                    # Verify sys.exit(1) was called
+                    mock_exit.assert_called_once_with(1)
 
     @pytest.mark.asyncio
     async def test_step2_validation_no_evaluation_folder(
@@ -723,7 +719,7 @@ class TestPipelineValidation:
     ):
         """Test that pipeline exits if Step 2 returns None."""
         import sys
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import patch
 
         from run_pipeline import main as pipeline_main
 
@@ -736,18 +732,13 @@ class TestPipelineValidation:
         async def mock_generate(*args, **kwargs):
             return None, str(conv_folder)
 
-        # Mock judge_main to return None
+        # Mock judge CLI main to return None
         async def mock_judge(args):
             return None
 
-        # Create a mock module with the mock judge main function
-        mock_judge_module = MagicMock()
-        mock_judge_module.main = mock_judge
-
         with (
             patch("generate.main", side_effect=mock_generate),
-            patch("importlib.util.module_from_spec", return_value=mock_judge_module),
-            patch("importlib.util.spec_from_file_location"),
+            patch("judge.cli.main", side_effect=mock_judge),
         ):
             # Mock sys.exit to raise SystemExit instead of actually exiting
             with patch.object(sys, "exit", side_effect=SystemExit) as mock_exit:
@@ -765,7 +756,7 @@ class TestPipelineValidation:
     ):
         """Test that pipeline exits if Step 2 folder doesn't exist."""
         import sys
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import patch
 
         from run_pipeline import main as pipeline_main
 
@@ -778,18 +769,13 @@ class TestPipelineValidation:
         async def mock_generate(*args, **kwargs):
             return None, str(conv_folder)
 
-        # Mock judge_main to return non-existent folder
+        # Mock judge CLI main to return non-existent folder
         async def mock_judge(args):
             return str(tmp_path / "nonexistent_eval")
 
-        # Create a mock module with the mock judge main function
-        mock_judge_module = MagicMock()
-        mock_judge_module.main = mock_judge
-
         with (
             patch("generate.main", side_effect=mock_generate),
-            patch("importlib.util.module_from_spec", return_value=mock_judge_module),
-            patch("importlib.util.spec_from_file_location"),
+            patch("judge.cli.main", side_effect=mock_judge),
         ):
             # Mock sys.exit to raise SystemExit instead of actually exiting
             with patch.object(sys, "exit", side_effect=SystemExit) as mock_exit:
@@ -805,7 +791,7 @@ class TestPipelineValidation:
     async def test_step2_validation_no_results_csv(self, tmp_path, valid_pipeline_args):
         """Test that pipeline exits if Step 2 produces no results.csv."""
         import sys
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import patch
 
         from run_pipeline import main as pipeline_main
 
@@ -823,18 +809,13 @@ class TestPipelineValidation:
         async def mock_generate(*args, **kwargs):
             return None, str(conv_folder)
 
-        # Mock judge_main to return folder without results.csv
+        # Mock judge CLI main to return folder without results.csv
         async def mock_judge(args):
             return str(eval_folder)
 
-        # Create a mock module with the mock judge main function
-        mock_judge_module = MagicMock()
-        mock_judge_module.main = mock_judge
-
         with (
             patch("generate.main", side_effect=mock_generate),
-            patch("importlib.util.module_from_spec", return_value=mock_judge_module),
-            patch("importlib.util.spec_from_file_location"),
+            patch("judge.cli.main", side_effect=mock_judge),
         ):
             # Mock sys.exit to raise SystemExit instead of actually exiting
             with patch.object(sys, "exit", side_effect=SystemExit) as mock_exit:
@@ -852,7 +833,7 @@ class TestPipelineValidation:
     ):
         """Test that error message lists files when folder is not empty."""
         import sys
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import patch
 
         from run_pipeline import main as pipeline_main
 
@@ -875,14 +856,9 @@ class TestPipelineValidation:
         async def mock_judge(args):
             return str(eval_folder)
 
-        # Create a mock module with the mock judge main function
-        mock_judge_module = MagicMock()
-        mock_judge_module.main = mock_judge
-
         with (
             patch("generate.main", side_effect=mock_generate),
-            patch("importlib.util.module_from_spec", return_value=mock_judge_module),
-            patch("importlib.util.spec_from_file_location"),
+            patch("judge.cli.main", side_effect=mock_judge),
         ):
             # Mock sys.exit to raise SystemExit instead of actually exiting
             with patch.object(sys, "exit", side_effect=SystemExit) as mock_exit:
@@ -906,7 +882,7 @@ class TestPipelineValidation:
         self, tmp_path, valid_pipeline_args, capsys
     ):
         """Test that validation success messages are displayed."""
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import patch
 
         from run_pipeline import main as pipeline_main
 
@@ -933,14 +909,9 @@ class TestPipelineValidation:
         def mock_score(*args, **kwargs):
             return {}
 
-        # Create a mock module with the mock judge main function
-        mock_judge_module = MagicMock()
-        mock_judge_module.main = mock_judge
-
         with (
             patch("generate.main", side_effect=mock_generate),
-            patch("importlib.util.module_from_spec", return_value=mock_judge_module),
-            patch("importlib.util.spec_from_file_location"),
+            patch("judge.cli.main", side_effect=mock_judge),
             patch("run_pipeline.score_results", new=mock_score),
             patch("run_pipeline.print_scores"),
             patch("run_pipeline.create_visualizations"),
