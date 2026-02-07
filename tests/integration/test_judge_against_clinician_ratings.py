@@ -315,14 +315,13 @@ class TestJudgeAgainstClinicianRatings:
         # Check for missing transcripts in results
         missing_transcripts = merged_df[merged_df["filename"].isna()]["transcript_id"]
         if len(missing_transcripts) > 0:
-            print(
-                f"⚠ Warning: {len(missing_transcripts)} transcript(s) "
-                f"missing from results"
+            missing_list = ", ".join(str(tid) for tid in missing_transcripts)
+            pytest.fail(
+                f"{len(missing_transcripts)} transcript(s) missing from results: "
+                f"{missing_list}"
             )
-        mismatches = [
-            f"{tid}: No judge ratings found (expected ratings exist)"
-            for tid in missing_transcripts
-        ]
+
+        mismatches = []
 
         # Compare dimension columns for transcripts present in both
         comparison_df = merged_df[
@@ -364,17 +363,9 @@ class TestJudgeAgainstClinicianRatings:
             num_mismatches = len(mismatches)
             mismatch_rate = (num_mismatches / total_ratings) * 100
 
-            # Count by type for debugging
-            missing_count = sum(1 for m in mismatches if "No judge ratings found" in m)
-            dimension_mismatch_count = num_mismatches - missing_count
-
             print(
                 f"Mismatch rate: {num_mismatches}/{total_ratings} "
                 f"({mismatch_rate:.1f}%)"
-            )
-            print(
-                f"  Breakdown: {dimension_mismatch_count} dimension mismatches, "
-                f"{missing_count} missing transcripts"
             )
 
             print("\nMismatches:")
