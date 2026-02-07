@@ -120,6 +120,7 @@ def expected_ratings_csv(conversations_dir: Path) -> Path:
 
 
 @pytest.mark.integration
+@pytest.mark.live
 class TestJudgeAgainstClinicianRatings:
     """Test judge.py output against expected clinician ratings."""
 

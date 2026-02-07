@@ -80,6 +80,7 @@ markers = [
     "unit: Unit tests (fast, isolated)",
     "integration: Integration tests (medium speed)",
     "e2e: End-to-end tests (slow)",
+    "live: Tests that require real API keys or external services (excluded from default CI in public repos)",
 ]
 addopts = [
     "-v",
