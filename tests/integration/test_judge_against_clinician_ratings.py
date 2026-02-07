@@ -22,7 +22,7 @@ from judge.constants import (
 )
 
 # Max Mismatches Allowed
-MAX_MISMATCHES_ALLOWED = 30
+MAX_MISMATCHES_ALLOWED = 30  # percentage - should be value between 0 and 100
 
 # Valid rating values
 VALID_RATING_VALUES = {BEST_PRACTICE, NEUTRAL, DAMAGING, NOT_RELEVANT}
