@@ -1,7 +1,7 @@
 """Integration test comparing judge.py output to expected clinician ratings.
 
 This test:
-1. Runs judge.py on conversations in tests/fixtures/conversations
+1. Runs judge.py on conversations in tests/fixtures/conversations using OpenAI's gpt-4o
 2. Extracts ratings from the judge output
 3. Compares them to expected values from transcript_agreement_scores.csv
 """
