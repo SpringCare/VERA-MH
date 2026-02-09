@@ -570,6 +570,14 @@ pytest tests/integration/
 pytest tests/e2e/
 ```
 
+### Using `@pytest.mark.live` for tests requiring API keys
+
+Some tests are marked with `@pytest.mark.live` (for example, `tests/integration/test_judge_against_clinician_ratings.py`). These tests call real APIs (e.g. the judge LLM) and require API keys.
+
+- **What:** The `live` marker marks tests that need real API keys or external services. They are excluded from the default test run in CI so that contributors and public CI can pass without secrets.
+- **Why:** CI runs two jobs: the main test job runs `pytest -m "not live"` (no keys needed); a separate "Live Tests" job runs only when `OPENAI_API_KEY` is set in repo secrets. Locally, run live tests only when you have keys: `pytest -m live`.
+- **vs. skip:** Using `pytest.skip()` when keys are missing would still collect and run (then skip) those tests, so they’d show up as skipped and their code would still be in the coverage run (as not covered). With the `live` marker and `-m "not live"`, live tests are deselected entirely—they aren’t run or counted, so coverage reflects only the tests that actually ran and isn’t penalized by live-only code paths.
+
 ### Using Claude Code for Testing
 
 If you have Claude Code installed, you can use these convenient commands:

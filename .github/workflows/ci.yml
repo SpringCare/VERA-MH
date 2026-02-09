@@ -57,8 +57,34 @@ jobs:
     - name: Install dependencies
       run: uv sync --all-extras
 
-    - name: Run tests with pytest
-      run: uv run pytest --cov --cov-report=term-missing
+    - name: Run tests with pytest (excluding live tests; no API keys required)
+      run: uv run pytest -m "not live" --cov --cov-report=term-missing
+
+  live-tests:
+    name: Live Tests (API keys required)
+    runs-on: ubuntu-latest
+    if: ${{ secrets.OPENAI_API_KEY != '' }}
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.11'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+
+    - name: Install dependencies
+      run: uv sync --all-extras
+
+    - name: Run live tests with pytest
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: uv run pytest -m live -v
 
   docker:
     name: Docker Build Check
