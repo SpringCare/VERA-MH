@@ -58,6 +58,7 @@ def repo_root():
 
 
 @pytest.mark.integration
+@pytest.mark.live
 class TestVERAMHPipeline:
     """Integration tests for the complete VERA-MH pipeline using CLI tools."""
 
