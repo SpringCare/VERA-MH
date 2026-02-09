@@ -41,27 +41,27 @@ class TestFormatConversationSummary:
 class TestBuildLangchainMessages:
     """Test build_langchain_messages function."""
 
-    def test_build_messages_with_no_history(self):
+    def test_build_messages_with_no_history(self, mock_system_message):
         """Test with only current message, no history."""
         messages = build_langchain_messages(
             role=Role.PROVIDER,
-            conversation_history=[{"turn": 0, "response": "Hello"}],
+            conversation_history=mock_system_message,
         )
 
         assert len(messages) == 1
         assert isinstance(messages[0], HumanMessage)
-        assert messages[0].text == "Hello"
+        assert messages[0].text == "Test"
 
-    def test_build_messages_with_empty_history(self):
+    def test_build_messages_with_empty_history(self, mock_system_message):
         """Test with empty history list."""
         messages = build_langchain_messages(
             role=Role.PROVIDER,
-            conversation_history=[{"turn": 0, "response": "Hello"}],
+            conversation_history=mock_system_message,
         )
 
         assert len(messages) == 1
         assert isinstance(messages[0], HumanMessage)
-        assert messages[0].text == "Hello"
+        assert messages[0].text == "Test"
 
     def test_build_messages_with_role_enum_values(self):
         """Test that speaker field uses Role enum values correctly."""
@@ -171,9 +171,9 @@ class TestBuildLangchainMessages:
         # Verify alternating pattern
         for i, msg in enumerate(messages):
             turn_number = i + 1
-            if turn_number % 2 == 1:  # Odd turns
+            if turn_number % 2 == 1:
                 assert isinstance(msg, HumanMessage)
-            else:  # Even turns
+            else:
                 assert isinstance(msg, AIMessage)
             assert msg.text == f"Message {turn_number}"
 
@@ -508,24 +508,24 @@ class TestBuildLangchainMessages:
 class TestFormatConversationAsString:
     """Test format_conversation_as_string function."""
 
-    def test_format_with_no_history(self):
+    def test_format_with_no_history(self, mock_system_message):
         """Test with only current message, no history."""
         result = format_conversation_as_string(
             role=Role.PROVIDER,
-            conversation_history=[{"turn": 0, "response": "Hello"}],
+            conversation_history=mock_system_message,
         )
 
-        assert result == "Human: Hello\n\nAssistant:"
+        assert result == "Human: Test\n\nAssistant:"
 
-    def test_format_with_system_prompt(self):
+    def test_format_with_system_prompt(self, mock_system_message):
         """Test with system prompt."""
         result = format_conversation_as_string(
             role=Role.PERSONA,
-            conversation_history=[{"turn": 0, "response": "Hello"}],
+            conversation_history=mock_system_message,
             system_prompt="You are helpful",
         )
 
-        assert result == "System: You are helpful\n\nHuman: Hello\n\nAssistant:"
+        assert result == "System: You are helpful\n\nHuman: Test\n\nAssistant:"
 
     def test_format_with_conversation_history(self):
         """Test with conversation history."""

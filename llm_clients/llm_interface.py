@@ -31,6 +31,7 @@ class LLMInterface(ABC):
         self.name = name
         self.role = role
         self.system_prompt = system_prompt or ""
+        self.last_response_metadata: Dict[str, Any] = {}
 
     @abstractmethod
     async def generate_response(

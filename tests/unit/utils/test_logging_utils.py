@@ -202,7 +202,7 @@ class TestLogConversationStart:
         )
         llm2 = MockLLM(
             name="llm2",
-            model_name="gpt-4",
+            model_name="gpt-4o",
             temperature=0.8,
             max_tokens=2000,
         )
@@ -212,7 +212,7 @@ class TestLogConversationStart:
             llm1_model_str="claude-3-opus",
             llm1_prompt="You are a helpful assistant",
             llm2_name="User",
-            llm2_model_str="gpt-4",
+            llm2_model_str="gpt-4o",
             initial_message="Hello",
             max_turns=10,
             llm1_model=llm1,
@@ -224,7 +224,7 @@ class TestLogConversationStart:
 
         assert "CONVERSATION STARTED" in content
         assert "claude-3-opus" in content
-        assert "gpt-4" in content
+        assert "gpt-4o" in content
         assert "Max Turns: 10" in content
 
     def test_logs_llm_configuration(self, tmp_path):
@@ -737,7 +737,7 @@ class TestFullConversationWorkflow:
         )
         llm2 = MockLLM(
             name="user",
-            model_name="gpt-4",
+            model_name="gpt-4o",
             temperature=0.8,
             max_tokens=2000,
         )
@@ -747,7 +747,7 @@ class TestFullConversationWorkflow:
             llm1_model_str="claude-3-opus",
             llm1_prompt="You are helpful",
             llm2_name="User",
-            llm2_model_str="gpt-4",
+            llm2_model_str="gpt-4o",
             initial_message="Hello",
             max_turns=3,
             llm1_model=llm1,

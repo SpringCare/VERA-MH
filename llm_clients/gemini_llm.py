@@ -62,9 +62,6 @@ class GeminiLLM(JudgeLLM):
         self.temperature = getattr(self.llm, "temperature", None)
         self.max_tokens = getattr(self.llm, "max_tokens", None)
 
-        # Store metadata from last response
-        self.last_response_metadata: Dict[str, Any] = {}
-
     async def generate_response(
         self,
         conversation_history: Optional[List[Dict[str, Any]]] = None,

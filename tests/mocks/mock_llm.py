@@ -82,12 +82,6 @@ class MockLLM(JudgeLLM):
         """Set or update the system prompt."""
         self.system_prompt = system_prompt
 
-    def reset(self) -> None:
-        """Reset for reuse in multiple tests."""
-        self.response_index = 0
-        self.calls = []
-        self.last_response_metadata = {}
-
     async def generate_structured_response(
         self, message: Optional[str], response_model: Type[T]
     ) -> T:

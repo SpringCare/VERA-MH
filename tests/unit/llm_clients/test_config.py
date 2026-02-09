@@ -34,7 +34,7 @@ class TestConfig:
 
         assert isinstance(config, dict)
         assert "model" in config
-        assert config["model"] == "gpt-4"
+        assert config["model"] == "gpt-5.2"
         # Temperature and max_tokens should NOT be in config
         assert "temperature" not in config
         assert "max_tokens" not in config

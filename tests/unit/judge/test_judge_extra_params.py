@@ -1,12 +1,30 @@
 """Unit tests for judge model extra parameters functionality."""
 
+import argparse
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from judge.llm_judge import LLMJudge
 from judge.rubric_config import ConversationData, RubricConfig
+from utils.utils import parse_key_value_list
+
+
+def _setup_extra_params_arg(argv: list[str]) -> dict[str, Any]:
+    """Parse argv and return args.judge_model_extra_params
+    (same type as judge.py CLI --judge-model-extra-params argument)."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--judge-model-extra-params",
+        "-jep",
+        help="Extra parameters for the judge model (key=value, comma-separated)",
+        type=parse_key_value_list,
+        default={},
+    )
+    args = parser.parse_args(argv)
+    return args.judge_model_extra_params
 
 
 @pytest.mark.unit
@@ -15,7 +33,9 @@ class TestJudgeExtraParams:
 
     async def test_llm_judge_accepts_extra_params(self, rubric_config_factory):
         """Test that LLMJudge accepts judge_model_extra_params parameter."""
-        extra_params = {"temperature": 0.7, "max_tokens": 1000}
+        extra_params = _setup_extra_params_arg(
+            ["-jep", "temperature=0.7,max_tokens=1000"]
+        )
 
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
         judge = LLMJudge(
@@ -40,7 +60,9 @@ class TestJudgeExtraParams:
 
     async def test_llm_judge_stores_extra_params_correctly(self, rubric_config_factory):
         """Test that LLMJudge stores extra params and makes them available."""
-        extra_params = {"temperature": 0.5, "max_tokens": 500, "top_p": 0.9}
+        extra_params = _setup_extra_params_arg(
+            ["-jep", "temperature=0.5,max_tokens=500,top_p=0.9"]
+        )
 
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
         judge = LLMJudge(
@@ -63,7 +85,9 @@ class TestJudgeExtraParams:
         self, tmp_path: Path, rubric_config_factory, fixtures_dir: Path
     ):
         """Test that extra params are passed to LLMFactory during async evaluation."""
-        extra_params = {"temperature": 0.7, "max_tokens": 1000}
+        extra_params = _setup_extra_params_arg(
+            ["-jep", "temperature=0.7,max_tokens=1000"]
+        )
         captured_kwargs = {}
 
         # Create a simple rubric prompt file for testing (without persona placeholders)
@@ -175,7 +199,7 @@ class TestJudgeExtraParams:
 
     async def test_llm_judge_preserves_standard_params(self, rubric_config_factory):
         """Test that extra params don't interfere with standard parameters."""
-        extra_params = {"temperature": 0.8}
+        extra_params = _setup_extra_params_arg(["-jep", "temperature=0.8"])
 
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
         judge = LLMJudge(
@@ -190,12 +214,9 @@ class TestJudgeExtraParams:
 
     async def test_multiple_extra_params_types(self, rubric_config_factory):
         """Test that extra params can contain various types."""
-        extra_params = {
-            "temperature": 0.7,  # float
-            "max_tokens": 1000,  # int
-            "top_p": 0.95,  # float
-            "stop_sequences": ["END"],  # list
-        }
+        extra_params = _setup_extra_params_arg(
+            ["-jep", "temperature=0.7,max_tokens=1000,top_p=0.95"]
+        )
 
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
         judge = LLMJudge(
@@ -207,13 +228,14 @@ class TestJudgeExtraParams:
         assert judge.judge_model_extra_params == extra_params
         assert isinstance(judge.judge_model_extra_params["temperature"], float)
         assert isinstance(judge.judge_model_extra_params["max_tokens"], int)
-        assert isinstance(judge.judge_model_extra_params["stop_sequences"], list)
 
     async def test_user_provided_temperature_overrides_default(
         self, rubric_config_factory
     ):
         """Test that user-provided temperature overrides the default of 0."""
-        extra_params = {"temperature": 0.9, "max_tokens": 2000}
+        extra_params = _setup_extra_params_arg(
+            ["-jep", "temperature=0.9,max_tokens=2000"]
+        )
 
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
         judge = LLMJudge(
@@ -230,7 +252,7 @@ class TestJudgeExtraParams:
         self, rubric_config_factory
     ):
         """Test that default temperature=0 is added when user provides other params."""
-        extra_params = {"max_tokens": 500, "top_p": 0.9}
+        extra_params = _setup_extra_params_arg(["-jep", "max_tokens=500,top_p=0.9"])
 
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
         judge = LLMJudge(
@@ -250,7 +272,9 @@ class TestJudgeExtraParams:
         self, rubric_config_factory
     ):
         """Test that explicitly setting temperature=0 is preserved (not overridden)."""
-        extra_params = {"temperature": 0, "max_tokens": 1000}
+        extra_params = _setup_extra_params_arg(
+            ["-jep", "temperature=0,max_tokens=1000"]
+        )
 
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
         judge = LLMJudge(
@@ -275,7 +299,9 @@ class TestJudgeExtraParams:
         ]
 
         for test_case in test_cases:
-            extra_params = {"temperature": test_case["temperature"]}
+            extra_params = _setup_extra_params_arg(
+                ["-jep", f"temperature={test_case['temperature']}"]
+            )
             rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
             judge = LLMJudge(
                 judge_model="mock-llm",

@@ -23,7 +23,7 @@ class LLMFactory:
 
         Args:
             model_name: The model identifier
-                (e.g., "claude-sonnet-4-5-20250929", "gpt-4")
+                (e.g., "claude-sonnet-4-5-20250929", "gpt-4o")
             name: Display name for this LLM instance
             system_prompt: Optional system prompt
             role: Role of the LLM (Role.PERSONA, Role.PROVIDER)
@@ -46,7 +46,7 @@ class LLMFactory:
             if k not in ["model", "name", "prompt_name", "system_prompt"]
         }
 
-        # Check Azure first to avoid matching "gpt" in "azure-gpt-4"
+        # Check Azure first to avoid matching "gpt" in "azure-gpt-5.2"
         if "azure" in model_lower:
             from .azure_llm import AzureLLM
 
@@ -85,7 +85,7 @@ class LLMFactory:
 
         Args:
             model_name: The model identifier
-                (e.g., "claude-sonnet-4-5-20250929", "gpt-4")
+                (e.g., "claude-sonnet-4-5-20250929", "gpt-4o")
             name: Display name for this LLM instance
             system_prompt: Optional system prompt
             **kwargs: Additional model-specific parameters

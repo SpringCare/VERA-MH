@@ -76,10 +76,10 @@ class TestJudgeCLIExtraParams:
 
         # Test with short flag
         args = parser.parse_args(
-            ["-f", "test_folder", "-j", "gpt-4", "-jep", "temperature=0.5"]
+            ["-f", "test_folder", "-j", "gpt-4o", "-jep", "temperature=0.5"]
         )
 
-        assert args.judge_model == "gpt-4"
+        assert args.judge_model == "gpt-4o"
         assert args.judge_model_extra_params == {"temperature": 0.5}
 
     def test_cli_judge_model_extra_params_defaults_to_empty_dict(self):

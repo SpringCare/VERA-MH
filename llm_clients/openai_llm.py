@@ -56,9 +56,6 @@ class OpenAILLM(JudgeLLM):
 
         self.llm = ChatOpenAI(**llm_params)
 
-        # Store metadata from last response
-        self.last_response_metadata: Dict[str, Any] = {}
-
     async def generate_response(
         self,
         conversation_history: Optional[List[Dict[str, Any]]] = None,

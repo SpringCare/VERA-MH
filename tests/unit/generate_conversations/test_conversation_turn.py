@@ -37,7 +37,7 @@ class TestConversationTurnCreation:
             input_message="Hello world",
             response_message=message,
             early_termination=True,
-            logging_metadata={"tokens": 50, "model": "gpt-4"},
+            logging_metadata={"tokens": 50, "model": "gpt-4o"},
         )
 
         assert turn.turn == 2
@@ -45,7 +45,7 @@ class TestConversationTurnCreation:
         assert turn.input_message == "Hello world"
         assert turn.response == "Hi there!"
         assert turn.early_termination is True
-        assert turn.logging_metadata == {"tokens": 50, "model": "gpt-4"}
+        assert turn.logging_metadata == {"tokens": 50, "model": "gpt-4o"}
         assert isinstance(turn.response_message, AIMessage)
 
     def test_create_with_defaults(self):
@@ -186,7 +186,7 @@ class TestConversationTurnFromDict:
             "input": "Hello world",
             "response": "Hi there!",
             "early_termination": False,
-            "logging": {"model": "gpt-4"},
+            "logging": {"model": "gpt-4o"},
         }
 
         # From provider's perspective, provider is "I" (AIMessage)

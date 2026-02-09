@@ -125,9 +125,6 @@ class AzureLLM(JudgeLLM):
         self.max_tokens = getattr(self.llm, "max_tokens", None)
         self.top_p = getattr(self.llm, "top_p", None)
 
-        # Store metadata from last response
-        self.last_response_metadata: Dict[str, Any] = {}
-
     async def generate_response(
         self,
         conversation_history: Optional[List[Dict[str, Any]]] = None,
@@ -175,6 +172,7 @@ class AzureLLM(JudgeLLM):
                     else self.model_name
                 ),
                 "provider": "azure",
+                "role": self.role.value,
                 "timestamp": datetime.now().isoformat(),
                 "response_time_seconds": round(end_time - start_time, 3),
                 "usage": {},
@@ -211,6 +209,7 @@ class AzureLLM(JudgeLLM):
                 "response_id": None,
                 "model": self.model_name,
                 "provider": "azure",
+                "role": self.role.value,
                 "timestamp": datetime.now().isoformat(),
                 "error": error_msg,
                 "usage": {},
@@ -281,6 +280,7 @@ class AzureLLM(JudgeLLM):
                 "response_id": None,
                 "model": self.model_name,
                 "provider": "azure",
+                "role": self.role.value,
                 "timestamp": datetime.now().isoformat(),
                 "response_time_seconds": round(end_time - start_time, 3),
                 "usage": {},
@@ -300,6 +300,7 @@ class AzureLLM(JudgeLLM):
                 "response_id": None,
                 "model": self.model_name,
                 "provider": "azure",
+                "role": self.role.value,
                 "timestamp": datetime.now().isoformat(),
                 "error": str(e),
                 "usage": {},

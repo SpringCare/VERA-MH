@@ -1,3 +1,4 @@
+import re
 from typing import Any, Dict, List, Optional
 
 from langchain_core.messages import AIMessage, HumanMessage
@@ -29,8 +30,8 @@ class ConversationSimulator:
         if speaker != self.persona:
             return False
 
-        # Check for exact phrase matches
-        if self.termination_signal in response:
+        # Check for exact phrase matches (case insensitive)
+        if re.search(re.escape(self.termination_signal), response, re.IGNORECASE):
             return True
 
         return False

@@ -47,7 +47,7 @@ class Config:
         Returns only the model name. Runtime parameters (temperature, max_tokens)
         should be passed explicitly via CLI arguments.
         """
-        return {"model": "gpt-4"}
+        return {"model": "gpt-5.2"}
 
     @classmethod
     def get_gemini_config(cls) -> Dict[str, Any]:
@@ -66,7 +66,7 @@ class Config:
         should be passed explicitly via CLI arguments. The endpoint and API key
         are loaded from environment variables.
         """
-        return {"model": "azure-gpt-4"}
+        return {"model": "azure-gpt-5.2"}
 
     @classmethod
     def get_ollama_config(cls) -> Dict[str, Any]:

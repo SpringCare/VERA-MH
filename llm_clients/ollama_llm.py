@@ -75,9 +75,6 @@ class OllamaLLM(LLMInterface):
         if self.temperature is None:
             self.temperature = getattr(self.llm, "temperature", None)
 
-        # Store metadata from last response
-        self.last_response_metadata: Dict[str, Any] = {}
-
     async def generate_response(
         self,
         conversation_history: Optional[List[Dict[str, Any]]] = None,

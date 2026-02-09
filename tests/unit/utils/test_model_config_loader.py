@@ -15,7 +15,7 @@ class TestLoadModelConfig:
         """Test loading a valid model configuration file."""
         config_data = {
             "prompt_models": {
-                "persona_anxious": "gpt-4",
+                "persona_anxious": "gpt-4o",
                 "persona_depressed": "claude-3-opus",
                 "chatbot_therapist": "claude-3-5-sonnet",
             },
@@ -30,12 +30,12 @@ class TestLoadModelConfig:
 
         assert result == config_data
         assert result["default_model"] == "claude-sonnet-4-5-20250929"
-        assert result["prompt_models"]["persona_anxious"] == "gpt-4"
+        assert result["prompt_models"]["persona_anxious"] == "gpt-4o"
         assert result["temperature"] == 0.7
 
     def test_load_model_config_with_minimal_structure(self, tmp_path):
         """Test loading config with only required fields."""
-        config_data = {"prompt_models": {}, "default_model": "gpt-4"}
+        config_data = {"prompt_models": {}, "default_model": "gpt-4o"}
 
         config_file = tmp_path / "minimal_config.json"
         config_file.write_text(json.dumps(config_data))
@@ -43,7 +43,7 @@ class TestLoadModelConfig:
         result = load_model_config(str(config_file))
 
         assert result["prompt_models"] == {}
-        assert result["default_model"] == "gpt-4"
+        assert result["default_model"] == "gpt-4o"
 
     def test_load_model_config_file_not_found(self, tmp_path, capsys):
         """Test handling of non-existent config file."""
@@ -103,7 +103,7 @@ class TestLoadModelConfig:
         """Test loading config with unicode characters in model names."""
         config_data = {
             "prompt_models": {
-                "persona_日本語": "gpt-4",
+                "persona_日本語": "gpt-4o",
                 "persona_émotionnel": "claude-3-opus",
             },
             "default_model": "claude-sonnet-4-5-20250929",
@@ -122,7 +122,7 @@ class TestLoadModelConfig:
     def test_load_model_config_with_nested_structure(self, tmp_path):
         """Test loading config with nested data structures."""
         config_data = {
-            "prompt_models": {"persona_1": "gpt-4"},
+            "prompt_models": {"persona_1": "gpt-4o"},
             "default_model": "claude-sonnet-4-5-20250929",
             "model_params": {
                 "temperature": 0.7,
@@ -168,7 +168,7 @@ class TestGetModelForPrompt:
         """Test getting model for a prompt that exists in config."""
         config_data = {
             "prompt_models": {
-                "persona_anxious": "gpt-4-turbo",
+                "persona_anxious": "gpt-4o-turbo",
                 "persona_happy": "claude-3-opus",
             },
             "default_model": "claude-sonnet-4-5-20250929",
@@ -179,12 +179,12 @@ class TestGetModelForPrompt:
 
         model = get_model_for_prompt("persona_anxious", str(config_file))
 
-        assert model == "gpt-4-turbo"
+        assert model == "gpt-4o-turbo"
 
     def test_get_model_for_prompt_returns_default_for_unknown(self, tmp_path):
         """Test getting model for prompt not in config returns default."""
         config_data = {
-            "prompt_models": {"persona_known": "gpt-4"},
+            "prompt_models": {"persona_known": "gpt-4o"},
             "default_model": "claude-sonnet-4-5-20250929",
         }
 
@@ -197,14 +197,14 @@ class TestGetModelForPrompt:
 
     def test_get_model_for_prompt_with_empty_prompt_models(self, tmp_path):
         """Test getting model when prompt_models is empty."""
-        config_data = {"prompt_models": {}, "default_model": "gpt-4"}
+        config_data = {"prompt_models": {}, "default_model": "gpt-4o"}
 
         config_file = tmp_path / "config.json"
         config_file.write_text(json.dumps(config_data))
 
         model = get_model_for_prompt("any_prompt", str(config_file))
 
-        assert model == "gpt-4"
+        assert model == "gpt-4o"
 
     def test_get_model_for_prompt_with_missing_config_file(self):
         """Test getting model when config file doesn't exist."""
@@ -217,7 +217,7 @@ class TestGetModelForPrompt:
         """Test that prompt name matching is case-sensitive."""
         config_data = {
             "prompt_models": {
-                "PersonaAnxious": "gpt-4",
+                "PersonaAnxious": "gpt-4o",
                 "persona_anxious": "claude-3-opus",
             },
             "default_model": "claude-sonnet-4-5-20250929",
@@ -231,7 +231,7 @@ class TestGetModelForPrompt:
         model2 = get_model_for_prompt("persona_anxious", str(config_file))
         model3 = get_model_for_prompt("personaanxious", str(config_file))
 
-        assert model1 == "gpt-4"
+        assert model1 == "gpt-4o"
         assert model2 == "claude-3-opus"
         assert model3 == "claude-sonnet-4-5-20250929"  # Falls back to default
 
@@ -239,7 +239,7 @@ class TestGetModelForPrompt:
         """Test prompt names with special characters."""
         config_data = {
             "prompt_models": {
-                "persona-with-dashes": "gpt-4",
+                "persona-with-dashes": "gpt-4o",
                 "persona_with_underscores": "claude-3-opus",
                 "persona.with.dots": "gpt-3.5-turbo",
             },
@@ -249,7 +249,7 @@ class TestGetModelForPrompt:
         config_file = tmp_path / "config.json"
         config_file.write_text(json.dumps(config_data))
 
-        assert get_model_for_prompt("persona-with-dashes", str(config_file)) == "gpt-4"
+        assert get_model_for_prompt("persona-with-dashes", str(config_file)) == "gpt-4o"
         assert (
             get_model_for_prompt("persona_with_underscores", str(config_file))
             == "claude-3-opus"
@@ -262,7 +262,7 @@ class TestGetModelForPrompt:
     def test_get_model_for_prompt_multiple_calls_consistent(self, tmp_path):
         """Test that multiple calls with same prompt return consistent results."""
         config_data = {
-            "prompt_models": {"test_prompt": "gpt-4"},
+            "prompt_models": {"test_prompt": "gpt-4o"},
             "default_model": "claude-sonnet-4-5-20250929",
         }
 
@@ -273,4 +273,4 @@ class TestGetModelForPrompt:
         model2 = get_model_for_prompt("test_prompt", str(config_file))
         model3 = get_model_for_prompt("test_prompt", str(config_file))
 
-        assert model1 == model2 == model3 == "gpt-4"
+        assert model1 == model2 == model3 == "gpt-4o"

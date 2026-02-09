@@ -17,7 +17,10 @@ class TestLoadPromptsFromCsv:
         template_path = fixtures_dir / "rubric_prompt_beginning.txt"
 
         # Create a simple template file for testing
-        template_content = "Persona: {persona_id}\nDescription: {persona_desc}\nRisk: {current_risk_level}"
+        template_content = (
+            "Persona: {persona_id}\nDescription: {persona_desc}\n"
+            "Risk: {current_risk_level}"
+        )
         template_path.write_text(template_content)
 
         result = load_prompts_from_csv(
@@ -414,3 +417,85 @@ class TestLoadPromptsFromCsv:
         assert isinstance(result, list)
         assert len(result) > 0
         assert isinstance(result[0], dict)
+
+    def test_max_personas_limits_results(self, tmp_path):
+        """Test that max_personas caps the number of returned rows."""
+        csv_file = tmp_path / "personas.tsv"
+        csv_file.write_text("Name\tAge\nAlice\t30\nBob\t25\nCharlie\t35")
+
+        template_file = tmp_path / "template.txt"
+        template_file.write_text("{Name}")
+
+        result = load_prompts_from_csv(
+            prompt_path=str(csv_file),
+            prompt_template_path=str(template_file),
+            max_personas=2,
+        )
+
+        assert len(result) == 2
+        assert result[0]["Name"] == "Alice"
+        assert result[1]["Name"] == "Bob"
+
+    def test_max_personas_zero_raises(self, tmp_path):
+        """Test that max_personas=0 raises ValueError."""
+        csv_file = tmp_path / "personas.tsv"
+        csv_file.write_text("Name\tAge\nAlice\t30")
+
+        template_file = tmp_path / "template.txt"
+        template_file.write_text("{Name}")
+
+        with pytest.raises(ValueError, match="max_personas must be > 0"):
+            load_prompts_from_csv(
+                prompt_path=str(csv_file),
+                prompt_template_path=str(template_file),
+                max_personas=0,
+            )
+
+    def test_max_personas_negative_raises(self, tmp_path):
+        """Test that max_personas < 0 raises ValueError."""
+        csv_file = tmp_path / "personas.tsv"
+        csv_file.write_text("Name\tAge\nAlice\t30")
+
+        template_file = tmp_path / "template.txt"
+        template_file.write_text("{Name}")
+
+        with pytest.raises(ValueError, match="max_personas must be > 0"):
+            load_prompts_from_csv(
+                prompt_path=str(csv_file),
+                prompt_template_path=str(template_file),
+                max_personas=-1,
+            )
+
+    def test_max_personas_with_name_filter_applies_after_filter(self, tmp_path):
+        """Test that max_personas limits count after name filtering."""
+        csv_file = tmp_path / "personas.tsv"
+        csv_file.write_text("Name\tAge\nAlice\t30\nBob\t25\nCharlie\t35")
+
+        template_file = tmp_path / "template.txt"
+        template_file.write_text("{Name}")
+
+        result = load_prompts_from_csv(
+            name_list=["Alice", "Bob", "Charlie"],
+            prompt_path=str(csv_file),
+            prompt_template_path=str(template_file),
+            max_personas=2,
+        )
+
+        assert len(result) == 2
+        assert result[0]["Name"] == "Alice"
+        assert result[1]["Name"] == "Bob"
+
+    def test_name_list_with_csv_missing_name_column_raises(self, tmp_path):
+        """Test that name_list with a CSV that has no 'Name' column raises KeyError."""
+        csv_file = tmp_path / "personas.tsv"
+        csv_file.write_text("ID\tAge\n1\t30\n2\t25")
+
+        template_file = tmp_path / "template.txt"
+        template_file.write_text("{ID}")
+
+        with pytest.raises(KeyError, match="Name"):
+            load_prompts_from_csv(
+                name_list=["1"],
+                prompt_path=str(csv_file),
+                prompt_template_path=str(template_file),
+            )

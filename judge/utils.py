@@ -7,6 +7,29 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 
 
+def parse_judge_models(model_arg):
+    """Parse judge model specifications from command line argument into a dictionary."""
+    judge_models = {}
+    for model_spec in model_arg:
+        if ":" in model_spec:
+            # Format: "model:count"
+            model, count = model_spec.rsplit(":", 1)
+            try:
+                n = int(count)
+            except ValueError:
+                raise ValueError(
+                    f"Judge model count must be an integer, got {count!r}"
+                ) from None
+            if n < 1:
+                raise ValueError(f"Judge model count must be positive, got {n}")
+            judge_models[model] = n
+        else:
+            # Format: "model" (defaults to 1 instance)
+            judge_models[model_spec] = 1
+
+    return judge_models
+
+
 def load_rubric_structure(
     rubric_path: str, sep: str = "\t"
 ) -> Tuple[List[str], List[str]]:

@@ -31,6 +31,9 @@ def load_prompts_from_csv(
     if not template_path.exists():
         raise FileNotFoundError(f"Template file not found: {template_path}")
 
+    if max_personas is not None and max_personas <= 0:
+        raise ValueError("max_personas must be > 0")
+
     # Read template once outside the loop for efficiency
     with open(template_path, "r", encoding="utf-8") as template_file:
         template = template_file.read()

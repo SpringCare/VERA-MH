@@ -12,7 +12,7 @@ def parse_key_value_list(arg):
         try:
             value = ast.literal_eval(value)
         except (ValueError, SyntaxError):
-            # Note: we are not logging the error here as we are leaving the value as a string
+            # Note: not logging the error here as we are leaving the value as a string
             pass
         d[key] = value
     return d

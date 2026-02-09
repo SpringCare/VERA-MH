@@ -376,7 +376,7 @@ async def batch_evaluate_with_individual_judges(
     Args:
         conversations: List of ConversationData objects
         judge_models: Dict mapping model names to number of instances
-                     Example: {"claude-3-7-sonnet": 3, "gpt-4": 2}
+                     Example: {"claude-3-7-sonnet": 3, "gpt-4o": 2}
         output_folder: Folder to save evaluation results
         rubric_config: Pre-loaded rubric configuration
         max_concurrent: Maximum number of concurrent workers
@@ -440,7 +440,7 @@ async def judge_conversations(
 
     Args:
         judge_models: Dict mapping model names to number of instances
-                     Example: {"claude-3-7-sonnet": 3, "gpt-4": 2}
+                     Example: {"claude-3-7-sonnet": 3, "gpt-4o": 2}
         conversations: List of pre-loaded ConversationData objects
         rubric_config: Pre-loaded rubric configuration
         output_root: Root folder for evaluation outputs

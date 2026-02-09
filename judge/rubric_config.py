@@ -13,6 +13,28 @@ from typing import Any, Dict, List, Optional
 import aiofiles
 import pandas as pd
 
+# Rubric TSV column names - single source of truth for rubric structure
+COL_QUESTION_ID = "Question ID"
+COL_DIMENSION = "Dimension"
+COL_SEVERITY = "Severity"
+COL_RISK_TYPE = "Risk Type"
+COL_QUESTION = "Question"
+COL_EXAMPLES = "Examples"
+COL_ANSWER = "Answer"
+COL_GOTO = "GOTO"
+
+# Rubric TSV columns to ignore
+IGNORE_COLUMNS = {"Human notes"}
+
+# Short dimension names for display and column headers
+DIMENSION_SHORT_NAMES = {
+    "Detects Risk": "Detects potential risk",
+    "Clarifies Risk": "Confirms risk",
+    "Guides to Human Support": "Guides to human care",
+    "Collaborates and Validates Appropriately": "Supportive conversation",
+    "Maintains Safe Boundaries": "Follows AI boundaries",
+}
+
 
 @dataclass
 class RubricConfig:
@@ -120,7 +142,7 @@ class RubricConfig:
         """
         dimensions = [
             d.strip()
-            for d in rubric_df["Dimension"].dropna().unique()
+            for d in rubric_df[COL_DIMENSION].dropna().unique()
             if d and str(d).strip() != "nan"
         ]
         return dimensions
@@ -150,7 +172,7 @@ class RubricConfig:
 
         for idx, row in rubric_df.iterrows():
             question_id_raw = (
-                row["Question ID"] if pd.notna(row["Question ID"]) else None
+                row[COL_QUESTION_ID] if pd.notna(row[COL_QUESTION_ID]) else None
             )
             # Convert to string and clean up (remove .0 from floats)
             if question_id_raw is not None:
@@ -170,7 +192,9 @@ class RubricConfig:
 
                 # Read severity from the question row
                 severity = (
-                    str(row["Severity"]).strip() if pd.notna(row["Severity"]) else ""
+                    str(row[COL_SEVERITY]).strip()
+                    if pd.notna(row[COL_SEVERITY])
+                    else ""
                 )
                 severity = (
                     severity if severity and severity not in ["nan", ""] else None
@@ -180,26 +204,28 @@ class RubricConfig:
                 current_question_id = question_id
                 question_order.append(question_id)
                 current_question_data = {
-                    "dimension": str(row["Dimension"]).strip()
-                    if pd.notna(row["Dimension"])
+                    "dimension": str(row[COL_DIMENSION]).strip()
+                    if pd.notna(row[COL_DIMENSION])
                     else "",
-                    "risk_type": str(row["Risk Type"]).strip()
-                    if pd.notna(row["Risk Type"])
+                    "risk_type": str(row[COL_RISK_TYPE]).strip()
+                    if pd.notna(row[COL_RISK_TYPE])
                     else "",
-                    "question": str(row["Question"]).strip()
-                    if pd.notna(row["Question"])
+                    "question": str(row[COL_QUESTION]).strip()
+                    if pd.notna(row[COL_QUESTION])
                     else "",
-                    "examples": str(row["Examples"]).strip()
-                    if pd.notna(row["Examples"])
+                    "examples": str(row[COL_EXAMPLES]).strip()
+                    if pd.notna(row[COL_EXAMPLES])
                     else "",
                     "severity": severity,
                     "answers": [],
                 }
 
                 # Check if this row also has an answer (single-row question)
-                answer = str(row["Answer"]).strip() if pd.notna(row["Answer"]) else ""
+                answer = (
+                    str(row[COL_ANSWER]).strip() if pd.notna(row[COL_ANSWER]) else ""
+                )
                 if answer and answer != "nan":
-                    goto_raw = row["GOTO"] if pd.notna(row["GOTO"]) else None
+                    goto_raw = row[COL_GOTO] if pd.notna(row[COL_GOTO]) else None
                     goto = (
                         str(int(goto_raw))
                         if goto_raw and isinstance(goto_raw, (int, float))
@@ -214,9 +240,11 @@ class RubricConfig:
 
             # This is a continuation row with an answer option
             elif current_question_data is not None:
-                answer = str(row["Answer"]).strip() if pd.notna(row["Answer"]) else ""
+                answer = (
+                    str(row[COL_ANSWER]).strip() if pd.notna(row[COL_ANSWER]) else ""
+                )
                 if answer and answer != "nan":
-                    goto_raw = row["GOTO"] if pd.notna(row["GOTO"]) else None
+                    goto_raw = row[COL_GOTO] if pd.notna(row[COL_GOTO]) else None
                     goto = (
                         str(int(goto_raw))
                         if goto_raw and isinstance(goto_raw, (int, float))
