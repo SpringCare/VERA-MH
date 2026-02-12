@@ -8,6 +8,9 @@ from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
 
+# Default system prompt when none is provided (e.g. for provider/agent LLMs)
+DEFAULT_SYSTEM_PROMPT = "You are a helpful AI assistant."
+
 
 class Role(Enum):
     """Role of the LLM in a conversation."""
@@ -32,7 +35,9 @@ class LLMInterface(ABC):
     ):
         self.name = name
         self.role = role
-        self.system_prompt = system_prompt or ""
+        self.system_prompt = (
+            system_prompt if system_prompt is not None else DEFAULT_SYSTEM_PROMPT
+        )
         self._last_response_metadata: Dict[str, Any] = {}
         self.conversation_id = self.create_conversation_id()
 

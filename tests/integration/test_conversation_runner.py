@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from generate_conversations.runner import ConversationRunner
-from llm_clients.llm_interface import Role
+from llm_clients.llm_interface import DEFAULT_SYSTEM_PROMPT, Role
 from tests.mocks.mock_llm import MockLLM
 
 
@@ -236,18 +236,22 @@ class TestConversationRunnerInit:
         basic_persona_config: Dict[str, Any],
         mock_llm_factory,
     ) -> None:
-        """When agent config has no system_prompt, create_llm gets the fallback."""
-        default_prompt = "You are a helpful AI assistant."
+        """When agent config has no system_prompt, runner passes None to create_llm;
+        LLMInterface (MockLLM via super().__init__) applies DEFAULT_SYSTEM_PROMPT."""
         agent_config = {
             "model": "mock-agent",
             "name": "test-agent",
         }
-        create_llm_calls = []
+        create_llm_calls: list[dict] = []
+        created_agents: list[MockLLM] = []
         real_create = mock_llm_factory.side_effect
 
         def recording_create_llm(*args: Any, **kwargs: Any) -> MockLLM:
             create_llm_calls.append(copy.deepcopy(kwargs))
-            return real_create(*args, **kwargs)
+            llm = real_create(*args, **kwargs)
+            if kwargs.get("role") == Role.PROVIDER:
+                created_agents.append(llm)
+            return llm
 
         mock_llm_factory.side_effect = recording_create_llm
 
@@ -277,7 +281,11 @@ class TestConversationRunnerInit:
 
         agent_calls = [c for c in create_llm_calls if c.get("role") == Role.PROVIDER]
         assert len(agent_calls) == 1
-        assert agent_calls[0]["system_prompt"] == default_prompt
+        # Runner passes None when config has no system_prompt
+        assert agent_calls[0]["system_prompt"] is None
+        # LLMInterface applies default; created agent should have DEFAULT_SYSTEM_PROMPT
+        assert len(created_agents) == 1
+        assert created_agents[0].system_prompt == DEFAULT_SYSTEM_PROMPT
 
 
 @pytest.mark.integration

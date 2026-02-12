@@ -172,7 +172,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)  # No system prompt
+        llm = ClaudeLLM(
+            name="TestClaude", role=Role.PERSONA, system_prompt=""
+        )  # No system prompt
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response without system prompt"

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from llm_clients import Role
-from llm_clients.llm_interface import LLMInterface
+from llm_clients.llm_interface import DEFAULT_SYSTEM_PROMPT, LLMInterface
 
 
 class ConcreteLLM(LLMInterface):
@@ -37,11 +37,11 @@ class TestLLMInterface:
     """Unit tests for LLMInterface abstract base class."""
 
     def test_init_with_name_only(self):
-        """Test initialization with only name parameter."""
+        """Test initialization with only name parameter uses DEFAULT_SYSTEM_PROMPT."""
         llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
 
         assert llm.name == "TestLLM"
-        assert llm.system_prompt == ""
+        assert llm.system_prompt == DEFAULT_SYSTEM_PROMPT
 
     def test_init_with_name_and_system_prompt(self):
         """Test initialization with name and system prompt."""
@@ -169,11 +169,16 @@ class TestLLMInterface:
         assert result == "method result"
         llm.llm.custom_method.assert_called_once()
 
-    def test_system_prompt_default_empty_string(self):
-        """Test that system_prompt defaults to empty string, not None."""
+    def test_system_prompt_default_when_none(self):
+        """When system_prompt is None, base class uses DEFAULT_SYSTEM_PROMPT."""
         llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
-        assert llm.system_prompt == ""
+        assert llm.system_prompt == DEFAULT_SYSTEM_PROMPT
         assert llm.system_prompt is not None
+
+    def test_system_prompt_explicit_empty_string(self):
+        """Explicit empty string is preserved, not replaced by default."""
+        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER, system_prompt="")
+        assert llm.system_prompt == ""
 
     def test_getattr_preserves_attribute_type(self):
         """Test that __getattr__ preserves the type of delegated attributes."""

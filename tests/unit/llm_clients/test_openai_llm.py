@@ -179,7 +179,9 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)  # No system prompt
+        llm = OpenAILLM(
+            name="TestOpenAI", role=Role.PERSONA, system_prompt=""
+        )  # No system prompt
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response without system prompt"

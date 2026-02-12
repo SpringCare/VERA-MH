@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from llm_clients.llm_interface import Role
+from llm_clients.llm_interface import DEFAULT_SYSTEM_PROMPT, Role
 
 from .test_base_llm import TestLLMBase
 from .test_helpers import (
@@ -215,7 +215,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="This is a test response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER, system_prompt="")
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         # Verify message uses Human/Assistant format even without system prompt
@@ -361,7 +361,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Default response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER, system_prompt="")
         response = await llm.generate_response(None)
 
         # Should handle None gracefully - message won't include current message part
@@ -415,8 +415,8 @@ class TestOllamaLLM(TestLLMBase):
 
         llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
 
-        # Initially empty string (from LLMInterface base class)
-        assert llm.system_prompt == ""
+        # Initially default prompt (from LLMInterface when system_prompt is None)
+        assert llm.system_prompt == DEFAULT_SYSTEM_PROMPT
 
         # Set prompt
         llm.set_system_prompt("You are a math tutor")
@@ -436,7 +436,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER, system_prompt="")
 
         # First call without system prompt
         await llm.generate_response(
@@ -515,7 +515,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER, system_prompt="")
 
         response = await llm.generate_response(conversation_history=mock_system_message)
 
@@ -537,7 +537,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER, system_prompt="")
 
         response = await llm.generate_response(conversation_history=mock_system_message)
 

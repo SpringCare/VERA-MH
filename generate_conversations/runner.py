@@ -101,9 +101,7 @@ class ConversationRunner:
         agent = LLMFactory.create_llm(
             model_name=self.agent_model_config["model"],
             name=self.agent_model_config.get("name", "Provider"),
-            system_prompt=self.agent_model_config.get(
-                "system_prompt", "You are a helpful AI assistant."
-            ),
+            system_prompt=self.agent_model_config.get("system_prompt"),
             role=Role.PROVIDER,
             **agent_kwargs,
         )
