@@ -33,7 +33,7 @@ import pytest
 from pydantic import BaseModel, Field
 
 from llm_clients import Role
-from llm_clients.llm_interface import JudgeLLM, LLMInterface
+from llm_clients.llm_interface import DEFAULT_SYSTEM_PROMPT, JudgeLLM, LLMInterface
 
 from .test_helpers import (
     assert_error_metadata,
@@ -125,11 +125,9 @@ class TestLLMBase(ABC):
     def test_set_system_prompt(self):
         """Test setting and updating system prompt."""
         with self.get_mock_patches():  # pyright: ignore[reportGeneralTypeIssues]
-            llm = self.create_llm(
-                role=Role.PERSONA, name="TestLLM", system_prompt="Initial prompt"
-            )
+            llm = self.create_llm(role=Role.PERSONA, name="TestLLM")
 
-            assert llm.system_prompt == "Initial prompt"
+            assert llm.system_prompt == DEFAULT_SYSTEM_PROMPT
 
             llm.set_system_prompt("Updated prompt")
             assert llm.system_prompt == "Updated prompt"

@@ -411,7 +411,7 @@ class TestOllamaLLM(TestLLMBase):
         assert "Line 1\nLine 2\nLine 3" in call_args
 
     @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
-    def test_set_system_prompt_updates_prompt(self, mock_ollama):
+    def test_set_system_prompt(self, mock_ollama):
         """Test that set_system_prompt updates the system_prompt attribute."""
         from llm_clients.ollama_llm import OllamaLLM
 
@@ -420,11 +420,9 @@ class TestOllamaLLM(TestLLMBase):
         # Initially default prompt (from LLMInterface when system_prompt is None)
         assert llm.system_prompt == DEFAULT_SYSTEM_PROMPT
 
-        # Set prompt
         llm.set_system_prompt("You are a math tutor")
         assert llm.system_prompt == "You are a math tutor"
 
-        # Update prompt
         llm.set_system_prompt("You are a science tutor")
         assert llm.system_prompt == "You are a science tutor"
 

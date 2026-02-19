@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from llm_clients import Role
+from llm_clients.llm_interface import DEFAULT_SYSTEM_PROMPT
 from llm_clients.openai_llm import OpenAILLM
 
 from .test_base_llm import TestJudgeLLMBase
@@ -323,10 +324,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
     def test_set_system_prompt(self):
         """Test set_system_prompt method."""
-        llm = OpenAILLM(
-            name="TestOpenAI", role=Role.PERSONA, system_prompt="Initial prompt"
-        )
-        assert llm.system_prompt == "Initial prompt"
+        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        assert llm.system_prompt == DEFAULT_SYSTEM_PROMPT
 
         llm.set_system_prompt("Updated prompt")
         assert llm.system_prompt == "Updated prompt"

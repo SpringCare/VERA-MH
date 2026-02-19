@@ -7,7 +7,7 @@ import pytest
 
 from llm_clients import Role
 from llm_clients.endpoint_llm import EndpointLLM
-from llm_clients.llm_interface import DEFAULT_START_PROMPT
+from llm_clients.llm_interface import DEFAULT_START_PROMPT, DEFAULT_SYSTEM_PROMPT
 
 from .test_base_llm import TestLLMBase
 from .test_helpers import (
@@ -230,10 +230,8 @@ class TestEndpointLLM(TestLLMBase):
 
     def test_set_system_prompt(self):
         with self.get_mock_patches():
-            llm = self.create_llm(
-                role=Role.PROVIDER, name="TestLLM", system_prompt="Initial"
-            )
-        assert llm.system_prompt == "Initial"
+            llm = self.create_llm(role=Role.PROVIDER, name="TestLLM")
+        assert llm.system_prompt == DEFAULT_SYSTEM_PROMPT
         llm.set_system_prompt("Updated")
         assert llm.system_prompt == "Updated"
 

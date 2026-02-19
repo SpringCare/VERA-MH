@@ -7,6 +7,7 @@ import pytest
 
 from llm_clients import Role
 from llm_clients.claude_llm import ClaudeLLM
+from llm_clients.llm_interface import DEFAULT_SYSTEM_PROMPT
 
 from .test_base_llm import TestJudgeLLMBase
 from .test_helpers import (
@@ -287,10 +288,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
     def test_set_system_prompt(self):
         """Test set_system_prompt method."""
-        llm = ClaudeLLM(
-            name="TestClaude", role=Role.PERSONA, system_prompt="Initial prompt"
-        )
-        assert llm.system_prompt == "Initial prompt"
+        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+        assert llm.system_prompt == DEFAULT_SYSTEM_PROMPT
 
         llm.set_system_prompt("Updated prompt")
         assert llm.system_prompt == "Updated prompt"

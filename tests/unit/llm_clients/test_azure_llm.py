@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from llm_clients import Role
 from llm_clients.azure_llm import AzureLLM
+from llm_clients.llm_interface import DEFAULT_SYSTEM_PROMPT
 
 from .test_base_llm import TestJudgeLLMBase
 from .test_helpers import (
@@ -486,9 +487,8 @@ class TestAzureLLM(TestJudgeLLMBase):
             role=Role.PERSONA,
             model_name="azure-gpt-5.2",
             name="TestAzure",
-            system_prompt="Initial prompt",
         )
-        assert llm.system_prompt == "Initial prompt"
+        assert llm.system_prompt == DEFAULT_SYSTEM_PROMPT
 
         llm.set_system_prompt("Updated prompt")
         assert llm.system_prompt == "Updated prompt"
