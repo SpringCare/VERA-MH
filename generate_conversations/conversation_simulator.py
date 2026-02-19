@@ -5,7 +5,10 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 from generate_conversations.conversation_turn import ConversationTurn
 from llm_clients import LLMInterface
-from utils.conversation_utils import save_conversation_to_file
+from utils.conversation_utils import (
+    ensure_provider_has_last_turn,
+    save_conversation_to_file,
+)
 
 
 class ConversationSimulator:
@@ -36,68 +39,61 @@ class ConversationSimulator:
 
         return False
 
-    async def start_conversation(
+    async def generate_conversation(
         self,
         max_turns: int,
-        initial_message: Optional[str] = None,
         max_total_words: Optional[int] = None,
+        persona_speaks_first: bool = True,
     ) -> List[Dict[str, Any]]:
         """
         Start a conversation between the two LLMs with early stopping support.
 
         Args:
             max_turns: Maximum number of conversation turns
-            initial_message: Optional initial message (for the first speaker)
-                to start the conversation. By default, first speaker is persona.
             max_total_words: Optional maximum total words across all responses
-
+            persona_speaks_first: If True, persona speaks first; else agent first.
 
         Returns:
             List of conversation turns with speaker and message
         """
         self.conversation_history = []
+        max_turns = ensure_provider_has_last_turn(max_turns, persona_speaks_first)
 
-        # Set up initial message for the conversation
-        if initial_message is None:
-            initial_message = "Start the conversation based on the system prompt"
-
-        # Start with persona by default, but this can be changed
-        # The role-based logic in build_langchain_messages() handles any starting order
-        current_speaker = self.persona
-        next_speaker = self.agent
+        if persona_speaks_first:
+            current_speaker = self.persona
+            next_speaker = self.agent
+        else:
+            current_speaker = self.agent
+            next_speaker = self.persona
 
         total_words = 0
         for turn in range(max_turns):
-            # Generate response with conversation history
-            # On turn 0, create a "turn 0" entry for the initial message
-            # This acts as a trigger for the LLM to start the conversation
-            # without counting as a real conversation turn
+            # start or continue the conversation
             if turn == 0:
-                initial_turn = {"turn": 0, "response": initial_message}
-                history_dicts = [initial_turn]
+                response = await current_speaker.start_conversation()
             else:
-                # Convert conversation history to dict format for LLM interface
+                # generate a response based on the conversation history
                 history_dicts = [t.to_dict() for t in self.conversation_history]
-
-            response = await current_speaker.generate_response(
-                conversation_history=history_dicts
-            )
+                response = await current_speaker.generate_response(
+                    conversation_history=history_dicts
+                )
 
             total_words += len(response.split())
 
-            # Create LangChain message based on speaker
+            # Create LangChain message based on speaker for overall conversation storage
+            # Note: each LLM Client will handle rebuilding the message type to
+            # always see themselves as AIMessage
             if current_speaker == self.persona:
                 lc_message = HumanMessage(content=response)
             else:
                 lc_message = AIMessage(content=response)
 
-            # Determine input message for metadata tracking
-            # On turn 0, it's the initial message
-            # On subsequent turns, it's the previous speaker's response
+            # Determine input message for overall conversation metadata tracking.
+            # Turn 0: ask the client (first_message vs start_prompt; overridable).
+            # Later turns: previous speaker's response.
             if turn == 0:
-                input_msg = initial_message
+                input_msg = current_speaker.get_first_turn_input_message()
             else:
-                # Get the last turn's response as input for this turn
                 if self.conversation_history:
                     input_msg = self.conversation_history[-1].response
                 else:

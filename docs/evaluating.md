@@ -3,9 +3,11 @@
 VERA-MH is ready to be used to evaluate any chat-based interface.
 [This](../llm_clients/llm_interface.py) Abstract Base Class (ABC) represents the interface to be implemented.
 Four concrete implementations of that class are provided for the APIs of ChatGPT, Claude, Gemini, Azure, and Llama (via Ollama).
+For developers who wish to use their own API as the provider agent, [EndpointLLM](../llm_clients/endpoint_llm.py) serves as a working example (currently chat-only; no judge support).
 
-To test your service, you need to instantiate a concrete class and implement two key methods:
-- `generate_response()`: Returns a string (the chatbot response) given conversation history (list of conversation turns)
+To test your service, you need to instantiate a concrete class and implement these key methods:
+- `start_conversation()`: Async method that returns the first conversational turn as a string. For raw LLM APIs you can call `generate_response(self.get_initial_prompt_turns())`; for service-based APIs you may call your own start endpoint (e.g. POST /start_conversation) and return the message.
+- `generate_response(conversation_history)`: Returns a string (the chatbot response) given conversation history. Used for subsequent turns (turn 1+); when called from the simulator, conversation_history is non-empty. You may delegate to `await self.start_conversation()` when history is empty for backward compatibility.
 - `generate_structured_response()`: Returns a Pydantic model instance for structured outputs (used by the judge system)
 
 ## Adding Support for a New LLM Provider
@@ -65,7 +67,26 @@ class YourLLM(JudgeLLM):
 
 ### 2. Implement the required methods
 
-#### `generate_response()` - For conversation generation
+#### `start_conversation()` - First response
+
+The simulator calls this on turn 0. Return the first response string.
+
+**Raw LLM (e.g. LangChain):** return a static `first_message` if set, otherwise call `generate_response(self.get_initial_prompt_turns())` to produce the first turn.
+
+```python
+async def start_conversation(self) -> str:
+    if self.first_message is not None:
+        self._set_response_metadata("your_provider", static_first_message=True)
+        return self.first_message
+    return await self.generate_response(self.get_initial_prompt_turns())
+```
+
+**Service-based API:** call your start endpoint (e.g. POST /start_conversation), set `conversation_id` from the response if needed, and return the message string.
+
+#### `generate_response()` - Subsequent turns
+
+Used for turns 1+ when called from the simulator (conversation_history is non-empty). You may delegate to `await self.start_conversation()` when history is empty for backward compatibility.
+
 ```python
 from langchain_core.messages import SystemMessage
 from utils.conversation_utils import build_langchain_messages
@@ -78,14 +99,19 @@ async def generate_response(
 
     Args:
         conversation_history: List of previous conversation turns.
-            Each turn is a dict with keys: 'turn', 'speaker', 'response'.
-            On the first turn (turn 0), conversation_history will contain
-            a single entry with turn=0, speaker="system", and the initial
-            message in the 'response' field.
+            When the simulator calls generate_response, history is non-empty
+            and contains turns 1, 2, … (the first response, e.g. "How can I help
+            today?", is turn 1). Each turn must include 'turn', 'speaker', and
+            'response'. If your start_conversation() delegates to
+            generate_response(), it may pass get_initial_prompt_turns(); that
+            internal format uses turn=0 and 'response' only (no 'speaker').
 
     Returns:
         The LLM's response as a string
     """
+    if not conversation_history or len(conversation_history) == 0:
+        return await self.start_conversation()
+
     messages = []
     
     # Add system prompt if present
@@ -93,29 +119,32 @@ async def generate_response(
         messages.append(SystemMessage(content=self.system_prompt))
     
     # Convert conversation history to LangChain messages
-    # This utility handles role conversion and formatting
+    # This utility handles LangChain message formatting wrt role
     messages.extend(
-        build_langchain_messages(conversation_history, self.system_prompt)
+        build_langchain_messages(self.role, conversation_history)
     )
     
     try:
         # Invoke the LLM
         response = await self.llm.ainvoke(messages)
-        
-        # Store metadata (optional but recommended)
-        self.last_response_metadata = {
-            "model": self.model_name,
-            "timestamp": datetime.now().isoformat(),
+        # Store metadata (response_id, model, provider, role, timestamp, usage)
+        self._set_response_metadata(
+            "claude",
+            response_id=getattr(response, "id", None),
+            model=model,
+            response_time_seconds=round(end_time - start_time, 3),
+            stop_reason=None,
+            response=response,
+            conversation_id=self.conversation_id,
             # Add other metadata as needed
-        }
-        
+        )
         return response.text
     except Exception as e:
-        # Store error metadata
-        self.last_response_metadata = {
-            "error": str(e),
-            "timestamp": datetime.now().isoformat(),
-        }
+        self._set_response_metadata(
+            "your_provider",
+            error=str(e),
+            # Add other metadata as needed
+        )
         return f"Error generating response: {str(e)}"
 ```
 

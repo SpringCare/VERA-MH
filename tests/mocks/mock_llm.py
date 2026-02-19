@@ -18,11 +18,19 @@ class MockLLM(JudgeLLM):
         responses: Optional[List[str]] = None,
         model_name: str = "mock-model",
         system_prompt: Optional[str] = None,
+        first_message: Optional[str] = None,
+        start_prompt: Optional[str] = None,
         simulate_error: bool = False,
         temperature: float = 0.7,
         max_tokens: int = 1000,
     ):
-        super().__init__(name, role, system_prompt)
+        super().__init__(
+            name,
+            role,
+            system_prompt,
+            first_message=first_message,
+            start_prompt=start_prompt,
+        )
         self.responses = responses or ["Mock response"]
         self.response_index = 0
         self.calls: List[str] = []
@@ -31,6 +39,13 @@ class MockLLM(JudgeLLM):
         self.model_name = model_name
         self.temperature = temperature
         self.max_tokens = max_tokens
+
+    async def start_conversation(self) -> str:
+        """Produce the first response (static first_message or next in sequence)."""
+        if self.first_message is not None:
+            self._set_response_metadata("mock", static_first_message=True)
+            return self.first_message
+        return await self.generate_response(self.get_initial_prompt_turns())
 
     async def generate_response(
         self,
@@ -44,6 +59,9 @@ class MockLLM(JudgeLLM):
         Returns:
             Response text string
         """
+        if not conversation_history or len(conversation_history) == 0:
+            return await self.start_conversation()
+
         # Extract the last message from conversation history for tracking
         message = ""
         if conversation_history and len(conversation_history) > 0:
@@ -51,11 +69,7 @@ class MockLLM(JudgeLLM):
         self.calls.append(message or "")
 
         if self.simulate_error:
-            self.last_response_metadata = {
-                "provider": "mock",
-                "model": self.name,
-                "error": "Simulated API error",
-            }
+            self._set_response_metadata("mock", error="Simulated API error")
             raise Exception("Simulated API error")
 
         if self.response_index >= len(self.responses):
@@ -64,13 +78,18 @@ class MockLLM(JudgeLLM):
             response = self.responses[self.response_index]
             self.response_index += 1
 
-        self.last_response_metadata = {
-            "provider": "mock",
-            "model": self.name,
-            "prompt_tokens": 10,
-            "completion_tokens": 20,
-            "total_tokens": 30,
-        }
+        self._set_response_metadata(
+            "mock",
+            model=self.model_name,
+            usage={
+                "prompt_tokens": 10,
+                "completion_tokens": 20,
+                "total_tokens": 30,
+            },
+            prompt_tokens=10,
+            completion_tokens=20,
+            total_tokens=30,
+        )
 
         return response
 

@@ -213,8 +213,8 @@ class TestLogConversationStart:
             llm1_prompt="You are a helpful assistant",
             llm2_name="User",
             llm2_model_str="gpt-4o",
-            initial_message="Hello",
             max_turns=10,
+            persona_speaks_first=True,
             llm1_model=llm1,
             llm2_model=llm2,
         )
@@ -226,6 +226,7 @@ class TestLogConversationStart:
         assert "claude-3-opus" in content
         assert "gpt-4o" in content
         assert "Max Turns: 10" in content
+        assert "Persona speaks first: True" in content
 
     def test_logs_llm_configuration(self, tmp_path):
         """Test that LLM configuration is logged correctly
@@ -249,8 +250,8 @@ class TestLogConversationStart:
             llm1_prompt="prompt1",
             llm2_name="model2",
             llm2_model_str="model2",
-            initial_message="Hi",
             max_turns=5,
+            persona_speaks_first=False,
             llm1_model=llm1,
             llm2_model=llm2,
         )
@@ -262,6 +263,7 @@ class TestLogConversationStart:
         assert "max_tokens: 500" in content
         assert "temperature: 0.9" in content
         assert "max_tokens: 1500" in content
+        assert "Persona speaks first: False" in content
 
     def test_logs_with_empty_logging_dict(self, tmp_path):
         """Test logging with empty logging dictionary
@@ -285,8 +287,8 @@ class TestLogConversationStart:
             llm1_prompt="prompt1",
             llm2_name="model2",
             llm2_model_str="model2",
-            initial_message="Hi",
             max_turns=5,
+            persona_speaks_first=True,
             llm1_model=llm1,
             llm2_model=llm2,
             logging={},
@@ -748,8 +750,8 @@ class TestFullConversationWorkflow:
             llm1_prompt="You are helpful",
             llm2_name="User",
             llm2_model_str="gpt-4o",
-            initial_message="Hello",
             max_turns=3,
+            persona_speaks_first=True,
             llm1_model=llm1,
             llm2_model=llm2,
         )
@@ -783,6 +785,7 @@ class TestFullConversationWorkflow:
         content = log_file.read_text()
 
         assert "CONVERSATION STARTED" in content
+        assert "Persona speaks first: True" in content
         assert f"TURN 1 - {Role.PERSONA.value.upper()}" in content
         assert f"TURN 2 - {Role.PROVIDER.value.upper()}" in content
         assert "CONVERSATION COMPLETED" in content

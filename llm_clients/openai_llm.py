@@ -1,5 +1,4 @@
 import time
-from datetime import datetime
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -26,7 +25,15 @@ class OpenAILLM(JudgeLLM):
         model_name: Optional[str] = None,
         **kwargs,
     ):
-        super().__init__(name, role, system_prompt)
+        first_message = kwargs.pop("first_message", None)
+        start_prompt = kwargs.pop("start_prompt", None)
+        super().__init__(
+            name,
+            role,
+            system_prompt,
+            first_message=first_message,
+            start_prompt=start_prompt,
+        )
 
         if not Config.OPENAI_API_KEY:
             raise ValueError("OPENAI_API_KEY not found in environment variables")
@@ -56,6 +63,16 @@ class OpenAILLM(JudgeLLM):
 
         self.llm = ChatOpenAI(**llm_params)
 
+    async def start_conversation(self) -> str:
+        """Produce the first response:
+        - static first_message if set, or
+        - LLM with start_prompt if first_message is not set.
+        """
+        if self.first_message is not None:
+            self._set_response_metadata("openai", static_first_message=True)
+            return self.first_message
+        return await self.generate_response(self.get_initial_prompt_turns())
+
     async def generate_response(
         self,
         conversation_history: Optional[List[Dict[str, Any]]] = None,
@@ -65,6 +82,9 @@ class OpenAILLM(JudgeLLM):
         Args:
             conversation_history: Optional list of previous conversation turns
         """
+        if not conversation_history or len(conversation_history) == 0:
+            return await self.start_conversation()
+
         messages = []
 
         if self.system_prompt:
@@ -91,24 +111,17 @@ class OpenAILLM(JudgeLLM):
             response = await self.llm.ainvoke(messages)
             end_time = time.time()
 
-            # Extract metadata from response - capturing all available fields
-            self.last_response_metadata = {
-                "response_id": getattr(response, "id", None),
-                # Will be updated from response_metadata if available
-                "model": self.model_name,
-                "provider": "openai",
-                "role": self.role.value,
-                "timestamp": datetime.now().isoformat(),
-                "response_time_seconds": round(end_time - start_time, 3),
-                "usage": {},
-                "finish_reason": None,
-                "additional_kwargs": {},
-                "system_fingerprint": None,
-                "logprobs": None,
-                "response": response,
-            }
+            self._set_response_metadata(
+                "openai",
+                response_id=getattr(response, "id", None),
+                response_time_seconds=round(end_time - start_time, 3),
+                finish_reason=None,
+                additional_kwargs={},
+                system_fingerprint=None,
+                logprobs=None,
+                response=response,
+            )
 
-            # Extract additional_kwargs if available
             if hasattr(response, "additional_kwargs") and response.additional_kwargs:
                 self._last_response_metadata["additional_kwargs"] = dict(
                     response.additional_kwargs
@@ -159,19 +172,13 @@ class OpenAILLM(JudgeLLM):
 
             return response.text
         except Exception as e:
-            # Store error metadata
-            self.last_response_metadata = {
-                "response_id": None,
-                "model": self.model_name,
-                "provider": "openai",
-                "role": self.role.value,
-                "timestamp": datetime.now().isoformat(),
-                "error": str(e),
-                "usage": {},
-                "additional_kwargs": {},
-                "system_fingerprint": None,
-                "logprobs": None,
-            }
+            self._set_response_metadata(
+                "openai",
+                error=str(e),
+                additional_kwargs={},
+                system_fingerprint=None,
+                logprobs=None,
+            )
             return f"Error generating response: {str(e)}"
 
     async def generate_structured_response(
@@ -201,17 +208,11 @@ class OpenAILLM(JudgeLLM):
             response = await structured_llm.ainvoke(messages)
             end_time = time.time()
 
-            # Store basic metadata for structured responses
-            self.last_response_metadata = {
-                "response_id": None,
-                "model": self.model_name,
-                "provider": "openai",
-                "role": self.role.value,
-                "timestamp": datetime.now().isoformat(),
-                "response_time_seconds": round(end_time - start_time, 3),
-                "usage": {},
-                "structured_output": True,
-            }
+            self._set_response_metadata(
+                "openai",
+                response_time_seconds=round(end_time - start_time, 3),
+                structured_output=True,
+            )
 
             # Ensure response is the correct type
             if not isinstance(response, response_model):
@@ -221,16 +222,7 @@ class OpenAILLM(JudgeLLM):
 
             return response  # type: ignore[return-value]
         except Exception as e:
-            # Store error metadata
-            self.last_response_metadata = {
-                "response_id": None,
-                "model": self.model_name,
-                "provider": "openai",
-                "role": self.role.value,
-                "timestamp": datetime.now().isoformat(),
-                "error": str(e),
-                "usage": {},
-            }
+            self._set_response_metadata("openai", error=str(e))
             raise RuntimeError(f"Error generating structured response: {str(e)}") from e
 
     def set_system_prompt(self, system_prompt: str) -> None:

@@ -6,6 +6,7 @@ Provides unified interface for different LLM providers
   - Gemini (gemini-*)
   - Azure (azure-*)
   - Ollama (ollama-*)
+  - Custom endpoint (endpoint, endpoint-*)
 """
 
 from .config import Config

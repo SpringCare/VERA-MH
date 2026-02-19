@@ -1,5 +1,4 @@
 import time
-from datetime import datetime
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from langchain_anthropic import ChatAnthropic
@@ -26,7 +25,15 @@ class ClaudeLLM(JudgeLLM):
         model_name: Optional[str] = None,
         **kwargs,
     ):
-        super().__init__(name, role, system_prompt)
+        first_message = kwargs.pop("first_message", None)
+        start_prompt = kwargs.pop("start_prompt", None)
+        super().__init__(
+            name,
+            role,
+            system_prompt,
+            first_message=first_message,
+            start_prompt=start_prompt,
+        )
 
         if not Config.ANTHROPIC_API_KEY:
             raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
@@ -64,6 +71,16 @@ class ClaudeLLM(JudgeLLM):
         self.temperature = getattr(self.llm, "temperature", None)
         self.max_tokens = getattr(self.llm, "max_tokens", None)
 
+    async def start_conversation(self) -> str:
+        """Produce the first response:
+        - static first_message if set, or
+        - LLM with start_prompt if first_message is not set.
+        """
+        if self.first_message is not None:
+            self._set_response_metadata("claude", static_first_message=True)
+            return self.first_message
+        return await self.generate_response(self.get_initial_prompt_turns())
+
     async def generate_response(
         self,
         conversation_history: Optional[List[Dict[str, Any]]] = None,
@@ -73,12 +90,14 @@ class ClaudeLLM(JudgeLLM):
         Args:
             conversation_history: Optional list of previous conversation turns
         """
+        if not conversation_history or len(conversation_history) == 0:
+            return await self.start_conversation()
+
         messages = []
 
         if self.system_prompt:
             messages.append(SystemMessage(content=self.system_prompt))
 
-        # Build messages from history
         messages.extend(build_langchain_messages(self.role, conversation_history))
 
         # Debug: Print messages being sent to LLM
@@ -94,28 +113,22 @@ class ClaudeLLM(JudgeLLM):
             response = await self.llm.ainvoke(messages)
             end_time = time.time()
 
-            # Extract metadata from response
-            self.last_response_metadata = {
-                "response_id": getattr(response, "id", None),
-                "model": (
-                    getattr(response.response_metadata, "model", self.model_name)
-                    if hasattr(response, "response_metadata")
-                    else self.model_name
-                ),
-                "provider": "claude",
-                "role": self.role.value,
-                "timestamp": datetime.now().isoformat(),
-                "response_time_seconds": round(end_time - start_time, 3),
-                "usage": {},
-                "stop_reason": None,
-                "response": response,
-            }
+            model = (
+                getattr(response.response_metadata, "model", self.model_name)
+                if hasattr(response, "response_metadata")
+                else self.model_name
+            )
+            self._set_response_metadata(
+                "claude",
+                response_id=getattr(response, "id", None),
+                model=model,
+                response_time_seconds=round(end_time - start_time, 3),
+                stop_reason=None,
+                response=response,
+            )
 
-            # Extract usage information if available
             if hasattr(response, "response_metadata") and response.response_metadata:
                 metadata = response.response_metadata
-
-                # Extract token usage
                 if "usage" in metadata:
                     usage = metadata["usage"]
                     self._last_response_metadata["usage"] = {
@@ -124,27 +137,14 @@ class ClaudeLLM(JudgeLLM):
                         "total_tokens": usage.get("input_tokens", 0)
                         + usage.get("output_tokens", 0),
                     }
-
-                # Extract stop reason
                 self._last_response_metadata["stop_reason"] = metadata.get(
                     "stop_reason"
                 )
-
-                # Store raw metadata
                 self._last_response_metadata["raw_metadata"] = dict(metadata)
 
             return response.text
         except Exception as e:
-            # Store error metadata
-            self.last_response_metadata = {
-                "response_id": None,
-                "model": self.model_name,
-                "provider": "claude",
-                "role": self.role.value,
-                "timestamp": datetime.now().isoformat(),
-                "error": str(e),
-                "usage": {},
-            }
+            self._set_response_metadata("claude", error=str(e))
             return f"Error generating response: {str(e)}"
 
     async def generate_structured_response(
@@ -174,17 +174,11 @@ class ClaudeLLM(JudgeLLM):
             response = await structured_llm.ainvoke(messages)
             end_time = time.time()
 
-            # Store basic metadata for structured responses
-            self.last_response_metadata = {
-                "response_id": None,
-                "model": self.model_name,
-                "provider": "claude",
-                "role": self.role.value,
-                "timestamp": datetime.now().isoformat(),
-                "response_time_seconds": round(end_time - start_time, 3),
-                "usage": {},
-                "structured_output": True,
-            }
+            self._set_response_metadata(
+                "claude",
+                response_time_seconds=round(end_time - start_time, 3),
+                structured_output=True,
+            )
 
             # Ensure response is the correct type
             if not isinstance(response, response_model):
@@ -194,16 +188,7 @@ class ClaudeLLM(JudgeLLM):
 
             return response  # type: ignore[return-value]
         except Exception as e:
-            # Store error metadata
-            self.last_response_metadata = {
-                "response_id": None,
-                "model": self.model_name,
-                "provider": "claude",
-                "role": self.role.value,
-                "timestamp": datetime.now().isoformat(),
-                "error": str(e),
-                "usage": {},
-            }
+            self._set_response_metadata("claude", error=str(e))
             raise RuntimeError(f"Error generating structured response: {str(e)}") from e
 
     def set_system_prompt(self, system_prompt: str) -> None:

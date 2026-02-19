@@ -1,6 +1,7 @@
 import copy
 import uuid
 from abc import ABC, abstractmethod
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
@@ -20,11 +21,20 @@ class Role(Enum):
     JUDGE = "judge"  # Judge role, used for judge operations
 
 
+# Default prompt sent to the LLM when starting a conversation (no first_message set).
+DEFAULT_START_PROMPT = "Start the conversation based on the system prompt"
+
+
 class LLMInterface(ABC):
     """Abstract base class for LLM implementations.
 
     Provides basic text generation capabilities. All LLM implementations
     must support basic text generation and system prompt management.
+
+    When conversation history is empty:
+    - first_message: If set, return this string as the first turn (no LLM call).
+    - start_prompt: If first_message is not set, use this as the prompt to
+      the LLM to generate the first turn. Defaults to DEFAULT_START_PROMPT.
     """
 
     def __init__(
@@ -32,11 +42,17 @@ class LLMInterface(ABC):
         name: str,
         role: Role,
         system_prompt: Optional[str] = None,
+        first_message: Optional[str] = None,
+        start_prompt: Optional[str] = None,
     ):
         self.name = name
         self.role = role
         self.system_prompt = (
             system_prompt if system_prompt is not None else DEFAULT_SYSTEM_PROMPT
+        )
+        self.first_message = first_message
+        self.start_prompt = (
+            start_prompt if start_prompt is not None else DEFAULT_START_PROMPT
         )
         self._last_response_metadata: Dict[str, Any] = {}
         self.conversation_id = self.create_conversation_id()
@@ -69,8 +85,69 @@ class LLMInterface(ABC):
         will overwrite self.conversation_id here.
         """
         cid = (self._last_response_metadata or {}).get("conversation_id")
-        if cid is not None:
+        if cid is not None and cid != self.conversation_id and cid != "":
             self.conversation_id = cid
+
+    def _set_response_metadata(self, provider: str, **extra: Any) -> None:
+        """Set last_response_metadata with common fields; pass extra keys as kwargs.
+
+        Always sets: response_id, model, provider, role, timestamp, usage.
+        Override or add keys via kwargs (e.g. error=..., response_time_seconds=...).
+        """
+        self.last_response_metadata = {
+            "response_id": extra.pop("response_id", None),
+            "model": extra.pop("model", getattr(self, "model_name", None)),
+            "provider": provider,
+            "role": self.role.value,
+            "timestamp": datetime.now().isoformat(),
+            "usage": extra.pop("usage", {}),
+            **extra,
+        }
+
+    def get_initial_prompt_turns(self) -> List[Dict[str, Any]]:
+        """Build the initial turn(s) used to prompt the LLM when history is empty.
+
+        Returns a list of dicts (e.g. [{"turn": 0, "response": "<start_prompt>"}])
+        that can be passed to the message builder
+        and then to the LLM. Used by raw LLM implementations that delegate from
+        start_conversation() to generate_response(...). Subclasses may override.
+
+        Returns:
+            List of dicts representing the initial conversation turn(s)
+            (e.g. [{"turn": 0, "response": "<start prompt text>"}]).
+        """
+        return [{"turn": 0, "response": self.start_prompt}]
+
+    def get_first_turn_input_message(self) -> Optional[str]:
+        """Return the input message used for the first turn, for metadata only.
+
+        Called by the simulator after start_conversation() to record what prompt
+        was sent to the LLM. Returns None if the first turn used first_message
+        (no LLM call); otherwise returns the start_prompt text actually used.
+
+        Subclasses that use custom logic in start_conversation() may override
+        this (or set _first_turn_input in start_conversation) so metadata
+        matches what was really sent.
+        """
+        if self.first_message is not None:
+            return None
+        return self.start_prompt
+
+    @abstractmethod
+    async def start_conversation(self) -> str:
+        """Produce the first response of the conversation.
+
+        Called by the simulator on turn 0. When first_message is set, return
+        it (and set metadata) without calling the API. Otherwise, raw LLM
+        implementations may call generate_response(self.get_initial_prompt_turns());
+        service-based clients may call their own start endpoint (e.g. POST
+        /start_conversation) and return the returned message.
+
+        Returns:
+            str: The first response text. Metadata in self.last_response_metadata
+                (getter returns a copy so callers need not copy).
+        """
+        pass
 
     @abstractmethod
     async def generate_response(
@@ -79,13 +156,18 @@ class LLMInterface(ABC):
     ) -> str:
         """Generate a response based on conversation history.
 
+        When used by the simulator, conversation_history is only passed for
+        turns 1+ (turn 0 uses start_conversation()). Callers may still pass
+        empty history for backward compatibility; implementations can delegate
+        to await self.start_conversation() in that case if desired.
+
         Args:
             conversation_history: List of previous conversation turns.
-                Each turn is a dict with keys: 'turn', 'speaker', 'response'.
-                On the first turn (turn 0), conversation_history will contain
-                a single entry with turn=0, speaker="system", and the initial
-                message in the 'response' field. This provides context for
-                starting the conversation.
+                When the simulator calls this, history is non-empty with turns
+                1, 2, … (first response is turn 1). Each turn: 'turn', 'speaker',
+                'response'. If start_conversation() delegates here, it may pass
+                get_initial_prompt_turns() (turn=0, 'response' only; no
+                'speaker'). See llm_clients/claude_llm.py for an example.
 
         Returns:
             str: The response text. Metadata in self.last_response_metadata

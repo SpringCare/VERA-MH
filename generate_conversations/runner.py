@@ -35,6 +35,7 @@ class ConversationRunner:
         max_concurrent: Optional[int] = None,
         max_total_words: Optional[int] = None,
         max_personas: Optional[int] = None,
+        persona_speaks_first: bool = True,
     ):
         self.persona_model_config = persona_model_config
         self.agent_model_config = agent_model_config
@@ -48,6 +49,7 @@ class ConversationRunner:
         self.max_concurrent = max_concurrent
         self.max_total_words = max_total_words
         self.max_personas = max_personas
+        self.persona_speaks_first = persona_speaks_first
 
     async def run_single_conversation(
         self,
@@ -57,10 +59,21 @@ class ConversationRunner:
         run_number: int,
         **kwargs: dict,
     ) -> Dict[str, Any]:
-        """Run a single conversation asynchronously.
+        """Run a single simulated conversation (persona vs provider LLM).
 
-        Each conversation uses its own agent instance so conversation_id and
-        per-session state are not shared across concurrent tasks.
+        Uses fresh LLM instances per call; safe for concurrent use. Logs turns,
+        writes transcript to self.folder_name, then cleans up logger and LLMs.
+
+        Args:
+            persona_config (dict): Must have "model", "prompt", "name".
+            max_turns (int): Max conversation turns for a conversation.
+            conversation_index (int): Index in the batch of conversations.
+            run_number (int): Run index for this prompt (e.g. 1 of runs_per_prompt).
+            **kwargs: Unused; reserved for future use.
+
+        Returns:
+            Dict[str, Any]: index, llm1_model, llm1_prompt, run_number, turns,
+            filename, log_file, duration, early_termination, conversation.
         """
         model_name = persona_config["model"]
         system_prompt = persona_config["prompt"]  # This is now the full persona prompt
@@ -113,8 +126,8 @@ class ConversationRunner:
             llm1_prompt=persona_name,
             llm2_name=agent.name,
             llm2_model_str=getattr(agent, "model_name", "unknown"),
-            initial_message="",
             max_turns=max_turns,
+            persona_speaks_first=self.persona_speaks_first,
             llm1_model=persona,
             llm2_model=agent,
         )
@@ -125,10 +138,10 @@ class ConversationRunner:
 
         result = None
         try:
-            conversation = await simulator.start_conversation(
-                initial_message=None,
+            conversation = await simulator.generate_conversation(
                 max_turns=max_turns,
                 max_total_words=self.max_total_words,
+                persona_speaks_first=self.persona_speaks_first,
             )
 
             # Log each conversation turn
@@ -162,7 +175,7 @@ class ConversationRunner:
             simulator.save_conversation(f"{filename_base}.txt", self.folder_name)
 
             result = {
-                "id": conversation_index,
+                "index": conversation_index,
                 "llm1_model": model_name,
                 "llm1_prompt": persona_name,
                 "run_number": run_number,

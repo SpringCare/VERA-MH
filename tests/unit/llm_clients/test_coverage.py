@@ -2,8 +2,9 @@
 
 This module ensures that:
 1. All LLM implementations have corresponding test files
-2. All JudgeLLM implementations test structured output generation
-3. All test classes inherit from appropriate base classes
+2. All LLM implementations test empty conversation history (start_conversation)
+3. All JudgeLLM implementations test structured output generation
+4. All test classes inherit from appropriate base classes
 
 These tests run in CI to prevent incomplete test coverage for new LLM implementations.
 """
@@ -92,6 +93,35 @@ def check_file_contains_string(file_path: Path, search_string: str) -> bool:
     try:
         content = file_path.read_text()
         return search_string in content
+    except Exception:
+        return False
+
+
+def file_defines_test_function(file_path: Path, test_name: str) -> bool:
+    """Check if the file defines an actual test function with the given name.
+
+    Uses AST so that commented-out code does not count. Returns True only
+    if there is a FunctionDef (at module level or inside a class) with
+    that name.
+
+    Args:
+        file_path: Path to the test file
+        test_name: Exact name of the test function (e.g. "test_foo")
+
+    Returns:
+        True if the function is defined, False otherwise
+    """
+    try:
+        content = file_path.read_text()
+        tree = ast.parse(content)
+
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and node.name == test_name
+            ):
+                return True
+        return False
     except Exception:
         return False
 
@@ -205,6 +235,39 @@ class TestLLMCoverage:
             + ".\n"
             + "These tests should inherit from TestJudgeLLMBase "
             + "or be implemented directly."
+        )
+
+    def test_all_llm_implementations_test_empty_conversation_history(self):
+        """Ensure all LLM implementations have an empty-conversation-history test."""
+        import re
+
+        implementations = get_all_llm_classes()
+        test_path = Path(__file__).parent
+        all_implementations = (
+            implementations["LLMInterface"] + implementations["JudgeLLM"]
+        )
+        missing_empty_history_tests = []
+
+        for impl_name in all_implementations:
+            name_without_llm = impl_name.replace("LLM", "")
+            snake_case = re.sub(r"(?<!^)(?=[A-Z])", "_", name_without_llm).lower()
+            snake_case = snake_case.replace("open_a_i", "openai")
+            test_file_name = f"test_{snake_case}_llm.py"
+            test_file_path = test_path / test_file_name
+
+            if test_file_path.exists():
+                if not file_defines_test_function(
+                    test_file_path,
+                    "test_generate_response_with_empty_conversation_history",
+                ):
+                    missing_empty_history_tests.append(impl_name)
+
+        assert not missing_empty_history_tests, (
+            "\n\nMissing empty conversation history tests for LLM implementations:\n"
+            + "\n".join(f"  - {impl}" for impl in missing_empty_history_tests)
+            + "\n\nAll LLM implementations must define "
+            + "test_generate_response_with_empty_conversation_history "
+            + "to verify start_conversation / default start_prompt with empty history."
         )
 
     def test_all_test_classes_inherit_from_appropriate_base(self):
@@ -342,6 +405,23 @@ class TestCoverageHelpers:
         assert not check_file_contains_string(
             test_helpers_path, "THIS_STRING_IS_NOT_IN_ANY_FILE"
         )
+
+    def test_file_defines_test_function_requires_actual_definition(self, tmp_path):
+        """file_defines_test_function uses AST; commented-out code does not count."""
+        # String in comment only -> False
+        commented = tmp_path / "commented.py"
+        commented.write_text("# def test_foo(): pass\n")
+        assert file_defines_test_function(commented, "test_foo") is False
+
+        # Actual definition -> True
+        defined = tmp_path / "defined.py"
+        defined.write_text("def test_foo(): pass\n")
+        assert file_defines_test_function(defined, "test_foo") is True
+
+        # Async def also counts
+        async_def = tmp_path / "async_def.py"
+        async_def.write_text("async def test_foo(): pass\n")
+        assert file_defines_test_function(async_def, "test_foo") is True
 
     def test_get_test_class_inheritance(self):
         """Test parsing of test class inheritance."""

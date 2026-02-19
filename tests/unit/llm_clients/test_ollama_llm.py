@@ -354,7 +354,8 @@ class TestOllamaLLM(TestLLMBase):
     async def test_generate_response_with_none_message(
         self, mock_ollama, mock_system_message
     ):
-        """Test generating response with None message."""
+        """Test generating response with None uses default start_prompt."""
+        from llm_clients.llm_interface import DEFAULT_START_PROMPT
         from llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
@@ -364,8 +365,9 @@ class TestOllamaLLM(TestLLMBase):
         llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER, system_prompt="")
         response = await llm.generate_response(None)
 
-        # Should handle None gracefully - message won't include current message part
-        mock_instance.ainvoke.assert_called_once_with("")
+        # None history: format uses default start_prompt message
+        expected = f"Human: {DEFAULT_START_PROMPT}\n\nAssistant:"
+        mock_instance.ainvoke.assert_called_once_with(expected)
         assert response == "Default response"
 
     @pytest.mark.asyncio

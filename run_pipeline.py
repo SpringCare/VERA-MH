@@ -26,6 +26,7 @@ from judge.score_viz import (
     create_risk_level_visualizations,
     create_visualizations,
 )
+from llm_clients.llm_interface import DEFAULT_START_PROMPT
 from utils.utils import parse_key_value_list
 
 
@@ -121,6 +122,39 @@ Example:
         help="Custom run ID for conversation folder (default: timestamp)",
     )
     parser.add_argument(
+        "-psf",
+        "--provider-speaks-first",
+        action="store_true",
+        help=(
+            "Provider speaks first. max_turns adjusted so provider has last turn. "
+            "Default: persona speaks first."
+        ),
+    )
+    parser.add_argument(
+        "-usm",
+        "--user-first-message",
+        help="Static first message from user-agent (no LLM call for first turn).",
+        default=None,
+    )
+    parser.add_argument(
+        "-usp",
+        "--user-start-prompt",
+        help="Prompt sent to user-agent LLM when starting conversation (first turn).",
+        default=DEFAULT_START_PROMPT,
+    )
+    parser.add_argument(
+        "-pfm",
+        "--provider-first-message",
+        help="Static first message from provider (no LLM call for first turn).",
+        default=None,
+    )
+    parser.add_argument(
+        "-psp",
+        "--provider-start-prompt",
+        help="Prompt sent to provider LLM when starting conversation (first turn).",
+        default=DEFAULT_START_PROMPT,
+    )
+    parser.add_argument(
         "--debug", action="store_true", help="Enable debug logging for generation"
     )
 
@@ -213,12 +247,18 @@ async def main():
         "model": args.user_agent,
         **args.user_agent_extra_params,
     }
+    if args.user_first_message is not None:
+        persona_model_config["first_message"] = args.user_first_message
+    persona_model_config["start_prompt"] = args.user_start_prompt
 
     agent_model_config = {
         "model": args.provider_agent,
         "name": args.provider_agent,
         **args.provider_agent_extra_params,
     }
+    if args.provider_first_message is not None:
+        agent_model_config["first_message"] = args.provider_first_message
+    agent_model_config["start_prompt"] = args.provider_start_prompt
 
     # Call generate.py's main function directly
     _, conversation_folder = await generate_main(
@@ -241,6 +281,7 @@ async def main():
         max_concurrent=args.max_concurrent,
         max_total_words=args.max_total_words,
         max_personas=args.max_personas,
+        persona_speaks_first=not args.provider_speaks_first,
     )
 
     print("")

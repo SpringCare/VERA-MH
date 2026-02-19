@@ -67,6 +67,10 @@ class LLMFactory:
             from .gemini_llm import GeminiLLM
 
             return GeminiLLM(name, role, system_prompt, model_name, **model_params)
+        elif "endpoint" in model_lower:
+            from .endpoint_llm import EndpointLLM
+
+            return EndpointLLM(name, role, system_prompt, model_name, **model_params)
         else:
             raise ValueError(f"Unsupported model: {model_name}")
 
@@ -111,7 +115,7 @@ class LLMFactory:
                 f"generation. Judge operations require models with structured "
                 f"output support. Supported models: Claude (claude-*), "
                 f"OpenAI (gpt-*), Gemini (gemini-*), Azure (azure-*). "
-                f"Not supported: Ollama models."
+                f"Not supported: Ollama (ollama-*), Endpoint (endpoint-*)."
             )
 
         return llm

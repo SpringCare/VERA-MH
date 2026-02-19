@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from generate_conversations import ConversationRunner
+from llm_clients.llm_interface import DEFAULT_START_PROMPT
 from utils.debug import set_debug
 from utils.utils import parse_key_value_list
 
@@ -25,6 +26,7 @@ async def main(
     max_concurrent: Optional[int] = None,
     max_total_words: Optional[int] = None,
     max_personas: Optional[int] = None,
+    persona_speaks_first: bool = True,
 ) -> tuple[List[Dict[str, Any]], str]:
     """
     Generate conversations and return results.
@@ -46,6 +48,8 @@ async def main(
             conversations concurrently.
         max_personas: Optional maximum number of personas to load from CSV. If None,
             loads all personas.
+        persona_speaks_first: If True (default), persona speaks first; else provider
+            speaks first. max_turns is adjusted so the provider always speaks last.
 
     Returns:
         List of conversation results
@@ -54,13 +58,6 @@ async def main(
         ValueError: Configuration error
         Exception: Other errors
     """
-    if max_turns % 2 != 0:
-        print(
-            "Max turns is odd, which means the last turn will be the user, "
-            "without a response."
-        )
-        print("Changing max turns to an even number.")
-        max_turns = max_turns + 1
     if verbose:
         print("🔄 Generating conversations with the following parameters:")
         print(f"  - Persona model: {persona_model_config}")
@@ -75,6 +72,7 @@ async def main(
         print(f"  - Max concurrent: {max_concurrent}")
         print(f"  - Max total words: {max_total_words}")
         print(f"  - Max personas: {max_personas}")
+        print(f"  - Persona speaks first: {persona_speaks_first}")
 
     # Generate default folder name if not provided
     if folder_name is None:
@@ -84,11 +82,6 @@ async def main(
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         persona_info = persona_model_config["model"].replace("-", "_").replace(".", "_")
         agent_info = agent_model_config["model"].replace("-", "_").replace(".", "_")
-        if persona_extra_run_params:
-            persona_info += f"_{persona_extra_run_params}"
-
-        if agent_extra_run_params:
-            agent_info += f"_{agent_extra_run_params}"
 
         run_id = (
             f"p_{persona_info}__a_{agent_info}__t{max_turns}__"
@@ -109,6 +102,7 @@ async def main(
         max_concurrent=max_concurrent,
         max_total_words=max_total_words,
         max_personas=max_personas,
+        persona_speaks_first=persona_speaks_first,
     )
 
     # Run conversations
@@ -229,6 +223,43 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "-psf",
+        "--provider-speaks-first",
+        help="Provider agent speaks first; max_turns will be adjusted "
+        "so provider has last turn. Default: persona speaks first.",
+        action="store_true",
+        default=False,
+    )
+
+    parser.add_argument(
+        "-pfm",
+        "--provider-first-message",
+        help="Static first message from provider (no LLM call for first turn).",
+        default=None,
+    )
+
+    parser.add_argument(
+        "-psp",
+        "--provider-start-prompt",
+        help="Prompt sent to provider LLM when starting conversation (first turn).",
+        default=DEFAULT_START_PROMPT,
+    )
+
+    parser.add_argument(
+        "-usm",
+        "--user-first-message",
+        help="Static first message from user-agent (no LLM call for first turn).",
+        default=None,
+    )
+
+    parser.add_argument(
+        "-usp",
+        "--user-start-prompt",
+        help="Prompt sent to user-agent LLM when starting conversation (first turn).",
+        default=DEFAULT_START_PROMPT,
+    )
+
+    parser.add_argument(
         "--debug",
         "-d",
         help="Enable debug logging for conversation generation",
@@ -246,6 +277,9 @@ if __name__ == "__main__":
         "model": args.user_agent,
         **args.user_agent_extra_params,
     }
+    if args.user_first_message is not None:
+        persona_model_config["first_message"] = args.user_first_message
+    persona_model_config["start_prompt"] = args.user_start_prompt
 
     agent_model_config = {
         "model": args.provider_agent,
@@ -253,6 +287,9 @@ if __name__ == "__main__":
         "name": args.provider_agent,
         **args.provider_agent_extra_params,
     }
+    if args.provider_first_message is not None:
+        agent_model_config["first_message"] = args.provider_first_message
+    agent_model_config["start_prompt"] = args.provider_start_prompt
 
     # TODO: Do the run id here, so that it can be printed when starting
     results, output_folder = asyncio.run(
@@ -291,5 +328,6 @@ if __name__ == "__main__":
             max_concurrent=args.max_concurrent,
             max_total_words=args.max_total_words,
             max_personas=args.max_personas,
+            persona_speaks_first=not args.provider_speaks_first,
         )
     )

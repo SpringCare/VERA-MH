@@ -11,6 +11,32 @@ from llm_clients.llm_interface import Role
 from .debug import debug_print
 
 
+def ensure_provider_has_last_turn(max_turns: int, persona_speaks_first: bool) -> int:
+    """
+    Return max_turns adjusted so the provider agent always has the last turn.
+
+    - persona_speaks_first=True (persona first): need even number of turns.
+    - persona_speaks_first=False (agent first): need odd number of turns.
+    """
+    if persona_speaks_first and max_turns % 2 != 0:
+        debug_print(
+            "Adjusted max_turns %s -> %s so provider has last turn "
+            "with persona_speaks_first=True.",
+            max_turns,
+            max_turns + 1,
+        )
+        return max_turns + 1
+    if not persona_speaks_first and max_turns % 2 == 0:
+        debug_print(
+            "Adjusted max_turns %s -> %s so provider has last turn "
+            "(persona_speaks_first=False).",
+            max_turns,
+            max_turns + 1,
+        )
+        return max_turns + 1
+    return max_turns
+
+
 def add_timestamp_to_path(path: Path) -> Path:
     """
     Add timestamp to filename before extension.
@@ -143,7 +169,7 @@ def build_langchain_messages(
     Returns:
         List of LangChain message objects (HumanMessage, AIMessage)
     """
-    messages = []
+    messages: List[BaseMessage] = []
 
     # Add conversation history if provided
     if conversation_history:
@@ -157,7 +183,7 @@ def build_langchain_messages(
             if turn_number is None or text is None:
                 continue
 
-            # Special case: turn 0 is the trigger for the LLM to start the conversation.
+            # Special case: turn 0 is for starting the conversation.
             if turn_number == 0:
                 debug_print(f"  Turn 0 -> HumanMessage (initial): {text[:50]}...")
                 messages.append(HumanMessage(content=text))

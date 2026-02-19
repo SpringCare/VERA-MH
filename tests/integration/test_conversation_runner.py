@@ -339,7 +339,7 @@ class TestConversationRunnerSingle:
             )
 
         # Assert - verify result structure
-        assert result["id"] == 1
+        assert result["index"] == 1
         assert result["llm1_model"] == "mock-persona-model"
         assert result["llm1_prompt"] == "TestPersona"
         assert result["run_number"] == 1
@@ -352,6 +352,50 @@ class TestConversationRunnerSingle:
 
         # Verify conversation file exists
         assert Path(result["filename"]).exists()
+
+    async def test_persona_speaks_first_false_first_turn_is_provider(
+        self,
+        tmp_path: Path,
+        basic_persona_config: Dict[str, Any],
+        basic_agent_config: Dict[str, Any],
+        mock_llm_factory,
+    ) -> None:
+        """Test persona_speaks_first=False: first turn is from the provider."""
+        conv_folder = tmp_path / "conversations"
+        run_id = "test_agent_first"
+
+        runner = ConversationRunner(
+            persona_model_config=basic_persona_config,
+            agent_model_config=basic_agent_config,
+            run_id=run_id,
+            folder_name=str(conv_folder),
+            persona_speaks_first=False,
+        )
+
+        persona_config = {
+            "model": "mock-persona-model",
+            "prompt": "Test persona prompt",
+            "name": "TestPersona",
+            "run": 1,
+        }
+
+        with patch(
+            "generate_conversations.runner.setup_conversation_logger"
+        ) as mock_logger:
+            logger = logging.getLogger("test_agent_first")
+            logger.handlers.clear()
+            mock_logger.return_value = logger
+
+            result = await runner.run_single_conversation(
+                persona_config=persona_config,
+                max_turns=3,
+                conversation_index=1,
+                run_number=1,
+            )
+
+        assert len(result["conversation"]) == 3
+        assert result["conversation"][0]["speaker"] == "provider"
+        assert result["conversation"][-1]["speaker"] == "provider"
 
     async def test_run_single_conversation_logging(
         self,
@@ -567,7 +611,7 @@ class TestConversationRunnerSingle:
 
         # Assert - verify all required metadata fields
         required_fields = [
-            "id",
+            "index",
             "llm1_model",
             "llm1_prompt",
             "run_number",
@@ -583,7 +627,7 @@ class TestConversationRunnerSingle:
             assert field in result, f"Missing field: {field}"
 
         # Verify types
-        assert isinstance(result["id"], int)
+        assert isinstance(result["index"], int)
         assert isinstance(result["turns"], int)
         assert isinstance(result["duration"], float)
         assert isinstance(result["early_termination"], bool)
@@ -771,9 +815,9 @@ class TestConversationRunnerMultiple:
                 # Act
                 results = await runner.run_conversations(persona_names=None)
 
-        # Assert - IDs should be 1, 2, 3, 4
-        ids = sorted([r["id"] for r in results])
-        assert ids == [1, 2, 3, 4]
+        # Assert - indices should be 1, 2, 3, 4
+        indices = sorted([r["index"] for r in results])
+        assert indices == [1, 2, 3, 4]
 
     async def test_agent_config_not_mutated_across_concurrent_conversations(
         self,

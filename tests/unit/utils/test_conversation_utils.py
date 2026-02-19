@@ -9,9 +9,30 @@ from llm_clients.llm_interface import Role
 from utils.conversation_utils import (
     add_timestamp_to_path,
     build_langchain_messages,
+    ensure_provider_has_last_turn,
     format_conversation_as_string,
     format_conversation_summary,
 )
+
+
+class TestEnsureProviderHasLastTurn:
+    """Test ensure_provider_has_last_turn."""
+
+    def test_persona_first_even_unchanged(self) -> None:
+        assert ensure_provider_has_last_turn(4, persona_speaks_first=True) == 4
+        assert ensure_provider_has_last_turn(6, persona_speaks_first=True) == 6
+
+    def test_persona_first_odd_bumped(self) -> None:
+        assert ensure_provider_has_last_turn(3, persona_speaks_first=True) == 4
+        assert ensure_provider_has_last_turn(5, persona_speaks_first=True) == 6
+
+    def test_agent_first_odd_unchanged(self) -> None:
+        assert ensure_provider_has_last_turn(3, persona_speaks_first=False) == 3
+        assert ensure_provider_has_last_turn(5, persona_speaks_first=False) == 5
+
+    def test_agent_first_even_bumped(self) -> None:
+        assert ensure_provider_has_last_turn(2, persona_speaks_first=False) == 3
+        assert ensure_provider_has_last_turn(4, persona_speaks_first=False) == 5
 
 
 class TestFormatConversationSummary:

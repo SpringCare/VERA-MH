@@ -472,7 +472,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
     async def test_generate_response_with_empty_conversation_history(
         self, mock_chat_anthropic, mock_response_factory
     ):
-        """Test generate_response with empty conversation_history."""
+        """Test start_conversation with empty history uses default start_prompt."""
+        from llm_clients.llm_interface import DEFAULT_START_PROMPT
+
         mock_response = mock_response_factory(
             text="Response", response_id="msg_empty", provider="claude"
         )
@@ -483,17 +485,16 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
         llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA, system_prompt="Test")
 
-        response = await llm.generate_response(conversation_history=[])
+        response = await llm.start_conversation()
 
         assert response == "Response"
 
-        # Verify ainvoke was called
+        # Empty history: SystemMessage + HumanMessage(default start_prompt)
         call_args = mock_llm.ainvoke.call_args
         messages = call_args[0][0]
-
-        # Should have: SystemMessage only (no history messages)
-        assert len(messages) == 1
+        assert len(messages) == 2
         assert messages[0].text == "Test"
+        assert messages[1].content == DEFAULT_START_PROMPT
 
     @pytest.mark.asyncio
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
@@ -501,7 +502,11 @@ class TestClaudeLLM(TestJudgeLLMBase):
     async def test_generate_response_with_none_conversation_history(
         self, mock_chat_anthropic, mock_response_factory
     ):
-        """Test generate_response with None conversation_history (default)."""
+        """Test generate_response with None
+        delegates to start_conversation (default start_prompt).
+        """
+        from llm_clients.llm_interface import DEFAULT_START_PROMPT
+
         mock_response = mock_response_factory(
             text="Response", response_id="msg_none", provider="claude"
         )
@@ -512,18 +517,17 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
         llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA, system_prompt="Test")
 
-        # Test with None explicitly passed
+        # None history delegates to start_conversation()
         response = await llm.generate_response(conversation_history=None)
 
         assert response == "Response"
 
-        # Verify ainvoke was called
+        # None history: SystemMessage + HumanMessage(default start_prompt)
         call_args = mock_llm.ainvoke.call_args
         messages = call_args[0][0]
-
-        # Should have: SystemMessage only (no history messages)
-        assert len(messages) == 1
+        assert len(messages) == 2
         assert messages[0].text == "Test"
+        assert messages[1].content == DEFAULT_START_PROMPT
 
     @pytest.mark.asyncio
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")

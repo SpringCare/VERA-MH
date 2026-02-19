@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional
 from unittest.mock import MagicMock
 
@@ -16,6 +17,10 @@ class ConcreteLLM(LLMInterface):
         self.llm = MagicMock(spec=["temperature", "max_tokens", "custom_method"])
         self.llm.temperature = 0.7
         self.llm.max_tokens = 1000
+
+    async def start_conversation(self) -> str:
+        """Concrete implementation of abstract method."""
+        return "test response"
 
     async def generate_response(self, conversation_history=None):
         """Concrete implementation of abstract method."""
@@ -108,6 +113,9 @@ class TestLLMInterface:
         class MinimalLLM(LLMInterface):
             """Minimal implementation without self.llm."""
 
+            async def start_conversation(self) -> str:
+                return "response"
+
             async def generate_response(self, conversation_history=None):
                 return "response"
 
@@ -132,6 +140,9 @@ class TestLLMInterface:
                 super().__init__(name, role, system_prompt)
                 self.llm = None
 
+            async def start_conversation(self) -> str:
+                return "response"
+
             async def generate_response(self, conversation_history=None):
                 return "response"
 
@@ -153,6 +164,7 @@ class TestLLMInterface:
         assert llm2.name == "LLM2"
         assert llm1.system_prompt == "Prompt 1"
         assert llm2.system_prompt == "Prompt 2"
+        assert llm1.conversation_id != llm2.conversation_id
 
         # Modify one shouldn't affect the other
         llm1.set_system_prompt("Modified Prompt 1")
@@ -196,6 +208,9 @@ class TestLLMInterface:
                 self.llm.bool_attr = True
                 self.llm.list_attr = [1, 2, 3]
 
+            async def start_conversation(self) -> str:
+                return "response"
+
             async def generate_response(self, conversation_history=None):
                 return "response"
 
@@ -224,6 +239,14 @@ class TestLLMInterface:
         assert isinstance(cid, str)
         assert len(cid) > 0
 
+    def test_create_conversation_id_returns_distinct_valid_uuid(self):
+        """Test that repeated calls return distinct values and each is a valid UUID."""
+        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        ids = [llm.create_conversation_id() for _ in range(50)]
+        assert len(ids) == len(set(ids)), "ids must be distinct"
+        for cid in ids:
+            uuid.UUID(cid)  # valid UUID string
+
     def test_update_conversation_id_from_metadata_leaves_unchanged_when_absent(self):
         """
         Test _update_conversation_id_from_metadata preserves conversation_id
@@ -247,7 +270,7 @@ class TestLLMInterface:
 
     @pytest.mark.asyncio
     async def test_conversation_id_available_after_generate_response(self):
-        """Test that conversation_id remains set after generate_response."""
+        """Test that conversation_id remains set after start_conversation."""
         llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
-        await llm.generate_response(conversation_history=[])
+        await llm.start_conversation()
         assert llm.conversation_id is not None

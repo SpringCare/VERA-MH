@@ -339,6 +339,22 @@ def mock_ollama_model():
         yield mock
 
 
+@pytest.fixture
+def mock_endpoint_config():
+    """Patch custom endpoint configuration for EndpointLLM tests."""
+    from unittest.mock import patch
+
+    with patch(
+        "llm_clients.endpoint_llm.Config.get_endpoint_config",
+        return_value={
+            "base_url": "https://api.example.com/chat",
+            "api_key": "test-endpoint-key",
+            "model": "phi4",
+        },
+    ):
+        yield
+
+
 # Note there is no need to mock the other LLM Client configs as Azure's is a bit complex
 @pytest.fixture
 def mock_azure_config():

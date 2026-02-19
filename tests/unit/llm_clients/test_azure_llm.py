@@ -304,6 +304,31 @@ class TestAzureLLM(TestJudgeLLMBase):
         assert "raw_metadata" in metadata
 
     @pytest.mark.asyncio
+    async def test_generate_response_with_empty_conversation_history(
+        self, mock_azure_config, mock_azure_model
+    ):
+        """Test start_conversation with empty history uses default start_prompt."""
+        from llm_clients.llm_interface import DEFAULT_START_PROMPT
+
+        mock_response = create_mock_response(
+            text="Response", response_id="chatcmpl-empty"
+        )
+        mock_llm = MagicMock()
+        mock_llm.model_name = "gpt-5.2"
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_azure_model.return_value = mock_llm
+
+        llm = AzureLLM(name="TestAzure", role=Role.PERSONA, system_prompt="Test")
+        response = await llm.start_conversation()
+
+        assert response == "Response"
+
+        call_args = mock_llm.ainvoke.call_args[0][0]
+        assert len(call_args) == 2
+        assert call_args[0].content == "Test"
+        assert call_args[1].content == DEFAULT_START_PROMPT
+
+    @pytest.mark.asyncio
     async def test_generate_response_without_system_prompt(
         self, mock_azure_config, mock_azure_model, mock_system_message
     ):
