@@ -1958,10 +1958,11 @@ class TestRunnerHelperFunctions:
             question_prompt_template="test",
         )
 
-        jobs = _create_evaluation_jobs(
+        jobs, skipped_count = _create_evaluation_jobs(
             conversations, judge_models, output_folder, rubric_config
         )
 
+        assert skipped_count == 0
         # 2 conversations × 3 instances = 6 jobs
         assert len(jobs) == 6
 
@@ -2018,10 +2019,11 @@ class TestRunnerHelperFunctions:
             question_prompt_template="test",
         )
 
-        jobs = _create_evaluation_jobs(
+        jobs, skipped_count = _create_evaluation_jobs(
             conversations, judge_models, output_folder, rubric_config
         )
 
+        assert skipped_count == 0
         # 2 conversations × (2 + 3) instances = 10 jobs
         assert len(jobs) == 10
 
@@ -2055,8 +2057,9 @@ class TestRunnerHelperFunctions:
             question_prompt_template="test",
         )
 
-        jobs = _create_evaluation_jobs(
+        jobs, skipped_count = _create_evaluation_jobs(
             conversations, judge_models, output_folder, rubric_config
         )
 
         assert len(jobs) == 0
+        assert skipped_count == 0

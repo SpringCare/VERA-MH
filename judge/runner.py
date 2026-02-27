@@ -7,6 +7,7 @@ import asyncio
 import os
 from asyncio import Queue
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
@@ -16,6 +17,19 @@ from .rubric_config import ConversationData, RubricConfig
 
 # In case this needs to be synced in the meta prompt for the judge
 EVALUATION_SEPARATOR = ":"
+
+
+def _conversation_already_judged(
+    conversation: ConversationData, set_output_base: Path
+) -> bool:
+    """Return True if any j_* dir under set_output_base
+    has a .tsv for this conversation.
+    """
+    conversation_name = Path(conversation.metadata.get("filename", "unknown.txt")).stem
+    for j_dir in set_output_base.glob("j_*"):
+        if j_dir.is_dir() and list(j_dir.glob(f"{conversation_name}_*.tsv")):
+            return True
+    return False
 
 
 def _parse_evaluation_to_dict(evaluation: Dict[str, Any]) -> Dict[str, Any]:
@@ -105,11 +119,24 @@ def _create_evaluation_jobs(
     output_folder: str,
     rubric_config: RubricConfig,
     judge_model_extra_params: Optional[Dict[str, Any]] = None,
-) -> List[
-    Tuple[ConversationData, str, int, int, str, RubricConfig, Optional[Dict[str, Any]]]
+) -> Tuple[
+    List[
+        Tuple[
+            ConversationData,
+            str,
+            int,
+            int,
+            str,
+            RubricConfig,
+            Optional[Dict[str, Any]],
+        ]
+    ],
+    int,
 ]:
     """
     Create job tuples for all (conversation × judge × instance) combinations.
+    Skips conversations that already have a .tsv in any j_* dir under
+    the set output base.
 
     Args:
         conversations: List of ConversationData objects
@@ -119,12 +146,17 @@ def _create_evaluation_jobs(
         judge_model_extra_params: Extra parameters for the judge model
 
     Returns:
-        List of job tuples:
+        Tuple of (jobs, skipped_count). jobs is a list of tuples:
         (conversation, judge_model, instance, judge_id, output_folder,
-        rubric_config, extra_params) where judge_id starts from 0 for each model type
+        rubric_config, extra_params) where judge_id starts from 0 for each model type.
     """
+    set_output_base = Path(output_folder).parent
     jobs = []
+    skipped_count = 0
     for conversation in conversations:
+        if _conversation_already_judged(conversation, set_output_base):
+            skipped_count += 1
+            continue
         for judge_model, num_instances in judge_models.items():
             for instance in range(1, num_instances + 1):
                 judge_id = instance - 1  # Convert 1-based instance to 0-based judge_id
@@ -139,7 +171,7 @@ def _create_evaluation_jobs(
                         judge_model_extra_params,
                     )
                 )
-    return jobs
+    return jobs, skipped_count
 
 
 async def _worker(
@@ -389,7 +421,19 @@ async def batch_evaluate_with_individual_judges(
     """
     total_files = len(conversations)
     total_judge_instances = sum(judge_models.values())
-    total_evaluations = total_files * total_judge_instances
+
+    # Create all evaluation jobs (skips already-judged conversations)
+    jobs, skipped_count = _create_evaluation_jobs(
+        conversations,
+        judge_models,
+        output_folder,
+        rubric_config,
+        judge_model_extra_params,
+    )
+    total_evaluations = len(jobs)
+
+    if skipped_count > 0:
+        print(f"Skipped {skipped_count} already-judged conversations.")
 
     print(
         f"Evaluating {total_files} conversations with "
@@ -400,15 +444,6 @@ async def batch_evaluate_with_individual_judges(
     print(
         f"Concurrency: {max_concurrent} workers "
         f"({'per judge model' if per_judge else 'total'})"
-    )
-
-    # Create all evaluation jobs
-    jobs = _create_evaluation_jobs(
-        conversations,
-        judge_models,
-        output_folder,
-        rubric_config,
-        judge_model_extra_params,
     )
 
     # Run workers with queue
