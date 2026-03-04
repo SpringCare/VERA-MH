@@ -30,18 +30,16 @@ from .constants import (
 )
 from .score_utils import (
     DIMENSIONS,
+    add_risk_levels_to_dataframe,
     build_dataframe_from_tsv_files,
-    build_dataframe_from_tsv_files_with_risk,
     calculate_dimension_scores,
     calculate_overall_percentages,
     calculate_vera_score,
+    ensure_results_csv,
     has_dimension_data,
     pct_of_total,
 )
-from .score_viz import (
-    create_risk_level_visualizations,
-    create_visualizations,
-)
+from .score_viz import create_risk_level_visualizations, create_visualizations
 from .utils import extract_model_names_from_path
 
 # Risk level order for consistent sorting
@@ -181,6 +179,7 @@ def score_results(
         "judge_model": model_names["judge"],
         "persona_model": model_names["persona"],
         "agent_model": model_names["agent"],
+        "workflow": model_names.get("workflow"),
         "summary": {
             "total_conversations": total_evaluations,
             "total_dimension_evaluations": overall_counts.get("total", 0),
@@ -336,7 +335,9 @@ def _calculate_risk_dimension_scores(
 
 
 def score_results_by_risk(
-    results_csv_path: str, personas_tsv_path: str, output_json_path: str = None
+    results_csv_path: str,
+    personas_tsv_path: str,
+    output_json_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Score evaluation results grouped by risk level.
@@ -349,17 +350,27 @@ def score_results_by_risk(
     Returns:
         Dictionary containing all scores grouped by risk level
     """
-    print("📊 Rebuilding dataframe with risk levels from TSV files...")
     evaluations_dir = Path(results_csv_path).parent
-    df = build_dataframe_from_tsv_files_with_risk(
-        evaluations_dir, Path(personas_tsv_path)
-    )
-    df.to_csv(results_csv_path, index=False)
-    print(f"✅ Rebuilt dataframe with {len(df)} rows and saved to {results_csv_path}")
+    print("📊 Ensuring results.csv exists and is valid...")
+    df = ensure_results_csv(evaluations_dir)
+
+    print("📊 Adding risk levels to results.csv...")
+
+    # Add persona_name and risk_level columns if they don't exist
+    df_before = df.copy()
+    df = add_risk_levels_to_dataframe(df, Path(personas_tsv_path))
+
+    # Save updated CSV if columns were added
+    if not df_before.equals(df):
+        df.to_csv(results_csv_path, index=False)
+        print(f"✅ Added risk levels to {len(df)} rows and saved to {results_csv_path}")
+    else:
+        print(f"✅ Risk levels already present in results.csv ({len(df)} rows)")
 
     risk_level_scores = {}
     for risk_level in RISK_LEVEL_ORDER:
-        risk_df = df[df["risk_level"] == risk_level].copy()
+        filtered = df[df["risk_level"] == risk_level]
+        risk_df = filtered.copy()
         if len(risk_df) == 0:
             continue
 
@@ -374,6 +385,7 @@ def score_results_by_risk(
         "judge_model": model_names["judge"],
         "persona_model": model_names["persona"],
         "agent_model": model_names["agent"],
+        "workflow": model_names.get("workflow"),
         "risk_level_scores": risk_level_scores,
     }
 
@@ -388,15 +400,39 @@ def score_results_by_risk(
 
 def _rebuild_dataframe_if_needed(results_csv_path: Path) -> bool:
     """Rebuild dataframe from TSV files if dimension columns are empty."""
-    df = pd.read_csv(results_csv_path)
-    if has_dimension_data(df):
+    df_existing = pd.read_csv(results_csv_path)
+    if has_dimension_data(df_existing):
         return False
 
     print(f"⚠️  Dimension columns are empty in {results_csv_path}")
     print(f"📊 Rebuilding dataframe from TSV files in {results_csv_path.parent}...")
 
     try:
-        df = build_dataframe_from_tsv_files(results_csv_path.parent)
+        df_new = build_dataframe_from_tsv_files(results_csv_path.parent)
+
+        # Preserve existing columns (like question_id and reasoning)
+        merge_cols = ["filename"]
+        if "run_id" in df_existing.columns and "run_id" in df_new.columns:
+            merge_cols.append("run_id")
+
+        # Get columns to preserve (exclude merge columns and columns already in df_new)
+        cols_to_preserve = [
+            col
+            for col in df_existing.columns
+            if col not in df_new.columns and col not in merge_cols
+        ]
+
+        if cols_to_preserve:
+            # Merge to add preserved columns
+            df_existing_subset = df_existing[merge_cols + cols_to_preserve]
+            df = df_new.merge(df_existing_subset, on=merge_cols, how="left")
+            print(
+                f"✅ Preserved {len(cols_to_preserve)} additional columns "
+                f"from existing CSV"
+            )
+        else:
+            df = df_new
+
         df.to_csv(results_csv_path, index=False)
         print(
             f"✅ Rebuilt dataframe with {len(df)} rows and saved to {results_csv_path}"

@@ -178,6 +178,54 @@ def parse_evaluation_filename(filename: str) -> Dict[str, Union[str, int]]:
     }
 
 
+def extract_conversation_filename_from_tsv(tsv_filename: str) -> str:
+    """
+    Extract original conversation filename from TSV evaluation filename.
+
+    TSV format: {conversation_name}_{judge_model}_i{instance}.tsv
+    Target: {conversation_name}.txt
+
+    Args:
+        tsv_filename: TSV filename (e.g., "3ea338_Lena_g5_run4_uuid_gpt-4o_i1.tsv")
+
+    Returns:
+        Original conversation filename (e.g., "3ea338_Lena_g5_run4_uuid.txt")
+    """
+    # Remove .tsv extension
+    name = tsv_filename.replace(".tsv", "")
+
+    # Try to parse using the structured format first
+    parsed = parse_evaluation_filename(tsv_filename)
+    if parsed:
+        # Reconstruct: {id}_{persona}_{user_model}_run{number}
+        return (
+            f"{parsed['id']}_{parsed['persona']}_{parsed['user_model']}_"
+            f"run{parsed['run']}.txt"
+        )
+
+    # Fallback: Remove judge suffix pattern _{judge_model}_i{instance}
+    match = re.search(r"(.+?)_[^_]+_i\d+$", name)
+    if match:
+        # Found pattern, return the part before the judge suffix
+        return match.group(1) + ".txt"
+
+    # Alternative: try matching just _i{digits} at the end
+    # (if judge model has no underscores)
+    # This handles cases like "name_gpt-4o_i1"
+    match = re.search(r"(.+)_i\d+$", name)
+    if match:
+        # Check if there's at least one underscore before _i{digits}
+        # (to avoid false matches)
+        before_i = match.group(1)
+        if "_" in before_i:
+            match2 = re.search(r"(.+)_[^-_]+_i\d+$", name)
+            if match2:
+                return match2.group(1) + ".txt"
+
+    # If no match, just convert extension (preserve original behavior)
+    return name + ".txt"
+
+
 def calculate_dimension_scores(
     df: pd.DataFrame,
     detailed: bool = False,
@@ -390,21 +438,65 @@ def build_results_csv_from_tsv_files(evaluations_dir) -> pd.DataFrame:
         try:
             tsv_df = pd.read_csv(tsv_file, sep="\t")
 
-            # Build row dictionary
-            row = {"filename": filename, "run_id": run_id}
+            # Parse TSV filename to extract judge_model, judge_instance, and judge_id
+            parsed = parse_evaluation_filename(filename)
+            judge_model = parsed.get("judge_model", "") if parsed else ""
+            judge_iteration = parsed.get("judge_iteration", 0) if parsed else 0
+            # Ensure judge_iteration is an int
+            # (it should be, but handle Union[str, int] type)
+            judge_instance = int(judge_iteration) if judge_iteration else 0
+            judge_id = max(0, judge_instance - 1)  # judge_id is 0-based
 
-            # Extract dimension -> score mapping
+            # Build row dictionary
+            row = {
+                "filename": filename,
+                "run_id": run_id,
+                "judge_model": judge_model,
+                "judge_instance": judge_instance,
+                "judge_id": judge_id,
+            }
+
+            # Extract dimension -> score mapping and parse
+            # yes_question_id/yes_reasoning from Reasoning
             for _, tsv_row in tsv_df.iterrows():
                 dimension = str(tsv_row.get("Dimension", "")).strip()
                 score = str(tsv_row.get("Score", "")).strip()
+                reasoning = str(tsv_row.get("Reasoning", "")).strip()
+
+                # Parse yes_question_id and yes_reasoning from reasoning column
+                # Format: "...Q{question_id}: {reasoning}..."
+                # Extract the first occurrence of Q{id}: pattern
+                yes_question_id = ""
+                yes_reasoning = ""
+
+                # Find "Q" followed by digits and then ":" (the first colon after Q{id})
+                match = re.search(
+                    r"Q(\d+):\s*(.+?)(?=;\s*Q\d+:|$)", reasoning, re.DOTALL
+                )
+                if match:
+                    yes_question_id = match.group(1)  # The digits after Q
+                    yes_reasoning = match.group(
+                        2
+                    ).strip()  # Everything after ": " until next "Q{id}:" or end
 
                 if dimension in DIMENSIONS:
                     row[dimension] = score
+                    # Always add yes_question_id and yes_reasoning columns
+                    # (even if empty)
+                    row[f"{dimension}_yes_question_id"] = yes_question_id
+                    row[f"{dimension}_yes_reasoning"] = yes_reasoning
 
             # Ensure all dimensions are present (fill with empty string if missing)
+            # Also ensure yes_question_id and yes_reasoning columns exist
+            # for all dimensions
             for dimension in DIMENSIONS:
                 if dimension not in row:
                     row[dimension] = ""
+                # Always add yes_question_id and yes_reasoning columns (even if empty)
+                if f"{dimension}_yes_question_id" not in row:
+                    row[f"{dimension}_yes_question_id"] = ""
+                if f"{dimension}_yes_reasoning" not in row:
+                    row[f"{dimension}_yes_reasoning"] = ""
 
             results.append(row)
 
@@ -413,7 +505,19 @@ def build_results_csv_from_tsv_files(evaluations_dir) -> pd.DataFrame:
             continue
 
     # Build dataframe with correct column order
-    columns = ["filename", "run_id"] + list(DIMENSIONS)
+    # Include judge columns, dimension scores, and yes_question_id/yes_reasoning columns
+    columns = [
+        "filename",
+        "run_id",
+        "judge_model",
+        "judge_instance",
+        "judge_id",
+    ]
+    for dimension in DIMENSIONS:
+        columns.append(dimension)
+        columns.append(f"{dimension}_yes_question_id")
+        columns.append(f"{dimension}_yes_reasoning")
+
     df = pd.DataFrame(results, columns=columns)
 
     return df
@@ -433,7 +537,9 @@ def build_dataframe_from_tsv_files(evaluations_dir: Path) -> pd.DataFrame:
     df = build_results_csv_from_tsv_files(evaluations_dir)
 
     # Transform filename column: change .tsv extension to .txt
-    df["filename"] = df["filename"].str.replace(".tsv", ".txt", regex=False)
+    # and remove judge suffix pattern (_{judge_model}_i{instance})
+    # to match original conversation filename
+    df["filename"] = df["filename"].apply(extract_conversation_filename_from_tsv)
 
     return df
 
@@ -452,8 +558,8 @@ def load_personas_risk_levels(personas_tsv_path: Path) -> Dict[str, str]:
     # Map persona name to risk level
     # Use keep_default_na=False to prevent pandas from converting "None" string to NaN
     risk_map = (
-        df[["Name", "Short Current Suicide Risk Level"]]
-        .set_index("Name")["Short Current Suicide Risk Level"]
+        df[["Name", "Current Risk Level"]]
+        .set_index("Name")["Current Risk Level"]
         .astype(str)
         .str.strip()
         .to_dict()
@@ -461,42 +567,57 @@ def load_personas_risk_levels(personas_tsv_path: Path) -> Dict[str, str]:
     return risk_map
 
 
-def build_dataframe_from_tsv_files_with_risk(
-    evaluations_dir: Path, personas_tsv_path: Path
+def add_risk_levels_to_dataframe(
+    df: pd.DataFrame, personas_tsv_path: Path
 ) -> pd.DataFrame:
     """
-    Build a dataframe from TSV evaluation files with risk level information.
-
-    This function reuses build_dataframe_from_tsv_files() and adds risk level
-    information from the personas.tsv file.
+    Add persona_name and risk_level columns to a dataframe.
 
     Args:
-        evaluations_dir: Directory containing TSV evaluation files
+        df: DataFrame with a 'filename' column
         personas_tsv_path: Path to personas.tsv file
 
     Returns:
-        DataFrame with columns: filename, run_id, persona_name,
-        risk_level, and each dimension
+        DataFrame with persona_name and risk_level columns added
     """
     from .utils import extract_persona_name_from_filename
 
-    # Get base dataframe without risk levels
-    df = build_dataframe_from_tsv_files(evaluations_dir)
+    # Only add columns if they don't already exist
+    if "persona_name" in df.columns and "risk_level" in df.columns:
+        return df
 
     # Load risk level mapping
     risk_map = load_personas_risk_levels(personas_tsv_path)
 
-    # Extract persona name from filename column (pandas-native)
+    # Extract persona names from filenames
     persona_names = df["filename"].apply(
-        lambda filename: extract_persona_name_from_filename(filename) or "Unknown"
+        lambda filename: extract_persona_name_from_filename(str(filename)) or "Unknown"
     )
 
     # Map persona_name to risk_level using risk_map
     risk_levels = persona_names.map(lambda name: risk_map.get(name, "Unknown"))
 
-    # Insert persona_name and risk_level columns after run_id
-    df.insert(2, "persona_name", persona_names)
-    df.insert(3, "risk_level", risk_levels)
+    # Add columns (insert after run_id if it exists, otherwise after filename)
+    if "persona_name" not in df.columns:
+        df["persona_name"] = persona_names
+        # Reorder columns to place persona_name after run_id (or after filename)
+        cols: list[str] = list(df.columns)
+        cols.remove("persona_name")
+        insert_pos = 2 if "run_id" in cols else 1
+        cols.insert(insert_pos, "persona_name")
+        df = pd.DataFrame(df[cols])
+
+    if "risk_level" not in df.columns:
+        df["risk_level"] = risk_levels
+        # Reorder columns to place risk_level after persona_name
+        # (or after run_id/filename)
+        cols = list(df.columns)
+        cols.remove("risk_level")
+        insert_pos = (
+            3 if "persona_name" in df.columns else (2 if "run_id" in df.columns else 1)
+        )
+        cols.insert(insert_pos, "risk_level")
+        df = pd.DataFrame(df[cols])
 
     return df
 
@@ -517,6 +638,7 @@ def has_dimension_data(df: pd.DataFrame) -> bool:
 def ensure_results_csv(eval_path) -> pd.DataFrame:
     """
     Ensure results.csv exists and is valid, regenerating from TSV files if needed.
+    Preserves existing columns (like question_id and reasoning) when rebuilding.
 
     Args:
         eval_path: Path to evaluation directory (can be str or Path)

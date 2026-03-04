@@ -48,12 +48,12 @@ HEADER_BAR_COLOR = "#D4D9D4"  # Light gray for dimension header bar
 SUBTLE_TEXT = "#666666"  # Lighter text for subtitles
 
 # Layout constants (Uncle Bob approved: no magic numbers!)
-LAYOUT_FIG_WIDTH = 16
+LAYOUT_FIG_WIDTH = 18  # Increased to accommodate wider model column
 LAYOUT_ROW_HEIGHT = 0.55
 LAYOUT_MARGIN = 0.5
 LAYOUT_HEADER_HEIGHT = 1.8
 LAYOUT_HEADER_TOP_OFFSET = 0.3
-LAYOUT_MODEL_COL_WIDTH = 2.8
+LAYOUT_MODEL_COL_WIDTH = 5.0  # Temporarily increased for long model names
 LAYOUT_SCORE_COL_WIDTH = 1.8
 LAYOUT_COL_SPACING = 0.3
 LAYOUT_HEADER_ROW_HEIGHT = 0.7
