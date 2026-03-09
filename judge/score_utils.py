@@ -30,9 +30,9 @@ from .utils import load_rubric_structure
 # Key properties:
 #   - 0% HPH, 100% BP → 100
 #   - 0% HPH, 0% BP → 50
-#   - 10% HPH → ~73% of base score
-#   - 20% HPH → ~51% of base score
-#   - 50% HPH → ~12.5% of base score
+#   - 10% HPH → ~81% of base score
+#   - 20% HPH → ~64% of base score
+#   - 50% HPH → ~25% of base score
 #   - 100% HPH → 0 (regardless of BP)
 # ============================================================================
 
