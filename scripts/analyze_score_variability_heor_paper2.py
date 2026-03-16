@@ -721,150 +721,6 @@ def run_sampling_analysis(
     return pd.DataFrame(results)
 
 
-def plot_std_vs_n(
-    results_df: pd.DataFrame,
-    output_path: Path,
-    title: str = "VERA Score Standard Deviation vs Number of Personas",
-):
-    """
-    Plot standard deviation of VERA scores as a function of P (number of personas),
-    with separate lines for different parameter combinations.
-
-    Args:
-        results_df: DataFrame with analysis results
-        output_path: Path to save the plot
-        title: Plot title
-    """
-    # Group by key parameters for subplots
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10), squeeze=False)
-    axes_flat = axes.flatten()
-
-    # Create subplots for different parameter combinations
-    plot_idx = 0
-
-    # Plot 1: By persona/user model
-    if "persona_model" in results_df.columns:
-        ax = axes_flat[plot_idx]
-        for persona in sorted(list(results_df["persona_model"].unique())):  # type: ignore[union-attr]
-            persona_df = results_df[results_df["persona_model"] == persona]
-            for r in sorted(list(persona_df["R"].unique())):  # type: ignore[union-attr]
-                r_df = persona_df[persona_df["R"] == r].sort_values(by="P")  # type: ignore[union-attr]
-                ax.plot(
-                    r_df["P"],
-                    r_df["overall_std"],
-                    marker="s",
-                    label=f"{persona}, R={r}",
-                    linewidth=2,
-                    markersize=6,
-                )
-        ax.set_xlabel("P (number of personas)", fontsize=10, color=TEXT_COLOR)
-        ax.set_ylabel("Standard Deviation", fontsize=10, color=TEXT_COLOR)
-        ax.set_title(
-            "By User Agent Model", fontsize=11, fontweight="bold", color=TEXT_COLOR
-        )
-        ax.legend(fontsize=8)
-        ax.grid(True, alpha=0.3)
-        plot_idx += 1
-
-    # Plot 2: By provider model
-    if "provider_model" in results_df.columns:
-        ax = axes_flat[plot_idx]
-        for provider in sorted(list(results_df["provider_model"].unique())):  # type: ignore[union-attr]
-            provider_df = results_df[results_df["provider_model"] == provider]
-            for r in sorted(list(provider_df["R"].unique())):  # type: ignore[union-attr]
-                r_df = provider_df[provider_df["R"] == r].sort_values(by="P")  # type: ignore[union-attr]
-                ax.plot(
-                    r_df["P"],
-                    r_df["overall_std"],
-                    marker="^",
-                    label=f"{provider}, R={r}",
-                    linewidth=2,
-                    markersize=6,
-                )
-        ax.set_xlabel("P (number of personas)", fontsize=10, color=TEXT_COLOR)
-        ax.set_ylabel("Standard Deviation", fontsize=10, color=TEXT_COLOR)
-        ax.set_title(
-            "By Provider Model", fontsize=11, fontweight="bold", color=TEXT_COLOR
-        )
-        ax.legend(fontsize=8)
-        ax.grid(True, alpha=0.3)
-        plot_idx += 1
-
-    # Plot 3: By R (conversations per persona) — averaged across user and provider models
-    if "R" in results_df.columns:
-        ax = axes_flat[plot_idx]
-        for r in sorted(list(results_df["R"].unique())):  # type: ignore[union-attr]
-            r_df = results_df[results_df["R"] == r].sort_values(by="P")  # type: ignore[union-attr]
-            grouped = r_df.groupby("P")["overall_std"].mean()
-            ax.plot(
-                grouped.index,
-                grouped.values,
-                marker="o",
-                label=f"R={r}",
-                linewidth=2,
-                markersize=6,
-            )
-        ax.set_xlabel("P (number of personas)", fontsize=10, color=TEXT_COLOR)
-        ax.set_ylabel("Standard Deviation", fontsize=10, color=TEXT_COLOR)
-        ax.set_title(
-            "By Conversations per Persona (avg across models)",
-            fontsize=11,
-            fontweight="bold",
-            color=TEXT_COLOR,
-        )
-        ax.legend(fontsize=8)
-        ax.grid(True, alpha=0.3)
-        plot_idx += 1
-
-    # Plot 4: Combined — one line per (user model, provider model) pair, R averaged
-    if "persona_model" in results_df.columns and "provider_model" in results_df.columns:
-        ax = axes_flat[plot_idx]
-        combo_df = (
-            results_df.groupby(["persona_model", "provider_model", "P"])["overall_std"]
-            .mean()
-            .reset_index()
-        )
-        for _, grp in combo_df.groupby(["persona_model", "provider_model"]):
-            assert isinstance(grp, pd.DataFrame)
-            u_name = display_name(str(grp["persona_model"].iloc[0]))
-            p_name = display_name(str(grp["provider_model"].iloc[0]))
-            label = f"U={u_name}, Prov={p_name}"
-            ax.plot(
-                grp["P"],
-                grp["overall_std"],
-                marker="D",
-                label=label,
-                linewidth=2,
-                markersize=5,
-            )
-        ax.set_xlabel("P (number of personas)", fontsize=10, color=TEXT_COLOR)
-        ax.set_ylabel("Standard Deviation", fontsize=10, color=TEXT_COLOR)
-        ax.set_title(
-            "By User × Provider Model (R averaged)",
-            fontsize=11,
-            fontweight="bold",
-            color=TEXT_COLOR,
-        )
-        ax.legend(fontsize=7)
-        ax.grid(True, alpha=0.3)
-        plot_idx += 1
-
-    # Hide unused subplots
-    for idx in range(plot_idx, len(axes_flat)):
-        axes_flat[idx].set_visible(False)
-
-    fig.suptitle(title, fontsize=14, fontweight="bold", y=1.02, color=TEXT_COLOR)
-    fig.patch.set_facecolor(BG_COLOR)
-    plt.tight_layout()
-
-    # Save figure
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=300, bbox_inches="tight", facecolor=BG_COLOR)
-    plt.close()
-
-    print(f"📈 Plot saved to: {output_path}")
-
-
 def plot_std_threshold(
     results_df: pd.DataFrame,
     output_path: Path,
@@ -1472,7 +1328,9 @@ def plot_score_convergence_by_provider(
                     line.set_color(color)
                     line.set_linewidth(1.5 if element != "medians" else 2.0)
 
-            # Annotate min (below lower cap) and max (above upper cap) for each box.
+            # Annotate min/max only for R=1 and R=8 boxes
+            if r not in (1, 8):
+                continue
             y_pad_max = (y_hi - y_lo) * 0.015  # 1.5% padding above max whisker
             y_pad_min = (y_hi - y_lo) * 0.025  # 2.5% padding below min whisker
             for box_i, stats in enumerate(box_stats):
@@ -1654,15 +1512,32 @@ def plot_cost_efficiency(
             for x_val, y_val, p_val in zip(
                 total_convs_p, ranges_p, prov_pers["P"].tolist()
             ):
-                ax.annotate(
-                    f"P={p_val}, R={min(r_values)}",
-                    xy=(x_val, y_val),
-                    xytext=(4, 4),
-                    textcoords="offset points",
-                    fontsize=8,
-                    color=color,
-                    alpha=0.85,
-                )
+                # P=10, R=1 goes to the right (shared start point with dashed line);
+                # all other P=X, R=1 labels go below
+                if p_val == min_p:
+                    ax.annotate(
+                        f"P={p_val}, R={min(r_values)}",
+                        xy=(x_val, y_val),
+                        xytext=(8, 0),
+                        textcoords="offset points",
+                        fontsize=8,
+                        color="black",
+                        alpha=0.85,
+                        ha="left",
+                        va="center",
+                    )
+                else:
+                    ax.annotate(
+                        f"P={p_val}, R={min(r_values)}",
+                        xy=(x_val, y_val),
+                        xytext=(0, -10),
+                        textcoords="offset points",
+                        fontsize=8,
+                        color="black",
+                        alpha=0.85,
+                        ha="center",
+                        va="top",
+                    )
 
         # ── Line 2: add conversations (conversation bootstrap, P=min_p) ──────
         prov_conv = conv_bt[conv_bt["provider_model"] == provider].copy()
@@ -1681,18 +1556,23 @@ def plot_cost_efficiency(
                 markersize=7,
                 label=f"Add conversations per persona (P={min_p} fixed)",
             )
-            # Annotate P and R values
+            # Annotate P and R values — only R=4, 8 on the P=min_p line
+            # (R=1 is already labelled by the "Add personas" solid line above)
             for x_val, y_val, r_val in zip(
                 total_convs_r, ranges_r, prov_conv["R"].tolist()
             ):
+                if r_val not in (4, 8):
+                    continue
                 ax.annotate(
                     f"P={min_p}, R={r_val}",
                     xy=(x_val, y_val),
-                    xytext=(4, -12),
+                    xytext=(0, 12),
                     textcoords="offset points",
                     fontsize=8,
-                    color=color,
+                    color="black",
                     alpha=0.85,
+                    ha="center",
+                    va="bottom",
                 )
 
         ax.set_title(
@@ -2678,7 +2558,6 @@ def main():
     # Generate plots
     if not args.no_plot:
         plot_path = Path(args.plot) if args.plot else output_path.with_suffix(".png")
-        plot_std_vs_n(results_df, plot_path)
 
         convergence_path = plot_path.with_stem(plot_path.stem + "_score_convergence")
         plot_score_convergence_by_provider(
