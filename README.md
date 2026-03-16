@@ -22,6 +22,7 @@ There are known limitations of the current structure, which will be simplified a
 
 ## Additional Resources
 
+- [VERA-MH: Reliability and Validity of an Open-Source AI Safety Evaluation in Mental Health](https://arxiv.org/abs/2602.05088)
 - [VERA-MH Concept Paper](https://arxiv.org/abs/2510.15297)
 - [First Announcement](https://www.springhealth.com/blog/introducing-vera-mh-new-standard-ethical-ai-mental-healthcare)
 

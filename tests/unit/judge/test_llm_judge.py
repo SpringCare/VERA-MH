@@ -1380,3 +1380,143 @@ class TestAnswerMatching:
             judge._match_answer_to_options("IMMEDIATE RISK", options)
             == "Immediate risk"
         )
+
+
+@pytest.mark.unit
+class TestNotRelevantGotoIntegration:
+    """Test NOT_RELEVANT>> handling integration."""
+
+    async def test_not_relevant_goto_overwrites_stored_answer(
+        self, rubric_config_factory
+    ):
+        """Test that _handle_not_relevant_goto overwrites existing dimension entries.
+
+        This tests the bug fix where _store_answer runs before
+        _handle_not_relevant_goto.
+        Dimension should be properly scored as "Not Relevant"
+        """
+        rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
+        judge = LLMJudge(
+            judge_model="mock-llm",
+            rubric_config=rubric_config,
+        )
+
+        # Simulate the problematic flow:
+        dimension_answers = {}
+        current_dimension = "Test Dimension 1"
+
+        # Mock question data for Q5 scenario
+        mock_question_data = {
+            "question": 'Select "Rate this dimension Not Relevant".',
+            "dimension": current_dimension,
+            "severity": None,
+        }
+
+        # 1. Store answer first (simulating _ask_all_questions flow)
+        judge._store_answer(
+            dimension_answers,
+            mock_question_data,
+            "5",
+            "Rate this dimension Not Relevant",
+            current_dimension,
+            "Special case",
+        )
+
+        # Verify initial state - dimension has normal entry (no marker)
+        assert len(dimension_answers[current_dimension]) == 1
+        assert (
+            "NOT_RELEVANT>>" not in dimension_answers[current_dimension][0]["question"]
+        )
+
+        # 2. Handle NOT_RELEVANT>> (simulating GOTO logic)
+        judge._handle_not_relevant_goto(
+            "5",
+            "Rate this dimension Not Relevant",
+            current_dimension,
+            dimension_answers,
+            verbose=False,
+        )
+
+        # 3. Verify the entry was overwritten with NOT_RELEVANT marker
+        assert len(dimension_answers[current_dimension]) == 1
+        entry = dimension_answers[current_dimension][0]
+        assert "NOT_RELEVANT>>" in entry["question"]
+        assert "NOT_RELEVANT>>" in entry["reasoning"]
+        assert entry["answer"] == "Not Relevant"
+
+        # 4. Verify scoring recognizes the marker
+        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        assert results[current_dimension]["score"] == "Not Relevant"
+
+    async def test_answer_with_not_relevant_goto_scores_not_relevant(
+        self, rubric_config_factory
+    ):
+        """Test that when answer's goto is NOT_RELEVANT>>, dimension gets Not Relevant.
+
+        This tests the end-to-end flow where:
+        1. A question is answered triggering NOT_RELEVANT>> goto
+        2. The dimension should be scored as "Not Relevant"
+
+        This is a focused test for the specific scenario where NOT_RELEVANT>> goto
+        should result in Not Relevant scoring.
+        """
+        rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
+        judge = LLMJudge(
+            judge_model="mock-llm",
+            rubric_config=rubric_config,
+        )
+
+        # Start with empty dimension_answers
+        dimension_answers = {}
+        current_dimension = "Test Dimension"
+
+        # Mock question data
+        mock_question_data = {
+            "question": "Test question that leads to a not-relevant goto",
+            "dimension": current_dimension,
+            "severity": "Red",
+        }
+
+        # Simulate an answer that would trigger NOT_RELEVANT>> goto
+        answer_text = "Rate this dimension Not Relevant"
+        question_id = "1"
+        reasoning = "User chose to mark dimension as not relevant"
+
+        # Store the answer first (normal flow)
+        judge._store_answer(
+            dimension_answers,
+            mock_question_data,
+            question_id,
+            answer_text,
+            current_dimension,
+            reasoning,
+        )
+
+        # Verify initial state - normal answer stored
+        assert len(dimension_answers[current_dimension]) == 1
+        initial_entry = dimension_answers[current_dimension][0]
+        assert "NOT_RELEVANT>>" not in initial_entry["question"]
+        assert initial_entry["answer"] == answer_text
+
+        # Simulate the NOT_RELEVANT>> goto being processed
+        judge._handle_not_relevant_goto(
+            question_id,
+            answer_text,
+            current_dimension,
+            dimension_answers,
+            verbose=False,
+        )
+
+        # Verify the entry was overwritten with NOT_RELEVANT marker
+        assert len(dimension_answers[current_dimension]) == 1
+        not_relevant_entry = dimension_answers[current_dimension][0]
+        assert "NOT_RELEVANT>>" in not_relevant_entry["question"]
+        assert "NOT_RELEVANT>>" in not_relevant_entry["reasoning"]
+        assert not_relevant_entry["answer"] == "Not Relevant"
+
+        # Most important: Verify dimension gets scored as "Not Relevant"
+        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        assert results[current_dimension]["score"] == "Not Relevant"
+        assert "NOT_RELEVANT>>" in results[current_dimension]["reasoning"]
+        assert results[current_dimension]["yes_question_id"] == ""
+        assert results[current_dimension]["yes_reasoning"] == ""

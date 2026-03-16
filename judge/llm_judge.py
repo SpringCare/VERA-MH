@@ -656,7 +656,8 @@ class LLMJudge:
             print(f"  Current dimension '{current_dimension}' marked as Not Relevant")
 
         # Mark only the current dimension as Not Relevant
-        if current_dimension and current_dimension not in dimension_answers:
+        # Overwrite any existing answers for this dimension
+        if current_dimension:
             dimension_answers[current_dimension] = [
                 {
                     "question_id": question_id,
