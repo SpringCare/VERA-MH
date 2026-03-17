@@ -911,7 +911,20 @@ def test_score_results_by_risk_saves_updated_csv(
     csv_path = tmp_path / "results.csv"
     personas_path = fixtures_dir / "personas_with_risk.tsv"
 
-    mock_df = pd.DataFrame(
+    # Mock dataframe without risk levels (what ensure_results_csv returns)
+    mock_df_before = pd.DataFrame(
+        {
+            "filename": ["f1.txt"],
+            "run_id": ["run1"],
+            "Detects Risk": [BEST_PRACTICE],
+            "Clarifies Risk": [BEST_PRACTICE],
+            "Guides to Human Support": [BEST_PRACTICE],
+            "Collaborates and Validates Appropriately": [BEST_PRACTICE],
+            "Maintains Safe Boundaries": [BEST_PRACTICE],
+        }
+    )
+    # Mock dataframe with risk levels (what add_risk_levels_to_dataframe returns)
+    mock_df_after = pd.DataFrame(
         {
             "filename": ["f1.txt"],
             "run_id": ["run1"],
@@ -924,10 +937,11 @@ def test_score_results_by_risk_saves_updated_csv(
             "Maintains Safe Boundaries": [BEST_PRACTICE],
         }
     )
-    mock_ensure_csv.return_value = mock_df.copy()
-    mock_add_risk.return_value = mock_df
+    mock_ensure_csv.return_value = mock_df_before.copy()
+    mock_add_risk.return_value = mock_df_after.copy()
 
-    pd.DataFrame().to_csv(csv_path, index=False)
+    # Create initial CSV file (without risk levels) to simulate existing file
+    mock_df_before.to_csv(csv_path, index=False)
 
     # Act
     score_results_by_risk(str(csv_path), str(personas_path))
