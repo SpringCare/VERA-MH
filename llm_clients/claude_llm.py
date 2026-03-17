@@ -1,5 +1,5 @@
 import time
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -9,30 +9,12 @@ from utils.conversation_utils import build_langchain_messages
 from utils.debug import debug_print
 
 from .config import Config
-from .llm_interface import JudgeLLM, Role
+from .llm_interface import JudgeLLM, Role, ainvoke_with_retry
 
 T = TypeVar("T", bound=BaseModel)
 
 # Error message that indicates account-level API limit; retrying will not help.
 API_USAGE_LIMIT_MSG = "You have reached your specified API usage limits"
-
-MAX_RETRIES = 3
-
-
-async def _ainvoke_with_retry(get_coro: Callable[[], Any]) -> Any:
-    """Run ainvoke with retries. On API usage limit error, re-raise immediately."""
-    last_exception: Optional[Exception] = None
-    for attempt in range(MAX_RETRIES + 1):
-        try:
-            return await get_coro()
-        except Exception as e:
-            last_exception = e
-            if API_USAGE_LIMIT_MSG in str(e):
-                raise
-            if attempt == MAX_RETRIES:
-                raise
-    assert last_exception is not None
-    raise last_exception
 
 
 class ClaudeLLM(JudgeLLM):
@@ -131,7 +113,10 @@ class ClaudeLLM(JudgeLLM):
 
         try:
             start_time = time.time()
-            response = await _ainvoke_with_retry(lambda: self.llm.ainvoke(messages))
+            response = await ainvoke_with_retry(
+                lambda: self.llm.ainvoke(messages),
+                no_retry_substrings=(API_USAGE_LIMIT_MSG,),
+            )
             end_time = time.time()
 
             model = (
@@ -194,8 +179,9 @@ class ClaudeLLM(JudgeLLM):
             structured_llm = self.llm.with_structured_output(response_model)
 
             start_time = time.time()
-            response = await _ainvoke_with_retry(
-                lambda: structured_llm.ainvoke(messages)
+            response = await ainvoke_with_retry(
+                lambda: structured_llm.ainvoke(messages),
+                no_retry_substrings=(API_USAGE_LIMIT_MSG,),
             )
             end_time = time.time()
 

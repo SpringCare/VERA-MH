@@ -9,7 +9,13 @@ from utils.conversation_utils import build_langchain_messages
 from utils.debug import debug_print
 
 from .config import Config
-from .llm_interface import JudgeLLM, Role
+from .llm_interface import JudgeLLM, Role, ainvoke_with_retry
+
+# Error substrings that indicate quota/usage limit; retrying will not help.
+OPENAI_NO_RETRY_SUBSTRINGS = (
+    "exceeded your current quota",
+    "insufficient_quota",
+)
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -108,7 +114,10 @@ class OpenAILLM(JudgeLLM):
 
         try:
             start_time = time.time()
-            response = await self.llm.ainvoke(messages)
+            response = await ainvoke_with_retry(
+                lambda: self.llm.ainvoke(messages),
+                no_retry_substrings=OPENAI_NO_RETRY_SUBSTRINGS,
+            )
             end_time = time.time()
 
             self._set_response_metadata(
@@ -205,7 +214,10 @@ class OpenAILLM(JudgeLLM):
             structured_llm = self.llm.with_structured_output(response_model)
 
             start_time = time.time()
-            response = await structured_llm.ainvoke(messages)
+            response = await ainvoke_with_retry(
+                lambda: structured_llm.ainvoke(messages),
+                no_retry_substrings=OPENAI_NO_RETRY_SUBSTRINGS,
+            )
             end_time = time.time()
 
             self._set_response_metadata(

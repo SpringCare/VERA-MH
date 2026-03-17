@@ -3,7 +3,7 @@ import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
 
 from pydantic import BaseModel
 
@@ -20,6 +20,30 @@ class Role(Enum):
 
 # Default prompt sent to the LLM when starting a conversation (no first_message set).
 DEFAULT_START_PROMPT = "Start the conversation based on the system prompt"
+
+MAX_RETRIES = 3
+
+
+async def ainvoke_with_retry(
+    get_coro: Callable[[], Any],
+    no_retry_substrings: tuple[str, ...] = (),
+) -> Any:
+    """Run ainvoke with retries. Re-raise immediately if error message contains
+    any of no_retry_substrings (e.g. API usage/quota limit messages).
+    """
+    last_exception: Optional[Exception] = None
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            return await get_coro()
+        except Exception as e:
+            last_exception = e
+            err_str = str(e)
+            if any(sub in err_str for sub in no_retry_substrings):
+                raise
+            if attempt == MAX_RETRIES:
+                raise
+    assert last_exception is not None
+    raise last_exception
 
 
 class LLMInterface(ABC):
