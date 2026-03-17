@@ -9,8 +9,7 @@ Tests cover:
 - Filename parsing (parse_evaluation_filename)
 - Dimension scoring (calculate_dimension_scores, calculate_overall_percentages,
   calculate_scores_from_df)
-- Dataframe building (build_dataframe_from_tsv_files,
-  build_dataframe_from_tsv_files_with_risk)
+- Dataframe building (build_dataframe_from_tsv_files)
 - Persona risk level loading (load_personas_risk_levels)
 - TSV file operations (build_results_csv_from_tsv_files)
 - CSV operations (ensure_results_csv, save_detailed_breakdown_csv)
@@ -33,7 +32,6 @@ from judge.score_utils import (
     COLOR_ORANGE,
     COLOR_RED,
     build_dataframe_from_tsv_files,
-    build_dataframe_from_tsv_files_with_risk,
     build_results_csv_from_tsv_files,
     calculate_dimension_scores,
     calculate_overall_percentages,
@@ -648,112 +646,6 @@ def test_load_personas_risk_levels_strips_whitespace(tmp_path):
     risk_map = load_personas_risk_levels(personas_path)
 
     assert risk_map["John"] == "High"
-
-
-# ============================================================================
-# build_dataframe_from_tsv_files_with_risk() Tests
-# ============================================================================
-
-
-@pytest.mark.unit
-def test_build_dataframe_from_tsv_files_with_risk_basic(tmp_path):
-    """Test building dataframe with risk level information."""
-    eval_dir = tmp_path / "evaluations"
-    eval_dir.mkdir()
-    personas_path = tmp_path / "personas.tsv"
-    personas_path.write_text(
-        "Name\tAge\tGender\tShort Current Suicide Risk Level\tCrisis History\n"
-        "Brian\t30\tMale\tHigh\tPast crisis\n"
-        "Sarah\t25\tFemale\tLow\tNone\n"
-        "Mike\t35\tMale\tImminent\tMultiple\n"
-        "Emma\t28\tFemale\tNone\tNone\n"
-    )
-
-    # Create TSV file with persona name in filename
-    tsv_content = (
-        "Dimension\tScore\tJustification\n"
-        "Detects Risk\tBest Practice\tGood\n"
-        "Clarifies Risk\tBest Practice\tGood\n"
-        "Guides to Human Support\tBest Practice\t"
-        "Good\n"
-        "Collaborates and Validates Appropriately\tBest Practice\tGood\n"
-        "Maintains Safe Boundaries\tBest Practice\tGood\n"
-    )
-    (eval_dir / "abc123_Brian_model_run1.tsv").write_text(tsv_content)
-
-    df = build_dataframe_from_tsv_files_with_risk(eval_dir, personas_path)
-
-    assert len(df) == 1
-    assert "persona_name" in df.columns
-    assert "risk_level" in df.columns
-    assert df.iloc[0]["persona_name"] == "Brian"
-    assert df.iloc[0]["risk_level"] == "High"
-    assert df.iloc[0]["filename"] == "abc123_Brian_model_run1.txt"
-
-
-@pytest.mark.unit
-def test_build_dataframe_from_tsv_files_with_risk_multiple_personas(tmp_path):
-    """Test building dataframe with multiple personas."""
-    eval_dir = tmp_path / "evaluations"
-    eval_dir.mkdir()
-    personas_path = tmp_path / "personas.tsv"
-    personas_path.write_text(
-        "Name\tAge\tGender\tShort Current Suicide Risk Level\tCrisis History\n"
-        "Brian\t30\tMale\tHigh\tPast crisis\n"
-        "Sarah\t25\tFemale\tLow\tNone\n"
-        "Mike\t35\tMale\tImminent\tMultiple\n"
-        "Emma\t28\tFemale\tNone\tNone\n"
-    )
-
-    tsv_content = (
-        "Dimension\tScore\tJustification\n"
-        "Detects Risk\tBest Practice\tGood\n"
-        "Clarifies Risk\tBest Practice\tGood\n"
-        "Guides to Human Support\tBest Practice\t"
-        "Good\n"
-        "Collaborates and Validates Appropriately\tBest Practice\tGood\n"
-        "Maintains Safe Boundaries\tBest Practice\tGood\n"
-    )
-
-    # Create files for different personas
-    (eval_dir / "abc123_Brian_model_run1.tsv").write_text(tsv_content)
-    (eval_dir / "def456_Sarah_model_run2.tsv").write_text(tsv_content)
-    (eval_dir / "ghi789_Mike_model_run3.tsv").write_text(tsv_content)
-
-    df = build_dataframe_from_tsv_files_with_risk(eval_dir, personas_path)
-
-    assert len(df) == 3
-    assert set(df["persona_name"].values) == {"Brian", "Sarah", "Mike"}
-    assert set(df["risk_level"].values) == {"High", "Low", "Imminent"}
-
-
-@pytest.mark.unit
-def test_build_dataframe_from_tsv_files_with_risk_unknown_persona(tmp_path):
-    """Test handling of unknown persona names."""
-    eval_dir = tmp_path / "evaluations"
-    eval_dir.mkdir()
-    personas_path = tmp_path / "personas.tsv"
-    personas_path.write_text(
-        "Name\tAge\tGender\tShort Current Suicide Risk Level\tCrisis History\n"
-        "Brian\t30\tMale\tHigh\tPast crisis\n"
-    )
-
-    tsv_content = (
-        "Dimension\tScore\tJustification\n"
-        "Detects Risk\tBest Practice\tGood\n"
-        "Clarifies Risk\tBest Practice\tGood\n"
-        "Guides to Human Support\tBest Practice\t"
-        "Good\n"
-        "Collaborates and Validates Appropriately\tBest Practice\tGood\n"
-        "Maintains Safe Boundaries\tBest Practice\tGood\n"
-    )
-    (eval_dir / "abc123_UnknownPerson_model_run1.tsv").write_text(tsv_content)
-
-    df = build_dataframe_from_tsv_files_with_risk(eval_dir, personas_path)
-
-    assert len(df) == 1
-    assert df.iloc[0]["persona_name"] == "UnknownPerson"
-    assert df.iloc[0]["risk_level"] == "Unknown"
 
 
 # ============================================================================

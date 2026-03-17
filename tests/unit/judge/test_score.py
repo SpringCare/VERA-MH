@@ -770,8 +770,11 @@ def test_score_results_dimension_all_not_relevant_returns_zero_scores(tmp_path, 
 
 
 @pytest.mark.unit
-@patch("judge.score.build_dataframe_from_tsv_files_with_risk")
-def test_score_results_by_risk_basic(mock_build_df, tmp_path, fixtures_dir):
+@patch("judge.score.add_risk_levels_to_dataframe")
+@patch("judge.score.ensure_results_csv")
+def test_score_results_by_risk_basic(
+    mock_ensure_csv, mock_add_risk, tmp_path, fixtures_dir
+):
     """Test basic scoring by risk level."""
     # Arrange
     csv_path = tmp_path / "results.csv"
@@ -797,7 +800,8 @@ def test_score_results_by_risk_basic(mock_build_df, tmp_path, fixtures_dir):
             "Maintains Safe Boundaries": [BEST_PRACTICE, BEST_PRACTICE],
         }
     )
-    mock_build_df.return_value = mock_df
+    mock_ensure_csv.return_value = mock_df.copy()
+    mock_add_risk.return_value = mock_df
 
     # Create empty CSV (it will be overwritten)
     pd.DataFrame().to_csv(csv_path, index=False)
@@ -812,8 +816,11 @@ def test_score_results_by_risk_basic(mock_build_df, tmp_path, fixtures_dir):
 
 
 @pytest.mark.unit
-@patch("judge.score.build_dataframe_from_tsv_files_with_risk")
-def test_score_results_by_risk_dimension_scores(mock_build_df, tmp_path, fixtures_dir):
+@patch("judge.score.add_risk_levels_to_dataframe")
+@patch("judge.score.ensure_results_csv")
+def test_score_results_by_risk_dimension_scores(
+    mock_ensure_csv, mock_add_risk, tmp_path, fixtures_dir
+):
     """Test dimension scoring within risk levels."""
     # Arrange
     csv_path = tmp_path / "results.csv"
@@ -838,7 +845,8 @@ def test_score_results_by_risk_dimension_scores(mock_build_df, tmp_path, fixture
             "Maintains Safe Boundaries": [BEST_PRACTICE, BEST_PRACTICE],
         }
     )
-    mock_build_df.return_value = mock_df
+    mock_ensure_csv.return_value = mock_df.copy()
+    mock_add_risk.return_value = mock_df
 
     pd.DataFrame().to_csv(csv_path, index=False)
 
@@ -854,9 +862,10 @@ def test_score_results_by_risk_dimension_scores(mock_build_df, tmp_path, fixture
 
 
 @pytest.mark.unit
-@patch("judge.score.build_dataframe_from_tsv_files_with_risk")
+@patch("judge.score.add_risk_levels_to_dataframe")
+@patch("judge.score.ensure_results_csv")
 def test_score_results_by_risk_includes_not_relevant(
-    mock_build_df, tmp_path, fixtures_dir
+    mock_ensure_csv, mock_add_risk, tmp_path, fixtures_dir
 ):
     """Test that 'Not Relevant' is included in risk-level scoring."""
     # Arrange
@@ -876,7 +885,8 @@ def test_score_results_by_risk_includes_not_relevant(
             "Maintains Safe Boundaries": [BEST_PRACTICE],
         }
     )
-    mock_build_df.return_value = mock_df
+    mock_ensure_csv.return_value = mock_df.copy()
+    mock_add_risk.return_value = mock_df
 
     pd.DataFrame().to_csv(csv_path, index=False)
 
@@ -891,8 +901,11 @@ def test_score_results_by_risk_includes_not_relevant(
 
 
 @pytest.mark.unit
-@patch("judge.score.build_dataframe_from_tsv_files_with_risk")
-def test_score_results_by_risk_saves_updated_csv(mock_build_df, tmp_path, fixtures_dir):
+@patch("judge.score.add_risk_levels_to_dataframe")
+@patch("judge.score.ensure_results_csv")
+def test_score_results_by_risk_saves_updated_csv(
+    mock_ensure_csv, mock_add_risk, tmp_path, fixtures_dir
+):
     """Test that updated dataframe is saved to CSV."""
     # Arrange
     csv_path = tmp_path / "results.csv"
@@ -911,7 +924,8 @@ def test_score_results_by_risk_saves_updated_csv(mock_build_df, tmp_path, fixtur
             "Maintains Safe Boundaries": [BEST_PRACTICE],
         }
     )
-    mock_build_df.return_value = mock_df
+    mock_ensure_csv.return_value = mock_df.copy()
+    mock_add_risk.return_value = mock_df
 
     pd.DataFrame().to_csv(csv_path, index=False)
 
@@ -925,8 +939,11 @@ def test_score_results_by_risk_saves_updated_csv(mock_build_df, tmp_path, fixtur
 
 
 @pytest.mark.unit
-@patch("judge.score.build_dataframe_from_tsv_files_with_risk")
-def test_score_results_by_risk_saves_json(mock_build_df, tmp_path, fixtures_dir):
+@patch("judge.score.add_risk_levels_to_dataframe")
+@patch("judge.score.ensure_results_csv")
+def test_score_results_by_risk_saves_json(
+    mock_ensure_csv, mock_add_risk, tmp_path, fixtures_dir
+):
     """Test that results are saved to JSON file."""
     # Arrange
     csv_path = tmp_path / "results.csv"
@@ -946,7 +963,8 @@ def test_score_results_by_risk_saves_json(mock_build_df, tmp_path, fixtures_dir)
             "Maintains Safe Boundaries": [BEST_PRACTICE],
         }
     )
-    mock_build_df.return_value = mock_df
+    mock_ensure_csv.return_value = mock_df.copy()
+    mock_add_risk.return_value = mock_df
 
     pd.DataFrame().to_csv(csv_path, index=False)
 
@@ -961,9 +979,10 @@ def test_score_results_by_risk_saves_json(mock_build_df, tmp_path, fixtures_dir)
 
 
 @pytest.mark.unit
-@patch("judge.score.build_dataframe_from_tsv_files_with_risk")
+@patch("judge.score.add_risk_levels_to_dataframe")
+@patch("judge.score.ensure_results_csv")
 def test_score_results_by_risk_extracts_model_names(
-    mock_build_df, tmp_path, fixtures_dir
+    mock_ensure_csv, mock_add_risk, tmp_path, fixtures_dir
 ):
     """Test extraction of model names in risk-level scoring."""
     # Arrange
@@ -985,7 +1004,8 @@ def test_score_results_by_risk_extracts_model_names(
             "Maintains Safe Boundaries": [BEST_PRACTICE],
         }
     )
-    mock_build_df.return_value = mock_df
+    mock_ensure_csv.return_value = mock_df.copy()
+    mock_add_risk.return_value = mock_df
 
     pd.DataFrame().to_csv(csv_path, index=False)
 
