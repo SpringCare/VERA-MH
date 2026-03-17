@@ -522,6 +522,7 @@ async def judge_conversations(
     if verbose:
         print(f"🔍 Judging {total_found} conversations")
 
+    start_time = datetime.now()
     # Run batch evaluation with multiple judges
     results = await batch_evaluate_with_individual_judges(
         conversations,
@@ -533,6 +534,8 @@ async def judge_conversations(
         judge_model_extra_params,
         verbose_workers,
     )
+    end_time = datetime.now()
+    total_time = (end_time - start_time).total_seconds()
 
     if save_aggregated_results and results:
         # Column order: filename, run_id, judge_model, judge_instance,
@@ -553,7 +556,10 @@ async def judge_conversations(
             f"{output_folder}/{filename}", index=False
         )
     if verbose:
-        print(f"✅ Completed {len(results)} evaluations → {output_folder}/")
+        print(
+            f"✅ Completed {len(results)} evaluations in {total_time:.2f} seconds "
+            f"→ {output_folder}/"
+        )
 
     return results, output_folder
 
