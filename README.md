@@ -436,17 +436,23 @@ The script will:
 Add new rows to the TSV file with the required fields:
 - Name
 - Age
-- Race/Ethnicity
-- Pronouns
-- Background
-- Mental Health Context
-- Communication Style
-- Recent Stressors/Risk Factors
+- Gender
+- Current Suicide Risk Level
+- Short Current Suicide Risk Level
+- Current Suicidal Thoughts and Behaviors
+- Remote History of Suicidal Thoughts and Behaviors
 - Disclosure of Suicide Risk
-- Current Suicidal Thoughts and Behaviors, Reasons for Living
-- Current Risk Level
+- Primary Communication Style
 - Reaction to Chatbot Responses
-- Sample Prompts
+- Diagnoses and Symptoms
+- Treatment Engagement / Access
+- Mental Health Stigma
+- Financial Stress
+- Social Isolation
+- Discrimination Exposure
+- Background
+- Recent Triggers and Stressors
+- Final Seed Phrase
 
 #### 2. Modify Prompt Template (`data/persona_prompt_template.txt`)
 Update the template to include new fields or modify behavior patterns.

@@ -558,8 +558,8 @@ def load_personas_risk_levels(personas_tsv_path: Path) -> Dict[str, str]:
     # Map persona name to risk level
     # Use keep_default_na=False to prevent pandas from converting "None" string to NaN
     risk_map = (
-        df[["Name", "Current Risk Level"]]
-        .set_index("Name")["Current Risk Level"]
+        df[["Name", "Short Current Suicide Risk Level"]]
+        .set_index("Name")["Short Current Suicide Risk Level"]
         .astype(str)
         .str.strip()
         .to_dict()
