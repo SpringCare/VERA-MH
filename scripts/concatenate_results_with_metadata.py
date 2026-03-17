@@ -11,6 +11,8 @@ concatenates them, and extracts additional columns from the file/directory names
 
 Usage:
     python3 scripts/concatenate_results_with_metadata.py [output_file]
+    python3 scripts/concatenate_results_with_metadata.py -e evaluations/A -e evaluations/B \\
+        -c conversations/C -o out.csv
 """
 
 import argparse
@@ -167,21 +169,46 @@ def main() -> None:
     parser.add_argument(
         "output_file",
         nargs="?",
-        default="concatenated_heor_paper2_results.csv",
-        help="Output CSV file path (default: concatenated_heor_paper2_results.csv)",
+        default="concatenated_results.csv",
+        help="Output CSV file path (default: concatenated_results.csv)",
+    )
+    parser.add_argument(
+        "-e",
+        "--eval-dir",
+        action="append",
+        dest="eval_dirs",
+        metavar="DIR",
+        help=(
+            "Base directory to search for results.csv (repeatable). "
+            "Default: evaluations/HEOR_GPT4o_FIXED and evaluations/HEOR_Sonnet45_FIXED"
+        ),
+    )
+    parser.add_argument(
+        "-c",
+        "--conv-dir",
+        action="append",
+        dest="conv_dirs",
+        metavar="DIR",
+        help=(
+            "Base directory to search for conversation .txt files (repeatable). "
+            "Default: conversations/HEOR_FIXED"
+        ),
     )
     args = parser.parse_args()
 
-    # Base directories to search for evaluations
-    eval_base_dirs = [
-        Path("evaluations/HEOR_GPT4o_FIXED"),
-        Path("evaluations/HEOR_Sonnet45_FIXED"),
-    ]
-
-    # Base directories to search for conversation files
-    conv_base_dirs = [
-        Path("conversations/HEOR_FIXED"),
-    ]
+    eval_base_dirs = (
+        [Path(p) for p in args.eval_dirs]
+        if args.eval_dirs
+        else [
+            Path("evaluations/HEOR_GPT4o_FIXED"),
+            Path("evaluations/HEOR_Sonnet45_FIXED"),
+        ]
+    )
+    conv_base_dirs = (
+        [Path(p) for p in args.conv_dirs]
+        if args.conv_dirs
+        else [Path("conversations/HEOR_FIXED")]
+    )
 
     # Find all results.csv files
     all_csv_files = []
