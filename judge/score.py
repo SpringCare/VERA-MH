@@ -4,9 +4,11 @@ Score evaluation results from judge/runner.py output.
 
 Run with `python -m judge.score -r evaluations/[eval_folder]/results.csv`
 
-Reads results.csv, re-calculates the dataframe from the tsv files in the same
-folder if the results.csv is empty, calculates dimension-level and aggregate scores,
-and outputs to console, JSON file, and generates visualizations:
+Reads results.csv for scoring. If dimension columns look empty, rebuilds from
+TSV into results_rebuilt_from_tsv.csv (never overwrites results.csv).
+Risk-level analysis writes results_with_risk.csv (TSV + risk columns).
+
+Outputs to console, JSON file, and generates visualizations:
 - scores_visualization.png: Overall scores with pie chart and dimension breakdown
 - scores_by_risk_visualization.png: Scores broken down by persona risk level
 """
@@ -54,6 +56,9 @@ OPTION_MAP = {
 }
 
 REVERSE_OPTION_MAP = {v: k for k, v in OPTION_MAP.items()}
+
+# TSV rebuild when results.csv lacks dimension data; never written to results.csv
+REBUILT_FROM_TSV_FILENAME = "results_rebuilt_from_tsv.csv"
 
 
 def _warn_missing_dimensions(df: pd.DataFrame, dimension_scores: Dict):
@@ -339,8 +344,13 @@ def score_results_by_risk(
     """
     Score evaluation results grouped by risk level.
 
+    Writes a TSV-derived dataframe with persona_name and risk_level columns to
+    results_with_risk.csv in the same directory as results.csv (does not
+    overwrite results.csv).
+
     Args:
-        results_csv_path: Path to results.csv file
+        results_csv_path: Path to results.csv file (directory used for TSV scan
+            and for output path)
         personas_tsv_path: Path to personas.tsv file
         output_json_path: Optional path to save JSON output
 
@@ -352,8 +362,9 @@ def score_results_by_risk(
     df = build_dataframe_from_tsv_files_with_risk(
         evaluations_dir, Path(personas_tsv_path)
     )
-    df.to_csv(results_csv_path, index=False)
-    print(f"✅ Rebuilt dataframe with {len(df)} rows and saved to {results_csv_path}")
+    risk_csv_path = evaluations_dir / "results_with_risk.csv"
+    df.to_csv(risk_csv_path, index=False)
+    print(f"✅ Rebuilt dataframe with {len(df)} rows and saved to {risk_csv_path}")
 
     risk_level_scores = {}
     for risk_level in RISK_LEVEL_ORDER:
@@ -384,25 +395,32 @@ def score_results_by_risk(
     return results
 
 
-def _rebuild_dataframe_if_needed(results_csv_path: Path) -> bool:
-    """Rebuild dataframe from TSV files if dimension columns are empty."""
+def _csv_path_for_scoring(results_csv_path: Path) -> Optional[Path]:
+    """
+    Return the CSV path to use for aggregate scoring.
+
+    Never modifies results.csv. If dimension columns appear empty, builds from
+    TSV files and writes REBUILT_FROM_TSV_FILENAME next to results.csv.
+    """
     df = pd.read_csv(results_csv_path)
     if has_dimension_data(df):
-        return False
+        return results_csv_path
 
-    print(f"⚠️  Dimension columns are empty in {results_csv_path}")
-    print(f"📊 Rebuilding dataframe from TSV files in {results_csv_path.parent}...")
+    print(f"⚠️  Dimension columns appear empty in {results_csv_path}")
+    rebuilt_path = results_csv_path.parent / REBUILT_FROM_TSV_FILENAME
+    print(
+        f"📊 Rebuilding from TSV → {rebuilt_path.name} "
+        f"(original results.csv is not modified)..."
+    )
 
     try:
         df = build_dataframe_from_tsv_files(results_csv_path.parent)
-        df.to_csv(results_csv_path, index=False)
-        print(
-            f"✅ Rebuilt dataframe with {len(df)} rows and saved to {results_csv_path}"
-        )
-        return True
+        df.to_csv(rebuilt_path, index=False)
+        print(f"✅ Wrote {len(df)} rows to {rebuilt_path}")
+        return rebuilt_path
     except Exception as e:
         print(f"❌ Error rebuilding dataframe from TSV files: {e}")
-        return False
+        return None
 
 
 def main():
@@ -448,12 +466,11 @@ def main():
         print(f"Error: Results CSV file not found: {args.results_csv}")
         return 1
 
-    if not _rebuild_dataframe_if_needed(results_csv_path):
-        # If rebuild failed, exit
-        if not has_dimension_data(pd.read_csv(results_csv_path)):
-            return 1
+    csv_for_scoring = _csv_path_for_scoring(results_csv_path)
+    if csv_for_scoring is None:
+        return 1
 
-    results = score_results(str(results_csv_path), args.output_json)
+    results = score_results(str(csv_for_scoring), args.output_json)
     print_scores(results)
 
     json_path = (

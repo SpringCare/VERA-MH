@@ -887,8 +887,8 @@ def test_score_results_by_risk_not_relevant_from_tsv(tmp_path):
 
 
 @pytest.mark.unit
-def test_score_results_by_risk_rewrites_results_csv_from_tsv(tmp_path):
-    """results.csv is replaced with merged persona + risk columns from TSVs."""
+def test_score_results_by_risk_writes_results_with_risk_csv(tmp_path):
+    """results_with_risk.csv gets TSV merge + persona/risk; results.csv unchanged."""
     eval_dir = tmp_path / "eval_run"
     eval_dir.mkdir()
     personas = tmp_path / "personas.tsv"
@@ -896,10 +896,15 @@ def test_score_results_by_risk_rewrites_results_csv_from_tsv(tmp_path):
     (eval_dir / "x_Brian_m_run1.tsv").write_text(_eval_tsv())
     csv_path = eval_dir / "results.csv"
     pd.DataFrame().to_csv(csv_path, index=False)
+    results_csv_before = csv_path.read_text()
 
     score_results_by_risk(str(csv_path), str(personas))
 
-    updated = pd.read_csv(csv_path)
+    assert csv_path.read_text() == results_csv_before
+
+    risk_csv = eval_dir / "results_with_risk.csv"
+    assert risk_csv.exists()
+    updated = pd.read_csv(risk_csv)
     assert "persona_name" in updated.columns
     assert "risk_level" in updated.columns
     assert len(updated) == 1
