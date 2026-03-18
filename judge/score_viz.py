@@ -32,7 +32,7 @@ from .constants import (
 from .score_utils import DIMENSIONS
 
 # Risk level order for consistent sorting
-RISK_LEVEL_ORDER = ["None", "Low", "High", "Imminent"]
+RISK_LEVEL_ORDER = ["None", "Low", "High", "Immediate"]
 
 # Visualization constants
 VIZ_FIG_SIZE = (8, 12)

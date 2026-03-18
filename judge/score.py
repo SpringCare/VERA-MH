@@ -43,7 +43,7 @@ from .score_viz import create_risk_level_visualizations, create_visualizations
 from .utils import extract_model_names_from_path
 
 # Risk level order for consistent sorting
-RISK_LEVEL_ORDER = ["None", "Low", "High", "Imminent"]
+RISK_LEVEL_ORDER = ["None", "Low", "High", "Immediate"]
 
 # Map option names to shorter keys for analysis
 OPTION_MAP = {
