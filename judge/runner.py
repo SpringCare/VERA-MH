@@ -19,15 +19,28 @@ from .rubric_config import ConversationData, RubricConfig
 EVALUATION_SEPARATOR = ":"
 
 
-def _conversation_already_judged(
-    conversation: ConversationData, set_output_base: Path
-) -> bool:
-    """Return True if any j_* dir under set_output_base
-    has a .tsv for this conversation.
-    """
+def _judge_result_tsv_basename(
+    conversation: ConversationData, judge_model: str, judge_instance: int
+) -> str:
+    """Basename of the evaluation TSV (must match LLMJudge._save_results)."""
     conversation_name = Path(conversation.metadata.get("filename", "unknown.txt")).stem
+    judge_suffix = judge_model.replace("/", "_").replace(":", "_")
+    judge_suffix += f"_i{judge_instance}"
+    return f"{conversation_name}_{judge_suffix}.tsv"
+
+
+def _conversation_already_judged_for_judge_instance(
+    conversation: ConversationData,
+    set_output_base: Path,
+    judge_model: str,
+    judge_instance: int,
+) -> bool:
+    """Return True if any j_* dir under set_output_base already contains the
+    TSV for this conversation, judge model, and instance.
+    """
+    basename = _judge_result_tsv_basename(conversation, judge_model, judge_instance)
     for j_dir in set_output_base.glob("j_*"):
-        if j_dir.is_dir() and list(j_dir.glob(f"{conversation_name}_*.tsv")):
+        if j_dir.is_dir() and (j_dir / basename).exists():
             return True
     return False
 
@@ -135,8 +148,9 @@ def _create_evaluation_jobs(
 ]:
     """
     Create job tuples for all (conversation × judge × instance) combinations.
-    Skips conversations that already have a .tsv in any j_* dir under
-    the set output base.
+    Skips each (conversation, judge model, instance) triple when that exact
+    evaluation TSV already exists in any j_* dir under the set output base
+    (same basename as LLMJudge._save_results).
 
     Args:
         conversations: List of ConversationData objects
@@ -154,11 +168,13 @@ def _create_evaluation_jobs(
     jobs = []
     skipped_count = 0
     for conversation in conversations:
-        if _conversation_already_judged(conversation, set_output_base):
-            skipped_count += 1
-            continue
         for judge_model, num_instances in judge_models.items():
             for instance in range(1, num_instances + 1):
+                if _conversation_already_judged_for_judge_instance(
+                    conversation, set_output_base, judge_model, instance
+                ):
+                    skipped_count += 1
+                    continue
                 judge_id = instance - 1  # Convert 1-based instance to 0-based judge_id
                 jobs.append(
                     (
@@ -422,7 +438,7 @@ async def batch_evaluate_with_individual_judges(
     total_files = len(conversations)
     total_judge_instances = sum(judge_models.values())
 
-    # Create all evaluation jobs (skips already-judged conversations)
+    # Create all evaluation jobs (skips jobs whose output TSV already exists)
     jobs, skipped_count = _create_evaluation_jobs(
         conversations,
         judge_models,
@@ -433,7 +449,10 @@ async def batch_evaluate_with_individual_judges(
     total_evaluations = len(jobs)
 
     if skipped_count > 0:
-        print(f"Skipped {skipped_count} already-judged conversations.")
+        print(
+            f"Skipped {skipped_count} evaluations (existing TSV for that "
+            f"conversation, judge model, and instance)."
+        )
 
     print(
         f"Evaluating {total_files} conversations with "
