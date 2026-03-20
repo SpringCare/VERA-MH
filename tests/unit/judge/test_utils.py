@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from judge.utils import (
+    canonical_evaluation_dir_name,
     extract_model_names_from_path,
     extract_persona_name_from_filename,
     load_rubric_structure,
@@ -161,6 +162,51 @@ class TestExtractModelNamesFromPath:
         assert result["judge"] == "claude 3 5 opus"
         assert result["persona"] == "gpt 4 turbo"
         assert result["agent"] == "gemini 1 5 pro"
+
+
+@pytest.mark.unit
+class TestCanonicalEvaluationDirName:
+    """Tests for canonical_evaluation_dir_name."""
+
+    def test_gpt4o_x1_with_dual_timestamps(self):
+        raw = (
+            "j_gpt-4ox1_20260316_155534_286__"
+            "p_claude_opus_4_5__a_gpt_5_2__t30__r1__20260223_213629"
+        )
+        assert canonical_evaluation_dir_name(raw) == (
+            "j_gpt-4o__p_claude_opus_4_5__a_gpt_5_2__t30__r1"
+        )
+
+    def test_no_judge_xn_suffix_still_works(self):
+        raw = "j_claude_opus__p_gpt_4__a_gemini__t10__r5__20231115"
+        assert canonical_evaluation_dir_name(raw) == (
+            "j_claude_opus__p_gpt_4__a_gemini__t10__r5"
+        )
+
+    def test_malformed_returns_none(self):
+        assert canonical_evaluation_dir_name("not_an_eval_dir") is None
+        assert canonical_evaluation_dir_name("j_only_judge") is None
+
+    def test_accepts_path_to_directory(self, tmp_path):
+        raw = (
+            "j_gpt-4ox1_20260316_155534_286__"
+            "p_claude_opus_4_5__a_gpt_5_2__t30__r1__20260223_213629"
+        )
+        d = tmp_path / raw
+        d.mkdir()
+        assert canonical_evaluation_dir_name(d) == (
+            "j_gpt-4o__p_claude_opus_4_5__a_gpt_5_2__t30__r1"
+        )
+
+    def test_accepts_path_to_results_csv(self, tmp_path):
+        raw = "j_gpt-4o__p_claude_opus_4_5__a_gpt_5_2__t30__r5__20231115"
+        d = tmp_path / raw
+        d.mkdir()
+        f = d / "results.csv"
+        f.write_text("a,b\n")
+        assert canonical_evaluation_dir_name(f) == (
+            "j_gpt-4o__p_claude_opus_4_5__a_gpt_5_2__t30__r5"
+        )
 
 
 @pytest.mark.unit

@@ -126,6 +126,45 @@ def extract_model_names_from_path(path_input: str) -> Dict[str, str]:
     return result
 
 
+def canonical_evaluation_dir_name(path_input: str | Path) -> Optional[str]:
+    """
+    Collapse a full evaluation directory name to a stable key (no timestamps).
+
+    Handles judge prefixes from batch judging: ``{model}x{count}_{timestamp}``
+    before ``__p_``.
+
+    Example:
+        j_gpt-4ox1_20260316_155534_286__p_claude_opus_4_5__a_gpt_5_2__t30__r1__...
+        -> j_gpt-4o__p_claude_opus_4_5__a_gpt_5_2__t30__r1
+
+    Parsing uses ``__p_``, ``__a_``, and trailing segments — not ``[^_]+``, because
+    persona and agent slugs contain underscores.
+
+    Args:
+        path_input: Evaluation directory name, path to that directory, or path to
+            a file inside it (e.g. ``results.csv``).
+
+    Returns:
+        Canonical name, or None if the string does not match the expected layout.
+    """
+    path = Path(path_input)
+    if path.is_file():
+        dir_name = path.parent.name
+    else:
+        dir_name = path.name
+
+    s = re.sub(r"__\d{8}.*$", "", dir_name)
+    if not s.startswith("j_") or "__p_" not in s or "__a_" not in s:
+        return None
+    head, tail = s.split("__p_", 1)
+    judge_raw = head[2:]
+    judge_raw = re.sub(r"_\d{8}.*$", "", judge_raw)
+    judge_raw = re.sub(r"x\d+$", "", judge_raw)
+    if not judge_raw or "__t" not in tail:
+        return None
+    return f"j_{judge_raw}__p_{tail}"
+
+
 def extract_persona_name_from_filename(filename: str) -> Optional[str]:
     """
     Extract persona name from TSV filename.
