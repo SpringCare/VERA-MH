@@ -46,7 +46,7 @@ from judge.score_utils import (
 )
 
 # ── Simulated turn thresholds & colours ───────────────────────────────────────
-# For each threshold T we include conversations where actual_conversation_turns < T.
+# For each threshold T we include conversations where actual_conversation_turns <= T.
 TURN_THRESHOLDS: list[int] = [20, 30, 40, 50, 60, 70, 80, 90, 100]
 # Sequential blue palette — lightest → darkest
 _THRESHOLD_COLORS: list[str] = ["#9ecae1", "#4292c6", "#2166ac", "#084594"]
@@ -267,7 +267,7 @@ def compare_max_turns_by_provider(
 ) -> pd.DataFrame:
     """
     Simulate the effect of different max_turns settings by filtering to
-    conversations where actual_conversation_turns < T for each threshold T.
+    conversations where actual_conversation_turns <= T for each threshold T.
 
     Args:
         df: DataFrame with all evaluation results (must have actual_conversation_turns)
@@ -299,7 +299,7 @@ def compare_max_turns_by_provider(
         row: dict[str, Any] = {"provider_llm": provider}
 
         for t in thresholds:
-            subset_raw = prov_df[prov_df["actual_conversation_turns"] < t]
+            subset_raw = prov_df[prov_df["actual_conversation_turns"] <= t]
             assert isinstance(subset_raw, pd.DataFrame)
             subset: pd.DataFrame = subset_raw
 
@@ -309,7 +309,7 @@ def compare_max_turns_by_provider(
                 else len(subset)
             )
             print(
-                f"\n📊 {provider}, actual_turns < {t}: {len(subset)} rows ({n_convs} conversations)"
+                f"\n📊 {provider}, actual_turns <= {t}: {len(subset)} rows ({n_convs} conversations)"
             )
 
             row[f"num_convs_t{t}"] = n_convs
@@ -391,7 +391,7 @@ def compare_max_turns_by_provider_and_user(
                 else len(subset)
             )
             print(
-                f"\n📊 provider={provider_llm}, user={user_llm}, actual_turns < {t}: "
+                f"\n📊 provider={provider_llm}, user={user_llm}, actual_turns <= {t}: "
                 f"{len(subset)} rows ({n_convs} conversations)"
             )
 
@@ -633,7 +633,7 @@ def plot_comparison(
         return
 
     baseline_t = max(available)
-    xlabel = "Simulated max turns  (actual turns < T)"
+    xlabel = "Simulated max turns  (actual turns <= T)"
     line_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"]
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
@@ -811,7 +811,7 @@ def plot_comparison_by_provider_and_user(
 
         ax.axhline(0, color="black", linewidth=0.8, linestyle="--")
         ax.set_xlabel(
-            "Simulated max turns  (actual turns < T)", fontsize=10, color=TEXT_COLOR
+            "Simulated max turns  (actual turns <= T)", fontsize=10, color=TEXT_COLOR
         )
         ax.set_ylabel(
             f"Score Difference vs. T={baseline_t}", fontsize=11, color=TEXT_COLOR
