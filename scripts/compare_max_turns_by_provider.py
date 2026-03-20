@@ -951,6 +951,8 @@ def main():
                 j_df, thresholds=TURN_THRESHOLDS
             )
 
+            judge_title = "" if j_label == "All Judges" else f" ({j_label})"
+
             provider_plot = plot_dir / f"{base_stem}_by_provider{j_suffix}.png"
             provider_user_plot = (
                 plot_dir / f"{base_stem}_by_provider_and_user{j_suffix}.png"
@@ -960,7 +962,7 @@ def main():
                 plot_comparison(
                     cmp,
                     provider_plot,
-                    title=f"VERA Score by Provider: Simulated Max Turns ({j_label})",
+                    title=f"VERA Score by Provider: Simulated Max Turns{judge_title}",
                     by_provider=True,
                     thresholds=TURN_THRESHOLDS,
                 )
@@ -969,7 +971,7 @@ def main():
                 plot_comparison_by_provider_and_user(
                     cmp_user,
                     provider_user_plot,
-                    title=f"VERA Score vs Simulated Max Turns by Provider and User Agent ({j_label})",
+                    title=f"VERA Score vs Simulated Max Turns by Provider and User Agent{judge_title}",
                     thresholds=TURN_THRESHOLDS,
                 )
 
