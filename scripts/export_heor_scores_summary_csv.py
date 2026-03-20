@@ -2,7 +2,7 @@
 """Summarize scores from paired ``scores.json`` + ``scores_by_risk.json`` per eval dir.
 
 Walks ``p_<conv_run>/j_<judge>__p_<conv_run>/`` trees, emits one CSV row per judge
-plus a *Pooled* row when both GPT-4o and Sonnet 4.5 judges are present for the
+plus a *pooled* row when both GPT-4o and Sonnet 4.5 judges are present for the
 same conversation run (counts summed across judges; VERA recomputed).
 
 **Scored** percentages use denominators that exclude *Not Relevant* (same basis as
@@ -36,6 +36,33 @@ DIMENSIONS: tuple[str, ...] = (
     "Maintains Safe Boundaries",
 )
 
+# Longer patterns first where one is a prefix of another (e.g. opus dated id).
+_MODEL_NAME_FIXES: tuple[tuple[str, str], ...] = (
+    ("claude-sonnet-4-5-20250929", "sonnet45"),
+    ("claude sonnet 4 5 20250929", "sonnet45"),
+    ("claude_sonnet_4_6", "sonnet46"),
+    ("claude sonnet 4 6", "sonnet46"),
+    ("claude_opus_4_5_20251101", "opus45"),
+    ("claude_opus_4_5", "opus45"),
+    ("claude opus 4 5 20251101", "opus45"),
+    ("claude opus 4 5", "opus45"),
+    ("opus_4_6", "opus46"),
+    ("opus 4 6", "opus46"),
+    ("gpt-4o", "gpt4o"),
+    ("gpt_4o", "gpt4o"),
+    ("gpt 4o", "gpt4o"),
+    ("gpt_5_2", "gpt52"),
+    ("gpt 5 2", "gpt52"),
+    ("gemini 2 5 flash", "gemini25f"),
+    ("gemini_2_5_flash", "gemini25f"),
+    ("gemini 3 1", "gemini31"),
+    ("gemini_3_1", "gemini31"),
+    ("azure grok 3", "grok3"),
+    ("azure_grok_3", "grok3"),
+    ("grok 4", "grok4"),
+    ("grok_4", "grok4"),
+)
+
 
 def pct_of_total(count: int | float, total: int | float, decimals: int = 2) -> float:
     """Match ``judge.score_utils.pct_of_total`` (no package import)."""
@@ -67,13 +94,18 @@ class DimCounts:
         return self.scored_total + self.not_relevant
 
 
-def judge_display_name(judge_model: str) -> str:
-    j = judge_model.lower()
-    if j.startswith("gpt-4o"):
-        return "GPT-4o"
-    if "claude-sonnet-4-5" in j or "sonnet-4-5-20250929" in j:
-        return "Sonnet 4.5"
-    return judge_model
+def simplify_model_name(model_name: str) -> str:
+    """Apply known model name fixes (order matters for overlapping keys)."""
+    m = model_name.lower()
+
+    for old, new in _MODEL_NAME_FIXES:
+        m = m.replace(old, new)
+
+    # for judge models, strip x1 suffix
+    if m.endswith("x1"):
+        m = m[:-2]
+
+    return m
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -134,10 +166,9 @@ def parse_bundle(
     n_eval = n_scored + eval_nr
 
     return {
-        "persona_model": scores.get("persona_model") or "",
-        "agent_model": scores.get("agent_model") or "",
-        "judge_model_raw": scores.get("judge_model") or "",
-        "judge": judge_display_name(str(scores.get("judge_model") or "")),
+        "persona_model": simplify_model_name(scores.get("persona_model") or ""),
+        "agent_model": simplify_model_name(scores.get("agent_model") or ""),
+        "judge": simplify_model_name(scores.get("judge_model") or ""),
         "total_score": float(total_vera) if total_vera is not None else None,
         "per_dim": per_dim,
         "totals": {
@@ -186,8 +217,7 @@ def pool_bundles(bundles: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "persona_model": bundles[0]["persona_model"],
         "agent_model": bundles[0]["agent_model"],
-        "judge_model_raw": "pooled",
-        "judge": "Pooled",
+        "judge": "pooled",
         "total_score": float(total_vera),
         "per_dim": per_dim,
         "totals": {
@@ -218,7 +248,7 @@ def bundle_to_flat_row(
     row: dict[str, Any] = {
         "Conversation run": conv_run,
         "Provider": bundle["agent_model"],
-        "User": bundle["agent_model"],
+        "User": bundle["persona_model"],
         "Judge": bundle["judge"],
         "Total score": bundle["total_score"],
     }
@@ -326,22 +356,22 @@ def collect_rows(root: Path) -> tuple[list[dict[str, Any]], list[str]]:
             rows.append(bundle_to_flat_row(conv_run, b))
 
         labels = {b["judge"] for b in bundles}
-        if len(bundles) == 2 and labels == {"GPT-4o", "Sonnet 4.5"}:
+        if len(bundles) == 2 and labels == {"gpt4o", "sonnet45"}:
             agents = {b["agent_model"] for b in bundles}
             personas = {b["persona_model"] for b in bundles}
             if len(agents) > 1 or len(personas) > 1:
                 warnings.append(
-                    f"{conv_run}: skip Pooled (mismatched models: "
+                    f"{conv_run}: skip pooled (mismatched models: "
                     f"agent={sorted(agents)} persona={sorted(personas)})"
                 )
             else:
                 pooled = pool_bundles(bundles)
                 rows.append(bundle_to_flat_row(conv_run, pooled))
         elif len(bundles) > 1 and not (
-            len(bundles) == 2 and labels == {"GPT-4o", "Sonnet 4.5"}
+            len(bundles) == 2 and labels == {"gpt4o", "sonnet45"}
         ):
             warnings.append(
-                f"{conv_run}: skip Pooled (expected GPT-4o + Sonnet 4.5, got {sorted(labels)})"
+                f"{conv_run}: skip pooled (expected gpt4o + sonnet45, got {sorted(labels)})"
             )
 
     return rows, warnings
