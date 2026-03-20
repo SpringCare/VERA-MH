@@ -28,3 +28,5 @@ htmlcov/
 # scoring artifacts
 publication_evaluations/vera_mh_v1_scores/
 publication_conversations/vera_mh_v1_scores_conversations/
+publication_evaluations/HEOR_GPT4o_FIXED/
+publication_evaluations/HEOR_Sonnet45_FIXED/
