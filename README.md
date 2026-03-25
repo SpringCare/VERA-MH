@@ -148,6 +148,16 @@ Within this folder there will be:
 
 When digging into the judging results, the `results.csv` can guide you to the conversations that had specific ratings you want to investigate and the individual conversation rating `tsv` files can help you understand at what point in the rubric the rating was assigned.
 
+**Persona role-reversal scan (optional):** To flag user/persona turns that sound like counseling directed at the chatbot (instead of seeking help), run:
+
+```bash
+uv run python3 scripts/detect_persona_role_reversal.py \
+  --root /path/to/parent/of/run/folders \
+  -o outputs/role_reversal.csv
+```
+
+Point `--root` at a directory that contains generated run folders named like `p_{user_model}__a_{provider_model}__t{N}__r{M}__{timestamp}` with `.txt` transcripts inside. The script uses `OPENAI_API_KEY` (default classifier: `gpt-4o-mini`), joins `Short Current Suicide Risk Level` from [data/personas.tsv](data/personas.tsv), and writes UTF-8 CSV with `conversation_filename` and `conversation_relpath` so you can open the source file. **By default**, once a file gets `role_reversal=true` on a user turn, later user turns in that same conversation are not sent to the model (saves tokens). Pass `--classify-all-user-messages` to score every user turn anyway. While it runs, each `role_reversal=true` hit is printed to **stderr** (flushed immediately) so you can `tail -f` a log file if you redirect with `2> role_reversal.log`. Use pivot tables in Google Sheets on `role_reversal` × `user_model_slug`, `persona_name`, or `short_suicide_risk_level`. See `uv run python3 scripts/detect_persona_role_reversal.py --help` for `--model`, concurrency, and debug limits.
+
 8. **Score and visualize the results**:
    ```
    uv run python -m judge.score -r evaluations/{YOUR_EVAL_FOLDER}/results.csv
