@@ -1403,7 +1403,7 @@ def plot_score_convergence_by_provider(
 def plot_cost_efficiency(
     results_df: pd.DataFrame,
     output_path: Path,
-    title: str = "Evaluation Cost Efficiency: Adding Personas vs. Adding Conversations",
+    title: str = "VERA-MH Evaluation Parameters: Adding Profiles vs. Conversations",
     judge_filter: str | None = None,
     use_ci_width: bool = False,
     use_std: bool = False,
@@ -1576,7 +1576,7 @@ def plot_cost_efficiency(
                 )
 
         ax.set_title(
-            f"{display_name(provider)} as Provider",
+            f"{display_name(provider)} as Provider agent",
             fontsize=11,
             fontweight="bold",
             color=TEXT_COLOR,
@@ -2654,7 +2654,8 @@ def main():
             plot_cost_efficiency(
                 results_df,
                 cost_eff_std_path,
-                title=f"Evaluation Cost Efficiency (Std): Adding Personas vs. Conversations ({_jlabel})",
+                # title=f"Evaluation Cost Efficiency (Std): Adding Personas vs. Conversations ({_jlabel})",
+                title="VERA-MH Evaluation Parameters: Adding Profiles vs. Conversations",
                 judge_filter=_jf,
                 use_std=True,
             )
