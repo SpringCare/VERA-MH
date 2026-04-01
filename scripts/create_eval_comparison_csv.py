@@ -50,6 +50,8 @@ def collect_rows(root: Path) -> list[tuple[str, str]]:
         slug = (
             slug.replace("claude-sonnet-4-5-20250929", "sonnet45")
             .replace("claude_sonnet_4_6", "sonnet46")
+            .replace("claude_sonnet_4_20250514", "sonnet4")
+            .replace("claude_opus_4_20250514", "opus4")
             .replace("claude_opus_4_5_20251101", "opus45")
             .replace("claude_opus_4_5", "opus45")
             .replace("opus_4_6", "opus46")
@@ -63,8 +65,8 @@ def collect_rows(root: Path) -> list[tuple[str, str]]:
         )
         # elif (slug := extract_provider_model_slug(eval_dir.name)) is None:
         #     continue
-        if slug.startswith("j_sonnet45"):
-            rows.append((slug, str(eval_dir)))
+        # if slug.startswith("j_gpt"):
+        rows.append((slug, str(eval_dir)))
     # rows.sort(key=lambda r: (r[0], r[1]))
     return rows
 

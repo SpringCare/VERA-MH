@@ -12,7 +12,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 # Base directory for publication evaluations
-EVAL_BASE_DIR="publication_evaluations/vera_mh_v1_scores"
+EVAL_BASE_DIR="/Users/josh.gieringer/Projects/VERA-MH/evaluations/HEOR_CLAUDE_4_EVAL"
 
 if [ ! -d "$EVAL_BASE_DIR" ]; then
     echo "❌ Error: Directory not found: $EVAL_BASE_DIR"

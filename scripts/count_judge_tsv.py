@@ -2,7 +2,7 @@
 from collections import Counter
 from pathlib import Path
 
-base = Path("/Users/josh.gieringer/Desktop/HEOR AIM 3/GROK_3_EVAL")
+base = Path("/Users/josh.gieringer/Projects/VERA-MH/evaluations/HEOR_CLAUDE_4_EVAL")
 counts = Counter(p.parent for p in base.rglob("*.tsv") if p.is_file())
 for d, n in sorted(counts.items(), key=lambda x: str(x[0])):
     print(f"{n:5d}  {d}")

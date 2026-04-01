@@ -28,10 +28,10 @@ cd "$SCRIPT_DIR/.."
 
 # Base directory to search for conversation folders
 # CONV_BASE_DIR="conversations/score_variability_20260120"
-CONV_BASE_DIR="/Users/josh.gieringer/Desktop/HEOR AIM 3/HEOR_GROK_3"
-EVAL_BASE_DIR="/Users/josh.gieringer/Desktop/HEOR AIM 3/GROK_3_EVAL"
+CONV_BASE_DIR="conversations/HEOR_CLAUDE_4"
+EVAL_BASE_DIR="evaluations/HEOR_CLAUDE_4_EVAL"
 
-MAX_CONCURRENT=10
+MAX_CONCURRENT=20
 
 judges=(
     'gpt-4o'
