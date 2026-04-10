@@ -171,6 +171,16 @@ uv run python3 scripts/compare_role_reversal.py \
 
 The script runs `detect_persona_role_reversal.py` on both directories sequentially, then prints and optionally saves a Markdown report broken down by user model, suicide risk level, and persona. Each breakdown row includes a Δ (percentage-point difference) and a two-sided Fisher's exact test p-value. Use `--skip-detection` to reload from previously generated CSVs and reprint the report without re-classifying. See `uv run python3 scripts/compare_role_reversal.py --help` for all options.
 
+**User realism score (optional):** To assign each conversation a single **0–10** realism score (primary weight on the simulated user seeking help vs. the provider), run:
+
+```bash
+uv run python3 scripts/score_user_realism.py \
+  --root conversations/{YOUR_RUN_FOLDER} \
+  -o outputs/user_realism_scores.csv
+```
+
+The default judge is `claude-sonnet-4-5-20250929`; pass `-m` / `--model` for another `JudgeLLM`-supported model. Uses the same run-folder layout as the role-reversal scripts (`p_*__a_*__t*__r*__*` parents of `.txt` files). Output CSV includes `score`, `reasoning`, `focus_notes`, and `error` (if the API call failed). See `uv run python3 scripts/score_user_realism.py --help` for concurrency and `--limit-files`.
+
 8. **Score and visualize the results**:
    ```
    uv run python -m judge.score -r evaluations/{YOUR_EVAL_FOLDER}/results.csv
