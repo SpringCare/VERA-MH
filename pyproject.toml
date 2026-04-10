@@ -16,6 +16,7 @@ dependencies = [
     "matplotlib>=3.5.0",
     "pytest>=7.0.0",
     "aiofiles>=25.1.0",
+    "scipy>=1.17.1",
 ]
 
 [project.optional-dependencies]
