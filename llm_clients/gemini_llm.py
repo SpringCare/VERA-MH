@@ -1,9 +1,10 @@
+import json
 import time
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from utils.conversation_utils import build_langchain_messages
 from utils.debug import debug_print
@@ -12,6 +13,62 @@ from .config import Config
 from .llm_interface import JudgeLLM, Role
 
 T = TypeVar("T", bound=BaseModel)
+
+_STRUCTURED_OUTPUT_MAX_LOG_CHARS = 4000
+
+
+def _truncate_for_log(
+    value: Any, max_chars: int = _STRUCTURED_OUTPUT_MAX_LOG_CHARS
+) -> str:
+    text = value if isinstance(value, str) else repr(value)
+    if len(text) <= max_chars:
+        return text
+    return f"{text[:max_chars]}... [truncated, {len(text)} chars total]"
+
+
+def _serialize_raw_message(raw: Any) -> Dict[str, Any]:
+    """Serialize an AIMessage (or similar) for failure diagnostics."""
+    if raw is None:
+        return {}
+    if isinstance(raw, AIMessage):
+        payload: Dict[str, Any] = {
+            "type": "AIMessage",
+            "content": raw.content,
+            "tool_calls": raw.tool_calls,
+        }
+        if raw.response_metadata:
+            payload["response_metadata"] = dict(raw.response_metadata)
+        if raw.additional_kwargs:
+            payload["additional_kwargs"] = dict(raw.additional_kwargs)
+        return payload
+    return {"type": type(raw).__name__, "repr": _truncate_for_log(raw)}
+
+
+def _extract_include_raw_result(
+    invoke_result: Any,
+) -> tuple[Any, Any, Any]:
+    """Unpack LangChain include_raw=True structured output payloads."""
+    if isinstance(invoke_result, dict) and "parsed" in invoke_result:
+        return (
+            invoke_result.get("parsed"),
+            invoke_result.get("raw"),
+            invoke_result.get("parsing_error"),
+        )
+    return invoke_result, None, None
+
+
+def _coerce_structured_response(response: Any, response_model: Type[T]) -> Optional[T]:
+    """Normalize structured LLM output to a Pydantic model instance."""
+    if response is None:
+        return None
+    if isinstance(response, response_model):
+        return response
+    if isinstance(response, dict):
+        try:
+            return response_model.model_validate(response)
+        except ValidationError:
+            return None
+    return None
 
 
 class GeminiLLM(JudgeLLM):
@@ -174,10 +231,35 @@ class GeminiLLM(JudgeLLM):
 
         return await self._run_with_retry(_invoke, provider="gemini")
 
+    def _build_structured_output_failure_debug(
+        self,
+        *,
+        response_model: Type[T],
+        parsed: Any,
+        raw: Any,
+        parsing_error: Any,
+    ) -> Dict[str, Any]:
+        raw_payload = _serialize_raw_message(raw)
+        return {
+            "structured_output_method": "json_schema",
+            "expected_model": response_model.__name__,
+            "parsed_type": type(parsed).__name__,
+            "parsed_repr": _truncate_for_log(parsed),
+            "parsing_error": _truncate_for_log(parsing_error)
+            if parsing_error is not None
+            else None,
+            "raw": raw_payload,
+            "raw_content": _truncate_for_log(raw_payload.get("content", "")),
+            "raw_tool_calls": raw_payload.get("tool_calls"),
+        }
+
     async def generate_structured_response(
         self, message: Optional[str], response_model: Type[T]
     ) -> T:
         """Generate a structured response using Pydantic model.
+
+        Uses Gemini native JSON schema (via LangChain) and captures raw responses
+        when parsing fails so judge logs can show what the model returned.
 
         Args:
             message: The prompt message
@@ -193,27 +275,71 @@ class GeminiLLM(JudgeLLM):
 
         messages.append(HumanMessage(content=message))
 
+        failure_debug: Dict[str, Any] = {}
+
         async def _invoke() -> T:
-            structured_llm = self.llm.with_structured_output(response_model)
+            structured_llm = self.llm.with_structured_output(
+                response_model,
+                method="json_schema",
+                include_raw=True,
+            )
 
             start_time = time.time()
-            response = await structured_llm.ainvoke(messages)
+            invoke_result = await structured_llm.ainvoke(messages)
             end_time = time.time()
+
+            parsed, raw, parsing_error = _extract_include_raw_result(invoke_result)
+            coerced = _coerce_structured_response(parsed, response_model)
 
             self._set_response_metadata(
                 "gemini",
                 response_time_seconds=round(end_time - start_time, 3),
                 structured_output=True,
+                structured_output_method="json_schema",
             )
 
-            if not isinstance(response, response_model):
-                raise ValueError(
-                    f"Response is not an instance of {response_model.__name__}"
+            if coerced is not None:
+                failure_debug.clear()
+                debug_print(
+                    f"[DEBUG {self.name}] Structured {response_model.__name__}: "
+                    f"{coerced!r}"
                 )
+                return coerced
 
-            return response  # type: ignore[return-value]
+            failure_debug.clear()
+            failure_debug.update(
+                self._build_structured_output_failure_debug(
+                    response_model=response_model,
+                    parsed=parsed,
+                    raw=raw,
+                    parsing_error=parsing_error,
+                )
+            )
+            debug_print(
+                f"[DEBUG {self.name}] Structured output failure:\n"
+                f"{json.dumps(failure_debug, indent=2, default=str)}"
+            )
+            raise ValueError(
+                f"Expected {response_model.__name__}, got {type(parsed).__name__}: "
+                f"{_truncate_for_log(parsed)}. "
+                f"raw_content={failure_debug.get('raw_content')!r}"
+            )
 
-        return await self._run_with_retry(_invoke, provider="gemini")
+        def _on_structured_error(
+            error: BaseException,
+            attempt_number: int,
+            max_attempts: int,
+            retryable: bool,
+            will_retry: bool,
+        ) -> Optional[Dict[str, Any]]:
+            _ = (error, attempt_number, max_attempts, retryable, will_retry)
+            if failure_debug:
+                return {"structured_output_debug": dict(failure_debug)}
+            return None
+
+        return await self._run_with_retry(
+            _invoke, provider="gemini", on_error=_on_structured_error
+        )
 
     def set_system_prompt(self, system_prompt: str) -> None:
         """Set or update the system prompt."""

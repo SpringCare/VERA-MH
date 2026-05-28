@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from langchain_core.messages import AIMessage
 
 from llm_clients import Role
 from llm_clients.gemini_llm import GeminiLLM
@@ -19,6 +20,20 @@ from .test_helpers import (
     verify_message_types_for_persona,
     verify_no_system_message_in_call,
 )
+
+
+def _include_raw_invoke_result(
+    parsed,
+    *,
+    raw: AIMessage | None = None,
+    parsing_error: BaseException | None = None,
+) -> dict:
+    """LangChain include_raw=True payload for structured output mocks."""
+    return {
+        "parsed": parsed,
+        "raw": raw or AIMessage(content=""),
+        "parsing_error": parsing_error,
+    }
 
 
 @pytest.mark.unit
@@ -602,7 +617,9 @@ class TestGeminiLLM(TestJudgeLLMBase):
             # Mock structured LLM
             mock_structured_llm = MagicMock()
             test_response = TestResponse(answer="Yes", reasoning="Because it's correct")
-            mock_structured_llm.ainvoke = AsyncMock(return_value=test_response)
+            mock_structured_llm.ainvoke = AsyncMock(
+                return_value=_include_raw_invoke_result(test_response)
+            )
             mock_llm.with_structured_output = MagicMock(
                 return_value=mock_structured_llm
             )
@@ -619,6 +636,11 @@ class TestGeminiLLM(TestJudgeLLMBase):
             assert isinstance(response, TestResponse)
             assert response.answer == "Yes"
             assert response.reasoning == "Because it's correct"
+            mock_llm.with_structured_output.assert_called_once_with(
+                TestResponse,
+                method="json_schema",
+                include_raw=True,
+            )
 
             # Verify metadata was stored
             metadata = assert_metadata_structure(
@@ -626,6 +648,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
             )
             assert metadata["model"] == "gemini-1.5-pro"
             assert metadata["structured_output"] is True
+            assert metadata["structured_output_method"] == "json_schema"
             assert_response_timing(metadata)
 
     @pytest.mark.asyncio
@@ -660,7 +683,9 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
             # Mock structured LLM
             mock_structured_llm = MagicMock()
-            mock_structured_llm.ainvoke = AsyncMock(return_value=test_response)
+            mock_structured_llm.ainvoke = AsyncMock(
+                return_value=_include_raw_invoke_result(test_response)
+            )
             mock_llm.with_structured_output = MagicMock(
                 return_value=mock_structured_llm
             )
@@ -711,6 +736,47 @@ class TestGeminiLLM(TestJudgeLLMBase):
                 "Structured output failed",
                 mock_ainvoke=mock_structured_llm.ainvoke,
             )
+            mock_llm.with_structured_output.assert_called_with(
+                TestResponse,
+                method="json_schema",
+                include_raw=True,
+            )
+
+    @pytest.mark.asyncio
+    async def test_generate_structured_response_unparsed_includes_debug_metadata(self):
+        """When parsing yields no model, failure metadata includes raw response."""
+        from pydantic import BaseModel, Field
+
+        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+            mock_llm = MagicMock()
+
+            class TestResponse(BaseModel):
+                answer: str = Field(description="The answer")
+                reasoning: str = Field(description="The reasoning")
+
+            raw_message = AIMessage(
+                content='{"answer": "Yes", "reasoning": "test"}',
+                tool_calls=[],
+            )
+            mock_structured_llm = MagicMock()
+            mock_structured_llm.ainvoke = AsyncMock(
+                return_value=_include_raw_invoke_result(None, raw=raw_message)
+            )
+            mock_llm.with_structured_output = MagicMock(
+                return_value=mock_structured_llm
+            )
+            mock_chat.return_value = mock_llm
+
+            llm = GeminiLLM(name="TestGemini", role=Role.JUDGE)
+
+            with pytest.raises(LLMGenerationFailed) as exc_info:
+                await llm.generate_structured_response("Test", TestResponse)
+
+            assert "Expected TestResponse" in str(exc_info.value)
+            debug = llm.last_response_metadata.get("structured_output_debug")
+            assert debug is not None
+            assert debug["parsed_type"] == "NoneType"
+            assert '{"answer": "Yes"' in debug["raw_content"]
 
     @pytest.mark.asyncio
     async def test_structured_response_metadata_fields(self):
@@ -726,7 +792,9 @@ class TestGeminiLLM(TestJudgeLLMBase):
             test_response = SimpleResponse(result="success")
 
             mock_structured_llm = MagicMock()
-            mock_structured_llm.ainvoke = AsyncMock(return_value=test_response)
+            mock_structured_llm.ainvoke = AsyncMock(
+                return_value=_include_raw_invoke_result(test_response)
+            )
             mock_llm.with_structured_output = MagicMock(
                 return_value=mock_structured_llm
             )
@@ -741,6 +809,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
             # Verify required fields
             assert metadata["provider"] == "gemini"
             assert metadata["structured_output"] is True
+            assert metadata["structured_output_method"] == "json_schema"
             assert metadata["response_id"] is None
             assert_iso_timestamp(metadata["timestamp"])
             assert_response_timing(metadata)

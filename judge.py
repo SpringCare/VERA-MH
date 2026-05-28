@@ -144,11 +144,23 @@ def get_parser() -> argparse.ArgumentParser:
         help="Enable verbose worker logging to show concurrency behavior",
     )
 
+    parser.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        help="Enable debug logging (structured LLM responses, message previews)",
+    )
+
     return parser
 
 
 async def main(args) -> Optional[str]:
     """Main async entrypoint for judging conversations."""
+    if args.debug:
+        from utils.debug import set_debug
+
+        set_debug(True)
+
     # Parse judge models from args (supports "model" or "model:count" format)
     judge_models = parse_judge_models(args.judge_model)
 
