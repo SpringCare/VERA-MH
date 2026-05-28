@@ -9,6 +9,7 @@ from utils.conversation_utils import (
     ensure_provider_has_last_turn,
     save_conversation_to_file,
 )
+from utils.debug import debug_print
 
 
 class ConversationSimulator:
@@ -23,18 +24,29 @@ class ConversationSimulator:
         self.termination_signal = "<END OF CONVERSATION>"
 
     def _should_terminate_conversation(
-        self, response: str, speaker: LLMInterface
+        self,
+        response: str,
+        speaker: LLMInterface,
+        extracted_signals: Optional[List[str]] = None,
     ) -> bool:
-        """
-        Check if the response indicates the conversation should end.
-        Only terminates if persona (the conversation initiator) signals to end.
-        """
-        # Only allow persona to terminate the conversation early
-        if speaker != self.persona:
-            return False
+        """Check if the response indicates the conversation should end.
 
-        # Check for exact phrase matches (case insensitive)
-        if re.search(re.escape(self.termination_signal), response, re.IGNORECASE):
+        Two termination paths:
+        - Global signal (self.termination_signal): only the persona can trigger it,
+          checked against the post-processed response.
+        - Custom signals: passed in as extracted_signals, are specific to the LLM
+          client, and detected from the raw response before post-processing.
+        """
+        # Global signal: persona-only, checked on cleaned response
+        if speaker == self.persona and re.search(
+            re.escape(self.termination_signal), response, re.IGNORECASE
+        ):
+            return True
+
+        # Bespoke signals extracted from raw response before post-processing
+        if extracted_signals and any(
+            signal in speaker.custom_termination_signals for signal in extracted_signals
+        ):
             return True
 
         return False
@@ -66,8 +78,21 @@ class ConversationSimulator:
             current_speaker = self.agent
             next_speaker = self.persona
 
+        debug_print(
+            f"[SIM] Starting conversation: persona_speaks_first={persona_speaks_first},"
+            f"max_turns={max_turns}"
+        )
+        debug_print(
+            f"[SIM] persona={self.persona.name} ({self.persona.role.value}), "
+            f"agent={self.agent.name} ({self.agent.role.value})"
+        )
+
         total_words = 0
         for turn in range(max_turns):
+            debug_print(
+                f"[SIM] Turn {turn + 1}/{max_turns}: "
+                f"{current_speaker.name} ({current_speaker.role.value}) speaking"
+            )
             # start or continue the conversation
             if turn == 0:
                 response = await current_speaker.start_conversation()
@@ -78,7 +103,12 @@ class ConversationSimulator:
                     conversation_history=history_dicts
                 )
 
+            raw_response = response
+            extracted_signals = current_speaker._extract_signals(response)
             response = current_speaker._post_process_response(response)
+
+            preview = response[:80].replace("\n", " ")
+            debug_print(f"[SIM]   → {preview!r}")
 
             total_words += len(response.split())
 
@@ -102,19 +132,31 @@ class ConversationSimulator:
                     raise ValueError(f"Conversation history is empty on turn {turn}")
 
             # Record this turn using ConversationTurn
+            logging_metadata = current_speaker.last_response_metadata
+            if current_speaker == self.agent:
+                logging_metadata["raw_response"] = raw_response
             turn_obj = ConversationTurn(
                 turn=turn + 1,
                 speaker=current_speaker.role,
                 input_message=input_msg,
                 response_message=lc_message,
                 early_termination=False,
-                logging_metadata=current_speaker.last_response_metadata,
+                logging_metadata=logging_metadata,
             )
             self.conversation_history.append(turn_obj)
 
             # Check if persona wants to end the conversation
-            if self._should_terminate_conversation(response, current_speaker):
-                self.conversation_history[-1].early_termination = True
+            if self._should_terminate_conversation(
+                response, current_speaker, extracted_signals
+            ):
+                if current_speaker._should_discard_response(extracted_signals):
+                    debug_print("[SIM]   provider error — discarding turn, ending")
+                    self.conversation_history.pop()
+                    if self.conversation_history:
+                        self.conversation_history[-1].early_termination = True
+                else:
+                    debug_print("[SIM]   early termination signal detected")
+                    self.conversation_history[-1].early_termination = True
                 break
 
             # Check if we've reached the maximum total words
@@ -124,10 +166,17 @@ class ConversationSimulator:
                 and max_total_words is not None
                 and total_words >= max_total_words
             ):
+                debug_print(
+                    f"[SIM]   word limit reached ({total_words}/{max_total_words})"
+                )
                 break
 
             # Switch speakers for next turn
             current_speaker, next_speaker = next_speaker, current_speaker
+            debug_print(
+                f"[SIM]   next speaker → {current_speaker.name} "
+                f"({current_speaker.role.value})"
+            )
 
         # Return dict format for backward compatibility
         return [t.to_dict() for t in self.conversation_history]

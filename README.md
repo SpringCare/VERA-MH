@@ -200,7 +200,10 @@ uv run python run_pipeline.py --help
 | `-usm` | `--user-first-message` | Static first message from user-agent/persona (no LLM call for first turn). Used on turn 0 when the persona/user-agent speaks first (i.e., when `--provider-speaks-first` is not set). |
 | `-usp` | `--user-start-prompt` | Prompt sent to user-agent LLM when starting the conversation (first turn). Used on turn 0 when the persona/user-agent speaks first (i.e., when `--provider-speaks-first` is not set). Default: `"Start the conversation based on the system prompt"` |
 | `-d` | `--debug` | Enable debug logging for conversation generation |
+| | `--sessions` | Comma-separated session types to run in order for each persona/run (e.g. `intake,coaching`). Omit for a single session (default). |
 | | `--resume` | Continue a previous run: set `--output` to the existing `p_*` run directory; skips persona/run pairs that already have transcript files. User/provider models, turns, and runs must match the original run (see `generate.py` validation). |
+
+**Multi-session conversations:** Use `--sessions` when the provider under test supports distinct session types (for example intake followed by coaching). For each persona and run, VERA-MH runs those sessions sequentially—each gets its own transcript and log, with filenames like `..._run1_s1_intake.txt` and `..._run1_s2_coaching.txt`. The provider LLM can implement `prepare_sessions()`, `enter_session()`, and `first_speaker` on [`LLMInterface`](llm_clients/llm_interface.py) to set up API sessions, enforce prerequisites, or control who speaks first per session type (see [Connecting your own LLM, Agent, or API](#connecting-your-own-llm-or-api)). With `--resume`, already-finished sessions are skipped individually so you can continue a partial multi-session run.
 
 **First message and start prompt:** When a role (provider or persona) speaks first, you can either supply a **first message** (a fixed string returned with no LLM call, e.g. `"How are you today?"`) or let the LLM generate the first turn using a **start prompt** (the prompt sent to the LLM when history is empty; default: `"Start the conversation based on the system prompt"`). If a first message is set for that role, the start prompt is not used for that turn. This supports both provider- and persona-first flows and records which turn used a static message vs an LLM response.
 
@@ -353,6 +356,7 @@ VERA-MH simulates realistic conversations between Large Language Models (LLMs) f
 - **Early Stopping**: Conversations can end naturally when personas signal completion
 - **Conversation Tracking**: Full conversation history is maintained with comprehensive logging
 - **Batch Processing**: Run multiple conversations with different personas and multiple runs per persona
+- **Multi-session runs**: Optional `--sessions` on `generate.py` runs a sequence of session types per persona/run (separate transcripts; provider hooks for session setup)
 
 ### Conversation Evaluation
 - **LLM-as-a-Judge**: Automated evaluation of conversations using LLM judges against clinical rubrics

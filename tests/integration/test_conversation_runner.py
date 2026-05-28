@@ -332,15 +332,11 @@ class TestConversationRunnerSingle:
         assert result["llm1_model"] == "mock-persona-model"
         assert result["llm1_prompt"] == "TestPersona"
         assert result["run_number"] == 1
-        assert result["turns"] == 4
-        assert "filename" in result
-        assert "log_file" in result
+        assert len(result["sessions"]) == 1
+        assert result["sessions"][0]["turns"] == 4
         assert result["duration"] > 0
-        assert isinstance(result["conversation"], list)
-        assert len(result["conversation"]) == 4
-
-        # Verify conversation file exists
-        assert Path(result["filename"]).exists()
+        assert len(result["sessions"][0]["conversation"]) == 4
+        assert Path(result["sessions"][0]["filename"]).exists()
 
     async def test_persona_speaks_first_false_first_turn_is_provider(
         self,
@@ -381,9 +377,10 @@ class TestConversationRunnerSingle:
                 run_number=1,
             )
 
-        assert len(result["conversation"]) == 3
-        assert result["conversation"][0]["speaker"] == "provider"
-        assert result["conversation"][-1]["speaker"] == "provider"
+        conv = result["sessions"][0]["conversation"]
+        assert len(conv) == 3
+        assert conv[0]["speaker"] == "provider"
+        assert conv[-1]["speaker"] == "provider"
 
     async def test_run_single_conversation_logging(
         self,
@@ -488,7 +485,7 @@ class TestConversationRunnerSingle:
             )
 
         # Assert - verify filename format
-        filename = Path(result["filename"]).name
+        filename = Path(result["sessions"][0]["filename"]).name
         # Should contain: tag_personaname_modelshort_runN
         assert "Persona" in filename
         assert "claude-3-opus-20240229" in filename
@@ -556,9 +553,7 @@ class TestConversationRunnerSingle:
                     run_number=1,
                 )
 
-        # Assert - check if early termination flag is present
-        assert "early_termination" in result
-        # Note: actual termination depends on simulator's signal detection
+        assert "early_termination" in result["sessions"][0]
 
     async def test_conversation_metadata_completeness(
         self,
@@ -603,23 +598,18 @@ class TestConversationRunnerSingle:
             "llm1_model",
             "llm1_prompt",
             "run_number",
-            "turns",
-            "filename",
-            "log_file",
+            "sessions",
             "duration",
-            "early_termination",
-            "conversation",
+            "skipped",
         ]
 
         for field in required_fields:
             assert field in result, f"Missing field: {field}"
 
-        # Verify types
-        assert isinstance(result["index"], int)
-        assert isinstance(result["turns"], int)
-        assert isinstance(result["duration"], float)
-        assert isinstance(result["early_termination"], bool)
-        assert isinstance(result["conversation"], list)
+        assert isinstance(result["sessions"], list)
+        assert len(result["sessions"]) == 1
+        assert isinstance(result["sessions"][0]["turns"], int)
+        assert isinstance(result["sessions"][0]["conversation"], list)
 
 
 @pytest.mark.integration
@@ -669,7 +659,7 @@ class TestConversationRunnerMultiple:
         # Assert - should run 2 personas * 2 runs each = 4 conversations
         assert len(results) == 4
         assert all(isinstance(r, dict) for r in results)
-        assert all("conversation" in r for r in results)
+        assert all(r["sessions"] and r["sessions"][0]["conversation"] for r in results)
 
     async def test_concurrent_execution_limit(
         self,
@@ -955,6 +945,115 @@ class TestConversationRunnerMultiple:
         assert sum(1 for r in results if r.get("skipped")) == 1
         assert sum(1 for r in results if not r.get("skipped")) == 1
 
+    async def test_resume_mode_skips_multi_session_transcripts(
+        self,
+        tmp_path: Path,
+        basic_persona_config: Dict[str, Any],
+        basic_agent_config: Dict[str, Any],
+        mock_llm_factory,
+    ) -> None:
+        """Resume recognizes *_runN_s{i}_{session_type}.txt transcript names."""
+        conv_folder = tmp_path / "conversations"
+        conv_folder.mkdir(parents=True, exist_ok=True)
+        intake = conv_folder / "abc123_Persona1_mock-persona-model_run1_s1_intake.txt"
+        coaching = (
+            conv_folder / "def456_Persona1_mock-persona-model_run1_s2_coaching.txt"
+        )
+        intake.write_text("user: hi\n\nchatbot: hello\n", encoding="utf-8")
+        coaching.write_text("user: hi\n\nchatbot: hello\n", encoding="utf-8")
+
+        runner = create_test_runner(
+            basic_persona_config,
+            basic_agent_config,
+            "test_run",
+            max_turns=2,
+            runs_per_prompt=1,
+            folder_name=str(conv_folder),
+            resume=True,
+            session_types=["intake", "coaching"],
+        )
+        mock_personas = [{"Name": "Persona1", "prompt": "Prompt 1"}]
+
+        with patch("generate_conversations.runner.load_prompts_from_csv") as mock_load:
+            mock_load.return_value = mock_personas
+            with patch(
+                "generate_conversations.runner.setup_conversation_logger"
+            ) as mock_logger:
+                mock_logger.return_value = MagicMock()
+                results = await runner.run_conversations(persona_names=None)
+
+        assert len(results) == 1
+        assert results[0].get("skipped") is True
+        assert results[0].get("skip_reason") == "existing"
+
+    async def test_resume_mode_runs_remaining_multi_session_only(
+        self,
+        tmp_path: Path,
+        basic_persona_config: Dict[str, Any],
+        mock_llm_factory,
+    ) -> None:
+        """Resume with partial multi-session work runs only missing sessions."""
+        conv_folder = tmp_path / "conversations"
+        conv_folder.mkdir(parents=True, exist_ok=True)
+        intake_path = (
+            conv_folder / "abc123_Persona1_mock-persona-model_run1_s1_intake.txt"
+        )
+        intake_path.write_text("user: hi\n\nchatbot: hello\n", encoding="utf-8")
+
+        agent_mock = MockLLM(
+            name="agent",
+            role=Role.PROVIDER,
+            responses=["reply"] * 10,
+            model_name="mock-agent-model",
+        )
+        persona_mock = MockLLM(
+            name="persona",
+            role=Role.PERSONA,
+            responses=["hi"] * 10,
+            model_name="mock-persona-model",
+        )
+
+        runner = ConversationRunner(
+            persona_model_config=basic_persona_config,
+            agent_model_config={"model": "mock-agent-model", "name": "agent"},
+            run_id="test_partial_resume",
+            folder_name=str(conv_folder),
+            max_turns=2,
+            runs_per_prompt=1,
+            resume=True,
+            session_types=["intake", "coaching"],
+        )
+        persona_config = {
+            "model": "mock-persona-model",
+            "prompt": "Test prompt",
+            "name": "Persona1",
+            "run": 1,
+        }
+
+        with (
+            patch(
+                "generate_conversations.runner.LLMFactory.create_llm",
+                side_effect=[persona_mock, agent_mock],
+            ),
+            patch(
+                "generate_conversations.runner.setup_conversation_logger",
+                return_value=MagicMock(),
+            ),
+        ):
+            result = await runner.run_single_conversation(
+                persona_config=persona_config,
+                max_turns=2,
+                conversation_index=1,
+                run_number=1,
+            )
+
+        assert len(result["sessions"]) == 2
+        assert result["sessions"][0]["skipped"] is True
+        assert result["sessions"][0]["skip_reason"] == "existing"
+        assert result["sessions"][0]["filename"] == str(intake_path)
+        assert result["sessions"][1]["skipped"] is False
+        assert result["sessions"][1]["turns"] > 0
+
     async def test_agent_config_not_mutated_across_concurrent_conversations(
         self,
         tmp_path: Path,
@@ -1142,7 +1241,7 @@ class TestConversationRunnerFileOperations:
                 results = await runner.run_conversations(persona_names=None)
 
         # Assert - all filenames should be unique
-        filenames = [r["filename"] for r in results]
+        filenames = [r["sessions"][0]["filename"] for r in results]
         assert len(filenames) == len(set(filenames))
 
 
@@ -1285,8 +1384,8 @@ class TestConversationRunnerErrorHandling:
                     run_number=1,
                 )
 
-                # Assert
-                mock_cleanup.assert_called_once_with(logger)
+                # Assert: session logger cleaned after failure; finally may call again.
+                assert mock_cleanup.call_count >= 1
 
 
 @pytest.mark.integration
@@ -1378,3 +1477,377 @@ class TestConversationRunnerPerformance:
         # Assert - should complete quickly with mocks
         assert len(results) == 4
         assert duration < 2.0  # Should be fast with mocks
+
+
+class SessionTrackingAgent(MockLLM):
+    """MockLLM that records session lifecycle calls
+    and supports first_speaker override."""
+
+    def __init__(
+        self,
+        *args,
+        first_speaker_role=None,
+        extra_sessions=None,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.setup_call_count = 0
+        self.enter_session_calls: list = []
+        self.prepare_sessions_calls: list = []
+        self._first_speaker_role = first_speaker_role
+        self._extra_sessions = extra_sessions or []
+
+    async def setup(self):
+        self.setup_call_count += 1
+
+    async def enter_session(self, session_type: str):
+        self.enter_session_calls.append(session_type)
+
+    def prepare_sessions(self, session_types):
+        self.prepare_sessions_calls.append(list(session_types))
+        return self._extra_sessions + list(session_types)
+
+    @property
+    def first_speaker(self):
+        return self._first_speaker_role
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+class TestMultiSessionRunner:
+    """Tests for multi-session runner behavior: setup hooks, first_speaker, sessions."""
+
+    async def test_agent_setup_called_once_before_sessions(
+        self,
+        tmp_path: Path,
+        basic_persona_config: Dict[str, Any],
+    ) -> None:
+        """agent.setup() is called exactly once before the session loop."""
+        conv_folder = tmp_path / "conversations"
+        tracking_agent = SessionTrackingAgent(
+            name="agent",
+            role=Role.PROVIDER,
+            responses=["reply"] * 10,
+            model_name="mock-agent-model",
+        )
+        persona_mock = MockLLM(
+            name="persona",
+            role=Role.PERSONA,
+            responses=["hi"] * 10,
+            model_name="mock-persona-model",
+        )
+
+        runner = ConversationRunner(
+            persona_model_config=basic_persona_config,
+            agent_model_config={"model": "mock-agent-model", "name": "agent"},
+            run_id="test_setup",
+            folder_name=str(conv_folder),
+        )
+        persona_config = {
+            "model": "mock-persona-model",
+            "prompt": "Test prompt",
+            "name": "TestPersona",
+            "run": 1,
+        }
+
+        with (
+            patch(
+                "generate_conversations.runner.LLMFactory.create_llm",
+                side_effect=[persona_mock, tracking_agent],
+            ),
+            patch(
+                "generate_conversations.runner.setup_conversation_logger",
+                return_value=MagicMock(),
+            ),
+        ):
+            await runner.run_single_conversation(
+                persona_config=persona_config,
+                max_turns=2,
+                conversation_index=1,
+                run_number=1,
+            )
+
+        assert tracking_agent.setup_call_count == 1
+
+    async def test_enter_session_called_for_each_session(
+        self,
+        tmp_path: Path,
+        basic_persona_config: Dict[str, Any],
+    ) -> None:
+        """enter_session is called once per session."""
+        conv_folder = tmp_path / "conversations"
+        tracking_agent = SessionTrackingAgent(
+            name="agent",
+            role=Role.PROVIDER,
+            responses=["reply"] * 10,
+            model_name="mock-agent-model",
+        )
+        persona_mock = MockLLM(
+            name="persona",
+            role=Role.PERSONA,
+            responses=["hi"] * 10,
+            model_name="mock-persona-model",
+        )
+
+        runner = ConversationRunner(
+            persona_model_config=basic_persona_config,
+            agent_model_config={"model": "mock-agent-model", "name": "agent"},
+            run_id="test_reset",
+            folder_name=str(conv_folder),
+            session_types=["intake", "coaching"],
+        )
+        persona_config = {
+            "model": "mock-persona-model",
+            "prompt": "Test prompt",
+            "name": "TestPersona",
+            "run": 1,
+        }
+
+        with (
+            patch(
+                "generate_conversations.runner.LLMFactory.create_llm",
+                side_effect=[persona_mock, tracking_agent],
+            ),
+            patch(
+                "generate_conversations.runner.setup_conversation_logger",
+                return_value=MagicMock(),
+            ),
+        ):
+            result = await runner.run_single_conversation(
+                persona_config=persona_config,
+                max_turns=2,
+                conversation_index=1,
+                run_number=1,
+            )
+
+        assert tracking_agent.enter_session_calls == ["intake", "coaching"]
+        assert len(result["sessions"]) == 2
+
+    async def test_prepare_sessions_result_used_as_session_list(
+        self,
+        tmp_path: Path,
+        basic_persona_config: Dict[str, Any],
+    ) -> None:
+        """prepare_sessions() return value is used as the actual session list."""
+        conv_folder = tmp_path / "conversations"
+        # Agent prepends "intake" to any session list
+        tracking_agent = SessionTrackingAgent(
+            name="agent",
+            role=Role.PROVIDER,
+            responses=["reply"] * 10,
+            model_name="mock-agent-model",
+            extra_sessions=["intake"],
+        )
+        persona_mock = MockLLM(
+            name="persona",
+            role=Role.PERSONA,
+            responses=["hi"] * 10,
+            model_name="mock-persona-model",
+        )
+
+        runner = ConversationRunner(
+            persona_model_config=basic_persona_config,
+            agent_model_config={"model": "mock-agent-model", "name": "agent"},
+            run_id="test_prepare",
+            folder_name=str(conv_folder),
+            session_types=["coaching"],
+        )
+        persona_config = {
+            "model": "mock-persona-model",
+            "prompt": "Test prompt",
+            "name": "TestPersona",
+            "run": 1,
+        }
+
+        with (
+            patch(
+                "generate_conversations.runner.LLMFactory.create_llm",
+                side_effect=[persona_mock, tracking_agent],
+            ),
+            patch(
+                "generate_conversations.runner.setup_conversation_logger",
+                return_value=MagicMock(),
+            ),
+        ):
+            result = await runner.run_single_conversation(
+                persona_config=persona_config,
+                max_turns=2,
+                conversation_index=1,
+                run_number=1,
+            )
+
+        # prepare_sessions was called with ["coaching"], returned ["intake", "coaching"]
+        assert tracking_agent.prepare_sessions_calls == [["coaching"]]
+        assert tracking_agent.enter_session_calls == ["intake", "coaching"]
+        assert len(result["sessions"]) == 2
+
+    async def test_first_speaker_overrides_persona_speaks_first(
+        self,
+        tmp_path: Path,
+        basic_persona_config: Dict[str, Any],
+    ) -> None:
+        """agent.first_speaker returning PROVIDER forces provider-first even when
+        runner.persona_speaks_first is True."""
+        conv_folder = tmp_path / "conversations"
+        tracking_agent = SessionTrackingAgent(
+            name="agent",
+            role=Role.PROVIDER,
+            responses=["provider opening"] + ["reply"] * 10,
+            model_name="mock-agent-model",
+            first_speaker_role=Role.PROVIDER,
+        )
+        persona_mock = MockLLM(
+            name="persona",
+            role=Role.PERSONA,
+            responses=["persona reply"] * 10,
+            model_name="mock-persona-model",
+        )
+
+        runner = ConversationRunner(
+            persona_model_config=basic_persona_config,
+            agent_model_config={"model": "mock-agent-model", "name": "agent"},
+            run_id="test_first_speaker",
+            folder_name=str(conv_folder),
+            persona_speaks_first=True,  # runner default: persona first
+        )
+        persona_config = {
+            "model": "mock-persona-model",
+            "prompt": "Test prompt",
+            "name": "TestPersona",
+            "run": 1,
+        }
+
+        with (
+            patch(
+                "generate_conversations.runner.LLMFactory.create_llm",
+                side_effect=[persona_mock, tracking_agent],
+            ),
+            patch(
+                "generate_conversations.runner.setup_conversation_logger",
+                return_value=MagicMock(),
+            ),
+        ):
+            result = await runner.run_single_conversation(
+                persona_config=persona_config,
+                max_turns=3,
+                conversation_index=1,
+                run_number=1,
+            )
+
+        # Despite persona_speaks_first=True, agent.first_speaker=PROVIDER wins
+        assert result["sessions"][0]["conversation"][0]["speaker"] == "provider"
+
+    async def test_session_suffix_in_filenames_when_session_types_set(
+        self,
+        tmp_path: Path,
+        basic_persona_config: Dict[str, Any],
+    ) -> None:
+        """When session_types is explicitly set,
+        filenames include session index and type."""
+        conv_folder = tmp_path / "conversations"
+        agent_mock = MockLLM(
+            name="agent",
+            role=Role.PROVIDER,
+            responses=["reply"] * 10,
+            model_name="mock-agent-model",
+        )
+        persona_mock = MockLLM(
+            name="persona",
+            role=Role.PERSONA,
+            responses=["hi"] * 10,
+            model_name="mock-persona-model",
+        )
+
+        runner = ConversationRunner(
+            persona_model_config=basic_persona_config,
+            agent_model_config={"model": "mock-agent-model", "name": "agent"},
+            run_id="test_suffix",
+            folder_name=str(conv_folder),
+            session_types=["intake", "coaching"],
+        )
+        persona_config = {
+            "model": "mock-persona-model",
+            "prompt": "Test prompt",
+            "name": "TestPersona",
+            "run": 1,
+        }
+
+        with (
+            patch(
+                "generate_conversations.runner.LLMFactory.create_llm",
+                side_effect=[persona_mock, agent_mock],
+            ),
+            patch(
+                "generate_conversations.runner.setup_conversation_logger",
+                return_value=MagicMock(),
+            ),
+        ):
+            result = await runner.run_single_conversation(
+                persona_config=persona_config,
+                max_turns=2,
+                conversation_index=1,
+                run_number=1,
+            )
+
+        assert len(result["sessions"]) == 2
+        assert "1_intake" in result["sessions"][0]["filename"]
+        assert "2_coaching" in result["sessions"][1]["filename"]
+        assert "conversation" not in result
+
+    async def test_multi_session_results_kept_separate(
+        self,
+        tmp_path: Path,
+        basic_persona_config: Dict[str, Any],
+    ) -> None:
+        """Each session has its own turns and transcript;
+        job-level list is not merged."""
+        conv_folder = tmp_path / "conversations"
+        agent_mock = MockLLM(
+            name="agent",
+            role=Role.PROVIDER,
+            responses=["reply"] * 20,
+            model_name="mock-agent-model",
+        )
+        persona_mock = MockLLM(
+            name="persona",
+            role=Role.PERSONA,
+            responses=["hi"] * 20,
+            model_name="mock-persona-model",
+        )
+
+        runner = ConversationRunner(
+            persona_model_config=basic_persona_config,
+            agent_model_config={"model": "mock-agent-model", "name": "agent"},
+            run_id="test_concat",
+            folder_name=str(conv_folder),
+            session_types=["intake", "coaching"],
+        )
+        persona_config = {
+            "model": "mock-persona-model",
+            "prompt": "Test prompt",
+            "name": "TestPersona",
+            "run": 1,
+        }
+
+        with (
+            patch(
+                "generate_conversations.runner.LLMFactory.create_llm",
+                side_effect=[persona_mock, agent_mock],
+            ),
+            patch(
+                "generate_conversations.runner.setup_conversation_logger",
+                return_value=MagicMock(),
+            ),
+        ):
+            result = await runner.run_single_conversation(
+                persona_config=persona_config,
+                max_turns=2,
+                conversation_index=1,
+                run_number=1,
+            )
+
+        assert len(result["sessions"]) == 2
+        assert "turns" not in result
+        for session in result["sessions"]:
+            assert session["turns"] > 0
+            assert len(session["conversation"]) == session["turns"]

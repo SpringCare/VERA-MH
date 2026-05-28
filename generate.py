@@ -33,6 +33,7 @@ async def main(
     max_total_words: Optional[int] = None,
     max_personas: Optional[int] = None,
     persona_speaks_first: bool = True,
+    session_types: Optional[List[str]] = None,
     resume: bool = False,
 ) -> tuple[List[Dict[str, Any]], str]:
     """
@@ -147,6 +148,7 @@ async def main(
         max_total_words=max_total_words,
         max_personas=max_personas,
         persona_speaks_first=persona_speaks_first,
+        session_types=session_types,
         resume=resume,
     )
 
@@ -319,6 +321,21 @@ if __name__ == "__main__":
         default=DEFAULT_START_PROMPT,
     )
 
+    def parse_sessions_arg(s: str) -> List[str]:
+        sessions = [t.strip() for t in s.split(",") if t.strip()]
+        if not sessions:
+            raise argparse.ArgumentTypeError(
+                "--sessions must contain at least one non-empty session name"
+            )
+        return sessions
+
+    parser.add_argument(
+        "--sessions",
+        help=("Comma-separated sequence of session types to run in order "),
+        type=parse_sessions_arg,
+        default=None,
+    )
+
     parser.add_argument(
         "--debug",
         "-d",
@@ -390,6 +407,7 @@ if __name__ == "__main__":
             max_total_words=args.max_total_words,
             max_personas=args.max_personas,
             persona_speaks_first=not args.provider_speaks_first,
+            session_types=args.sessions,
             resume=args.resume,
         )
     )

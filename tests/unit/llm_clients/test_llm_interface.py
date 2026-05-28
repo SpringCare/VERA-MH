@@ -340,6 +340,99 @@ class TestLLMInterface:
         await llm.start_conversation()
         assert llm.conversation_id is not None
 
+
+@pytest.mark.unit
+class TestLLMInterfaceHooks:
+    """Tests for the extensibility hooks added to LLMInterface."""
+
+    def test_custom_termination_signals_default_empty(self):
+        """custom_termination_signals returns [] by default."""
+        llm = ConcreteLLM("test", Role.PROVIDER)
+        assert llm.custom_termination_signals == []
+
+    def test_post_process_response_noop(self):
+        """_post_process_response is a no-op by default."""
+        llm = ConcreteLLM("test", Role.PROVIDER)
+        assert llm._post_process_response("hello world") == "hello world"
+        assert llm._post_process_response("") == ""
+
+    def test_should_discard_response_default_false(self):
+        """_should_discard_response returns False regardless of signals."""
+        llm = ConcreteLLM("test", Role.PROVIDER)
+        assert llm._should_discard_response([]) is False
+        assert llm._should_discard_response(["SIGNAL"]) is False
+
+    def test_extract_signals_returns_matching_signals(self):
+        """_extract_signals returns only the signals found in the response."""
+
+        class SignalLLM(ConcreteLLM):
+            @property
+            def custom_termination_signals(self):
+                return ["[END]", "[ERROR]"]
+
+        llm = SignalLLM("test", Role.PROVIDER)
+        found = llm._extract_signals("Something happened [END] here")
+        assert found == ["[END]"]
+
+    def test_extract_signals_returns_empty_when_no_match(self):
+        """_extract_signals returns [] when no signals are present."""
+
+        class SignalLLM(ConcreteLLM):
+            @property
+            def custom_termination_signals(self):
+                return ["[END]"]
+
+        llm = SignalLLM("test", Role.PROVIDER)
+        assert llm._extract_signals("nothing special here") == []
+
+    def test_extract_signals_returns_multiple_matches(self):
+        """_extract_signals returns all signals found in the response."""
+
+        class SignalLLM(ConcreteLLM):
+            @property
+            def custom_termination_signals(self):
+                return ["[END]", "[ERROR]"]
+
+        llm = SignalLLM("test", Role.PROVIDER)
+        found = llm._extract_signals("[ERROR] something went wrong [END]")
+        assert "[END]" in found
+        assert "[ERROR]" in found
+
+    def test_extract_signals_case_insensitive(self):
+        """_extract_signals is case-insensitive."""
+
+        class SignalLLM(ConcreteLLM):
+            @property
+            def custom_termination_signals(self):
+                return ["[end]"]
+
+        llm = SignalLLM("test", Role.PROVIDER)
+        assert llm._extract_signals("message [END] here") == ["[end]"]
+
+    def test_first_speaker_default_none(self):
+        """first_speaker returns None by default."""
+        llm = ConcreteLLM("test", Role.PROVIDER)
+        assert llm.first_speaker is None
+
+    def test_prepare_sessions_returns_unchanged(self):
+        """prepare_sessions returns the same list unmodified."""
+        llm = ConcreteLLM("test", Role.PROVIDER)
+        sessions = ["intake", "coaching"]
+        result = llm.prepare_sessions(sessions)
+        assert result == sessions
+
+    @pytest.mark.asyncio
+    async def test_setup_is_noop(self):
+        """setup() completes without error by default."""
+        llm = ConcreteLLM("test", Role.PROVIDER)
+        await llm.setup()  # must not raise
+
+    @pytest.mark.asyncio
+    async def test_enter_session_is_noop(self):
+        """enter_session() completes without error by default."""
+        llm = ConcreteLLM("test", Role.PROVIDER)
+        await llm.enter_session("intake")  # must not raise
+
     @pytest.mark.asyncio
     async def test_run_with_retry_succeeds_after_transient_failures(self):
         h = RetryHarness()

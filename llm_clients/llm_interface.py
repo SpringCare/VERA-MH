@@ -332,6 +332,81 @@ class LLMInterface(ABC):
         """
         return response
 
+    @property
+    def custom_termination_signals(self) -> List[str]:
+        """Per-implementation early-termination signals.
+
+        Return a list of signal strings. When any signal is found in this
+        speaker's response, the conversation ends early.
+        Returns [] by default (no custom signals).
+        Override in subclasses to add provider-specific custom termination detection.
+        Each signal is only checked against the response of the LLM that declares it.
+        Mostly meant for provider LLM classes to allow special termination handling.
+        """
+        return []
+
+    def _should_discard_response(self, extracted_signals: List[str]) -> bool:
+        """Return True if the response that produced these signals should be discarded.
+
+        When True, the simulator removes the turn from conversation history entirely
+        rather than marking it as early_termination. Override in subclasses for
+        provider-specific error responses that should not appear in transcripts.
+        """
+        return False
+
+    def _extract_signals(self, response: str) -> List[str]:
+        """Extract custom termination signals present in a raw response.
+
+        Called by the simulator on the raw response, before _post_process_response
+        strips provider artifacts. Returns the subset of custom_termination_signals
+        found in the response.
+
+        Override in subclasses for custom extraction logic (e.g. structured parsing).
+        The default implementation scans for each entry in custom_termination_signals.
+        """
+        import re
+
+        found = []
+        for signal in self.custom_termination_signals:
+            if re.search(re.escape(signal), response, re.IGNORECASE):
+                found.append(signal)
+        return found
+
+    @property
+    def first_speaker(self) -> Optional["Role"]:
+        """The role that should speak first in this session.
+
+        Returns None to defer to the runner's global persona_speaks_first setting.
+        Override in subclasses where the session type dictates speaker order
+        (e.g. INTAKE sessions are always provider-initiated).
+        """
+        return None
+
+    def prepare_sessions(self, session_types: List[str]) -> List[str]:
+        """Normalize the session list before running.
+
+        Override to enforce provider-specific prerequisites (e.g. prepend INTAKE).
+        Default: return unchanged.
+        """
+        return session_types
+
+    async def enter_session(self, session_type: str) -> None:
+        """Prepare the provider for session_type. If a session is already active,
+        finish it first. Called once at the start of each session iteration
+        (including the first).
+        No-op by default."""
+        pass
+
+    async def setup(self) -> None:
+        """Set up any resources needed before the conversation starts.
+
+        Called by the simulator once before the turn loop begins.
+        Subclasses that need async initialization (e.g. session creation,
+        auth token acquisition) should override this method.
+        Default implementation does nothing.
+        """
+        pass
+
     async def cleanup(self) -> None:
         """Clean up any resources used by this LLM instance.
 

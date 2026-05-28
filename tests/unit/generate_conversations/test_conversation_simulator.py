@@ -503,3 +503,134 @@ class TestFirstSpeakerAndFirstMessageCombinations:
         assert history[1]["speaker"] == "persona"
         assert history[2]["speaker"] == "provider"
         assert "Provider says hello first" in persona.calls
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+class TestBespokeTerminationAndPostProcessing:
+    """Tests for bespoke termination signals, discard, and post-processing hooks."""
+
+    async def test_agent_bespoke_signal_terminates_conversation(self):
+        """Provider's own bespoke signal triggers early termination."""
+
+        class SignalAgent(MockLLM):
+            @property
+            def custom_termination_signals(self):
+                return ["[SESSION_ENDED]"]
+
+        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["hello"] * 5)
+        agent = SignalAgent(
+            name="agent",
+            role=Role.PROVIDER,
+            responses=["normal reply", "closing [SESSION_ENDED]", "unreachable"],
+        )
+        simulator = ConversationSimulator(persona=persona, agent=agent)
+
+        history = await simulator.generate_conversation(max_turns=10)
+
+        assert history[-1]["speaker"] == "provider"
+        assert history[-1]["early_termination"] is True
+
+    async def test_discard_response_removes_turn_from_history(self):
+        """When _should_discard_response is True, the offending turn is dropped."""
+
+        class ErrorAgent(MockLLM):
+            @property
+            def custom_termination_signals(self):
+                return ["[ERROR]"]
+
+            def _should_discard_response(self, extracted_signals):
+                return "[ERROR]" in extracted_signals
+
+        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["hello"])
+        agent = ErrorAgent(
+            name="agent",
+            role=Role.PROVIDER,
+            responses=["[ERROR] server failure"],
+        )
+        simulator = ConversationSimulator(persona=persona, agent=agent)
+
+        history = await simulator.generate_conversation(max_turns=10)
+
+        # Agent's error turn was discarded; only persona's hello remains.
+        assert len(history) == 1
+        assert history[0]["speaker"] == "persona"
+        assert history[-1]["early_termination"] is True
+
+    async def test_raw_response_stored_in_agent_logging(self):
+        """raw_response in agent's logging reflects the unstripped text."""
+
+        class StrippingAgent(MockLLM):
+            def _post_process_response(self, response: str) -> str:
+                return response.replace("[META]", "").strip()
+
+        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["hi"])
+        agent = StrippingAgent(
+            name="agent", role=Role.PROVIDER, responses=["hello [META]"]
+        )
+        simulator = ConversationSimulator(persona=persona, agent=agent)
+
+        history = await simulator.generate_conversation(max_turns=2)
+
+        agent_turn = next(t for t in history if t["speaker"] == "provider")
+        assert agent_turn["logging"]["raw_response"] == "hello [META]"
+
+    async def test_post_process_applied_to_stored_response(self):
+        """The stored response is the post-processed version, not the raw one."""
+
+        class StrippingAgent(MockLLM):
+            def _post_process_response(self, response: str) -> str:
+                return response.replace("<INTERNAL>", "").strip()
+
+        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["hi"])
+        agent = StrippingAgent(
+            name="agent",
+            role=Role.PROVIDER,
+            responses=["hello there <INTERNAL>"],
+        )
+        simulator = ConversationSimulator(persona=persona, agent=agent)
+
+        history = await simulator.generate_conversation(max_turns=2)
+
+        agent_turn = next(t for t in history if t["speaker"] == "provider")
+        assert agent_turn["response"] == "hello there"
+        assert "<INTERNAL>" not in agent_turn["response"]
+
+    async def test_raw_response_not_in_persona_logging(self):
+        """raw_response is NOT added to persona turn's logging metadata."""
+        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["hi"])
+        agent = MockLLM(name="agent", role=Role.PROVIDER, responses=["hello"])
+        simulator = ConversationSimulator(persona=persona, agent=agent)
+
+        history = await simulator.generate_conversation(max_turns=2)
+
+        persona_turn = next(t for t in history if t["speaker"] == "persona")
+        assert "raw_response" not in persona_turn["logging"]
+
+    async def test_bespoke_signal_checked_against_raw_response(self):
+        """Bespoke signals are extracted before post-processing strips them."""
+
+        class SignalStrippingAgent(MockLLM):
+            @property
+            def custom_termination_signals(self):
+                return ["[SESSION_ENDED]"]
+
+            def _post_process_response(self, response: str) -> str:
+                # Strip the signal so it won't appear in the stored response
+                return response.replace("[SESSION_ENDED]", "").strip()
+
+        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["hi"])
+        agent = SignalStrippingAgent(
+            name="agent",
+            role=Role.PROVIDER,
+            responses=["goodbye [SESSION_ENDED]"],
+        )
+        simulator = ConversationSimulator(persona=persona, agent=agent)
+
+        history = await simulator.generate_conversation(max_turns=10)
+
+        # Signal was present in raw response → termination triggered
+        assert history[-1]["speaker"] == "provider"
+        assert history[-1]["early_termination"] is True
+        # But the stored response has been stripped
+        assert "[SESSION_ENDED]" not in history[-1]["response"]
