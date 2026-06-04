@@ -7,7 +7,10 @@ import pytest
 from langchain_core.messages import AIMessage
 
 from llm_clients import Role
-from llm_clients.gemini_llm import GeminiLLM
+from llm_clients.gemini_llm import (
+    _STRUCTURED_OUTPUT_MAX_LOG_CHARS,
+    GeminiLLM,
+)
 from llm_clients.llm_interface import LLMGenerationFailed
 
 from .test_base_llm import TestJudgeLLMBase
@@ -777,6 +780,41 @@ class TestGeminiLLM(TestJudgeLLMBase):
             assert debug is not None
             assert debug["parsed_type"] == "NoneType"
             assert '{"answer": "Yes"' in debug["raw_content"]
+            assert "content" not in debug["raw"]
+
+    @pytest.mark.asyncio
+    async def test_structured_output_failure_truncates_large_raw_content(self):
+        """Oversized raw bodies stay bounded in logs and omit duplicate raw.content."""
+        from pydantic import BaseModel, Field
+
+        huge_content = "x" * (_STRUCTURED_OUTPUT_MAX_LOG_CHARS + 5000)
+
+        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+            mock_llm = MagicMock()
+
+            class TestResponse(BaseModel):
+                answer: str = Field(description="The answer")
+
+            raw_message = AIMessage(content=huge_content, tool_calls=[])
+            mock_structured_llm = MagicMock()
+            mock_structured_llm.ainvoke = AsyncMock(
+                return_value=_include_raw_invoke_result(None, raw=raw_message)
+            )
+            mock_llm.with_structured_output = MagicMock(
+                return_value=mock_structured_llm
+            )
+            mock_chat.return_value = mock_llm
+
+            llm = GeminiLLM(name="TestGemini", role=Role.JUDGE)
+
+            with pytest.raises(LLMGenerationFailed):
+                await llm.generate_structured_response("Test", TestResponse)
+
+            debug = llm.last_response_metadata.get("structured_output_debug")
+            assert debug is not None
+            assert "content" not in debug["raw"]
+            assert "truncated" in debug["raw_content"]
+            assert len(debug["raw_content"]) < len(huge_content)
 
     @pytest.mark.asyncio
     async def test_structured_response_retry_transport_error_no_stale_debug(

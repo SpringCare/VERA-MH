@@ -26,14 +26,26 @@ def _truncate_for_log(
     return f"{text[:max_chars]}... [truncated, {len(text)} chars total]"
 
 
+def _raw_message_content_for_log(raw: Any) -> str:
+    """Bounded text preview of the raw model message body."""
+    if raw is None:
+        return ""
+    if isinstance(raw, AIMessage):
+        return _truncate_for_log(raw.content)
+    return _truncate_for_log(raw)
+
+
 def _serialize_raw_message(raw: Any) -> Dict[str, Any]:
-    """Serialize an AIMessage (or similar) for failure diagnostics."""
+    """Serialize an AIMessage (or similar) for failure diagnostics.
+
+    Omits message content; use ``raw_content`` on the failure debug dict for a
+    truncated body preview so logs stay bounded when the dict is printed whole.
+    """
     if raw is None:
         return {}
     if isinstance(raw, AIMessage):
         payload: Dict[str, Any] = {
             "type": "AIMessage",
-            "content": raw.content,
             "tool_calls": raw.tool_calls,
         }
         if raw.response_metadata:
@@ -249,7 +261,7 @@ class GeminiLLM(JudgeLLM):
             if parsing_error is not None
             else None,
             "raw": raw_payload,
-            "raw_content": _truncate_for_log(raw_payload.get("content", "")),
+            "raw_content": _raw_message_content_for_log(raw),
             "raw_tool_calls": raw_payload.get("tool_calls"),
         }
 
