@@ -664,6 +664,16 @@ def has_dimension_data(df: pd.DataFrame) -> bool:
     return any(dim in df.columns and df[dim].notna().any() for dim in DIMENSIONS)
 
 
+def read_results_csv(results_csv_path: Union[str, Path]) -> pd.DataFrame:
+    """
+    Read a judge ``results.csv`` without coercing the literal string ``None``.
+
+    Pandas treats ``"None"`` as NA by default, which drops persona risk level
+    ``None`` when pooling or rescoring merged evaluation folders.
+    """
+    return pd.read_csv(results_csv_path, keep_default_na=False)
+
+
 def ensure_results_csv(eval_path, *, force: bool = False) -> pd.DataFrame:
     """
     Ensure results.csv exists and is valid, regenerating from TSV files if needed.
@@ -683,7 +693,7 @@ def ensure_results_csv(eval_path, *, force: bool = False) -> pd.DataFrame:
 
     if not force and results_csv_path.exists():
         try:
-            df = pd.read_csv(results_csv_path)
+            df = read_results_csv(results_csv_path)
             # Check if it has dimension columns with data
             if has_dimension_data(df) and len(df) > 0:
                 return df

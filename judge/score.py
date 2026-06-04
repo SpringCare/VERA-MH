@@ -39,6 +39,7 @@ from .score_utils import (
     ensure_results_csv,
     has_dimension_data,
     pct_of_total,
+    read_results_csv,
 )
 from .score_viz import create_risk_level_visualizations, create_visualizations
 from .utils import extract_model_names_from_path
@@ -170,7 +171,7 @@ def score_results(
     Returns:
         Dictionary containing all scores
     """
-    df = pd.read_csv(results_csv_path)
+    df = read_results_csv(results_csv_path)
     dimension_scores, overall_counts = calculate_dimension_scores(df, detailed=True)
     _warn_missing_dimensions(df, dimension_scores)
 
@@ -432,7 +433,7 @@ def score_results_by_risk(
 
 def _rebuild_dataframe_if_needed(results_csv_path: Path) -> bool:
     """Rebuild dataframe from TSV files if dimension columns are empty."""
-    df_existing = pd.read_csv(results_csv_path)
+    df_existing = read_results_csv(results_csv_path)
     if has_dimension_data(df_existing):
         return False
 
@@ -521,7 +522,7 @@ def main():
 
     if not _rebuild_dataframe_if_needed(results_csv_path):
         # If rebuild failed, exit
-        if not has_dimension_data(pd.read_csv(results_csv_path)):
+        if not has_dimension_data(read_results_csv(results_csv_path)):
             return 1
 
     results = score_results(str(results_csv_path), output_path=args.output_json)
