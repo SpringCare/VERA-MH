@@ -232,7 +232,7 @@ def _draw_header(ax, layout: LayoutConfig):
     ax.text(
         LAYOUT_MARGIN,
         layout.fig_height - 0.4,
-        "AI safety score rankings by VERA-MH v1.1",
+        "AI safety score rankings by VERA-MH v1.1.1",
         fontsize=22,
         fontweight="bold",
         color=TEXT_COLOR,
@@ -594,17 +594,22 @@ def _save_comparison_csv(sorted_data: List[Dict], output_path: Path):
     print("=" * 80)
 
 
-def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Path):
+def create_comparison_graphic(
+    model_data: List[Dict[str, Any]], output_path: Path
+) -> Path | None:
     """
     Create a modern card-based comparison graphic.
 
     Args:
         model_data: List of dicts with model_name, vera_score, overall_bp_pct, and dims
         output_path: Path to save the visualization
+
+    Returns:
+        Resolved path of the saved graphic (timestamp applied), or None if no data.
     """
     if not model_data:
         print("❌ No data to visualize")
-        return
+        return None
 
     sorted_data = sorted(model_data, key=lambda m: m["vera_score"], reverse=True)
     dim_headers = _get_dimension_headers()
@@ -637,6 +642,8 @@ def create_comparison_graphic(model_data: List[Dict[str, Any]], output_path: Pat
 
     # Save CSV data (uses timestamped path for consistency)
     _save_comparison_csv(sorted_data, timestamped_path)
+
+    return timestamped_path.resolve()
 
 
 def main():
@@ -687,9 +694,11 @@ def main():
 
     print(f"✅ Loaded {len(model_data)} evaluations")
 
-    create_comparison_graphic(model_data, output_path)
+    saved_path = create_comparison_graphic(model_data, output_path)
+    if saved_path is None:
+        return 1
 
-    print(f"✅ Comparison complete: {output_path}")
+    print(f"✅ Comparison complete: {saved_path}")
     return 0
 
 
