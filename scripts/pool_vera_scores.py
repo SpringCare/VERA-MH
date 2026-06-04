@@ -1,7 +1,13 @@
 #!/usr/bin/env uv run python
 """
-Pool judge evaluation results from multiple evaluation runs (e.g. 2+ user-agent separate
-pipelines) into one results.csv, then recompute VERA-MH scores and visualizations.
+Pool judge evaluation results from multiple ``j_*`` evaluation directories into
+one ``results.csv``, then recompute VERA-MH scores and visualizations.
+
+Inputs may differ by user agent, judge model, or both—the merged dataframe is a
+straight concatenation of every source's rows. Common uses include combining the
+two user-agent suites from ``run_recommended_vera_pipeline.sh`` (each judged with
+``gpt-5.4`` by default) or merging separate judge runs (e.g. GPT-4o and Sonnet)
+over the same conversations.
 
 Typical layout for each input path:
   output/p_<user>__a_<agent>__t30__r1__<ts>/evaluations/j_<...>/results.csv
@@ -14,9 +20,12 @@ inside it. For example::
     output/p_gpt_4o__a_gpt_4o__t6__r1_20260422_110000/evaluations/j_gpt_4o__.../results.csv
 
 **Legacy layout** (e.g. top-level ``evaluations/j_*`` next to a flat ``conversations/``
-run): merging and scoring still work; only the auto-generated ``j_pooled__*`` folder
+run): merging and scoring still work; only the auto-generated merged ``j_*`` folder
 name may fall back to ``unknown`` placeholders because the script cannot infer the
 ``p_*`` generation basename from the path alone.
+
+Merged folder names follow ``judge.py`` conventions: ``j_<model>x<count>`` for a
+single judge, or ``j_<model1>x2+<model2>x1__p_...`` when multiple judges are present.
 
 Also supports extracting the last evaluation directory from a run_pipeline log:
   uv run python scripts/pool_vera_scores.py --extract-from-log /path/to/log.txt
@@ -36,6 +45,13 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from utils.naming import parse_generation_run_folder_name  # noqa: E402
+
+# ``j_{judge_info}_{timestamp}__p_...`` or ``...__conversations`` (legacy flat layout)
+_JUDGE_EVAL_DIR_HEAD = re.compile(
+    r"^j_(?P<judge>.+?)_\d{8}_\d{6}_\d+__(?:p_|conversations)",
+    re.IGNORECASE,
+)
+_JUDGE_SPEC_TOKEN = re.compile(r"([^_]+x\d+)")
 
 
 def extract_last_evaluation_dir_from_pipeline_log(text: str) -> str:
@@ -140,24 +156,109 @@ def _persona_slug_for_pool(source_eval_dirs: list[Path]) -> str:
     return "+".join(sorted(set(persona_names)))
 
 
-def _synthetic_pooled_folder_basename(source_eval_dirs: list[Path]) -> str:
+def _judge_slug_from_dataframe(df: Any) -> str:
+    """
+    Build a judge segment like ``gpt-5.4x1`` or ``gpt-4ox2+claude-sonnet-4-5x1``.
+
+    Matches ``judge.py`` / ``judge.runner`` folder naming (``modelx<count>`` per
+    judge). Multiple judges are joined with ``+`` (stable sorted order).
+    """
+
+    if "judge_model" not in df.columns or df["judge_model"].dropna().empty:
+        return "unknown"
+
+    models = sorted(df["judge_model"].dropna().astype(str).unique())
+    parts: list[str] = []
+    for model in models:
+        sub = df[df["judge_model"].astype(str) == model]
+        if "judge_instance" in sub.columns and sub["judge_instance"].notna().any():
+            count = int(sub["judge_instance"].max())
+        else:
+            count = 1
+        parts.append(f"{model}x{count}")
+    return "+".join(parts)
+
+
+def _merge_judge_slug_tokens(*slugs: str) -> str:
+    """Merge ``modelxN`` tokens from one or more slug strings (max count per model)."""
+    counts: dict[str, int] = {}
+    for slug in slugs:
+        for part in slug.split("+"):
+            m = re.fullmatch(r"(.+)x(\d+)", part)
+            if not m:
+                continue
+            model, count = m.group(1), int(m.group(2))
+            counts[model] = max(counts.get(model, 0), count)
+    if not counts:
+        return "unknown"
+    return "+".join(f"{model}x{count}" for model, count in sorted(counts.items()))
+
+
+def _judge_slug_from_eval_dir_name(dir_name: str) -> str | None:
+    """
+    Parse ``modelx<count>`` judge spec(s) from a ``j_*`` evaluation folder basename.
+
+    Returns None for legacy ``j_pooled__*`` names or unparseable basenames.
+    Multi-judge batch folders use ``_`` between specs in ``judge.py``; this returns
+    ``+``-joined specs for pooled output naming.
+    """
+    if dir_name.startswith("j_pooled__"):
+        return None
+    m = _JUDGE_EVAL_DIR_HEAD.match(dir_name)
+    if not m:
+        return None
+    tokens = _JUDGE_SPEC_TOKEN.findall(m.group("judge"))
+    if not tokens:
+        return None
+    return "+".join(sorted(tokens))
+
+
+def _judge_slug_for_pool(
+    combined: Any,
+    source_eval_dirs: list[Path],
+    *,
+    judge_slug: str | None = None,
+) -> str:
+    """Resolve the judge segment for a merged evaluation folder name."""
+    if judge_slug:
+        return judge_slug
+    if "judge_model" in combined.columns and combined["judge_model"].notna().any():
+        return _judge_slug_from_dataframe(combined)
+    dir_slugs = [
+        s for d in source_eval_dirs if (s := _judge_slug_from_eval_dir_name(d.name))
+    ]
+    if dir_slugs:
+        return _merge_judge_slug_tokens(*dir_slugs)
+    return "unknown"
+
+
+def _synthetic_pooled_folder_basename(
+    source_eval_dirs: list[Path],
+    combined: Any,
+    *,
+    judge_slug: str | None = None,
+) -> str:
     """
     Build a ``j_*``-style basename for the pooled output directory.
 
-    The ``p_*`` segment lists user/persona models inferred from every source's sibling
-    ``p_*`` folder (sorted, ``+``-joined when more than one). Provider agent, turn
-    count, and runs-per-prompt reuse the first source's generation folder when
-    parsable; otherwise falls back to ``t30__r1`` and ``a_unknown``. A timestamp
-    suffix keeps same-day batches distinct.
+    The judge segment uses ``modelx<count>`` tokens (``+``-joined when multiple
+    judges), aligned with ``judge.py`` batch folder naming. The ``p_*`` segment lists
+    user/persona models inferred from every source's sibling ``p_*`` folder (sorted,
+    ``+``-joined when more than one). Provider agent, turn count, and runs-per-prompt
+    reuse the first source's generation folder when parsable; otherwise falls back to
+    ``t30__r1`` and ``a_unknown``. A timestamp suffix keeps same-day batches distinct.
 
     Args:
         source_eval_dirs: Non-empty list of resolved evaluation directories.
+        combined: Merged results dataframe (used for judge slug inference).
+        judge_slug: Optional override for the judge segment.
 
     Returns:
         Directory basename (no path separators), e.g.
-        ``j_pooled__p_claude_sonnet_4_5+gpt_4o_mini__a_gpt_4o__t30__r1__20260422_153000``.
+        ``j_gpt-5.4x1__p_claude_opus_4_5+gpt_5_2__a_gpt_5_4_nano__t30__r1__20260422_153000``.
     """
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    judge = _judge_slug_for_pool(combined, source_eval_dirs, judge_slug=judge_slug)
     persona_slug = _persona_slug_for_pool(source_eval_dirs)
     gen = _generation_folder_for_eval(source_eval_dirs[0])
     if gen is not None:
@@ -166,10 +267,10 @@ def _synthetic_pooled_folder_basename(source_eval_dirs: list[Path]) -> str:
             agent = meta["agent"]
             t = meta["turns"]
             r = meta["runs"]
-            return f"j_pooled__p_{persona_slug}__a_{agent}__t{t}__r{r}__{ts}"
+            return f"j_{judge}__p_{persona_slug}__a_{agent}__t{t}__r{r}__{ts}"
         except ValueError:
             pass
-    return f"j_pooled__p_{persona_slug}__a_unknown__t30__r1__{ts}"
+    return f"j_{judge}__p_{persona_slug}__a_unknown__t30__r1__{ts}"
 
 
 def _annotate_pooled_results(
@@ -217,21 +318,23 @@ def pool_evaluation_directories(
     *,
     personas_tsv: Path | None = None,
     skip_risk_analysis: bool = False,
+    judge_slug: str | None = None,
 ) -> Path:
     """
     Merge several judge runs into one ``results.csv`` and compute VERA artifacts.
 
     Loads each evaluation via ``ensure_results_csv`` (rebuilding from TSVs if needed),
     concatenates rows, then writes merged ``results.csv``, ``pool_metadata.json``, and
-    scoring artifacts under a new synthetic ``j_pooled__...`` directory.
+    scoring artifacts under a new synthetic ``j_<judge>__p_...`` directory.
 
     Args:
         source_paths: Paths to ``j_*`` folders or to ``results.csv`` inside them.
-        output_parent: Directory under which the new ``j_pooled__...`` folder is
+        output_parent: Directory under which the new merged ``j_*`` folder is
             created (e.g. repo ``output/``).
         personas_tsv: Personas file for risk-level analysis; defaults to
             ``data/personas.tsv`` under the repo when None.
         skip_risk_analysis: When True, skip ``score_results_by_risk`` and risk charts.
+        judge_slug: Optional override for the judge name (e.g. ``gpt-4ox1+sonnet45x1``).
 
     Returns:
         Path to the synthetic evaluation folder (``results.csv`` and ``scores/``).
@@ -279,14 +382,16 @@ def pool_evaluation_directories(
         print(
             "Warning: some evaluation paths are not under .../p_*/evaluations/j_* "
             f"({preview}). "
-            "Merged results and scores are unchanged; the new j_pooled__* folder name "
+            "Merged results and scores are unchanged; the new merged j_* folder name "
             "may use unknown placeholders for persona/agent/turns/runs. "
             "Use nested paths from generate.py / run_pipeline.py for descriptive "
             "names.",
             file=sys.stderr,
         )
 
-    synth_name = _synthetic_pooled_folder_basename(eval_dirs)
+    synth_name = _synthetic_pooled_folder_basename(
+        eval_dirs, combined, judge_slug=judge_slug
+    )
     out_eval = (output_parent / synth_name).resolve()
     out_eval.mkdir(parents=True, exist_ok=True)
     results_csv = out_eval / "results.csv"
@@ -421,8 +526,9 @@ def main() -> int:
     """
     parser = argparse.ArgumentParser(
         description=(
-            "Pool multiple judge evaluation runs into one scored folder, "
-            "or extract an evaluation path from run_pipeline log output."
+            "Merge multiple j_* evaluation runs (any mix of user agents and/or "
+            "judge models) into one scored folder, or extract an evaluation path "
+            "from run_pipeline log output."
         )
     )
     parser.add_argument(
@@ -434,7 +540,7 @@ def main() -> int:
         "-o",
         "--output-dir",
         help=(
-            "Parent directory for pooled output (a synthetic j_pooled__* folder is "
+            "Parent directory for pooled output (a synthetic j_<judge>__p_* folder is "
             "created inside, with pool_metadata.json next to results.csv). "
             "Default: output/ under the repo."
         ),

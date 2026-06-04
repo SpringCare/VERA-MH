@@ -89,15 +89,14 @@ Use this profile when you want a **reliable VERA-MH score comparable to the publ
 - **Max Conversation Turns**
   - **30** turns per conversation.
 - **Judges**
-  - Score the full batch with **GPT-4o** and **Claude Sonnet 4.5**.
-  - Reported scores are fairly insensitive to judge choice.
-  - One judge model is often enough if you want to save cost.
+  - Score the full batch with **GPT 5.4** (`gpt-5.4`).
+  - An IRR study found GPT 5.4 more aligned with human clinician ratings than the prior dual-judge setup (GPT-4o + Claude Sonnet 4.5).
 
 To run this profile in one scripted flow after [Environment setup](#environment-setup), see [Reliable VERA-MH score (automated)](#reliable-vera-mh-score-automated).
 
 ## Reliable VERA-MH score (automated)
 
-For the [recommended settings](#recommended-settings) (dual user agents, 30 turns, dual judges, pooled headline score), run from the repository root after [Environment setup](#environment-setup) (steps **0–2**: `uv sync`, activate `.venv`, configure `.env`) and, if you use a custom provider, the steps in [Connecting your own LLM, Agent, or API](#connecting-your-own-llm-or-api):
+For the [recommended settings](#recommended-settings) (dual user agents, 30 turns, GPT 5.4 judge, pooled headline score), run from the repository root after [Environment setup](#environment-setup) (steps **0–2**: `uv sync`, activate `.venv`, configure `.env`) and, if you use a custom provider, the steps in [Connecting your own LLM, Agent, or API](#connecting-your-own-llm-or-api):
 
 ```bash
 ./scripts/run_recommended_vera_pipeline.sh <provider-agent-model>
@@ -106,19 +105,19 @@ For the [recommended settings](#recommended-settings) (dual user agents, 30 turn
 Use the same **provider** model id you would pass to `run_pipeline.py` as `--provider-agent` (the system under evaluation). The script:
 
 - Runs `run_pipeline.py` **twice**: once with **GPT 5.2** as the user agent (`gpt-5.2`) and once with **Claude Opus 4.5** (`claude-opus-4-5-20251101`), each with **30** turns and **1** conversation per persona (all personas in `data/personas.tsv` unless you cap the count).
-- Judges each batch with **GPT-4o** and **Claude Sonnet 4.5** (`claude-sonnet-4-5-20250929`).
-- Merges both evaluation runs via `scripts/pool_vera_scores.py` into a **single pooled** folder `j_pooled__.../` (next to your `p_*` runs by default) containing merged `results.csv`, `pool_metadata.json`, `scores/scores.json`, and the usual score / risk visualizations. Use that pooled folder for headline VERA-MH numbers across the combined judge rows.
+- Judges each batch with **GPT 5.4** (`gpt-5.4`).
+- Merges both evaluation runs via `scripts/pool_vera_scores.py` into a **single pooled** folder `j_<judge>__p_.../` (e.g. `j_gpt-5.4x1__p_gpt_5_2+claude_opus_4_5__a_.../`, next to your `p_*` runs by default) containing merged `results.csv`, `pool_metadata.json`, `scores/scores.json`, and the usual score / risk visualizations. Use that pooled folder for headline VERA-MH numbers across both user-agent suites.
 
-By default, generation folders go under `output/`; the pooled `j_pooled__...` folder is created in that same parent unless you override it. See environment variables in `scripts/run_recommended_vera_pipeline.sh`, for example:
+By default, generation folders go under `output/`; the pooled merged `j_*` folder is created in that same parent unless you override it. See environment variables in `scripts/run_recommended_vera_pipeline.sh`, for example:
 
 | Variable | Purpose |
 |----------|---------|
 | `VERA_OUTPUT_PARENT` | Parent for new `p_*` runs (default: `output`) |
 | `VERA_MAX_CONCURRENT` | Passed through as `--max-concurrent` |
 | `VERA_MAX_PERSONAS` | Passed through as `--max-personas` (smoke tests) |
-| `VERA_POOL_OUTPUT` | Parent directory for the new `j_pooled__...` folder (default: same as `VERA_OUTPUT_PARENT`) |
+| `VERA_POOL_OUTPUT` | Parent directory for the new merged `j_<judge>__p_...` folder (default: same as `VERA_OUTPUT_PARENT`) |
 | `VERA_POOL_SKIP_RISK` | If set, skip pooled risk-level analysis |
-| `VERA_USER_A`, `VERA_USER_B`, `VERA_JUDGE_A`, `VERA_JUDGE_B` | Override default model ids (first/second suite and judge order) |
+| `VERA_USER_A`, `VERA_USER_B`, `VERA_JUDGE` | Override default model ids (first/second user-agent suite and judge) |
 
 Arguments after `<provider-agent-model>` are forwarded to `run_pipeline.py` (for example `--max-concurrent 10`).
 
@@ -211,11 +210,11 @@ This will generate conversations under `output/<p_* run>/conversations/` by defa
 
 4. **Judge the conversations**:
    ```bash
-   uv run python judge.py -f output/{YOUR_P_RUN}/ -j gpt-4o
+   uv run python judge.py -f output/{YOUR_P_RUN}/ -j gpt-5.4
    ```
    Point `-f` at a generation run folder: if it contains a `conversations/` subdir with `.txt` files, transcripts are read from there; otherwise a flat folder of `.txt` files is still supported. To resume a partial batch in the same evaluation folder (same judge specs as before), add `--resume` and set `-o` to that existing `j_*` folder (e.g. `output/{YOUR_P_RUN}/evaluations/j_*__.../`).
 
-**Judge model recommendations**: **GPT-4o** and **Claude Sonnet** have the highest inter-rater reliability with human clinicians as judge models.
+**Judge model recommendations**: **GPT 5.4** (`gpt-5.4`) is the recommended judge; an IRR study found it more aligned with human clinician ratings than GPT-4o and Claude Sonnet 4.5.
 
 **Parameters for `judge.py`:**
 
