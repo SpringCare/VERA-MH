@@ -779,6 +779,49 @@ class TestGeminiLLM(TestJudgeLLMBase):
             assert '{"answer": "Yes"' in debug["raw_content"]
 
     @pytest.mark.asyncio
+    async def test_structured_response_retry_transport_error_no_stale_debug(
+        self, monkeypatch
+    ):
+        """Failure debug from a prior attempt must not attach to transport errors."""
+        from pydantic import BaseModel, Field
+
+        async def _noop_sleep(_delay: float) -> None:
+            return None
+
+        monkeypatch.setattr("llm_clients.llm_interface.asyncio.sleep", _noop_sleep)
+
+        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+            mock_llm = MagicMock()
+
+            class TestResponse(BaseModel):
+                answer: str = Field(description="The answer")
+
+            raw_message = AIMessage(
+                content='{"answer": "stale"}',
+                tool_calls=[],
+            )
+            mock_structured_llm = MagicMock()
+            mock_structured_llm.ainvoke = AsyncMock(
+                side_effect=[
+                    _include_raw_invoke_result(None, raw=raw_message),
+                    Exception("transport error"),
+                ]
+            )
+            mock_llm.with_structured_output = MagicMock(
+                return_value=mock_structured_llm
+            )
+            mock_chat.return_value = mock_llm
+
+            llm = GeminiLLM(name="TestGemini", role=Role.JUDGE)
+            llm.max_llm_retries = 1
+
+            with pytest.raises(LLMGenerationFailed) as exc_info:
+                await llm.generate_structured_response("Test", TestResponse)
+
+            assert "transport error" in str(exc_info.value)
+            assert llm.last_response_metadata.get("structured_output_debug") is None
+
+    @pytest.mark.asyncio
     async def test_structured_response_metadata_fields(self):
         """Test that structured response metadata includes correct fields."""
         from pydantic import BaseModel

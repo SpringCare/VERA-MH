@@ -278,6 +278,7 @@ class GeminiLLM(JudgeLLM):
         failure_debug: Dict[str, Any] = {}
 
         async def _invoke() -> T:
+            failure_debug.clear()
             structured_llm = self.llm.with_structured_output(
                 response_model,
                 method="json_schema",
