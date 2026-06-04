@@ -558,3 +558,23 @@ class TestLLMInterfaceHooks:
         metadata = h.last_response_metadata
         assert metadata["attempt"] == 4
         assert metadata["will_retry"] is False
+
+
+@pytest.mark.unit
+class TestModelParamSupport:
+    """Tests for model-specific runtime parameter support on the base class."""
+
+    def test_model_supports_param_default(self):
+        assert LLMInterface._model_supports_param("any-model", "temperature")
+
+    def test_base_class_has_empty_unsupported_params_map(self):
+        assert LLMInterface._UNSUPPORTED_MODEL_PARAMS == {}
+        assert LLMInterface._model_supports_param("any-model", "temperature")
+
+    def test_filter_supported_params_passthrough(self):
+        params = {"temperature": 0, "max_tokens": 500, "top_p": 0.9}
+        filtered = LLMInterface._filter_supported_params("any-model", params)
+        assert filtered == params
+
+    def test_subclass_can_access_model_supports_param(self):
+        assert ConcreteLLM._model_supports_param("any-model", "temperature")

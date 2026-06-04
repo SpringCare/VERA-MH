@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Protocol, Type, TypeVar
+from typing import Any, ClassVar, Dict, List, Optional, Protocol, Type, TypeVar
 
 from pydantic import BaseModel
 
@@ -69,6 +69,10 @@ class LLMInterface(ABC):
       the LLM to generate the first turn. Defaults to DEFAULT_START_PROMPT.
     """
 
+    # Model name substring -> runtime params the API rejects for that model.
+    # Provider subclasses override with provider-specific constraints.
+    _UNSUPPORTED_MODEL_PARAMS: ClassVar[Dict[str, frozenset[str]]] = {}
+
     def __init__(
         self,
         name: str,
@@ -114,6 +118,26 @@ class LLMInterface(ABC):
         Subclasses may override to use a different id format.
         """
         return str(uuid.uuid4())
+
+    @classmethod
+    def _model_supports_param(cls, model_name: str, param_name: str) -> bool:
+        """Return False when ``param_name`` must not be sent for ``model_name``."""
+        model_lower = model_name.lower()
+        param_lower = param_name.lower()
+        for model_marker, unsupported in cls._UNSUPPORTED_MODEL_PARAMS.items():
+            if model_marker in model_lower:
+                if param_lower in {p.lower() for p in unsupported}:
+                    return False
+        return True
+
+    @classmethod
+    def _filter_supported_params(
+        cls, model_name: str, params: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Drop runtime params that ``model_name`` does not accept."""
+        return {
+            k: v for k, v in params.items() if cls._model_supports_param(model_name, k)
+        }
 
     def _update_conversation_id_from_metadata(self) -> None:
         """If the API returned a conversation_id in response metadata, use it.

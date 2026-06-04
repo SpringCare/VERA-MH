@@ -1,5 +1,5 @@
 import time
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import Any, ClassVar, Dict, List, Optional, Type, TypeVar
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -26,6 +26,10 @@ class ClaudeLLM(JudgeLLM):
     Prompt caching uses Anthropic's per-request ``cache_control`` (see ``caching`` and
     ``anthropic_cache_control`` constructor args).
     """
+
+    _UNSUPPORTED_MODEL_PARAMS: ClassVar[Dict[str, frozenset[str]]] = {
+        "opus-4-8": frozenset({"temperature"}),
+    }
 
     def _no_retry_substrings(self) -> tuple[str, ...]:
         # Anthropic API / Messages API (see https://docs.anthropic.com/en/api/errors)
@@ -77,6 +81,7 @@ class ClaudeLLM(JudgeLLM):
 
         # Override with any provided kwargs
         llm_params.update(kwargs)
+        llm_params = self._filter_supported_params(self.model_name, llm_params)
 
         # Print configuration before creating LLM
         print("Creating Claude LLM with parameters:")
