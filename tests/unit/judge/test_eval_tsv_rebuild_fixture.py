@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from judge.score_utils import build_dataframe_from_tsv_files, read_results_csv
+from judge.score_utils import build_dataframe_from_tsv_files, read_judge_results_csv
 
 # Folder name must contain ``__<run_id>`` so :func:`build_results_csv_from_tsv_files`
 # assigns the same ``run_id`` as in the saved ``results.csv``.
@@ -18,7 +18,7 @@ _FIXTURE_DIR = (
 
 
 def test_rebuilt_dataframe_matches_committed_results_csv() -> None:
-    df_csv = read_results_csv(_FIXTURE_DIR / "results.csv")
+    df_csv = read_judge_results_csv(_FIXTURE_DIR / "results.csv")
     df_tsv = build_dataframe_from_tsv_files(_FIXTURE_DIR)
 
     sort_cols = ["filename", "judge_model", "judge_instance"]

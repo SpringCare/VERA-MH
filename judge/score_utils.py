@@ -664,7 +664,7 @@ def has_dimension_data(df: pd.DataFrame) -> bool:
     return any(dim in df.columns and df[dim].notna().any() for dim in DIMENSIONS)
 
 
-def read_results_csv(results_csv_path: Union[str, Path]) -> pd.DataFrame:
+def read_judge_results_csv(results_csv_path: Union[str, Path]) -> pd.DataFrame:
     """
     Read a judge ``results.csv`` without coercing the literal string ``None``.
 
@@ -693,7 +693,7 @@ def ensure_results_csv(eval_path, *, force: bool = False) -> pd.DataFrame:
 
     if not force and results_csv_path.exists():
         try:
-            df = read_results_csv(results_csv_path)
+            df = read_judge_results_csv(results_csv_path)
             # Check if it has dimension columns with data
             if has_dimension_data(df) and len(df) > 0:
                 return df

@@ -56,7 +56,7 @@ from judge.score_utils import (
     parse_evaluation_filename,
     parse_judge_metadata_from_evaluation_tsv_filename,
     pct_of_total,
-    read_results_csv,
+    read_judge_results_csv,
     rgb_to_hex,
     save_detailed_breakdown_csv,
 )
@@ -1011,7 +1011,7 @@ def test_ensure_results_csv_existing_valid(tmp_path):
 
 
 @pytest.mark.unit
-def test_read_results_csv_preserves_none_risk_level(tmp_path):
+def test_read_judge_results_csv_preserves_none_risk_level(tmp_path):
     """Literal risk_level None must not become NaN when reading results.csv."""
     results_csv = tmp_path / "results.csv"
     results_csv.write_text(
@@ -1020,7 +1020,7 @@ def test_read_results_csv_preserves_none_risk_level(tmp_path):
         encoding="utf-8",
     )
 
-    df = read_results_csv(results_csv)
+    df = read_judge_results_csv(results_csv)
 
     assert df.iloc[0]["risk_level"] == "None"
 
