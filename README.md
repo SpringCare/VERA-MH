@@ -33,7 +33,7 @@ There are known limitations of the current structure, which will be simplified a
 
 # Getting started
 
-This page covers [Environment setup](#environment-setup), optional [custom provider wiring](#connecting-your-own-llm-or-api), [Recommended settings](#recommended-settings) for comparable scores, the [automated pooled pipeline](#reliable-vera-mh-score-automated), and [Running VERA-MH step by step](#running-vera-mh-step-by-step) (`run_pipeline.py`, `generate.py`, `judge.py`, scoring, and flag tables).
+This page covers [Environment setup](#environment-setup), optional [custom provider wiring](#connecting-your-own-llm-or-api), [Recommended settings](#recommended-settings) for comparable scores, the [automated pooled pipeline](#reliable-vera-mh-score-automated), and [Running VERA-MH step by step](#running-vera-mh-step-by-step) (`run_pipeline.py`, `generate.py`, `judge.py`, scoring, comparison, and improvement reports).
 
 ## Environment setup
 
@@ -294,6 +294,44 @@ The output from this script goes to the `score_comparisons` folder by default.  
 * `{input_filename}_output.png` contains a visualization of the VERA-MH v1.1 Score for each dimension and overall for each Provider Model in the input csv.
 * `{input_filename}_output.csv` contains the same information in CSV form (plus two bonus columns:  `Overall HPH%` and `Overall BP%`)
 * `{input_filename}_output_detailed.csv` contains the same information but adds the HPH% and BP% for each of the rubric dimensions.
+
+7. **(Optional) Summarize judge results into an improvement report**:
+   ```bash
+   uv run python3 scripts/summarize_results.py \
+     --results output/{YOUR_P_RUN}/evaluations/{YOUR_J_RUN}/results.csv \
+     --rubric data/rubric.tsv \
+     --out-stats output/{YOUR_J_RUN}/improvement_stats.json \
+     --out-md output/{YOUR_J_RUN}/improvement_report.md
+   ```
+
+After scoring, use `scripts/summarize_results.py` to turn a judge **`results.csv`** into a structured breakdown of where a provider failed and which rubric questions drove those failures. The script reads per-dimension outcome columns plus `*_yes_question_id` / `*_yes_reasoning` (the rubric branch that triggered a Suboptimal or High Potential for Harm rating), joins question text from **`data/rubric.tsv`**, and emits:
+
+* **`--out-stats`** — JSON with dimension scores, global failure modes, and per-dimension counts broken down by outcome band and rubric question (including optional judge reasoning exemplars).
+* **`--out-md`** — Markdown **improvement report** with a TL;DR grouped by dimension (High Potential for Harm before Suboptimal), then detailed per-dimension sections with percentages, rubric question text, and sample judge reasoning.
+
+If you omit both output paths, the script prints a short JSON meta summary and a preview of the Markdown to stdout.
+
+**Parameters for `scripts/summarize_results.py`:**
+
+| Flag | Description |
+|------|-------------|
+| `--results` | Path to judge **`results.csv`** (required) |
+| `--rubric` | Rubric TSV for question text and severity (default: `data/rubric.tsv`) |
+| `--out-stats` | Write structured JSON stats here |
+| `--out-md` | Write Markdown improvement report here |
+| `--top-questions` | Max rubric questions listed per outcome band per dimension (default: `12`) |
+| `--exemplars` | Max distinct judge reasoning snippets per question bucket (default: `3`) |
+| `--low-sample-threshold` | If total rows are below this, flag the report as low-sample (default: `30`) |
+
+**Batch mode:** To generate reports for many evaluation folders at once (each child dir must contain `results.csv`), use `scripts/batch_summarize_evaluations.py`:
+
+```bash
+uv run python3 scripts/batch_summarize_evaluations.py \
+  output/v1.1/evaluations_v1.1.1 \
+  -o output/v1.1/v1.1.1_reports
+```
+
+See `uv run python3 scripts/summarize_results.py --help` for all options.
 
 ### Using Extra Parameters
 
