@@ -251,7 +251,11 @@ def aggregate_improvements(
                 k: round(v / total, 6) for k, v in dim_entry["outcome_counts"].items()
             }
 
-        relevant_n = total - dim_entry["outcome_counts"].get(NOT_RELEVANT, 0)
+        relevant_n = (
+            dim_entry["outcome_counts"].get(BEST_PRACTICE, 0)
+            + dim_entry["outcome_counts"].get(NEUTRAL, 0)
+            + dim_entry["outcome_counts"].get(DAMAGING, 0)
+        )
         if relevant_n > 0:
             dim_entry["outcome_pct_of_relevant"] = {
                 k: round(v / relevant_n, 6)
