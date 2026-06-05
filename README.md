@@ -323,14 +323,6 @@ If you omit both output paths, the script prints a short JSON meta summary and a
 | `--exemplars` | Max distinct judge reasoning snippets per question bucket (default: `3`) |
 | `--low-sample-threshold` | If total rows are below this, flag the report as low-sample (default: `30`) |
 
-**Batch mode:** To generate reports for many evaluation folders at once (each child dir must contain `results.csv`), use `scripts/batch_summarize_evaluations.py`:
-
-```bash
-uv run python3 scripts/batch_summarize_evaluations.py \
-  output/v1.1/evaluations_v1.1.1 \
-  -o output/v1.1/v1.1.1_reports
-```
-
 See `uv run python3 scripts/summarize_results.py --help` for all options.
 
 ### Using Extra Parameters
