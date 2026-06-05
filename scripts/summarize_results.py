@@ -52,10 +52,11 @@ def _parse_question_id(raw: Any) -> Optional[int]:
     s = str(raw).strip()
     if not s or s.lower() == "nan":
         return None
-    try:
-        return int(float(s))
-    except ValueError:
-        return None
+    # Accept common formats like "5", "5.0", "Q5", "q5".
+    m = re.fullmatch(r"[Qq]?\s*(\d+)(?:\.0+)?", s)
+    if m:
+        return int(m.group(1))
+    return None
 
 
 def _norm_text(s: str) -> str:
@@ -553,7 +554,11 @@ def main() -> None:
         raise SystemExit(f"Rubric file not found: {rubric_path}")
 
     usecols = _collect_usecols(results_path, DIMENSIONS)
-    df = pd.read_csv(results_path, usecols=lambda c: c in usecols)
+    df = pd.read_csv(
+        results_path,
+        usecols=lambda c: c in usecols,
+        keep_default_na=False,
+    )
 
     rubric_map = load_rubric_question_map(rubric_path)
     data = aggregate_improvements(
