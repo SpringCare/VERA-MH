@@ -33,7 +33,8 @@ from judge.rubric_config import (  # noqa: E402
     COL_QUESTION_ID,
     COL_SEVERITY,
 )
-from judge.score_utils import DIMENSIONS, calculate_dimension_scores  # noqa: E402
+from judge.score_utils import calculate_dimension_scores  # noqa: E402
+from judge.utils import load_rubric_structure  # noqa: E402
 
 # Order here only affects the first aggregation pass; TL;DR uses HPH then Suboptimal.
 FAILURE_OUTCOMES = (DAMAGING, NEUTRAL)
@@ -78,6 +79,14 @@ def _outcome_rank(outcome: str) -> int:
     if outcome == NEUTRAL:
         return 1
     return 0
+
+
+def load_rubric_dimensions(rubric_path: Path) -> List[str]:
+    """Unique dimension names from the rubric, in first-seen order."""
+    dimensions, _ = load_rubric_structure(str(rubric_path))
+    if not dimensions:
+        raise ValueError(f"No dimensions found in rubric: {rubric_path}")
+    return dimensions
 
 
 def load_rubric_question_map(rubric_path: Path) -> Dict[int, Dict[str, str]]:
@@ -169,7 +178,7 @@ def aggregate_improvements(
 ) -> Dict[str, Any]:
     total = len(df)
     dims_present = [d for d in dimensions if d in df.columns]
-    dim_scores, _ = calculate_dimension_scores(df, detailed=True)
+    dim_scores, _ = calculate_dimension_scores(df, detailed=True, dimensions=dimensions)
 
     out: Dict[str, Any] = {
         "meta": {
@@ -557,7 +566,8 @@ def main() -> None:
     if not rubric_path.is_file():
         raise SystemExit(f"Rubric file not found: {rubric_path}")
 
-    usecols = _collect_usecols(results_path, DIMENSIONS)
+    dimensions = load_rubric_dimensions(rubric_path)
+    usecols = _collect_usecols(results_path, dimensions)
     df = pd.read_csv(
         results_path,
         usecols=lambda c: c in usecols,
@@ -568,24 +578,25 @@ def main() -> None:
     data = aggregate_improvements(
         df,
         rubric_map,
-        DIMENSIONS,
+        dimensions,
         exemplars_per_bucket=args.exemplars,
         top_questions_per_band=args.top_questions,
         low_sample_threshold=args.low_sample_threshold,
     )
     data["meta"]["results_path"] = str(results_path)
     data["meta"]["rubric_path"] = str(rubric_path)
+    data["meta"]["dimensions_from_rubric"] = dimensions
 
     if args.out_stats:
         args.out_stats.parent.mkdir(parents=True, exist_ok=True)
         args.out_stats.write_text(json.dumps(data, indent=2), encoding="utf-8")
     if args.out_md:
         args.out_md.parent.mkdir(parents=True, exist_ok=True)
-        args.out_md.write_text(render_markdown(data, DIMENSIONS), encoding="utf-8")
+        args.out_md.write_text(render_markdown(data, dimensions), encoding="utf-8")
 
     if not args.out_stats and not args.out_md:
         print(json.dumps(data["meta"], indent=2))
-        print(render_markdown(data, DIMENSIONS)[:4000])
+        print(render_markdown(data, dimensions)[:4000])
 
 
 if __name__ == "__main__":
