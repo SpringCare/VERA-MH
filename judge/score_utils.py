@@ -730,14 +730,14 @@ def save_detailed_breakdown_csv(
     for model in sorted_data:
         row = {
             "Model": model["model_name"],
-            "Overall VERA-MH v1.1 Score": round(model["vera_score"], 1),
+            "Overall VERA-MH v1.1.1 Score": round(model["vera_score"], 1),
             "Overall %HPH": round(model.get("overall_hph_pct", 0.0), 1),
             "Overall %BP": round(model.get("overall_bp_pct", 0.0), 1),
         }
         for dim in DIMENSIONS:
             short_name = DIMENSION_SHORT_NAMES.get(dim, dim)
             dim_data = model["dimensions"].get(dim, {})
-            row[f"{short_name} VERA-MH v1.1 Score"] = round(
+            row[f"{short_name} VERA-MH v1.1.1 Score"] = round(
                 dim_data.get("vera_score", 0.0), 1
             )
             row[f"{short_name} %HPH"] = round(dim_data.get("hph_pct", 0.0), 1)
