@@ -432,6 +432,7 @@ class TestPipelineConfiguration:
             per_judge=pipeline_args.judge_per_judge,
             verbose_workers=pipeline_args.judge_verbose_workers,
             resume=pipeline_args.resume_judge,
+            debug=pipeline_args.debug,
         )
 
         # Verify structure
@@ -442,6 +443,7 @@ class TestPipelineConfiguration:
         assert judge_args.judge_model == ["claude-sonnet-4-5-20250929"]
         assert judge_args.output is None
         assert judge_args.resume is False
+        assert judge_args.debug is False
 
     def test_empty_extra_params_dont_pollute_config(self):
         """Test that empty extra params don't add unwanted keys."""
