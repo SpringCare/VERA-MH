@@ -1,5 +1,5 @@
 import time
-from typing import Any, ClassVar, Dict, List, Optional, Type, TypeVar
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -27,9 +27,10 @@ class ClaudeLLM(JudgeLLM):
     ``anthropic_cache_control`` constructor args).
     """
 
-    _UNSUPPORTED_MODEL_PARAMS: ClassVar[Dict[str, frozenset[str]]] = {
-        "opus-4-8": frozenset({"temperature"}),
-    }
+    def _unsupported_model_params(self) -> Dict[str, frozenset[str]]:
+        return {
+            "opus-4-8": frozenset({"temperature"}),
+        }
 
     def _no_retry_substrings(self) -> tuple[str, ...]:
         # Anthropic API / Messages API (see https://docs.anthropic.com/en/api/errors)

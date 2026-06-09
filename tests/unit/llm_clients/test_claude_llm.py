@@ -124,15 +124,38 @@ class TestClaudeLLM(TestJudgeLLMBase):
             assert "temperature" not in call_kwargs
             assert call_kwargs["max_tokens"] == 500
 
-    def test_model_supports_param_unsupported_for_opus_4_8(self):
-        assert not ClaudeLLM._model_supports_param("claude-opus-4-8", "temperature")
+    def test_model_supports_param_unsupported_for_opus_4_8(self, default_llm_kwargs):
+        with patch("llm_clients.claude_llm.ChatAnthropic"):
+            llm = ClaudeLLM(
+                name="TestClaude",
+                role=Role.JUDGE,
+                model_name="claude-opus-4-8",
+                **default_llm_kwargs,
+            )
+        assert not llm._model_supports_param("claude-opus-4-8", "temperature")
 
-    def test_model_supports_param_case_insensitive(self):
-        assert not ClaudeLLM._model_supports_param("Claude-Opus-4-8", "Temperature")
+    def test_model_supports_param_case_insensitive(self, default_llm_kwargs):
+        with patch("llm_clients.claude_llm.ChatAnthropic"):
+            llm = ClaudeLLM(
+                name="TestClaude",
+                role=Role.JUDGE,
+                model_name="claude-opus-4-8",
+                **default_llm_kwargs,
+            )
+        assert not llm._model_supports_param("Claude-Opus-4-8", "Temperature")
 
-    def test_filter_supported_params_strips_temperature_for_opus_4_8(self):
+    def test_filter_supported_params_strips_temperature_for_opus_4_8(
+        self, default_llm_kwargs
+    ):
+        with patch("llm_clients.claude_llm.ChatAnthropic"):
+            llm = ClaudeLLM(
+                name="TestClaude",
+                role=Role.JUDGE,
+                model_name="claude-opus-4-8",
+                **default_llm_kwargs,
+            )
         params = {"temperature": 0, "max_tokens": 500, "top_p": 0.9}
-        filtered = ClaudeLLM._filter_supported_params("claude-opus-4-8", params)
+        filtered = llm._filter_supported_params("claude-opus-4-8", params)
         assert filtered == {"max_tokens": 500, "top_p": 0.9}
 
     @pytest.mark.asyncio
