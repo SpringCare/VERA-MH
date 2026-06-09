@@ -17,7 +17,35 @@ R = TypeVar("R")
 def extract_structured_invoke_result(
     invoke_result: Any,
 ) -> tuple[Any, Any, Any]:
-    """Unpack LangChain ``include_raw=True`` structured output payloads."""
+    """Unpack LangChain ``include_raw=True`` structured output payloads.
+
+    With ``include_raw=True``, ``structured_llm.ainvoke(...)`` returns a dict
+    instead of a bare Pydantic model. We split it into ``(parsed, raw, error)``
+    so callers can use the model *and* read token usage from the raw AIMessage.
+
+    Toy example::
+
+        # LangChain returns something like:
+        invoke_result = {
+            "parsed": QuestionResponse(answer="Yes", reasoning="..."),
+            "raw": AIMessage(  # has response_metadata / usage_metadata
+                content='{"answer": "Yes", "reasoning": "..."}',
+                response_metadata={"token_usage": {...}},
+            ),
+            "parsing_error": None,
+        }
+
+        parsed, raw, parsing_error = extract_structured_invoke_result(invoke_result)
+        # parsed -> QuestionResponse(...)
+        # raw -> AIMessage(...)  (use for usage logging)
+        # parsing_error -> None
+
+    Without ``include_raw``, LangChain returns only the parsed model::
+
+        invoke_result = QuestionResponse(answer="Yes", reasoning="...")
+        parsed, raw, parsing_error = extract_structured_invoke_result(invoke_result)
+        # parsed -> QuestionResponse(...), raw -> None, parsing_error -> None
+    """
     if isinstance(invoke_result, dict) and "parsed" in invoke_result:
         return (
             invoke_result.get("parsed"),
