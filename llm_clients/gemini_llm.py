@@ -43,8 +43,12 @@ def _raw_message_content_for_log(raw: Any) -> str:
 def _serialize_raw_message(raw: Any) -> Dict[str, Any]:
     """Serialize an AIMessage (or similar) for failure diagnostics.
 
-    Omits message content; use ``raw_content`` on the failure debug dict for a
-    truncated body preview so logs stay bounded when the dict is printed whole.
+    Returns the structural ``raw`` sub-dict (type, tool_calls, response_metadata,
+    etc.) used inside :meth:`_build_structured_output_failure_debug`. It
+    deliberately omits ``AIMessage.content`` here so the body is not duplicated
+    inside nested metadata. The caller adds a separate top-level ``raw_content``
+    key with a truncated text preview — one bounded copy of the response text
+    when the whole failure debug dict is logged.
     """
     if raw is None:
         return {}
