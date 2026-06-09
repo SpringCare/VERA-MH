@@ -27,6 +27,11 @@ class ClaudeLLM(JudgeLLM):
     ``anthropic_cache_control`` constructor args).
     """
 
+    def _unsupported_model_params(self) -> Dict[str, frozenset[str]]:
+        return {
+            "opus-4-8": frozenset({"temperature"}),
+        }
+
     def _no_retry_substrings(self) -> tuple[str, ...]:
         # Anthropic API / Messages API (see https://docs.anthropic.com/en/api/errors)
         return (
@@ -77,6 +82,7 @@ class ClaudeLLM(JudgeLLM):
 
         # Override with any provided kwargs
         llm_params.update(kwargs)
+        llm_params = self._filter_supported_params(self.model_name, llm_params)
 
         # Print configuration before creating LLM
         print("Creating Claude LLM with parameters:")
