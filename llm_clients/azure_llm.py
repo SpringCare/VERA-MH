@@ -12,7 +12,12 @@ from utils.conversation_utils import build_langchain_messages
 from utils.debug import debug_print
 
 from .config import Config
-from .llm_interface import JudgeLLM, LLMGenerationFailed
+from .llm_interface import (
+    JudgeLLM,
+    LLMGenerationFailed,
+    ensure_pydantic_response,
+    extract_structured_invoke_result,
+)
 
 # Define type variable for Pydantic models
 T = TypeVar("T", bound=BaseModel)
@@ -148,6 +153,39 @@ class AzureLLM(JudgeLLM):
         self.max_tokens = getattr(self.llm, "max_tokens", None)
         self.top_p = getattr(self.llm, "top_p", None)
 
+    def _enrich_azure_message_metadata(self, response: Any) -> None:
+        """Merge token usage and response fields from a LangChain AIMessage."""
+        if response is None:
+            return
+
+        response_id = getattr(response, "id", None)
+        if response_id is not None:
+            self._last_response_metadata["response_id"] = response_id
+
+        model = (
+            getattr(response.response_metadata, "model", self.model_name)
+            if hasattr(response, "response_metadata")
+            else self.model_name
+        )
+        if model is not None:
+            self._last_response_metadata["model"] = model
+
+        if hasattr(response, "response_metadata") and response.response_metadata:
+            metadata = response.response_metadata
+
+            if "token_usage" in metadata:
+                usage = metadata["token_usage"]
+                self._last_response_metadata["usage"] = {
+                    "input_tokens": usage.get("input_tokens", 0),
+                    "output_tokens": usage.get("output_tokens", 0),
+                    "total_tokens": usage.get("total_tokens", 0),
+                }
+
+            self._last_response_metadata["finish_reason"] = metadata.get(
+                "finish_reason"
+            )
+            self._last_response_metadata["raw_metadata"] = dict(metadata)
+
     async def start_conversation(self) -> str:
         """Produce the first response:
         - static first_message if set, or
@@ -243,23 +281,7 @@ class AzureLLM(JudgeLLM):
                 finish_reason=None,
                 response=response,
             )
-
-            if hasattr(response, "response_metadata") and response.response_metadata:
-                metadata = response.response_metadata
-
-                if "token_usage" in metadata:
-                    usage = metadata["token_usage"]
-                    self._last_response_metadata["usage"] = {
-                        "input_tokens": usage.get("input_tokens", 0),
-                        "output_tokens": usage.get("output_tokens", 0),
-                        "total_tokens": usage.get("total_tokens", 0),
-                    }
-
-                self._last_response_metadata["finish_reason"] = metadata.get(
-                    "finish_reason"
-                )
-
-                self._last_response_metadata["raw_metadata"] = dict(metadata)
+            self._enrich_azure_message_metadata(response)
 
             return response.text
 
@@ -285,11 +307,14 @@ class AzureLLM(JudgeLLM):
         messages.append(HumanMessage(content=message))
 
         async def _invoke() -> T:
-            structured_llm = self.llm.with_structured_output(response_model)
+            structured_llm = self.llm.with_structured_output(
+                response_model,
+                include_raw=True,
+            )
 
             try:
                 start_time = time.time()
-                response = await structured_llm.ainvoke(messages)
+                invoke_result = await structured_llm.ainvoke(messages)
                 end_time = time.time()
             except Exception as e:
                 error_msg = str(e)
@@ -300,18 +325,22 @@ class AzureLLM(JudgeLLM):
                     ) from e
                 raise
 
+            parsed, raw, _ = extract_structured_invoke_result(invoke_result)
+            response = ensure_pydantic_response(parsed, response_model)
+
             self._set_response_metadata(
                 "azure",
                 response_time_seconds=round(end_time - start_time, 3),
                 structured_output=True,
             )
+            self._enrich_azure_message_metadata(raw)
 
-            if not isinstance(response, response_model):
+            if response is None:
                 raise ValueError(
                     f"Response is not an instance of {response_model.__name__}"
                 )
 
-            return response  # type: ignore[return-value]
+            return response
 
         return await self._run_with_retry(_invoke, provider="azure")
 

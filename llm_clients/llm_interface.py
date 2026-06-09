@@ -8,10 +8,37 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Protocol, Type, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 T = TypeVar("T", bound=BaseModel)
 R = TypeVar("R")
+
+
+def extract_structured_invoke_result(
+    invoke_result: Any,
+) -> tuple[Any, Any, Any]:
+    """Unpack LangChain ``include_raw=True`` structured output payloads."""
+    if isinstance(invoke_result, dict) and "parsed" in invoke_result:
+        return (
+            invoke_result.get("parsed"),
+            invoke_result.get("raw"),
+            invoke_result.get("parsing_error"),
+        )
+    return invoke_result, None, None
+
+
+def ensure_pydantic_response(response: Any, response_model: Type[T]) -> Optional[T]:
+    """Return a Pydantic model instance from structured LLM output, or None."""
+    if response is None:
+        return None
+    if isinstance(response, response_model):
+        return response
+    if isinstance(response, dict):
+        try:
+            return response_model.model_validate(response)
+        except ValidationError:
+            return None
+    return None
 
 
 class RetryOnErrorCallback(Protocol):

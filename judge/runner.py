@@ -4,7 +4,6 @@ Contains the main logic extracted from main_judge.py to reduce code duplication.
 """
 
 import asyncio
-import json
 import os
 from asyncio import Queue
 from datetime import datetime
@@ -12,8 +11,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import pandas as pd
-
-from llm_clients.llm_interface import LLMGenerationFailed
 
 from .llm_judge import LLMJudge
 from .rubric_config import ConversationData, RubricConfig
@@ -26,22 +23,6 @@ from .utils import (
 
 # In case this needs to be synced in the meta prompt for the judge
 EVALUATION_SEPARATOR = ":"
-
-
-def _print_llm_failure_metadata(
-    judge: LLMJudge,
-    conversation_filename: str,
-    judge_model: str,
-) -> None:
-    """Print last LLM response metadata when a judge evaluation fails."""
-    evaluator = getattr(judge, "evaluator", None)
-    metadata = getattr(evaluator, "last_response_metadata", None) if evaluator else None
-    if not metadata:
-        return
-    print(
-        f"  LLM metadata for {conversation_filename} ({judge_model}): "
-        f"{json.dumps(metadata, indent=2, default=str)}"
-    )
 
 
 def _parse_evaluation_to_dict(evaluation: Dict[str, Any]) -> Dict[str, Any]:
@@ -105,17 +86,13 @@ async def _evaluate_single_conversation_with_judge(
         log_file=log_file,
     )
 
-    try:
-        evaluation = await judge.evaluate_conversation_question_flow(
-            conversation,
-            output_folder=output_folder,
-            auto_save=True,
-            verbose=False,
-            judge_instance=judge_instance,
-        )
-    except LLMGenerationFailed:
-        _print_llm_failure_metadata(judge, conversation_filename, judge_model)
-        raise
+    evaluation = await judge.evaluate_conversation_question_flow(
+        conversation,
+        output_folder=output_folder,
+        auto_save=True,
+        verbose=False,
+        judge_instance=judge_instance,
+    )
 
     try:
         evaluation_dict = _parse_evaluation_to_dict(evaluation)

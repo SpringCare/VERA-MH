@@ -245,6 +245,112 @@ def assert_llm_generation_failed(
 
 
 # ============================================================================
+# Structured output test helpers
+# ============================================================================
+
+STRUCTURED_USAGE_INPUT = 500
+STRUCTURED_USAGE_OUTPUT = 42
+STRUCTURED_USAGE_TOTAL = 542
+
+
+def structured_include_raw_invoke_result(
+    parsed: Any,
+    raw: Any,
+    parsing_error: Any = None,
+) -> dict[str, Any]:
+    """LangChain ``include_raw=True`` payload for structured output mocks."""
+    return {
+        "parsed": parsed,
+        "raw": raw,
+        "parsing_error": parsing_error,
+    }
+
+
+def mock_raw_metadata_for_structured_usage(provider: str) -> Dict[str, Any]:
+    """Provider-specific usage metadata for mock raw AIMessages."""
+    if provider == "claude":
+        return {
+            "model": "claude-sonnet-4-5-20250929",
+            "usage": {
+                "input_tokens": STRUCTURED_USAGE_INPUT,
+                "output_tokens": STRUCTURED_USAGE_OUTPUT,
+            },
+            "stop_reason": "end_turn",
+        }
+    if provider == "openai":
+        return {
+            "model_name": "gpt-5.4-mini-2026-03-17",
+            "token_usage": {
+                "prompt_tokens": STRUCTURED_USAGE_INPUT,
+                "completion_tokens": STRUCTURED_USAGE_OUTPUT,
+                "total_tokens": STRUCTURED_USAGE_TOTAL,
+            },
+            "finish_reason": "stop",
+            "usage_metadata": {
+                "input_tokens": STRUCTURED_USAGE_INPUT,
+                "output_tokens": STRUCTURED_USAGE_OUTPUT,
+                "total_tokens": STRUCTURED_USAGE_TOTAL,
+            },
+        }
+    if provider == "azure":
+        return {
+            "token_usage": {
+                "input_tokens": STRUCTURED_USAGE_INPUT,
+                "output_tokens": STRUCTURED_USAGE_OUTPUT,
+                "total_tokens": STRUCTURED_USAGE_TOTAL,
+            },
+            "finish_reason": "stop",
+        }
+    if provider == "gemini":
+        return {
+            "model_name": "gemini-1.5-pro",
+            "usage_metadata": {
+                "prompt_token_count": STRUCTURED_USAGE_INPUT,
+                "candidates_token_count": STRUCTURED_USAGE_OUTPUT,
+                "total_token_count": STRUCTURED_USAGE_TOTAL,
+            },
+        }
+    raise ValueError(f"Unsupported provider: {provider}")
+
+
+def assert_structured_output_include_raw(
+    mock_with_structured_output: Any,
+    response_model: type,
+) -> None:
+    """Assert structured output was requested with include_raw=True."""
+    mock_with_structured_output.assert_called_once()
+    args, kwargs = mock_with_structured_output.call_args
+    assert args[0] is response_model
+    assert kwargs.get("include_raw") is True
+
+
+def assert_structured_usage_values(metadata: Dict[str, Any], provider: str) -> None:
+    """Assert provider-specific token usage was captured from the raw message."""
+    usage = metadata["usage"]
+    assert isinstance(usage, dict)
+    assert len(usage) > 0
+
+    if provider == "claude":
+        assert usage["input_tokens"] == STRUCTURED_USAGE_INPUT
+        assert usage["output_tokens"] == STRUCTURED_USAGE_OUTPUT
+        assert usage["total_tokens"] == STRUCTURED_USAGE_TOTAL
+    elif provider == "openai":
+        assert usage["input_tokens"] == STRUCTURED_USAGE_INPUT
+        assert usage["output_tokens"] == STRUCTURED_USAGE_OUTPUT
+        assert usage["total_tokens"] == STRUCTURED_USAGE_TOTAL
+    elif provider == "azure":
+        assert usage["input_tokens"] == STRUCTURED_USAGE_INPUT
+        assert usage["output_tokens"] == STRUCTURED_USAGE_OUTPUT
+        assert usage["total_tokens"] == STRUCTURED_USAGE_TOTAL
+    elif provider == "gemini":
+        assert usage["prompt_token_count"] == STRUCTURED_USAGE_INPUT
+        assert usage["candidates_token_count"] == STRUCTURED_USAGE_OUTPUT
+        assert usage["total_token_count"] == STRUCTURED_USAGE_TOTAL
+    else:
+        raise ValueError(f"Unsupported provider: {provider}")
+
+
+# ============================================================================
 # Mock Verification
 # ============================================================================
 
