@@ -131,8 +131,10 @@ def extract_last_response_metadata(llm: Any) -> dict[str, Any]:
     """Read last_response_metadata from an LLMInterface or wrapper with .evaluator."""
     if llm is None:
         return {}
+    # if LLMJudge passed as llm, get its self.evaluator else use llm
     evaluator = getattr(llm, "evaluator", None)
     target = evaluator if evaluator is not None else llm
+    # both conversation and judges store responses in last_response_metadata
     metadata = getattr(target, "last_response_metadata", None)
     return metadata or {}
 
