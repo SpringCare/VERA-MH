@@ -147,13 +147,7 @@ class GeminiLLM(JudgeLLM):
         if response_id is not None:
             self._last_response_metadata["response_id"] = response_id
 
-        model = (
-            getattr(response.response_metadata, "model_name", self.model_name)
-            if hasattr(response, "response_metadata")
-            else self.model_name
-        )
-        if model is not None:
-            self._last_response_metadata["model"] = model
+        self._last_response_metadata["model"] = self._extract_response_model(response)
 
         if hasattr(response, "response_metadata") and response.response_metadata:
             metadata = response.response_metadata
@@ -221,11 +215,7 @@ class GeminiLLM(JudgeLLM):
             response = await self.llm.ainvoke(messages)
             end_time = time.time()
 
-            model = (
-                getattr(response.response_metadata, "model_name", self.model_name)
-                if hasattr(response, "response_metadata")
-                else self.model_name
-            )
+            model = self._extract_response_model(response)
             self._set_response_metadata(
                 "gemini",
                 response_id=getattr(response, "id", None),

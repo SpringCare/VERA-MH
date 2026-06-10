@@ -280,6 +280,23 @@ class LLMInterface(ABC):
             f"LLM call failed after {max_attempts} attempts: {last_exception}"
         ) from last_exception
 
+    def _extract_response_model(self, response: Any) -> Optional[str]:
+        """Extract model identifier from a LangChain AIMessage response."""
+        metadata_obj = getattr(response, "response_metadata", None)
+        model = None
+        if metadata_obj is not None:
+            for key in ("model", "model_name"):
+                if isinstance(metadata_obj, dict):
+                    value = metadata_obj.get(key)
+                else:
+                    value = getattr(metadata_obj, key, None)
+                if isinstance(value, str) and value:
+                    model = value
+                    break
+        if model is None:
+            model = getattr(self, "model_name", None)
+        return model
+
     def _set_response_metadata(self, provider: str, **extra: Any) -> None:
         """Set last_response_metadata with common fields; pass extra keys as kwargs.
 

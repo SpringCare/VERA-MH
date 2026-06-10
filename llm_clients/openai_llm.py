@@ -99,11 +99,10 @@ class OpenAILLM(JudgeLLM):
                 response.additional_kwargs
             )
 
+        self._last_response_metadata["model"] = self._extract_response_model(response)
+
         if hasattr(response, "response_metadata") and response.response_metadata:
             metadata = response.response_metadata
-
-            if "model_name" in metadata:
-                self._last_response_metadata["model"] = metadata["model_name"]
 
             if "token_usage" in metadata:
                 token_usage = metadata["token_usage"]
