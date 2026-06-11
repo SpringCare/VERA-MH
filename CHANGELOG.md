@@ -2,6 +2,33 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) where versioning is applied.
 
+## [Unreleased]
+
+## [1.1.1](https://github.com/SpringCare/VERA-MH/releases/tag/v1.1.1) \- 2026-06-12
+
+### Breaking / migration
+
+- **Recommended judge profile** — An internal inter-rater reliability (IRR) iteration found **GPT 5.4** (`gpt-5.4`) most aligned with human clinician ratings on a set of 50 newly simulated conversations, replacing the v1.1 dual-judge setup (**GPT-4o** \+ **Claude Sonnet 4.5**). Update automation and comparisons that assume dual judges.
+
+### Runtime, CLI, and pipeline
+
+- **LLM runtime params** — Provider clients filter model-unsupported parameters before API calls; **Claude Opus 4.8** (`claude-opus-4-8`) rejects **`temperature`** (stripped automatically).  
+- **Gemini judging** — Structured judge output uses **`json_schema`** for improved stability with Gemini models; judge logs include structured-output failure diagnostics when parsing fails.  
+- **`judge/score_utils.read_judge_results_csv()`** — Reads **`results.csv`** with **`keep_default_na=False`** so persona risk level **`None`** (literal string) is preserved when pooling or rescoring.
+
+### Automation (recommended scoring; when scripts are present)
+
+- **`scripts/run_recommended_vera_pipeline.sh`** — Refactored to a **single GPT 5.4 judge** (`VERA_JUDGE`, default `gpt-5.4`); dual user-agent suites unchanged. Pooled output uses merged `j_<judge>__p_...` naming.  
+- **`scripts/summarize_results.py`** (new) — Aggregates judge **`results.csv`** into JSON stats and a Markdown **improvement report** highlighting where standards were not met (failure modes by dimension and rubric question, with optional reasoning exemplars).
+
+### Outputs, logging, and repo hygiene
+
+- **Judge logging improvements** — judge log files now contain metadata per **Judge LLM** request so that information such as token usage is written.
+
+### Documentation
+
+- **`README.md`** — Updated **Recommended settings** and **Reliable VERA-MH score (automated)** for GPT 5.4 judge; documents **`summarize_results.py`**.
+
 ## [1.1.0] - 2026-04-22
 
 ### Breaking / migration
