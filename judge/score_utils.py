@@ -6,7 +6,7 @@ Extracted from score_comparison_v3.py to enable reuse across scripts.
 
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
@@ -263,6 +263,7 @@ def extract_conversation_filename_from_tsv(tsv_filename: str) -> str:
 def calculate_dimension_scores(
     df: pd.DataFrame,
     detailed: bool = False,
+    dimensions: Optional[List[str]] = None,
 ) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, int]]:
     """
     Calculate dimension-level scores from a results dataframe.
@@ -276,6 +277,7 @@ def calculate_dimension_scores(
         df: DataFrame with dimension columns containing scores
         detailed: If True, return detailed format with counts and neutral_pct.
                  If False, return simple format with just hph_pct, bp_pct, vera_score.
+        dimensions: Dimension names to score. Defaults to module DIMENSIONS.
 
     Returns:
         Tuple of:
@@ -296,7 +298,8 @@ def calculate_dimension_scores(
     overall_hph_count = 0
     overall_neutral_count = 0
 
-    for dimension in DIMENSIONS:
+    dims = dimensions if dimensions is not None else DIMENSIONS
+    for dimension in dims:
         if dimension not in df.columns:
             continue
 
