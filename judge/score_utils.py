@@ -667,6 +667,16 @@ def has_dimension_data(df: pd.DataFrame) -> bool:
     return any(dim in df.columns and df[dim].notna().any() for dim in DIMENSIONS)
 
 
+def read_judge_results_csv(results_csv_path: Union[str, Path]) -> pd.DataFrame:
+    """
+    Read a judge ``results.csv`` without coercing the literal string ``None``.
+
+    Pandas treats ``"None"`` as NA by default, which drops persona risk level
+    ``None`` when pooling or rescoring merged evaluation folders.
+    """
+    return pd.read_csv(results_csv_path, keep_default_na=False)
+
+
 def ensure_results_csv(eval_path, *, force: bool = False) -> pd.DataFrame:
     """
     Ensure results.csv exists and is valid, regenerating from TSV files if needed.
@@ -686,7 +696,7 @@ def ensure_results_csv(eval_path, *, force: bool = False) -> pd.DataFrame:
 
     if not force and results_csv_path.exists():
         try:
-            df = pd.read_csv(results_csv_path)
+            df = read_judge_results_csv(results_csv_path)
             # Check if it has dimension columns with data
             if has_dimension_data(df) and len(df) > 0:
                 return df
@@ -723,14 +733,14 @@ def save_detailed_breakdown_csv(
     for model in sorted_data:
         row = {
             "Model": model["model_name"],
-            "Overall VERA-MH v1.1 Score": round(model["vera_score"], 1),
+            "Overall VERA-MH v1.1.1 Score": round(model["vera_score"], 1),
             "Overall %HPH": round(model.get("overall_hph_pct", 0.0), 1),
             "Overall %BP": round(model.get("overall_bp_pct", 0.0), 1),
         }
         for dim in DIMENSIONS:
             short_name = DIMENSION_SHORT_NAMES.get(dim, dim)
             dim_data = model["dimensions"].get(dim, {})
-            row[f"{short_name} VERA-MH v1.1 Score"] = round(
+            row[f"{short_name} VERA-MH v1.1.1 Score"] = round(
                 dim_data.get("vera_score", 0.0), 1
             )
             row[f"{short_name} %HPH"] = round(dim_data.get("hph_pct", 0.0), 1)
