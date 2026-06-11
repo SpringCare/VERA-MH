@@ -19,6 +19,7 @@ class ConversationSimulator:
         self.persona = persona
         self.agent = agent
         self.conversation_history: List[ConversationTurn] = []
+        self.last_active_speaker: Optional[LLMInterface] = None
 
         # Define termination signals that indicate persona wants to end the conversation
         self.termination_signal = "<END OF CONVERSATION>"
@@ -69,6 +70,7 @@ class ConversationSimulator:
             List of conversation turns with speaker and message
         """
         self.conversation_history = []
+        self.last_active_speaker = None
         max_turns = ensure_provider_has_last_turn(max_turns, persona_speaks_first)
 
         if persona_speaks_first:
@@ -93,6 +95,7 @@ class ConversationSimulator:
                 f"[SIM] Turn {turn + 1}/{max_turns}: "
                 f"{current_speaker.name} ({current_speaker.role.value}) speaking"
             )
+            self.last_active_speaker = current_speaker
             # start or continue the conversation
             if turn == 0:
                 response = await current_speaker.start_conversation()

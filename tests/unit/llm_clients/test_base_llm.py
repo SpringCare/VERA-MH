@@ -41,6 +41,10 @@ from .test_helpers import (
     assert_metadata_copy_behavior,
     assert_metadata_structure,
     assert_response_timing,
+    assert_structured_output_include_raw,
+    assert_structured_usage_values,
+    mock_raw_metadata_for_structured_usage,
+    structured_include_raw_invoke_result,
 )
 
 
@@ -376,6 +380,57 @@ class TestJudgeLLMBase(TestLLMBase):
                 "Structured output failed",
                 mock_ainvoke=mock_structured_llm.ainvoke,
             )
+
+    @pytest.mark.asyncio
+    async def test_generate_structured_response_captures_usage_from_raw(
+        self, mock_response_factory
+    ):
+        """Structured output must capture token usage from the raw AIMessage."""
+        with self.get_mock_patches():  # pyright: ignore[reportGeneralTypeIssues]
+
+            class TestResponse(BaseModel):
+                answer: str = Field(description="The answer")
+                reasoning: str = Field(description="The reasoning")
+
+            provider = self.get_provider_name()
+            test_response = TestResponse(answer="Yes", reasoning="Because")
+            raw_message = mock_response_factory(
+                text='{"answer": "Yes", "reasoning": "Because"}',
+                response_id=f"{provider}-structured-usage",
+                provider=provider,
+                metadata=mock_raw_metadata_for_structured_usage(provider),
+            )
+
+            mock_structured_llm = MagicMock()
+            mock_structured_llm.ainvoke = AsyncMock(
+                return_value=structured_include_raw_invoke_result(
+                    test_response, raw_message
+                )
+            )
+            mock_llm_client = MagicMock()
+            mock_llm_client.with_structured_output = MagicMock(
+                return_value=mock_structured_llm
+            )
+
+            llm = self.create_llm(role=Role.JUDGE, name="TestLLM")
+            llm.llm = mock_llm_client  # pyright: ignore[reportAttributeAccessIssue]
+
+            await llm.generate_structured_response("Evaluate", TestResponse)
+
+            assert_structured_output_include_raw(
+                mock_llm_client.with_structured_output, TestResponse
+            )
+
+            metadata = assert_metadata_structure(
+                llm,
+                expected_provider=provider,
+                expected_role=Role.JUDGE,
+                require_response_id=True,
+                require_usage=True,
+            )
+            assert metadata["structured_output"] is True
+            assert metadata["response_id"] == f"{provider}-structured-usage"
+            assert_structured_usage_values(metadata, provider)
 
     @pytest.mark.asyncio
     async def test_structured_response_invalid_type_raises_error(self):
