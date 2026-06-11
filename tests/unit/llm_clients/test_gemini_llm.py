@@ -284,6 +284,31 @@ class TestGeminiLLM(TestJudgeLLMBase):
     @pytest.mark.asyncio
     @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
     @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    async def test_model_name_update_from_dict_metadata(
+        self, mock_chat_gemini, mock_system_message
+    ):
+        """Test that model name is updated from dict response metadata."""
+        mock_response = MagicMock()
+        mock_response.text = "Test"
+        mock_response.id = "gemini-model"
+        mock_response.response_metadata = {"model_name": "gemini-2.0-flash"}
+
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_chat_gemini.return_value = mock_llm
+
+        llm = GeminiLLM(
+            name="TestGemini",
+            role=Role.PERSONA,
+            model_name="gemini-1.5-pro",
+        )
+        await llm.generate_response(conversation_history=mock_system_message)
+
+        assert llm.last_response_metadata["model"] == "gemini-2.0-flash"
+
+    @pytest.mark.asyncio
+    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_api_error(
         self, mock_chat_gemini, mock_llm_factory, mock_system_message
     ):

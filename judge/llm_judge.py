@@ -9,7 +9,12 @@ from judge.constants import BEST_PRACTICE, DAMAGING, NEUTRAL
 from judge.question_navigator import QuestionNavigator
 from judge.response_models import QuestionResponse
 from judge.rubric_config import ConversationData, RubricConfig
-from judge.utils import default_adhoc_parent, judge_evaluation_tsv_filename
+from judge.utils import (
+    default_adhoc_parent,
+    judge_evaluation_tsv_filename,
+    log_llm_failure_metadata,
+    log_llm_response_metadata,
+)
 from llm_clients import LLMFactory, Role
 from llm_clients.llm_interface import JudgeLLM, LLMGenerationFailed
 
@@ -562,17 +567,12 @@ class LLMJudge:
         self, question_id: str, exc: LLMGenerationFailed
     ) -> None:
         """Log structured-output failure details to the per-conversation judge log."""
-        self.logger.error(f"STRUCTURED OUTPUT FAILED for question {question_id}: {exc}")
-        evaluator = self.evaluator
-        if evaluator is None:
-            return
-        metadata = getattr(evaluator, "last_response_metadata", None) or {}
-        debug = metadata.get("structured_output_debug")
-        if debug:
-            self.logger.error(f"structured_output_debug: {debug}")
-        for key in ("error", "attempt", "max_attempts", "retryable", "will_retry"):
-            if key in metadata:
-                self.logger.error(f"  {key}: {metadata[key]}")
+        log_llm_failure_metadata(
+            self.logger,
+            self.evaluator,
+            context=f"question {question_id}",
+            error=exc,
+        )
 
     async def _ask_single_question(
         self, question_id: str, question_data: Dict[str, Any], verbose: bool
@@ -622,6 +622,11 @@ class LLMJudge:
             raise
 
         self.logger.info(f"STRUCTURED RESPONSE:\n{structured_response}")
+        log_llm_response_metadata(
+            self.logger,
+            self.evaluator,
+            context=f"question {question_id}",
+        )
         if verbose:
             print(f"  Answer: {structured_response.answer}")
             print(f"  Reasoning: {structured_response.reasoning[:100]}...")

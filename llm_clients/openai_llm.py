@@ -9,7 +9,12 @@ from utils.conversation_utils import build_langchain_messages
 from utils.debug import debug_print
 
 from .config import Config
-from .llm_interface import JudgeLLM, Role
+from .llm_interface import (
+    JudgeLLM,
+    Role,
+    ensure_pydantic_response,
+    extract_structured_invoke_result,
+)
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -80,6 +85,54 @@ class OpenAILLM(JudgeLLM):
 
         self.llm = ChatOpenAI(**llm_params)
 
+    def _enrich_openai_message_metadata(self, response: Any) -> None:
+        """Merge token usage and response fields from a LangChain AIMessage."""
+        if response is None:
+            return
+
+        response_id = getattr(response, "id", None)
+        if response_id is not None:
+            self._last_response_metadata["response_id"] = response_id
+
+        if hasattr(response, "additional_kwargs") and response.additional_kwargs:
+            self._last_response_metadata["additional_kwargs"] = dict(
+                response.additional_kwargs
+            )
+
+        self._last_response_metadata["model"] = self._extract_response_model(response)
+
+        if hasattr(response, "response_metadata") and response.response_metadata:
+            metadata = response.response_metadata
+
+            if "token_usage" in metadata:
+                token_usage = metadata["token_usage"]
+                self._last_response_metadata["usage"] = {
+                    "prompt_tokens": token_usage.get("prompt_tokens", 0),
+                    "completion_tokens": token_usage.get("completion_tokens", 0),
+                    "total_tokens": token_usage.get("total_tokens", 0),
+                }
+
+            self._last_response_metadata["finish_reason"] = metadata.get(
+                "finish_reason"
+            )
+            self._last_response_metadata["system_fingerprint"] = metadata.get(
+                "system_fingerprint"
+            )
+            self._last_response_metadata["logprobs"] = metadata.get("logprobs")
+            self._last_response_metadata["raw_response_metadata"] = dict(metadata)
+
+        if hasattr(response, "usage_metadata") and response.usage_metadata:
+            usage_meta = response.usage_metadata
+            self._last_response_metadata.setdefault("usage", {})
+            self._last_response_metadata["usage"].update(
+                {
+                    "input_tokens": usage_meta.get("input_tokens", 0),
+                    "output_tokens": usage_meta.get("output_tokens", 0),
+                    "total_tokens": usage_meta.get("total_tokens", 0),
+                }
+            )
+            self._last_response_metadata["raw_usage_metadata"] = dict(usage_meta)
+
     async def start_conversation(self) -> str:
         """Produce the first response:
         - static first_message if set, or
@@ -141,46 +194,7 @@ class OpenAILLM(JudgeLLM):
                 logprobs=None,
                 response=response,
             )
-
-            if hasattr(response, "additional_kwargs") and response.additional_kwargs:
-                self._last_response_metadata["additional_kwargs"] = dict(
-                    response.additional_kwargs
-                )
-
-            if hasattr(response, "response_metadata") and response.response_metadata:
-                metadata = response.response_metadata
-
-                if "model_name" in metadata:
-                    self._last_response_metadata["model"] = metadata["model_name"]
-
-                if "token_usage" in metadata:
-                    token_usage = metadata["token_usage"]
-                    self._last_response_metadata["usage"] = {
-                        "prompt_tokens": token_usage.get("prompt_tokens", 0),
-                        "completion_tokens": token_usage.get("completion_tokens", 0),
-                        "total_tokens": token_usage.get("total_tokens", 0),
-                    }
-
-                self._last_response_metadata["finish_reason"] = metadata.get(
-                    "finish_reason"
-                )
-                self._last_response_metadata["system_fingerprint"] = metadata.get(
-                    "system_fingerprint"
-                )
-                self._last_response_metadata["logprobs"] = metadata.get("logprobs")
-
-                self._last_response_metadata["raw_response_metadata"] = dict(metadata)
-
-            if hasattr(response, "usage_metadata") and response.usage_metadata:
-                usage_meta = response.usage_metadata
-                self._last_response_metadata["usage"].update(
-                    {
-                        "input_tokens": usage_meta.get("input_tokens", 0),
-                        "output_tokens": usage_meta.get("output_tokens", 0),
-                        "total_tokens": usage_meta.get("total_tokens", 0),
-                    }
-                )
-                self._last_response_metadata["raw_usage_metadata"] = dict(usage_meta)
+            self._enrich_openai_message_metadata(response)
 
             return response.text
 
@@ -206,27 +220,34 @@ class OpenAILLM(JudgeLLM):
         messages.append(HumanMessage(content=message))
 
         async def _invoke() -> T:
-            structured_llm = self.llm.with_structured_output(response_model)
+            structured_llm = self.llm.with_structured_output(
+                response_model,
+                include_raw=True,
+            )
 
             start_time = time.time()
-            response = await structured_llm.ainvoke(
+            invoke_result = await structured_llm.ainvoke(
                 messages,
                 prompt_cache_key=self.conversation_id,
             )
             end_time = time.time()
+
+            parsed, raw, _ = extract_structured_invoke_result(invoke_result)
+            response = ensure_pydantic_response(parsed, response_model)
 
             self._set_response_metadata(
                 "openai",
                 response_time_seconds=round(end_time - start_time, 3),
                 structured_output=True,
             )
+            self._enrich_openai_message_metadata(raw)
 
-            if not isinstance(response, response_model):
+            if response is None:
                 raise ValueError(
                     f"Response is not an instance of {response_model.__name__}"
                 )
 
-            return response  # type: ignore[return-value]
+            return response
 
         return await self._run_with_retry(_invoke, provider="openai")
 

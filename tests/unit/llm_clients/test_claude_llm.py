@@ -345,6 +345,33 @@ class TestClaudeLLM(TestJudgeLLMBase):
     @pytest.mark.asyncio
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
     @patch("llm_clients.claude_llm.ChatAnthropic")
+    async def test_model_name_update_from_metadata(
+        self, mock_chat_anthropic, mock_response_factory, mock_system_message
+    ):
+        """Test that model name is updated from dict response metadata."""
+        mock_response = mock_response_factory(
+            text="Test",
+            response_id="msg-model",
+            provider="claude",
+            metadata={"model": "claude-3-opus-20240229"},
+        )
+
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_chat_anthropic.return_value = mock_llm
+
+        llm = ClaudeLLM(
+            name="TestClaude",
+            role=Role.PERSONA,
+            model_name="claude-sonnet-4-5-20250929",
+        )
+        await llm.generate_response(conversation_history=mock_system_message)
+
+        assert llm.last_response_metadata["model"] == "claude-3-opus-20240229"
+
+    @pytest.mark.asyncio
+    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_api_error(
         self, mock_chat_anthropic, mock_llm_factory, mock_system_message
     ):

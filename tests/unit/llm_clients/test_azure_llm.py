@@ -403,6 +403,26 @@ class TestAzureLLM(TestJudgeLLMBase):
         assert metadata["finish_reason"] is None
 
     @pytest.mark.asyncio
+    async def test_model_name_update_from_dict_metadata(
+        self, mock_azure_config, mock_azure_model, mock_system_message
+    ):
+        """Test that model name is updated from dict response metadata."""
+        mock_response = MagicMock()
+        mock_response.text = "Test"
+        mock_response.id = "chatcmpl-model"
+        mock_response.response_metadata = {"model": "gpt-4o-deployment"}
+
+        mock_llm = MagicMock()
+        mock_llm.model_name = "gpt-5.2"
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_azure_model.return_value = mock_llm
+
+        llm = AzureLLM(name="TestAzure", role=Role.PERSONA, model_name="gpt-5.2")
+        await llm.generate_response(conversation_history=mock_system_message)
+
+        assert llm.last_response_metadata["model"] == "gpt-4o-deployment"
+
+    @pytest.mark.asyncio
     async def test_generate_response_api_error(
         self, mock_azure_config, mock_azure_model, mock_system_message
     ):

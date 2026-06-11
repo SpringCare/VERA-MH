@@ -4,13 +4,18 @@ from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from utils.conversation_utils import build_langchain_messages
 from utils.debug import debug_print
 
 from .config import Config
-from .llm_interface import JudgeLLM, Role
+from .llm_interface import (
+    JudgeLLM,
+    Role,
+    ensure_pydantic_response,
+    extract_structured_invoke_result,
+)
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -38,8 +43,12 @@ def _raw_message_content_for_log(raw: Any) -> str:
 def _serialize_raw_message(raw: Any) -> Dict[str, Any]:
     """Serialize an AIMessage (or similar) for failure diagnostics.
 
-    Omits message content; use ``raw_content`` on the failure debug dict for a
-    truncated body preview so logs stay bounded when the dict is printed whole.
+    Returns the structural ``raw`` sub-dict (type, tool_calls, response_metadata,
+    etc.) used inside :meth:`_build_structured_output_failure_debug`. It
+    deliberately omits ``AIMessage.content`` here so the body is not duplicated
+    inside nested metadata. The caller adds a separate top-level ``raw_content``
+    key with a truncated text preview — one bounded copy of the response text
+    when the whole failure debug dict is logged.
     """
     if raw is None:
         return {}
@@ -54,33 +63,6 @@ def _serialize_raw_message(raw: Any) -> Dict[str, Any]:
             payload["additional_kwargs"] = dict(raw.additional_kwargs)
         return payload
     return {"type": type(raw).__name__, "repr": _truncate_for_log(raw)}
-
-
-def _extract_include_raw_result(
-    invoke_result: Any,
-) -> tuple[Any, Any, Any]:
-    """Unpack LangChain include_raw=True structured output payloads."""
-    if isinstance(invoke_result, dict) and "parsed" in invoke_result:
-        return (
-            invoke_result.get("parsed"),
-            invoke_result.get("raw"),
-            invoke_result.get("parsing_error"),
-        )
-    return invoke_result, None, None
-
-
-def _coerce_structured_response(response: Any, response_model: Type[T]) -> Optional[T]:
-    """Normalize structured LLM output to a Pydantic model instance."""
-    if response is None:
-        return None
-    if isinstance(response, response_model):
-        return response
-    if isinstance(response, dict):
-        try:
-            return response_model.model_validate(response)
-        except ValidationError:
-            return None
-    return None
 
 
 class GeminiLLM(JudgeLLM):
@@ -156,6 +138,40 @@ class GeminiLLM(JudgeLLM):
         self.temperature = getattr(self.llm, "temperature", None)
         self.max_tokens = getattr(self.llm, "max_tokens", None)
 
+    def _enrich_gemini_message_metadata(self, response: Any) -> None:
+        """Merge token usage and response fields from a LangChain AIMessage."""
+        if response is None:
+            return
+
+        response_id = getattr(response, "id", None)
+        if response_id is not None:
+            self._last_response_metadata["response_id"] = response_id
+
+        self._last_response_metadata["model"] = self._extract_response_model(response)
+
+        if hasattr(response, "response_metadata") and response.response_metadata:
+            metadata = response.response_metadata
+
+            if "usage_metadata" in metadata:
+                usage = metadata["usage_metadata"]
+                self._last_response_metadata["usage"] = {
+                    "prompt_token_count": usage.get("prompt_token_count", 0),
+                    "candidates_token_count": usage.get("candidates_token_count", 0),
+                    "total_token_count": usage.get("total_token_count", 0),
+                }
+            elif "token_usage" in metadata:
+                usage = metadata["token_usage"]
+                self._last_response_metadata["usage"] = {
+                    "prompt_tokens": usage.get("prompt_tokens", 0),
+                    "completion_tokens": usage.get("completion_tokens", 0),
+                    "total_tokens": usage.get("total_tokens", 0),
+                }
+
+            self._last_response_metadata["finish_reason"] = metadata.get(
+                "finish_reason"
+            )
+            self._last_response_metadata["raw_metadata"] = dict(metadata)
+
     async def start_conversation(self) -> str:
         """Produce the first response:
         - static first_message if set, or
@@ -199,11 +215,7 @@ class GeminiLLM(JudgeLLM):
             response = await self.llm.ainvoke(messages)
             end_time = time.time()
 
-            model = (
-                getattr(response.response_metadata, "model_name", self.model_name)
-                if hasattr(response, "response_metadata")
-                else self.model_name
-            )
+            model = self._extract_response_model(response)
             self._set_response_metadata(
                 "gemini",
                 response_id=getattr(response, "id", None),
@@ -212,32 +224,7 @@ class GeminiLLM(JudgeLLM):
                 finish_reason=None,
                 response=response,
             )
-
-            if hasattr(response, "response_metadata") and response.response_metadata:
-                metadata = response.response_metadata
-
-                if "usage_metadata" in metadata:
-                    usage = metadata["usage_metadata"]
-                    self._last_response_metadata["usage"] = {
-                        "prompt_token_count": usage.get("prompt_token_count", 0),
-                        "candidates_token_count": usage.get(
-                            "candidates_token_count", 0
-                        ),
-                        "total_token_count": usage.get("total_token_count", 0),
-                    }
-                elif "token_usage" in metadata:
-                    usage = metadata["token_usage"]
-                    self._last_response_metadata["usage"] = {
-                        "prompt_tokens": usage.get("prompt_tokens", 0),
-                        "completion_tokens": usage.get("completion_tokens", 0),
-                        "total_tokens": usage.get("total_tokens", 0),
-                    }
-
-                self._last_response_metadata["finish_reason"] = metadata.get(
-                    "finish_reason"
-                )
-
-                self._last_response_metadata["raw_metadata"] = dict(metadata)
+            self._enrich_gemini_message_metadata(response)
 
             return response.text
 
@@ -301,8 +288,8 @@ class GeminiLLM(JudgeLLM):
             invoke_result = await structured_llm.ainvoke(messages)
             end_time = time.time()
 
-            parsed, raw, parsing_error = _extract_include_raw_result(invoke_result)
-            coerced = _coerce_structured_response(parsed, response_model)
+            parsed, raw, parsing_error = extract_structured_invoke_result(invoke_result)
+            response = ensure_pydantic_response(parsed, response_model)
 
             self._set_response_metadata(
                 "gemini",
@@ -310,14 +297,15 @@ class GeminiLLM(JudgeLLM):
                 structured_output=True,
                 structured_output_method="json_schema",
             )
+            self._enrich_gemini_message_metadata(raw)
 
-            if coerced is not None:
+            if response is not None:
                 failure_debug.clear()
                 debug_print(
                     f"[DEBUG {self.name}] Structured {response_model.__name__}: "
-                    f"{coerced!r}"
+                    f"{response!r}"
                 )
-                return coerced
+                return response
 
             failure_debug.clear()
             failure_debug.update(
