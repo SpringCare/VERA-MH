@@ -1,44 +1,47 @@
-# VERA-MH: Validation of Ethical and Responsible AI in Mental Health
-Prototype for generating and evaluating LLM conversations in mental health contexts.
+# VERA-MH: Claude Code Guide
+
+Framework for generating and evaluating LLM conversations in mental health contexts. This file is for **Claude Code** (slash commands, `.claude/` config). For agent-agnostic guidance (architecture, testing, domain guardrails), see [AGENTS.md](./AGENTS.md).
 
 ## Quick Start
-```bash
-# Install uv if not already installed
-pip install uv
 
-# Set up environment and install dependencies
+```bash
+pip install uv
 uv sync
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
-
-# Configure environment
-cp .env.example .env  # Add your API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY)
+cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY)
 ```
+
 **Python >= 3.11 required**
 
 ## Code Style
+
 - Minimal print statements
-- Prototype phase: prioritize clarity over perfection
-- Don't overthink implementation
-- Don't create example files
-- Use `python3` command explicitly
+- Prioritize clarity; match existing patterns in the module you touch
+- Don't create example files unless asked
+- Use `python3` or `uv run python` explicitly
+- Add or update tests when changing behavior
 
 ## File Organization
+
 - **Temporary tests**: `tmp_tests/` (not committed)
-- **Main scripts**: `generate.py`, `judge.py` at root
-- **Core modules**: Implementation in main directory
-- **Docs**: See `docs/` for detailed guides
+- **Main scripts**: `generate.py`, `judge.py`, `run_pipeline.py` at root
+- **Packages**: `generate_conversations/`, `judge/`, `llm_clients/`, `utils/`
+- **Permanent tests**: `tests/` (unit and integration)
+- **Docs**: `docs/`; agent architecture map in [AGENTS.md](./AGENTS.md)
 
 ## Code Quality Tools
+
 - **Formatting**: `uv run ruff format .`
 - **Linting**: `uv run ruff check .`
 - **Type checking**: `uv run pyright` (basic mode)
 - **Pre-commit**: `pre-commit install` (auto-run checks on commit)
 - All configuration in `pyproject.toml`
-- **📖 See**: `docs/pre-commit-hooks.md` for pre-commit documentation
+- See `docs/pre-commit-hooks.md` for pre-commit documentation
 
 ## Git Conventions
 
 ### Commit Message Format
+
 Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
 
 ```
@@ -47,142 +50,84 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
 [optional body]
 ```
 
-**Types:**
-- `feat`: New feature or significant enhancement
-- `fix`: Bug fix
-- `refactor`: Code restructuring without behavior change
-- `test`: Adding or updating tests
-- `docs`: Documentation changes only
-- `chore`: Maintenance tasks (dependencies, config, tooling)
-- `style`: Code style/formatting changes only
-- `perf`: Performance improvements
+**Types:** `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `style`, `perf`
 
-**Guidelines:**
-- Keep subject line under 72 characters
-- Use imperative mood ("add feature" not "added feature")
-- Don't end subject line with a period
-- Separate subject from body with blank line
-- Focus on *why* the change was made, not *what* changed
-- Make atomic commits (one logical change per commit)
-
-**Examples:**
-```bash
-feat: add support for GPT-4 model evaluation
-fix: handle missing conversation files gracefully
-docs: update README with new model options
-chore: upgrade langchain to v0.1.0
-test: add unit tests for judge scoring logic
-```
+**Guidelines:** Imperative mood, under 72 characters, no trailing period, atomic commits.
 
 ### Branch Naming
-Use descriptive branch names with type prefixes:
 
-**Format:** `<type>/<brief-description>`
-
-**Types:**
-- `feat/` - New features
-- `fix/` - Bug fixes
-- `refactor/` - Code refactoring
-- `test/` - Testing infrastructure
-- `docs/` - Documentation updates
-- `chore/` - Maintenance and tooling
-
-**Examples:**
-```bash
-feat/add-gpt4-support
-fix/conversation-file-handling
-refactor/cleanup-judge-logic
-test/unit-test-infrastructure
-docs/update-api-examples
-chore/upgrade-dependencies
-```
-
-**Guidelines:**
-- Use kebab-case (lowercase with hyphens)
-- Keep names concise but descriptive
-- Avoid generic names like `fix/bug` or `feat/new-feature`
-- Delete branches after merging
+**Format:** `<type>/<brief-description>` (kebab-case), e.g. `feat/add-gpt4-support`
 
 ### Workflow
+
 1. **Create branch from main**: `git checkout -b type/description`
-2. **Make changes**: Follow code style and write tests
-3. **Commit frequently**: Make atomic, logical commits
+2. **Make changes**: Follow code style; run `uv run pytest -m "not live"`
+3. **Commit frequently**: Atomic, logical commits
 4. **Run quality checks**: Pre-commit hooks run automatically
 5. **Push and create PR**: `git push -u origin branch-name`
 6. **Use `/create-commits`**: Let Claude Code organize commits logically
 
-**Tip:** Use `/create-commits` slash command to analyze changes and create well-organized, logical commits automatically.
-
 ## Testing
-- No formal test suite yet (prototype phase)
-- For temporary test scripts: use `tmp_tests/`
-- When adding permanent tests: use `pytest` with `tests/` directory
-- Run tests: `pytest` (when tests exist)
-- Coverage: `pytest --cov` (when needed)
+
+See [AGENTS.md](./AGENTS.md) for full testing policy. Summary:
+
+- `tests/unit/` and `tests/integration/`; fixtures in `tests/fixtures/`
+- Default: `uv run pytest -m "not live"` (CI-safe, no API keys)
+- Live API tests: `uv run pytest -m live`
+- Coverage enforced via `pyproject.toml` (`--cov-fail-under=30`)
 
 ### Claude Code Testing Configuration
-The project uses Claude Code with custom testing commands and agents:
-- **Slash commands** (`.claude/commands/`) - User-facing testing workflows
-- **test-engineer agent** (`.claude/agents/`) - Automated testing in parallel
+
+- **Slash commands** (`.claude/commands/`) — `/test`, `/fix-tests`, `/create-tests`
+- **test-engineer agent** (`.claude/agents/`) — parallel test runs
 
 **Maintenance guidelines:**
+
 1. **When testing patterns change** (pytest config, fixtures, conventions):
-   - Review and update relevant slash commands (`/test`, `/create-tests`, etc.)
-   - Agent reads command files directly, so updates auto-propagate
-   - Only update agent if commands are added/removed
+   - Update relevant slash commands (`/test`, `/create-tests`, etc.)
+   - Update [AGENTS.md](./AGENTS.md) if agent-facing policy changes
+   - Only update `test-engineer` agent if commands are added/removed
 
 2. **When adding new testing commands:**
    - Add to `.claude/commands/`
-   - Update `.claude/commands/README.md` and main `README.md`
-   - If it contains testing patterns, add reference to `.claude/agents/test-engineer.md`
-
-**Why this matters:**
-- Agents use slash commands as living documentation (via Read tool)
-- Keeping them in sync ensures consistent testing patterns
-- Single source of truth prevents duplication and drift
-
-## Tech Stack
-- **LLM Framework**: LangChain (multi-provider support)
-- **Supported Providers**: Anthropic, OpenAI, Google GenAI
-- **Data Validation**: Pydantic v2
-- **Data Processing**: Pandas
-- **Config Management**: python-dotenv
+   - Update `.claude/commands/README.md` and `README.md`
+   - Reference in `.claude/agents/test-engineer.md` if applicable
 
 ## Key Commands
+
 ```bash
-# Generate conversations
-python3 generate.py -u claude-sonnet-4-5 -p claude-sonnet-4-5 -t 6 -r 1
+# Slash-command alternatives: /run-generator, /run-judge, /test, /format
 
-# Judge/evaluate conversations
-python3 judge.py -f output/{YOUR_P_RUN}/ -j claude-sonnet-4-5
+# End-to-end pipeline
+uv run python run_pipeline.py \
+  --user-agent claude-sonnet-4-5-20250929 \
+  --provider-agent gpt-4o \
+  --runs 1 --turns 10 \
+  --judge-model claude-sonnet-4-5-20250929 \
+  --max-personas 5
 
-# Development
-uv sync              # Install/update dependencies
-uv add <package>     # Add new dependency
-uv add --dev <pkg>   # Add dev dependency
+# Generate / judge (step by step)
+uv run python generate.py -u claude-sonnet-4-5-20250929 -p gpt-4o -t 6 -r 1
+uv run python judge.py -f output/{YOUR_P_RUN}/ -j claude-sonnet-4-5-20250929
 
-# Code quality
-uv run ruff format .   # Format code
-uv run ruff check .    # Lint code
-uv run pyright         # Type check
-pre-commit run --all-files  # Run all pre-commit hooks
-
-# Testing (when implemented)
-pytest               # Run tests
-pytest --cov         # Run with coverage
+# Development & quality
+uv sync
+uv run ruff format .
+uv run ruff check .
+uv run pyright
+uv run pytest -m "not live"
+pre-commit run --all-files
 ```
 
 ## Documentation Reference
-- **Setup & Architecture**: See `README.md`
-- **Pre-commit Hooks**: See `docs/pre-commit-hooks.md`
-- **Custom LLM Providers**: See `docs/evaluating.md`
-- **Usage Examples**: See `README.md` → "Usage" section
-- **Model Configuration**: See `README.md` → "Models" section
+
+- **Agent guide (architecture, guardrails, testing):** [AGENTS.md](./AGENTS.md)
+- **Setup & usage:** [README.md](./README.md)
+- **Custom LLM providers:** [docs/evaluating.md](./docs/evaluating.md)
+- **Slash commands:** [.claude/commands/README.md](./.claude/commands/README.md)
 
 ## Docker
-```bash
-docker-compose up    # Run via Docker
-```
 
----
-For detailed information, see README.md and docs/
+```bash
+docker-compose up
+```
