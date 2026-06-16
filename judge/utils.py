@@ -8,6 +8,18 @@ from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
+from utils.logging_utils import (
+    extract_last_response_metadata,
+    log_llm_failure_metadata,
+    log_llm_response_metadata,
+)
+
+__all__ = [
+    "extract_last_response_metadata",
+    "log_llm_failure_metadata",
+    "log_llm_response_metadata",
+]
+
 
 def parse_judge_models(model_arg):
     """Parse judge model specifications from command line argument into a dictionary."""

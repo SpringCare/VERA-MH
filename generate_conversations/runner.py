@@ -17,6 +17,7 @@ from utils.logging_utils import (
     log_conversation_end,
     log_conversation_start,
     log_conversation_turn,
+    log_llm_failure_metadata,
     setup_conversation_logger,
 )
 from utils.naming import (
@@ -515,6 +516,12 @@ class ConversationRunner:
                             persona_name,
                             run_number,
                             str(e),
+                        )
+                        log_llm_failure_metadata(
+                            session_logger,
+                            simulator.last_active_speaker,
+                            context=f"{persona_name} run {run_number}",
+                            error=e,
                         )
                     cleanup_logger(session_logger)
                     sessions.append(

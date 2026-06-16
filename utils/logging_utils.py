@@ -1,10 +1,13 @@
 """Utilities for conversation logging."""
 
+import json
 import logging
 import os
-from typing import Optional
+from typing import Any, Optional
 
 from llm_clients import LLMInterface
+
+from .debug import debug_print, is_debug
 
 
 def setup_conversation_logger(
@@ -122,6 +125,57 @@ def log_conversation_end(
     if total_time:
         logger.info(f"Duration: {total_time:.2f} seconds")
     logger.info("=" * 60)
+
+
+def extract_last_response_metadata(llm: Any) -> dict[str, Any]:
+    """Read last_response_metadata from an LLMInterface or wrapper with .evaluator."""
+    if llm is None:
+        return {}
+    # if LLMJudge passed as llm, get its self.evaluator else use llm
+    evaluator = getattr(llm, "evaluator", None)
+    target = evaluator if evaluator is not None else llm
+    # both conversation and judges store responses in last_response_metadata
+    metadata = getattr(target, "last_response_metadata", None)
+    return metadata or {}
+
+
+def log_llm_response_metadata(
+    logger: logging.Logger,
+    llm: Any,
+    *,
+    context: str = "",
+) -> None:
+    """Log per-call metadata (token usage, response_id) after a successful LLM call."""
+    metadata = extract_last_response_metadata(llm)
+    logger.info(f"response_id: {metadata.get('response_id')}")
+    logger.info(f"logging: {metadata}")
+    if is_debug() and metadata:
+        label = f" for {context}" if context else ""
+        debug_print(
+            f"  LLM metadata{label}: {json.dumps(metadata, indent=2, default=str)}"
+        )
+
+
+def log_llm_failure_metadata(
+    logger: logging.Logger,
+    llm: Any,
+    *,
+    context: str,
+    error: str | Exception,
+) -> None:
+    """Log full failure metadata to file; debug_print when debug is enabled."""
+    logger.error("LLM GENERATION FAILED | context=%s error=%s", context, str(error))
+    metadata = extract_last_response_metadata(llm)
+    if metadata:
+        logger.error(
+            "LLM failure metadata: %s",
+            json.dumps(metadata, indent=2, default=str),
+        )
+    if is_debug() and metadata:
+        debug_print(
+            f"  LLM metadata for {context}: "
+            f"{json.dumps(metadata, indent=2, default=str)}"
+        )
 
 
 def log_error(

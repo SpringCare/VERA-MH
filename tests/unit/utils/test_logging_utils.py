@@ -7,12 +7,16 @@ import pytest
 
 from llm_clients import Role
 from tests.mocks.mock_llm import MockLLM
+from utils.debug import set_debug
 from utils.logging_utils import (
     cleanup_logger,
+    extract_last_response_metadata,
     log_conversation_end,
     log_conversation_start,
     log_conversation_turn,
     log_error,
+    log_llm_failure_metadata,
+    log_llm_response_metadata,
     setup_conversation_logger,
 )
 
@@ -545,6 +549,118 @@ class TestLogError:
         assert "ERROR: Value error occurred" in content
         assert "Exception: Invalid value provided" in content
         assert "Exception Type: ValueError" in content
+
+
+@pytest.mark.unit
+class TestLlmMetadataLogging:
+    """Test suite for LLM metadata logging helpers."""
+
+    @pytest.fixture(autouse=True)
+    def reset_debug(self):
+        set_debug(False)
+        yield
+        set_debug(False)
+
+    def test_extract_last_response_metadata_from_llm(self):
+        llm = MockLLM()
+        llm.last_response_metadata = {
+            "response_id": "resp-1",
+            "usage": {"input_tokens": 10, "output_tokens": 5},
+        }
+
+        metadata = extract_last_response_metadata(llm)
+
+        assert metadata["response_id"] == "resp-1"
+        assert metadata["usage"]["input_tokens"] == 10
+
+    def test_extract_last_response_metadata_from_wrapper(self):
+        llm = MockLLM()
+        llm.last_response_metadata = {"response_id": "inner"}
+
+        class Wrapper:
+            evaluator = llm
+
+        metadata = extract_last_response_metadata(Wrapper())
+
+        assert metadata["response_id"] == "inner"
+
+    def test_extract_last_response_metadata_none_returns_empty(self):
+        assert extract_last_response_metadata(None) == {}
+
+    def test_log_llm_response_metadata_writes_to_file(self, tmp_path):
+        logger = setup_conversation_logger(
+            "success_metadata",
+            log_dir=str(tmp_path / "logging" / "metadata_001"),
+        )
+        llm = MockLLM()
+        llm.last_response_metadata = {
+            "response_id": "resp-abc",
+            "usage": {"input_tokens": 100, "output_tokens": 20},
+        }
+
+        log_llm_response_metadata(logger, llm, context="question 1")
+
+        content = (
+            tmp_path / "logging" / "metadata_001" / "success_metadata.log"
+        ).read_text()
+        assert "response_id: resp-abc" in content
+        assert "logging: {'response_id': 'resp-abc'" in content
+        assert "'usage': {'input_tokens': 100, 'output_tokens': 20}" in content
+
+    def test_log_llm_failure_metadata_writes_to_file(self, tmp_path):
+        logger = setup_conversation_logger(
+            "failure_metadata",
+            log_dir=str(tmp_path / "logging" / "metadata_002"),
+        )
+        llm = MockLLM()
+        llm.last_response_metadata = {
+            "response_id": "resp-fail",
+            "usage": {"input_tokens": 50, "output_tokens": 0},
+            "structured_output_debug": {"raw_content": "{"},
+        }
+
+        log_llm_failure_metadata(
+            logger,
+            llm,
+            context="question 3",
+            error="LLM error (non-retryable): parse failed",
+        )
+
+        content = (
+            tmp_path / "logging" / "metadata_002" / "failure_metadata.log"
+        ).read_text()
+        assert "LLM GENERATION FAILED | context=question 3" in content
+        assert "LLM failure metadata:" in content
+        assert "resp-fail" in content
+        assert "structured_output_debug" in content
+
+    def test_log_llm_failure_metadata_debug_prints(self, tmp_path, capsys):
+        logger = setup_conversation_logger(
+            "failure_debug",
+            log_dir=str(tmp_path / "logging" / "metadata_003"),
+        )
+        llm = MockLLM()
+        llm.last_response_metadata = {"response_id": "resp-debug"}
+
+        set_debug(True)
+        log_llm_failure_metadata(logger, llm, context="turn 2", error="failed")
+
+        captured = capsys.readouterr()
+        assert "LLM metadata for turn 2" in captured.out
+        assert "resp-debug" in captured.out
+
+    def test_log_llm_response_metadata_no_print_without_debug(self, tmp_path, capsys):
+        logger = setup_conversation_logger(
+            "success_no_debug",
+            log_dir=str(tmp_path / "logging" / "metadata_004"),
+        )
+        llm = MockLLM()
+        llm.last_response_metadata = {"response_id": "resp-quiet"}
+
+        log_llm_response_metadata(logger, llm, context="question 5")
+
+        captured = capsys.readouterr()
+        assert captured.out == ""
 
 
 @pytest.mark.unit

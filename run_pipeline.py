@@ -579,6 +579,7 @@ async def main():
         per_judge=args.judge_per_judge,
         verbose_workers=args.judge_verbose_workers,
         resume=args.resume_judge,
+        debug=args.debug,
     )
 
     # Call judge.py's main function directly

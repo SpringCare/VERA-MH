@@ -8,10 +8,65 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Protocol, Type, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 T = TypeVar("T", bound=BaseModel)
 R = TypeVar("R")
+
+
+def extract_structured_invoke_result(
+    invoke_result: Any,
+) -> tuple[Any, Any, Any]:
+    """Unpack LangChain ``include_raw=True`` structured output payloads.
+
+    With ``include_raw=True``, ``structured_llm.ainvoke(...)`` returns a dict
+    instead of a bare Pydantic model. We split it into ``(parsed, raw, error)``
+    so callers can use the model *and* read token usage from the raw AIMessage.
+
+    Toy example::
+
+        # LangChain returns something like:
+        invoke_result = {
+            "parsed": QuestionResponse(answer="Yes", reasoning="..."),
+            "raw": AIMessage(  # has response_metadata / usage_metadata
+                content='{"answer": "Yes", "reasoning": "..."}',
+                response_metadata={"token_usage": {...}},
+            ),
+            "parsing_error": None,
+        }
+
+        parsed, raw, parsing_error = extract_structured_invoke_result(invoke_result)
+        # parsed -> QuestionResponse(...)
+        # raw -> AIMessage(...)  (use for usage logging)
+        # parsing_error -> None
+
+    Without ``include_raw``, LangChain returns only the parsed model::
+
+        invoke_result = QuestionResponse(answer="Yes", reasoning="...")
+        parsed, raw, parsing_error = extract_structured_invoke_result(invoke_result)
+        # parsed -> QuestionResponse(...), raw -> None, parsing_error -> None
+    """
+    if isinstance(invoke_result, dict) and "parsed" in invoke_result:
+        return (
+            invoke_result.get("parsed"),
+            invoke_result.get("raw"),
+            invoke_result.get("parsing_error"),
+        )
+    return invoke_result, None, None
+
+
+def ensure_pydantic_response(response: Any, response_model: Type[T]) -> Optional[T]:
+    """Return a Pydantic model instance from structured LLM output, or None."""
+    if response is None:
+        return None
+    if isinstance(response, response_model):
+        return response
+    if isinstance(response, dict):
+        try:
+            return response_model.model_validate(response)
+        except ValidationError:
+            return None
+    return None
 
 
 class RetryOnErrorCallback(Protocol):
@@ -114,6 +169,31 @@ class LLMInterface(ABC):
         Subclasses may override to use a different id format.
         """
         return str(uuid.uuid4())
+
+    def _unsupported_model_params(self) -> Dict[str, frozenset[str]]:
+        """Model name substring -> runtime params the API rejects for that model.
+
+        Override on concrete LLMs with provider-specific constraints.
+        """
+        return {}
+
+    def _model_supports_param(self, model_name: str, param_name: str) -> bool:
+        """Return False when ``param_name`` must not be sent for ``model_name``."""
+        model_lower = model_name.lower()
+        param_lower = param_name.lower()
+        for model_marker, unsupported in self._unsupported_model_params().items():
+            if model_marker in model_lower:
+                if param_lower in {p.lower() for p in unsupported}:
+                    return False
+        return True
+
+    def _filter_supported_params(
+        self, model_name: str, params: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Drop runtime params that ``model_name`` does not accept."""
+        return {
+            k: v for k, v in params.items() if self._model_supports_param(model_name, k)
+        }
 
     def _update_conversation_id_from_metadata(self) -> None:
         """If the API returned a conversation_id in response metadata, use it.
@@ -224,6 +304,23 @@ class LLMInterface(ABC):
         raise LLMGenerationFailed(
             f"LLM call failed after {max_attempts} attempts: {last_exception}"
         ) from last_exception
+
+    def _extract_response_model(self, response: Any) -> Optional[str]:
+        """Extract model identifier from a LangChain AIMessage response."""
+        metadata_obj = getattr(response, "response_metadata", None)
+        model = None
+        if metadata_obj is not None:
+            for key in ("model", "model_name"):
+                if isinstance(metadata_obj, dict):
+                    value = metadata_obj.get(key)
+                else:
+                    value = getattr(metadata_obj, key, None)
+                if isinstance(value, str) and value:
+                    model = value
+                    break
+        if model is None:
+            model = getattr(self, "model_name", None)
+        return model
 
     def _set_response_metadata(self, provider: str, **extra: Any) -> None:
         """Set last_response_metadata with common fields; pass extra keys as kwargs.

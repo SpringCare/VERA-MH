@@ -106,6 +106,58 @@ class TestClaudeLLM(TestJudgeLLMBase):
             assert call_kwargs["max_tokens"] == 500
             assert call_kwargs["top_p"] == 0.9
 
+    def test_init_strips_temperature_for_opus_4_8(self, default_llm_kwargs):
+        """Opus 4.8 rejects temperature; it must not be passed to ChatAnthropic."""
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_llm = MagicMock()
+            mock_llm.model = "claude-opus-4-8"
+            mock_chat_anthropic.return_value = mock_llm
+
+            ClaudeLLM(
+                name="TestClaude",
+                role=Role.JUDGE,
+                model_name="claude-opus-4-8",
+                **default_llm_kwargs,
+            )
+
+            call_kwargs = mock_chat_anthropic.call_args[1]
+            assert "temperature" not in call_kwargs
+            assert call_kwargs["max_tokens"] == 500
+
+    def test_model_supports_param_unsupported_for_opus_4_8(self, default_llm_kwargs):
+        with patch("llm_clients.claude_llm.ChatAnthropic"):
+            llm = ClaudeLLM(
+                name="TestClaude",
+                role=Role.JUDGE,
+                model_name="claude-opus-4-8",
+                **default_llm_kwargs,
+            )
+        assert not llm._model_supports_param("claude-opus-4-8", "temperature")
+
+    def test_model_supports_param_case_insensitive(self, default_llm_kwargs):
+        with patch("llm_clients.claude_llm.ChatAnthropic"):
+            llm = ClaudeLLM(
+                name="TestClaude",
+                role=Role.JUDGE,
+                model_name="claude-opus-4-8",
+                **default_llm_kwargs,
+            )
+        assert not llm._model_supports_param("Claude-Opus-4-8", "Temperature")
+
+    def test_filter_supported_params_strips_temperature_for_opus_4_8(
+        self, default_llm_kwargs
+    ):
+        with patch("llm_clients.claude_llm.ChatAnthropic"):
+            llm = ClaudeLLM(
+                name="TestClaude",
+                role=Role.JUDGE,
+                model_name="claude-opus-4-8",
+                **default_llm_kwargs,
+            )
+        params = {"temperature": 0, "max_tokens": 500, "top_p": 0.9}
+        filtered = llm._filter_supported_params("claude-opus-4-8", params)
+        assert filtered == {"max_tokens": 500, "top_p": 0.9}
+
     @pytest.mark.asyncio
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
     @patch("llm_clients.claude_llm.ChatAnthropic")
@@ -341,6 +393,33 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert metadata["model"] == "claude-sonnet-4-5-20250929"
         assert metadata["usage"] == {}
         assert metadata["stop_reason"] is None
+
+    @pytest.mark.asyncio
+    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("llm_clients.claude_llm.ChatAnthropic")
+    async def test_model_name_update_from_metadata(
+        self, mock_chat_anthropic, mock_response_factory, mock_system_message
+    ):
+        """Test that model name is updated from dict response metadata."""
+        mock_response = mock_response_factory(
+            text="Test",
+            response_id="msg-model",
+            provider="claude",
+            metadata={"model": "claude-3-opus-20240229"},
+        )
+
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_chat_anthropic.return_value = mock_llm
+
+        llm = ClaudeLLM(
+            name="TestClaude",
+            role=Role.PERSONA,
+            model_name="claude-sonnet-4-5-20250929",
+        )
+        await llm.generate_response(conversation_history=mock_system_message)
+
+        assert llm.last_response_metadata["model"] == "claude-3-opus-20240229"
 
     @pytest.mark.asyncio
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")

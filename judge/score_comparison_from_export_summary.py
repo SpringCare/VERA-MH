@@ -15,6 +15,8 @@ Usage:
     python -m judge.score_comparison
     python -m judge.score_comparison --input evaluations_to_compare.csv
     python -m judge.score_comparison -i my_evaluations.csv -o output.png
+    python -m judge.score_comparison \\
+        --from-export-summary output/v1.1/vera_scores_summary.csv
 """
 
 import argparse
@@ -41,6 +43,10 @@ from .score_utils import (
     get_color_for_score,
     save_detailed_breakdown_csv,
 )
+
+# Suffix for per-dimension VERA columns; must match export_vera_scores_csv ``prefix``.
+_DIM_VERA_MH_SUFFIX = " — VERA-MH score"
+_DIM_VERA_LEGACY_SUFFIX = " — VERA score"
 
 # Layout colors (additional colors specific to this visualization)
 CARD_COLOR = "#FFFFFF"  # White card
@@ -122,6 +128,125 @@ def load_evaluation_data(input_path: Path) -> List[Dict[str, Any]]:
         combined_df = pd.concat(all_dfs, ignore_index=True)
         model_data = _calculate_model_scores(combined_df, model_name)
         results.append(model_data)
+
+    return results
+
+
+def _conversation_run_column(df: pd.DataFrame) -> str | None:
+    """Column used by ``export_vera_scores_csv.py`` for run / aggregate label."""
+    for col in ("Conversation run", "Judge directory"):
+        if col in df.columns:
+            return col
+    return None
+
+
+def load_model_data_from_export_summary_csv(
+    summary_path: Path,
+    *,
+    conversation_run: str | None = None,
+    user: str | None = None,
+    judge: str | None = None,
+) -> List[Dict[str, Any]]:
+    """
+    Build ``model_data`` from ``scripts/export_vera_scores_csv.py`` output.
+
+    Reads pre-computed scores from each row (no merging or pooling). Optional
+    filters narrow by User, Judge, or Judge directory / Conversation run.
+    """
+    df = pd.read_csv(summary_path)
+    df.columns = df.columns.str.strip()
+
+    if "Provider" not in df.columns:
+        print("⚠️  Warning: summary CSV missing 'Provider' column")
+        return []
+
+    run_col = _conversation_run_column(df)
+    mask = pd.Series(True, index=df.index)
+    if user is not None and "User" in df.columns:
+        mask &= df["User"].astype(str).str.strip() == user
+    if judge is not None and "Judge" in df.columns:
+        mask &= df["Judge"].astype(str).str.strip() == judge
+    if conversation_run is not None and run_col is not None:
+        mask &= df[run_col].astype(str).str.strip() == conversation_run
+
+    sub = df.loc[mask]
+    if sub.empty:
+        filters = []
+        if user is not None:
+            filters.append(f"User={user!r}")
+        if judge is not None:
+            filters.append(f"Judge={judge!r}")
+        if conversation_run is not None:
+            filters.append(f"{run_col or 'Conversation run'}={conversation_run!r}")
+        if filters:
+            print(f"⚠️  Warning: No rows matched {', '.join(filters)}")
+        else:
+            print("⚠️  Warning: Summary CSV has no rows")
+        return []
+
+    results: List[Dict[str, Any]] = []
+    for _, row in sub.iterrows():
+        model_name = str(row.get("Provider", "")).strip()
+        if not model_name:
+            continue
+
+        try:
+            vera_score = float(row["Total score"])
+        except (TypeError, ValueError, KeyError):
+            print(f"⚠️  Warning: Bad Total score for row Provider={model_name!r}, skip")
+            continue
+
+        try:
+            overall_bp_pct = float(row["Total % BP (scored ratings)"])
+            overall_hph_pct = float(row["Total % HPH (scored ratings)"])
+        except (TypeError, ValueError, KeyError):
+            overall_bp_pct = 0.0
+            overall_hph_pct = 0.0
+
+        dimensions: Dict[str, Dict[str, float]] = {}
+        for d in DIMENSIONS:
+            col_v = f"{d}{_DIM_VERA_MH_SUFFIX}"
+            col_v_legacy = f"{d}{_DIM_VERA_LEGACY_SUFFIX}"
+            raw_v = (
+                row[col_v]
+                if col_v in row.index
+                else (row[col_v_legacy] if col_v_legacy in row.index else None)
+            )
+            if raw_v is None or (isinstance(raw_v, float) and pd.isna(raw_v)):
+                vera_dim = 50.0
+            else:
+                try:
+                    vera_dim = float(raw_v)
+                except (TypeError, ValueError):
+                    vera_dim = 50.0
+            col_hph = f"{d} — % HPH (scored)"
+            col_bp = f"{d} — % BP (scored)"
+            hph_d = bp_d = 0.0
+            if col_hph in row.index and pd.notna(row[col_hph]):
+                try:
+                    hph_d = float(row[col_hph])
+                except (TypeError, ValueError):
+                    pass
+            if col_bp in row.index and pd.notna(row[col_bp]):
+                try:
+                    bp_d = float(row[col_bp])
+                except (TypeError, ValueError):
+                    pass
+            dimensions[d] = {
+                "vera_score": vera_dim,
+                "hph_pct": hph_d,
+                "bp_pct": bp_d,
+            }
+
+        results.append(
+            {
+                "model_name": model_name,
+                "vera_score": round(vera_score, 1),
+                "overall_bp_pct": round(overall_bp_pct, 1),
+                "overall_hph_pct": round(overall_hph_pct, 1),
+                "dimensions": dimensions,
+            }
+        )
 
     return results
 
@@ -655,10 +780,47 @@ def main():
     parser.add_argument(
         "--input",
         "-i",
-        default="evaluations_to_compare.csv",
+        default=None,
         help=(
             "Path to CSV file with 'Provider Model' and 'Path' columns "
-            "(default: evaluations_to_compare.csv)"
+            "(default: evaluations_to_compare.csv when not using --from-export-summary)"
+        ),
+    )
+
+    parser.add_argument(
+        "--from-export-summary",
+        type=Path,
+        default=None,
+        metavar="CSV",
+        help=(
+            "Use rows from scripts/export_vera_scores_csv.py output instead of "
+            "evaluation directories (optional --summary-* filters)"
+        ),
+    )
+
+    parser.add_argument(
+        "--summary-user",
+        default="__any__",
+        help=(
+            "With --from-export-summary: filter User column "
+            "(default: __any__, use all rows)"
+        ),
+    )
+    parser.add_argument(
+        "--summary-judge",
+        default="__any__",
+        help=(
+            "With --from-export-summary: filter Judge column "
+            "(default: __any__, use all rows)"
+        ),
+    )
+    parser.add_argument(
+        "--summary-conversation-run",
+        default="__any__",
+        metavar="LABEL",
+        help=(
+            "With --from-export-summary: filter Judge directory / Conversation run "
+            "(default: __any__, use all rows)"
         ),
     )
 
@@ -674,19 +836,37 @@ def main():
 
     args = parser.parse_args()
 
-    input_path = Path(args.input)
-    if not input_path.exists():
-        print(f"❌ Error: Input file not found: {args.input}")
-        return 1
+    if args.from_export_summary:
+        summary_path = args.from_export_summary.expanduser().resolve()
+        if not summary_path.is_file():
+            print(f"❌ Error: Summary CSV not found: {summary_path}")
+            return 1
+
+        def _optional_filter(value: str) -> str | None:
+            return None if value == "__any__" else value
+
+        print(f"📥 Loading from export summary: {summary_path}")
+        model_data = load_model_data_from_export_summary_csv(
+            summary_path,
+            conversation_run=_optional_filter(args.summary_conversation_run),
+            user=_optional_filter(args.summary_user),
+            judge=_optional_filter(args.summary_judge),
+        )
+        stem_for_default = summary_path.stem
+    else:
+        input_path = Path(args.input or "evaluations_to_compare.csv")
+        if not input_path.exists():
+            print(f"❌ Error: Input file not found: {input_path}")
+            return 1
+        stem_for_default = input_path.stem
+        print(f"📥 Loading evaluations from: {input_path}")
+        model_data = load_evaluation_data(input_path)
 
     if args.output:
         output_path = Path(args.output)
     else:
-        output_path = Path("score_comparisons") / f"{input_path.stem}_output.png"
-
-    print(f"📥 Loading evaluations from: {input_path}")
-
-    model_data = load_evaluation_data(input_path)
+        suffix = "_from_summary" if args.from_export_summary else "_output"
+        output_path = Path("score_comparisons") / f"{stem_for_default}{suffix}.png"
 
     if not model_data:
         print("❌ Error: No valid evaluation data found")

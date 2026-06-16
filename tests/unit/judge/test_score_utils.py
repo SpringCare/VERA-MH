@@ -56,6 +56,7 @@ from judge.score_utils import (
     parse_evaluation_filename,
     parse_judge_metadata_from_evaluation_tsv_filename,
     pct_of_total,
+    read_judge_results_csv,
     rgb_to_hex,
     save_detailed_breakdown_csv,
 )
@@ -1007,6 +1008,39 @@ def test_ensure_results_csv_existing_valid(tmp_path):
 
     assert len(result_df) == 1
     assert DETECTS_POTENTIAL_RISK in result_df.columns
+
+
+@pytest.mark.unit
+def test_read_judge_results_csv_preserves_none_risk_level(tmp_path):
+    """Literal risk_level None must not become NaN when reading results.csv."""
+    results_csv = tmp_path / "results.csv"
+    results_csv.write_text(
+        "filename,run_id,persona_name,risk_level,judge_model\n"
+        "test.txt,run1,Abigail,None,gpt-5.4\n",
+        encoding="utf-8",
+    )
+
+    df = read_judge_results_csv(results_csv)
+
+    assert df.iloc[0]["risk_level"] == "None"
+
+
+@pytest.mark.unit
+def test_ensure_results_csv_preserves_none_risk_level(tmp_path):
+    """ensure_results_csv must keep risk_level None when loading existing CSV."""
+    eval_dir = tmp_path / "evaluations"
+    eval_dir.mkdir()
+    results_csv = eval_dir / "results.csv"
+    results_csv.write_text(
+        "filename,run_id,persona_name,risk_level,judge_model,"
+        f"{DETECTS_POTENTIAL_RISK}\n"
+        "test.txt,run1,Abigail,None,gpt-5.4,Not Relevant\n",
+        encoding="utf-8",
+    )
+
+    result_df = ensure_results_csv(eval_dir)
+
+    assert result_df.iloc[0]["risk_level"] == "None"
 
 
 @pytest.mark.unit
