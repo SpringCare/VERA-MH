@@ -15,7 +15,7 @@ Auto-formats and lints Python code. Configuration in `pyproject.toml`.
 
 ## Agent Documentation
 
-`AGENTS.md` and `CLAUDE.md` are **intentionally separate**:
+`AGENTS.md` and `CLAUDE.md` are **intentionally separate** (see the **Documentation map** in [AGENTS.md](../AGENTS.md)):
 
 - **[AGENTS.md](../AGENTS.md)** — agent-agnostic guide (architecture, testing, domain guardrails, key commands)
 - **[CLAUDE.md](../CLAUDE.md)** — Claude Code slash commands and `.claude/` maintenance

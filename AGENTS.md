@@ -145,10 +145,27 @@ Format: `<type>/<brief-description>` (kebab-case), e.g. `feat/add-gpt4-support`,
 3. Atomic commits; pre-commit hooks run on commit
 4. Push and open a PR
 
-## Documentation Reference
+## Documentation Map
+
+One canonical home per concern — cross-link, don't copy paragraphs.
+
+| Doc | Audience | Use for |
+|-----|----------|---------|
+| [README.md](./README.md) | Humans | Setup, CLI usage, output layout, detailed architecture |
+| **AGENTS.md** (this file) | All coding agents | Style, architecture map, testing, key commands, git conventions |
+| [CLAUDE.md](./CLAUDE.md) | Claude Code only | Slash commands, `.claude/` maintenance |
+| [docs/](./docs/) | Humans and agents | Topic deep dives (see links below) |
+
+**When to update which file:** pytest/CI policy → AGENTS.md; new CLI flag or output layout → README (+ AGENTS key commands if agents run it often); LLM provider integration → [docs/evaluating.md](./docs/evaluating.md); Claude slash commands → `.claude/commands/` + CLAUDE.md + README command list.
+
+**OpenSpec:** not used in this repo. Consider [OpenSpec](https://github.com/Fission-AI/OpenSpec) only for large multi-file features where you want agreed behavioral specs before coding (e.g. new judge dimensions, pipeline CLI changes). It complements — does not replace — AGENTS.md or README.
+
+### Links
 
 - **Setup, pipeline, output layout:** [README.md](./README.md)
 - **Custom LLM providers:** [docs/evaluating.md](./docs/evaluating.md)
+- **Judge behavior:** [docs/judge.md](./docs/judge.md)
+- **Structured output:** [docs/structured-output.md](./docs/structured-output.md)
 - **Pre-commit hooks:** [docs/pre-commit-hooks.md](./docs/pre-commit-hooks.md)
 - **Claude Code commands:** [CLAUDE.md](./CLAUDE.md), [.claude/commands/](./.claude/commands/)
 
