@@ -12,7 +12,8 @@ Prefer these over retyping CLI commands from [AGENTS.md](./AGENTS.md):
 | Code quality | `/format` |
 | VERA-MH | `/run-generator`, `/run-judge` |
 | Testing | `/test`, `/fix-tests`, `/create-tests [module] [--layer=unit\|integration\|e2e]` |
-| Git | `/create-commits`, `/create-pr` |
+| Git | `/create-commits`, `/create-pr`, `/review` (local diff), `/code-review` (PR) |
+| Verify | `/verify` (runs `pytest -m "not live"` — never hits live APIs) |
 
 Full command docs: [.claude/commands/README.md](./.claude/commands/README.md)
 
