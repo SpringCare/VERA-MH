@@ -3,11 +3,10 @@
 [![CI](https://github.com/SpringCare/VERA-MH/workflows/CI/badge.svg)](https://github.com/SpringCare/VERA-MH/actions/workflows/ci.yml)
 [![Docker](https://github.com/SpringCare/VERA-MH/workflows/Docker%20Build%20Validation/badge.svg)](https://github.com/SpringCare/VERA-MH/actions/workflows/docker.yml)
 
-VERA-MH (Validation of Ethical and Responsible AI in Mental Health) is a comprehensive framework for evaluating AI systems designed for mental health applications. This toolkit enables researchers, developers, and clinicians to systematically assess how well AI systems handle sensitive mental health conversations across detecting potential risk, confirming risk, guiding to human support, communicating effectively, and holding safe boundaries. By simulating realistic patient-provider interactions using clinically-developed personas and rubrics, VERA-MH provides standardized evaluation metrics that help ensure AI mental health tools are safe, effective, and responsible before deployment.
+VERA-MH (Validation of Ethical and Responsible AI in Mental Health) is a comprehensive framework for evaluating AI systems designed for mental health applications. This toolkit enables researchers, developers, and clinicians to systematically assess how well AI systems handle sensitive mental health conversations across detecting potential risk, confirming risk, guiding to human support, communicating effectively, and holding safe boundaries. By simulating user-chatbot interactions using clinically-developed personas and rubrics, VERA-MH provides standardized evaluation metrics that can help determine whether AI mental health tools are safe for sensitive mental health conversations before, during, and after deployment. Please review the [License](https://github.com/SpringCare/VERA-MH/blob/main/LICENSE) documentation for additional information.
 
 This code should be considered a continuous work in progress (including this documentation), and the main avenue to offer feedback.
-We value every interaction that follows the [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
-There are known limitations of the current structure, which will be simplified and streamlined.
+We value every interaction that follows the [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).  There are known limitations of the current structure, which will be simplified and streamlined.
 
 ## Table of Contents
 
