@@ -130,7 +130,7 @@ Pooled runs (`j_pooled__.../`) sit alongside `p_*` folders when merging multiple
 
 ## Invariants
 
-Agents and contributors must comply. Import boundaries are defined in `[tool.importlinter]` in [pyproject.toml](../pyproject.toml) and checked via `uv run lint-imports`.
+Agents and contributors must comply. Import boundaries are documented in the [Layer model](#layer-model) section above.
 
 ### MUST
 
@@ -152,14 +152,14 @@ Agents and contributors must comply. Import boundaries are defined in `[tool.imp
 - Add root-level Python scripts (including keeping `generate.py`, `judge.py`, or `run_pipeline.py` as entry points after migration).
 - Put domain logic in `vera.py` — keep the CLI layer thin.
 - Commit generated output under `output/` or secrets in `.env`.
-- Bypass architecture checks (`lint-imports`, required CI) to merge structural changes.
+- Bypass architecture checks (pyright, required CI) to merge structural changes.
 
 ### ESCALATE (stop and ask)
 
 Stop work and request maintainer approval before proceeding when a task would:
 
 - Add a new top-level package or move code between `judge/` and `generate_conversations/`.
-- Change import boundaries enforced in [pyproject.toml](../pyproject.toml) (`[tool.importlinter]`).
+- Change import boundaries documented in this file.
 - Add a new runtime dependency or raise minimum Python version.
 - Change judge rubric/scoring contracts, pipeline output layout, or CLI flags affecting run folders.
 - Add or remove a `vera.py` subcommand.
@@ -173,15 +173,15 @@ Target state for automated checks:
 
 | Mechanism | What it checks |
 |-----------|----------------|
-| `uv run lint-imports` | Package import boundaries |
-| Pre-commit | Ruff format/lint + `lint-imports` |
-| CI | Ruff, `lint-imports`, `pytest -m "not live"` |
+| `uv run pyright` | Type checking (basic mode) |
+| Pre-commit | Ruff format/lint |
+| CI | Ruff, pyright, `pytest -m "not live"` |
 | `.github/CODEOWNERS` | Human review on `vera.py`, import boundaries, domain packages |
 
 Run before pushing structural changes:
 
 ```bash
-uv run lint-imports
+uv run pyright
 uv run pytest -m "not live"
 ```
 
@@ -194,7 +194,6 @@ Implementation may not match the target yet. Known gaps:
 | `vera.py` | `generate.py`, `judge.py`, `run_pipeline.py` | Extract argparse/`main()` into subcommand modules; wire `vera.py`; deprecate old scripts; delete after one release |
 | `vera score` | `python -m judge.score` | Remove standalone `__main__` from `judge/score.py` once `vera score` exists |
 | `vera pool` | `scripts/pool_vera_scores.py` | Move logic into `judge/`; remove or thin the script |
-| `lint-imports` in CI/pre-commit | Manual only today | Add CI step and pre-commit hook |
 | `.github/CODEOWNERS` | Not present | Add file or drop reference from enforcement table |
 
 Legacy scripts should print a deprecation message pointing at the equivalent `vera.py` subcommand until removed.
@@ -204,6 +203,5 @@ Legacy scripts should print a deprecation message pointing at the equivalent `ve
 To add an exception or new boundary:
 
 1. Update this document with rationale.
-2. Update `[tool.importlinter]` contracts in `pyproject.toml` to match.
-3. Update [AGENTS.md](../AGENTS.md) if agent stop/escalate rules change.
-4. Update [README.md](../README.md) if CLI flags or output layout change.
+2. Update [AGENTS.md](../AGENTS.md) if agent stop/escalate rules change.
+3. Update [README.md](../README.md) if CLI flags or output layout change.
