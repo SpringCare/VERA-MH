@@ -9,13 +9,9 @@ pre-commit install   # Activates hooks
 
 ## Hooks
 
-### Standard: Ruff, import boundaries, Pyright
+### Standard: Ruff
 
 Auto-formats and lints Python code. Configuration in `pyproject.toml`.
-
-- **Ruff** — format and lint
-- **lint-imports** — package boundary checks (`[tool.importlinter]`)
-- **Pyright** — type check on production packages (entry points + domain packages + `utils/`)
 
 ## Agent Documentation
 

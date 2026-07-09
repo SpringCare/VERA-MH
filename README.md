@@ -672,7 +672,7 @@ If you have Claude Code installed, you can use these custom commands:
 - `/setup-dev` - Set up complete development environment (includes test infrastructure)
 
 **Code Quality:**
-- `/format` - Run code formatting and linting (ruff + lint-imports)
+- `/format` - Run code formatting and linting (ruff + pyright)
 
 **Running VERA-MH:**
 - `/run-generator` - Interactive conversation generator

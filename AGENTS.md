@@ -50,7 +50,7 @@ Read [docs/architecture.md](docs/architecture.md) before structural changes.
 **Stop and ask** when a task would:
 - Violate a MUST NOT in the architecture doc
 - Add a new dependency or top-level package
-- Change import boundaries in `pyproject.toml` (`[tool.importlinter]`)
+- Change import boundaries documented in [architecture.md](docs/architecture.md)
 - Change judge rubric/scoring contracts, pipeline output layout, or CLI flags affecting run folders
 - Add or remove a `vera.py` subcommand
 - Refactor across multiple domain packages in one change without maintainer review
@@ -58,7 +58,7 @@ Read [docs/architecture.md](docs/architecture.md) before structural changes.
 Verify before pushing structural changes:
 
 ```bash
-uv run lint-imports
+uv run pyright
 uv run pytest -m "not live"
 ```
 
@@ -139,7 +139,7 @@ uv add --dev <pkg>
 # Code quality
 uv run ruff format .
 uv run ruff check .
-uv run lint-imports
+uv run pyright
 pre-commit run --all-files
 ```
 
@@ -147,9 +147,9 @@ Use dated model IDs (e.g. `claude-sonnet-4-5-20250929`) as in README; shorthand 
 
 ## Code Quality Tools
 
-- **Import boundaries:** `uv run lint-imports` (enforces package layers; see [architecture.md](docs/architecture.md))
 - **Formatting:** `uv run ruff format .`
 - **Linting:** `uv run ruff check .`
+- **Type checking:** `uv run pyright` (basic mode)
 - **Pre-commit:** `pre-commit install` — see [docs/pre-commit-hooks.md](docs/pre-commit-hooks.md)
 - Configuration: `pyproject.toml`
 
