@@ -6,11 +6,3 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  - repo: local
-    hooks:
-      - id: sync-claude-to-agents
-        name: Sync CLAUDE.md to AGENTS.md
-        entry: .pre-commit-scripts/sync-claude-to-agents.sh
-        language: script
-        files: ^CLAUDE\.md$
-        pass_filenames: false
