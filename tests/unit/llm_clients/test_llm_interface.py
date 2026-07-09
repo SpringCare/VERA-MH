@@ -3,9 +3,15 @@ from typing import Optional
 from unittest.mock import MagicMock
 
 import pytest
+from pydantic import BaseModel
 
 from llm_clients import Role
-from llm_clients.llm_interface import LLMGenerationFailed, LLMInterface
+from llm_clients.llm_interface import (
+    LLMGenerationFailed,
+    LLMInterface,
+    ensure_pydantic_response,
+    extract_structured_invoke_result,
+)
 
 
 class ConcreteLLM(LLMInterface):
@@ -582,3 +588,100 @@ class TestModelParamSupport:
     def test_subclass_can_access_model_supports_param(self):
         llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
         assert llm._model_supports_param("any-model", "temperature")
+
+
+@pytest.mark.unit
+class TestExtractStructuredInvokeResult:
+    """Tests for unpacking `with_structured_output(include_raw=True)` payloads."""
+
+    def test_unpacks_include_raw_dict(self):
+        raw = MagicMock()
+        result = {"parsed": {"answer": "Yes"}, "raw": raw, "parsing_error": None}
+        parsed, extracted_raw, parsing_error = extract_structured_invoke_result(result)
+        assert parsed == {"answer": "Yes"}
+        assert extracted_raw is raw
+        assert parsing_error is None
+
+    def test_passes_through_parsing_error(self):
+        error = ValueError("bad json")
+        result = {"parsed": None, "raw": MagicMock(), "parsing_error": error}
+        parsed, _, parsing_error = extract_structured_invoke_result(result)
+        assert parsed is None
+        assert parsing_error is error
+
+    def test_bare_value_without_include_raw(self):
+        """Without include_raw, LangChain returns only the parsed model/dict."""
+        parsed, raw, parsing_error = extract_structured_invoke_result({"answer": "Yes"})
+        assert parsed == {"answer": "Yes"}
+        assert raw is None
+        assert parsing_error is None
+
+
+@pytest.mark.unit
+class TestEnsurePydanticResponse:
+    """Tests for coercing structured-output payloads into a Pydantic model.
+
+    Covers the single-key-unwrap fallback for models that occasionally wrap
+    forced tool-call args in a spurious key (observed on claude-sonnet-5).
+    """
+
+    def test_returns_instance_unchanged(self):
+        class Answer(BaseModel):
+            text: str
+
+        instance = Answer(text="hi")
+        assert ensure_pydantic_response(instance, Answer) is instance
+
+    def test_validates_plain_dict(self):
+        class Answer(BaseModel):
+            text: str
+
+        result = ensure_pydantic_response({"text": "hi"}, Answer)
+        assert result == Answer(text="hi")
+
+    def test_unwraps_single_spurious_key(self):
+        class Answer(BaseModel):
+            answer: str
+            reasoning: str
+
+        wrapped = {"$PARAMETER_NAME": {"answer": "Yes", "reasoning": "because"}}
+        result = ensure_pydantic_response(wrapped, Answer)
+        assert result == Answer(answer="Yes", reasoning="because")
+
+    def test_does_not_unwrap_multi_key_dict(self):
+        class Answer(BaseModel):
+            answer: str
+            reasoning: str
+
+        # Two top-level keys: not the spurious-single-key shape, so no unwrap
+        # attempt is made even though one value happens to be a dict.
+        multi_key = {"answer": "Yes", "extra": {"reasoning": "because"}}
+        assert ensure_pydantic_response(multi_key, Answer) is None
+
+    def test_single_key_with_non_dict_value_returns_none(self):
+        class Answer(BaseModel):
+            text: str
+
+        assert (
+            ensure_pydantic_response({"$PARAMETER_NAME": "not a dict"}, Answer) is None
+        )
+
+    def test_single_key_inner_dict_fails_validation_returns_none(self):
+        class Answer(BaseModel):
+            answer: str
+            reasoning: str
+
+        wrapped = {"$PARAMETER_NAME": {"wrong_field": "Yes"}}
+        assert ensure_pydantic_response(wrapped, Answer) is None
+
+    def test_non_dict_non_instance_returns_none(self):
+        class Answer(BaseModel):
+            text: str
+
+        assert ensure_pydantic_response("just a string", Answer) is None
+
+    def test_none_returns_none(self):
+        class Answer(BaseModel):
+            text: str
+
+        assert ensure_pydantic_response(None, Answer) is None

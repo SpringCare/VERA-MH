@@ -119,6 +119,29 @@ class TestGeminiLLM(TestJudgeLLMBase):
             assert call_kwargs["max_tokens"] == 500
             assert call_kwargs["top_p"] == 0.9
 
+    @pytest.mark.parametrize(
+        "reasoning_kwargs",
+        [
+            {"thinking_budget": 2048},
+            {"thinking_level": "high"},
+        ],
+    )
+    def test_init_passes_through_native_reasoning_kwargs(self, reasoning_kwargs):
+        """`thinking_budget`/`thinking_level` are native ChatGoogleGenerativeAI
+        fields (unlike Claude's `thinking` dict, no shim is needed here).
+        Regression guard against a future langchain-google-genai rename.
+        """
+        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+            GeminiLLM(
+                name="TestGemini",
+                role=Role.PERSONA,
+                **reasoning_kwargs,
+            )
+
+            call_kwargs = mock_chat.call_args[1]
+            for key, value in reasoning_kwargs.items():
+                assert call_kwargs[key] == value
+
     @pytest.mark.asyncio
     @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
     @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")

@@ -74,6 +74,12 @@ class GeminiLLM(JudgeLLM):
     **Explicit** Context Caching (``cached_content`` resource names) is not wired here;
     it needs a separate cache create/update lifecycle. There is no Anthropic-style
     ``cache_control`` on ``ChatGoogleGenerativeAI``.
+
+    Reasoning/thinking is controlled via two flat, native ``ChatGoogleGenerativeAI``
+    fields that pass straight through kwargs (e.g. ``-jep thinking_level=high``):
+    ``thinking_level`` (``"low"``/``"high"``, Gemini 3+, takes precedence) and
+    ``thinking_budget`` (int token budget, older/Gemini 2.5 models). No dict
+    wrapping is needed here, unlike Claude's ``thinking`` param.
     """
 
     def _no_retry_substrings(self) -> tuple[str, ...]:
