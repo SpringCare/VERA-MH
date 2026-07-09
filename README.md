@@ -429,6 +429,8 @@ VERA-MH simulates realistic conversations between Large Language Models (LLMs) f
 
 ## Architecture
 
+See **[docs/architecture.md](docs/architecture.md)** for the target layer model, invariants, and single CLI orchestrator (`vera.py`). Below is a quick module reference; CLI usage and output layout are in the sections above.
+
 ### Core Components
 
 - **`generate.py`**: Main entry point for conversation generation with configurable parameters
@@ -694,7 +696,7 @@ If you have Claude Code installed, you can use these custom commands:
 - `/setup-dev` - Set up complete development environment (includes test infrastructure)
 
 **Code Quality:**
-- `/format` - Run code formatting and linting (ruff + pyright)
+- `/format` - Run code formatting and linting (ruff + lint-imports)
 
 **Running VERA-MH:**
 - `/run-generator` - Interactive conversation generator
