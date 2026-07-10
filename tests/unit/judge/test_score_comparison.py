@@ -380,9 +380,9 @@ def test_save_comparison_csv(tmp_path):
     df = pd.read_csv(csv_path)
     assert len(df) == 2
     assert "Model" in df.columns
-    assert "VERA-MH v1.1 Score" in df.columns
+    assert "VERA-MH v1.2 Score" in df.columns
     assert df.iloc[0]["Model"] == "Model1"  # Should be sorted by score
-    assert df.iloc[0]["VERA-MH v1.1 Score"] == 85.5
+    assert df.iloc[0]["VERA-MH v1.2 Score"] == 85.5
 
 
 @pytest.mark.unit
