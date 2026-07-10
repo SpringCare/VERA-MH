@@ -24,10 +24,28 @@ T = TypeVar("T", bound=BaseModel)
 # and be removed from memory if it is not used.
 _DEFAULT_ANTHROPIC_CACHE_CONTROL: Dict[str, Any] = {"type": "ephemeral"}
 
-# Models that use `thinking={"type": "adaptive"}` + the `effort` field instead
-# of `thinking={"type": "enabled", "budget_tokens": N}`. Also the set of
-# models that reject `temperature` outright (see `_unsupported_model_params`).
-_ADAPTIVE_THINKING_MODEL_MARKERS = ("opus-4-8", "sonnet-5")
+# Per-model quirks, keyed by a substring marker matched against model_name.
+# To onboard a new model that needs similar special-casing, add its marker
+# here with the applicable quirks rather than adding another `is_x` check.
+#
+# adaptive_thinking: uses `thinking={"type": "adaptive"}` + the `effort`
+#   shorthand instead of `thinking={"type": "enabled", "budget_tokens": N}`.
+#   Also rejects the `temperature` param outright (see
+#   `_unsupported_model_params`).
+# defaults_thinking_on: runs adaptive thinking by default when `thinking` is
+#   omitted (unlike other adaptive models, which default to no thinking); must
+#   be explicitly disabled so no thinking_effort means no thinking.
+# sparse_max_tokens_profile: the installed langchain-anthropic has no
+#   model-profile entry for this model, so it silently falls back to
+#   max_tokens=4096 (vs 64k-128k auto-set for profiled models) - too tight for
+#   structured output, which must fit the full answer/reasoning in the
+#   completion. Needs an explicit default.
+_MODEL_QUIRKS: Dict[str, frozenset[str]] = {
+    "opus-4-8": frozenset({"adaptive_thinking"}),
+    "sonnet-5": frozenset(
+        {"adaptive_thinking", "defaults_thinking_on", "sparse_max_tokens_profile"}
+    ),
+}
 
 # thinking_effort labels -> Anthropic's raw `budget_tokens`, for models that
 # don't support the `effort` shorthand (haiku, older sonnet).
@@ -37,6 +55,18 @@ _EFFORT_BUDGETS: Dict[str, int] = {
     "high": 16000,
     "max": 32000,
 }
+
+
+def _quirks_for_model(model_name: Optional[str]) -> frozenset[str]:
+    """Union of quirks for every marker in `_MODEL_QUIRKS` found in model_name."""
+    if not model_name:
+        return frozenset()
+    model_lower = model_name.lower()
+    quirks: set[str] = set()
+    for marker, marker_quirks in _MODEL_QUIRKS.items():
+        if marker in model_lower:
+            quirks |= marker_quirks
+    return frozenset(quirks)
 
 
 class ClaudeLLM(JudgeLLM):
@@ -49,14 +79,13 @@ class ClaudeLLM(JudgeLLM):
     def _unsupported_model_params(self) -> Dict[str, frozenset[str]]:
         return {
             marker: frozenset({"temperature"})
-            for marker in _ADAPTIVE_THINKING_MODEL_MARKERS
+            for marker, quirks in _MODEL_QUIRKS.items()
+            if "adaptive_thinking" in quirks
         }
 
     @staticmethod
     def _is_adaptive_thinking_model(model_name: Optional[str]) -> bool:
-        return bool(model_name) and any(
-            marker in model_name for marker in _ADAPTIVE_THINKING_MODEL_MARKERS
-        )
+        return "adaptive_thinking" in _quirks_for_model(model_name)
 
     @staticmethod
     def _apply_thinking_kwargs(
@@ -66,12 +95,12 @@ class ClaudeLLM(JudgeLLM):
     ) -> None:
         """Translate `thinking_effort` into native ChatAnthropic kwargs, in place.
 
-        Adaptive models (opus-4-8, sonnet-5) use `thinking={"type": "adaptive"}`
-        + the `effort` shorthand; older models (haiku, older sonnet) use
+        Adaptive models use `thinking={"type": "adaptive"}` + the `effort`
+        shorthand; older models (haiku, older sonnet) use
         `thinking={"type": "enabled", "budget_tokens": N}`.
         """
-        is_adaptive = ClaudeLLM._is_adaptive_thinking_model(model_name)
-        is_sonnet_5 = bool(model_name and "sonnet-5" in model_name)
+        quirks = _quirks_for_model(model_name)
+        is_adaptive = "adaptive_thinking" in quirks
 
         if thinking_effort is not None:
             effort_str = str(thinking_effort)
@@ -82,18 +111,10 @@ class ClaudeLLM(JudgeLLM):
                 budget = _EFFORT_BUDGETS.get(effort_str, _EFFORT_BUDGETS["medium"])
                 kwargs["thinking"] = {"type": "enabled", "budget_tokens": budget}
                 kwargs.setdefault("max_tokens", budget + 1024)  # must exceed budget
-        elif is_sonnet_5:
-            # Sonnet 5 runs adaptive thinking by default when `thinking` is
-            # omitted (unlike Opus 4.7/4.8, which default to no thinking).
-            # Disable explicitly so no thinking_effort means no thinking.
+        elif "defaults_thinking_on" in quirks:
             kwargs["thinking"] = {"type": "disabled"}
 
-        if is_sonnet_5:
-            # The installed langchain-anthropic has no model-profile entry
-            # for claude-sonnet-5, so it silently falls back to
-            # max_tokens=4096 (vs 64k-128k auto-set for other Claude
-            # models) - too tight for structured output, which must fit the
-            # full answer/reasoning in the completion. Set an adequate default.
+        if "sparse_max_tokens_profile" in quirks:
             kwargs.setdefault("max_tokens", 8192)
 
     def _no_retry_substrings(self) -> tuple[str, ...]:
