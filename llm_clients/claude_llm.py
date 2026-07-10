@@ -112,7 +112,7 @@ class ClaudeLLM(JudgeLLM):
                 kwargs["thinking"] = {"type": "enabled", "budget_tokens": budget}
                 kwargs.setdefault("max_tokens", budget + 1024)  # must exceed budget
         elif "defaults_thinking_on" in quirks:
-            kwargs["thinking"] = {"type": "disabled"}
+            kwargs.setdefault("thinking", {"type": "disabled"})
 
         if "sparse_max_tokens_profile" in quirks:
             kwargs.setdefault("max_tokens", 8192)

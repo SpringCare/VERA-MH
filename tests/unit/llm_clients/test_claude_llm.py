@@ -182,6 +182,12 @@ class TestClaudeLLM(TestJudgeLLMBase):
         ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-sonnet-5", None)
         assert kwargs == {"thinking": {"type": "disabled"}, "max_tokens": 8192}
 
+    def test_apply_thinking_kwargs_no_effort_sonnet_5_keeps_explicit_thinking(self):
+        """A caller-supplied `thinking` kwarg must survive the disabled default."""
+        kwargs: dict = {"thinking": {"type": "enabled", "budget_tokens": 5000}}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-sonnet-5", None)
+        assert kwargs["thinking"] == {"type": "enabled", "budget_tokens": 5000}
+
     def test_apply_thinking_kwargs_no_effort_opus_4_8_is_untouched(self):
         """Unlike sonnet-5, opus-4-8 defaults to no thinking already."""
         kwargs: dict = {}
