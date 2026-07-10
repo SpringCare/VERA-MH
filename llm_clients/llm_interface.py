@@ -73,8 +73,8 @@ def ensure_pydantic_response(response: Any, response_model: Type[T]) -> Optional
         # tool-use template placeholders. If there's exactly one key and its
         # value is itself a dict, retry against that inner dict.
         if len(response) == 1:
-            (inner,) = response.values()
-            if isinstance(inner, dict):
+            key, inner = next(iter(response.items()))
+            if key.startswith("$PARAMETER_") and isinstance(inner, dict):
                 try:
                     return response_model.model_validate(inner)
                 except ValidationError:
