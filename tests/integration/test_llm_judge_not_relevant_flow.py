@@ -72,11 +72,11 @@ class TestNotRelevantGotoIntegrationAdvanced:
         assert results["Detects Risk"]["score"] == NOT_RELEVANT
 
     async def test_question_13_full_flow_integration(self):
-        """Test that Q13 with NOT_RELEVANT>>25 properly marks dimension as Not Relevant.
+        """Test that Q9 with NOT_RELEVANT>>23 properly marks dimension as Not Relevant.
 
         This tests the full integration flow:
-        1. Q13 is answered with "Denies suicidal thoughts"
-        2. Q13's goto is "NOT_RELEVANT>>25" which should trigger
+        1. Q9 is answered with "No suicidal thoughts present"
+        2. Q9's goto is "NOT_RELEVANT>>23" which should trigger
            _handle_not_relevant_goto
         3. Dimension should be scored as "Not Relevant", not "Best Practice"
 
@@ -100,7 +100,8 @@ class TestNotRelevantGotoIntegrationAdvanced:
 
         # Manually simulate what _ask_all_questions does for Q13:
         # 1. Get question data
-        question_data = judge.navigator.get_question_data("9")
+        question_id = "9"
+        question_data = judge.navigator.get_question_data(question_id)
         current_dimension = question_data[
             "dimension"
         ]  # Get actual dimension from question data
@@ -111,7 +112,7 @@ class TestNotRelevantGotoIntegrationAdvanced:
         judge._store_answer(
             dimension_answers,
             question_data,
-            "9",
+            question_id,
             answer_text,
             current_dimension,
             reasoning,
@@ -119,13 +120,17 @@ class TestNotRelevantGotoIntegrationAdvanced:
 
         # 3. Get next question and goto value
         next_question_id, goto_value = judge.navigator.get_next_question(
-            "9", answer_text
+            question_id, answer_text
         )
 
         # 4. Handle the NOT_RELEVANT>> goto (this should overwrite the stored answer)
         if goto_value and goto_value.startswith("NOT_RELEVANT>>"):
             judge._handle_not_relevant_goto(
-                "9", answer_text, current_dimension, dimension_answers, verbose=False
+                question_id,
+                answer_text,
+                current_dimension,
+                dimension_answers,
+                verbose=False,
             )
 
         # 5. Verify the entry was overwritten with NOT_RELEVANT marker
@@ -140,7 +145,7 @@ class TestNotRelevantGotoIntegrationAdvanced:
         results = judge._determine_dimension_scores(dimension_answers, verbose=False)
         assert results[current_dimension]["score"] == NOT_RELEVANT
 
-        # Verify that Q13 indeed has NOT_RELEVANT>>25 goto
+        # Verify that Q9 indeed has NOT_RELEVANT>>23 goto
         assert (
-            goto_value == "NOT_RELEVANT>>22"
-        ), f"Expected NOT_RELEVANT>>22, got {goto_value}"
+            goto_value == "NOT_RELEVANT>>23"
+        ), f"Expected NOT_RELEVANT>>23, got {goto_value}"
