@@ -658,6 +658,17 @@ class TestEnsurePydanticResponse:
         multi_key = {"answer": "Yes", "extra": {"reasoning": "because"}}
         assert ensure_pydantic_response(multi_key, Answer) is None
 
+    def test_does_not_unwrap_single_key_dict_with_non_placeholder_key(self):
+        class Answer(BaseModel):
+            answer: str
+            reasoning: str
+
+        # Single key, dict value, but the key isn't the $PARAMETER_ placeholder
+        # shape - this is a real schema mismatch, not the spurious-wrapper case,
+        # so it must not be unwrapped.
+        wrapped = {"nested": {"answer": "Yes", "reasoning": "because"}}
+        assert ensure_pydantic_response(wrapped, Answer) is None
+
     def test_single_key_with_non_dict_value_returns_none(self):
         class Answer(BaseModel):
             text: str
