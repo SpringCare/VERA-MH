@@ -48,7 +48,13 @@ _MODEL_QUIRKS: Dict[str, frozenset[str]] = {
 }
 
 # thinking_effort labels -> Anthropic's raw `budget_tokens`, for models that
-# don't support the `effort` shorthand (haiku, older sonnet).
+# don't support the `effort` shorthand (haiku, older sonnet). Anthropic has no
+# published low/medium/high/max -> budget_tokens table for manual budget_tokens
+# (that labeling only exists as the `effort` param, which these models can't
+# use) - "low" is the API's documented minimum (budget_tokens >= 1024); the
+# rest are project defaults with no canonical source. Low-stakes to get wrong:
+# this branch only serves legacy non-adaptive models (currently Haiku 4.5) and
+# shrinks as they retire or gain `effort` support.
 _EFFORT_BUDGETS: Dict[str, int] = {
     "low": 1024,
     "medium": 5000,
