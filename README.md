@@ -361,6 +361,30 @@ uv run python judge.py -f output/{YOUR_P_RUN} -j gpt-4o:3
 uv run python judge.py -f output/{YOUR_P_RUN} -j gpt-4o:2 claude-sonnet-4-20250514:3
 ```
 
+#### Reasoning / extended thinking
+
+Reasoning-capable models expose an "effort" knob controlling how much internal reasoning they do before responding. Each provider uses a different native parameter name, so pass whichever matches your model via `-uep` / `-pep` / `-jep`:
+
+| Provider | Parameter | Values | Example |
+|----------|-----------|--------|---------|
+| OpenAI (`gpt-5.x`, `o-series`) | `reasoning_effort` | `low`, `medium`, `high` | `-jep reasoning_effort=high` |
+| Claude (`claude-sonnet-5`, `claude-opus-4-8`, `claude-haiku-4-5`, ...) | `thinking_effort` | `low`, `medium`, `high`, `max` | `-jep thinking_effort=high` |
+| Gemini (`gemini-3-*`) | `thinking_level` | `low`, `high` | `-jep thinking_level=high` |
+| Gemini (`gemini-2.5-*`) | `thinking_budget` | integer token budget | `-jep thinking_budget=2048` |
+
+```bash
+# Judge with high reasoning effort
+uv run python judge.py -f output/{YOUR_P_RUN} -j gpt-5.4 -jep reasoning_effort=high
+
+# Claude judge with extended thinking
+uv run python judge.py -f output/{YOUR_P_RUN} -j claude-sonnet-5 -jep thinking_effort=high
+```
+
+**Notes:**
+- `thinking_effort` is Claude-specific shorthand (not a native Anthropic API field): it's translated internally into the right combination of `thinking`/`effort`/`budget_tokens` for the given model (see [`llm_clients/claude_llm.py`](llm_clients/claude_llm.py)). It exists because the CLI's extra-params parser splits on commas, so a literal multi-key dict like `thinking={"type": "enabled", "budget_tokens": 5000}` can't be passed directly.
+- `reasoning_effort` (OpenAI) and `thinking_budget`/`thinking_level` (Gemini) are native LangChain fields that pass straight through — no translation needed.
+- Combine with other extra params by separating with a comma: `-jep thinking_effort=high,max_tokens=2000`. Note that Claude forces `temperature=1` automatically whenever thinking is enabled, overriding any `temperature` you pass alongside `thinking_effort`.
+
 ## Data Files
 
 Most of the interesting data is contained in the [`data`](data) folder, specifically:
@@ -396,9 +420,9 @@ VERA-MH simulates realistic conversations between Large Language Models (LLMs) f
 
 ### LLM Provider Support
 - **LangChain Integration**: Uses LangChain for robust LLM interactions
-- **Claude Support**: Claude models via LangChain's Anthropic library with structured output
-- **OpenAI Support**: GPT models via LangChain's OpenAI library with structured output
-- **Gemini Support**: Google Gemini models via LangChain's Google library with structured output
+- **Claude Support**: Claude models via LangChain's Anthropic library with structured output; extended thinking via `-jep thinking_effort=<low|medium|high|max>` (see [Reasoning / extended thinking](#reasoning--extended-thinking))
+- **OpenAI Support**: GPT models via LangChain's OpenAI library with structured output; reasoning effort via `-jep reasoning_effort=<low|medium|high>`
+- **Gemini Support**: Google Gemini models via LangChain's Google library with structured output; thinking via `-jep thinking_level=<low|high>` (Gemini 3+) or `-jep thinking_budget=<tokens>` (Gemini 2.5)
 - **Azure Support**: Azure-deployed models via LangChain's Azure library with structured output
 - **Ollama Support**: Local Ollama models via LangChain's Ollama library (limited structured output support)
 
