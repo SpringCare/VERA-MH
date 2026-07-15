@@ -29,19 +29,27 @@ _DEFAULT_ANTHROPIC_CACHE_CONTROL: Dict[str, Any] = {"type": "ephemeral"}
 # here with the applicable quirks rather than adding another `is_x` check.
 #
 # adaptive_thinking: uses `thinking={"type": "adaptive"}` + the `effort`
-#   shorthand instead of `thinking={"type": "enabled", "budget_tokens": N}`.
-#   Also rejects the `temperature` param outright (see
-#   `_unsupported_model_params`).
+#   shorthand instead of `thinking={"type": "enabled", "budget_tokens": N}`
+#   (manual extended thinking returns a 400 on these models). Also rejects
+#   `temperature`/`top_p`/`top_k` outright at any non-default value (see
+#   `_unsupported_model_params`); Anthropic's guidance is to omit them and
+#   steer behavior via the system prompt instead.
+#   https://platform.claude.com/docs/en/about-claude/models/whats-new-sonnet-5
 # defaults_thinking_on: runs adaptive thinking by default when `thinking` is
 #   omitted (unlike other adaptive models, which default to no thinking); must
-#   be explicitly disabled so no thinking_effort means no thinking.
+#   be explicitly disabled so no thinking_effort means no thinking. Not used
+#   for fable-5: adaptive thinking is *always* on there and
+#   `thinking={"type": "disabled"}` is rejected outright, so there is nothing
+#   to force - omitting `thinking` already does the right thing.
 # sparse_max_tokens_profile: the installed langchain-anthropic has no
 #   model-profile entry for this model, so it silently falls back to
 #   max_tokens=4096 (vs 64k-128k auto-set for profiled models) - too tight for
 #   structured output, which must fit the full answer/reasoning in the
 #   completion. Needs an explicit default.
 _MODEL_QUIRKS: Dict[str, frozenset[str]] = {
+    "opus-4-7": frozenset({"adaptive_thinking"}),
     "opus-4-8": frozenset({"adaptive_thinking"}),
+    "fable-5": frozenset({"adaptive_thinking"}),
     "sonnet-5": frozenset(
         {"adaptive_thinking", "defaults_thinking_on", "sparse_max_tokens_profile"}
     ),
@@ -84,7 +92,7 @@ class ClaudeLLM(JudgeLLM):
 
     def _unsupported_model_params(self) -> Dict[str, frozenset[str]]:
         return {
-            marker: frozenset({"temperature"})
+            marker: frozenset({"temperature", "top_p", "top_k"})
             for marker, quirks in _MODEL_QUIRKS.items()
             if "adaptive_thinking" in quirks
         }
@@ -187,13 +195,20 @@ class ClaudeLLM(JudgeLLM):
         if "thinking" in llm_params:
             llm_params["temperature"] = 1
 
-        llm_params = self._filter_supported_params(self.model_name, llm_params)
+        filtered_params = self._filter_supported_params(self.model_name, llm_params)
+        dropped_params = sorted(set(llm_params) - set(filtered_params))
+        llm_params = filtered_params
 
         # Print configuration before creating LLM
         print("Creating Claude LLM with parameters:")
         print(f"  Model: {llm_params['model']}")
         print(f"  Temperature: {llm_params.get('temperature', 'default')}")
         print(f"  Max tokens: {llm_params.get('max_tokens', 'default')}")
+        if dropped_params:
+            print(
+                f"  Dropped (unsupported for {self.model_name}): "
+                f"{', '.join(dropped_params)}"
+            )
         extra_params = {
             k: v
             for k, v in llm_params.items()

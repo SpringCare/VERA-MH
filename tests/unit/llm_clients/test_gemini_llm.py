@@ -119,6 +119,67 @@ class TestGeminiLLM(TestJudgeLLMBase):
             assert call_kwargs["max_tokens"] == 500
             assert call_kwargs["top_p"] == 0.9
 
+    def test_init_strips_sampling_params_for_gemini_3(self, default_llm_kwargs):
+        """Gemini 3.x: temperature/top_p/top_k are no longer recommended and
+        must not be forced onto the model (Google migration guidance)."""
+        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+            GeminiLLM(
+                name="TestGemini",
+                role=Role.JUDGE,
+                model_name="gemini-3-pro-preview",
+                **default_llm_kwargs,
+            )
+
+            call_kwargs = mock_chat.call_args[1]
+            assert "temperature" not in call_kwargs
+            assert "top_p" not in call_kwargs
+            assert call_kwargs["max_tokens"] == 500
+
+    def test_init_keeps_sampling_params_for_pre_gemini_3(self, default_llm_kwargs):
+        """Pre-Gemini-3 models are unaffected by the sampling-param filter."""
+        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+            GeminiLLM(
+                name="TestGemini",
+                role=Role.JUDGE,
+                model_name="gemini-2.5-pro",
+                **default_llm_kwargs,
+            )
+
+            call_kwargs = mock_chat.call_args[1]
+            assert call_kwargs["temperature"] == 0.5
+            assert call_kwargs["top_p"] == 0.9
+
+    def test_model_supports_param_unsupported_for_gemini_3(self, default_llm_kwargs):
+        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI"):
+            llm = GeminiLLM(
+                name="TestGemini",
+                role=Role.JUDGE,
+                model_name="gemini-3-pro-preview",
+                **default_llm_kwargs,
+            )
+        assert not llm._model_supports_param("gemini-3-pro-preview", "temperature")
+        assert not llm._model_supports_param("gemini-3-pro-preview", "top_p")
+        assert not llm._model_supports_param("gemini-3-flash", "top_k")
+        assert llm._model_supports_param("gemini-3-pro-preview", "max_tokens")
+        assert llm._model_supports_param("gemini-2.5-pro", "temperature")
+        # Version-threshold check (not a fixed "gemini-3" marker) applies to
+        # later major versions too, e.g. a hypothetical gemini-4.
+        assert not llm._model_supports_param("gemini-4-pro", "temperature")
+
+    def test_filter_supported_params_strips_unsupported_for_gemini_3(
+        self, default_llm_kwargs
+    ):
+        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI"):
+            llm = GeminiLLM(
+                name="TestGemini",
+                role=Role.JUDGE,
+                model_name="gemini-3-pro-preview",
+                **default_llm_kwargs,
+            )
+        params = {"temperature": 0, "max_tokens": 500, "top_p": 0.9, "top_k": 40}
+        filtered = llm._filter_supported_params("gemini-3-pro-preview", params)
+        assert filtered == {"max_tokens": 500}
+
     @pytest.mark.parametrize(
         "reasoning_kwargs",
         [

@@ -106,8 +106,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
             assert call_kwargs["max_tokens"] == 500
             assert call_kwargs["top_p"] == 0.9
 
-    def test_init_strips_temperature_for_opus_4_8(self, default_llm_kwargs):
-        """Opus 4.8 rejects temperature; it must not be passed to ChatAnthropic."""
+    def test_init_strips_sampling_params_for_opus_4_8(self, default_llm_kwargs):
+        """Opus 4.8 rejects temperature/top_p/top_k; none may reach ChatAnthropic."""
         with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-opus-4-8"
@@ -122,6 +122,45 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
             call_kwargs = mock_chat_anthropic.call_args[1]
             assert "temperature" not in call_kwargs
+            assert "top_p" not in call_kwargs
+            assert call_kwargs["max_tokens"] == 500
+
+    def test_init_strips_sampling_params_for_opus_4_7(self, default_llm_kwargs):
+        """Opus 4.7 shares Opus 4.8's sampling-param and manual-thinking 400s."""
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_llm = MagicMock()
+            mock_llm.model = "claude-opus-4-7"
+            mock_chat_anthropic.return_value = mock_llm
+
+            ClaudeLLM(
+                name="TestClaude",
+                role=Role.JUDGE,
+                model_name="claude-opus-4-7",
+                **default_llm_kwargs,
+            )
+
+            call_kwargs = mock_chat_anthropic.call_args[1]
+            assert "temperature" not in call_kwargs
+            assert "top_p" not in call_kwargs
+            assert call_kwargs["max_tokens"] == 500
+
+    def test_init_strips_sampling_params_for_fable_5(self, default_llm_kwargs):
+        """Fable 5 shares the same sampling-param 400s as Opus 4.7/4.8."""
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_llm = MagicMock()
+            mock_llm.model = "claude-fable-5"
+            mock_chat_anthropic.return_value = mock_llm
+
+            ClaudeLLM(
+                name="TestClaude",
+                role=Role.JUDGE,
+                model_name="claude-fable-5",
+                **default_llm_kwargs,
+            )
+
+            call_kwargs = mock_chat_anthropic.call_args[1]
+            assert "temperature" not in call_kwargs
+            assert "top_p" not in call_kwargs
             assert call_kwargs["max_tokens"] == 500
 
     def test_model_supports_param_unsupported_for_opus_4_8(self, default_llm_kwargs):
@@ -133,6 +172,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
                 **default_llm_kwargs,
             )
         assert not llm._model_supports_param("claude-opus-4-8", "temperature")
+        assert not llm._model_supports_param("claude-opus-4-8", "top_p")
+        assert not llm._model_supports_param("claude-opus-4-8", "top_k")
 
     def test_model_supports_param_case_insensitive(self, default_llm_kwargs):
         with patch("llm_clients.claude_llm.ChatAnthropic"):
@@ -144,7 +185,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
             )
         assert not llm._model_supports_param("Claude-Opus-4-8", "Temperature")
 
-    def test_filter_supported_params_strips_temperature_for_opus_4_8(
+    def test_filter_supported_params_strips_sampling_params_for_opus_4_8(
         self, default_llm_kwargs
     ):
         with patch("llm_clients.claude_llm.ChatAnthropic"):
@@ -154,9 +195,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
                 model_name="claude-opus-4-8",
                 **default_llm_kwargs,
             )
-        params = {"temperature": 0, "max_tokens": 500, "top_p": 0.9}
+        params = {"temperature": 0, "max_tokens": 500, "top_p": 0.9, "top_k": 40}
         filtered = llm._filter_supported_params("claude-opus-4-8", params)
-        assert filtered == {"max_tokens": 500, "top_p": 0.9}
+        assert filtered == {"max_tokens": 500}
 
     # ============================================================================
     # Reasoning / extended-thinking effort translation
@@ -167,7 +208,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         [
             ("claude-sonnet-5", True),
             ("claude-opus-4-8", True),
-            ("claude-opus-4-7", False),
+            ("claude-opus-4-7", True),
+            ("claude-fable-5", True),
             ("claude-haiku-4-5", False),
             ("claude-sonnet-4-5-20250929", False),
             (None, False),
@@ -194,6 +236,13 @@ class TestClaudeLLM(TestJudgeLLMBase):
         ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-opus-4-8", None)
         assert kwargs == {}
 
+    def test_apply_thinking_kwargs_no_effort_fable_5_is_untouched(self):
+        """fable-5 can't disable thinking at all; omitting `thinking` already
+        gives the (only) adaptive-always-on behavior, so nothing is forced."""
+        kwargs: dict = {}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-fable-5", None)
+        assert kwargs == {}
+
     def test_apply_thinking_kwargs_no_effort_non_adaptive_model_is_untouched(self):
         kwargs: dict = {}
         ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-haiku-4-5", None)
@@ -212,6 +261,11 @@ class TestClaudeLLM(TestJudgeLLMBase):
         kwargs: dict = {}
         ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-opus-4-8", "high")
         assert kwargs == {"thinking": {"type": "adaptive"}, "effort": "high"}
+
+    def test_apply_thinking_kwargs_effort_on_fable_5_uses_adaptive_and_effort(self):
+        kwargs: dict = {}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-fable-5", "xhigh")
+        assert kwargs == {"thinking": {"type": "adaptive"}, "effort": "xhigh"}
 
     def test_apply_thinking_kwargs_effort_on_haiku_uses_budget_tokens(self):
         kwargs: dict = {}
@@ -282,8 +336,10 @@ class TestClaudeLLM(TestJudgeLLMBase):
             llm = ClaudeLLM(name="TestClaude", role=Role.JUDGE)
         unsupported = llm._unsupported_model_params()
         assert unsupported == {
-            "opus-4-8": frozenset({"temperature"}),
-            "sonnet-5": frozenset({"temperature"}),
+            "opus-4-7": frozenset({"temperature", "top_p", "top_k"}),
+            "opus-4-8": frozenset({"temperature", "top_p", "top_k"}),
+            "fable-5": frozenset({"temperature", "top_p", "top_k"}),
+            "sonnet-5": frozenset({"temperature", "top_p", "top_k"}),
         }
 
     @pytest.mark.asyncio
