@@ -257,6 +257,28 @@ Provider APIs differ in how prompt/context caching works. The built-in clients b
 | **Azure** (`AzureLLM`) | Follows the underlying Azure/OpenAI-compatible API. This wrapper does not set Anthropic-style `cache_control` or OpenAI-style `prompt_cache_key`. |
 | **Gemini** (`GeminiLLM`) | For **eligible models** (e.g. Gemini 2.5+), the Google GenAI API applies **implicit (automatic) prompt caching** when requests share a common prefix—no extra parameters in this client. **Explicit** context caching (`cached_content` resources) is **not** wired in `GeminiLLM`; that path needs a separate create/update lifecycle and is unrelated to implicit caching. |
 
+## Reasoning / extended thinking (by provider)
+
+See [README.md](../README.md#reasoning--extended-thinking) for the user-facing `-uep`/`-pep`/`-jep` flag per provider (`thinking_effort`, `reasoning_effort`, `thinking_level`/`thinking_budget`). This section covers what each client does internally to make that flag work, and which sampling params it silently drops so a reasoning-enabled request doesn't 400.
+
+| Provider | Behavior in this repo |
+|----------|------------------------|
+| **Claude** (`ClaudeLLM`) | `thinking_effort` is a CLI-only shorthand — not a native Anthropic field — translated per-model into either `thinking={"type": "adaptive"}` + `effort=<level>` (models with the `adaptive_thinking` quirk, see table below) or `thinking={"type": "enabled", "budget_tokens": N}` (older/non-adaptive models, e.g. Haiku 4.5, using the `_EFFORT_BUDGETS` low/medium/high/max lookup). Adaptive models reject `temperature`/`top_p`/`top_k` outright once thinking is active, so `ClaudeLLM` drops them via `_unsupported_model_params`. Anthropic also requires `temperature=1` whenever `thinking` is set at all; the client forces this, overriding any `temperature` passed alongside `thinking_effort`. |
+| **OpenAI** (`OpenAILLM`) | `reasoning_effort` is a native `ChatOpenAI` field — passed straight through, no translation. `gpt-5.x` models (excluding `gpt-5*-chat`) reject `temperature`, `top_p`, `presence_penalty`, `frequency_penalty`, `logprobs`, and `top_logprobs` once reasoning is active; `OpenAILLM._model_supports_param` filters all of them (langchain-openai itself only strips `temperature`, so the rest would otherwise 400). |
+| **Gemini** (`GeminiLLM`) | `thinking_level` (`"low"`/`"high"`, Gemini 3+, takes precedence) and `thinking_budget` (integer token budget, Gemini 2.5) are native `ChatGoogleGenerativeAI` fields — no dict wrapping needed, unlike Claude's `thinking` param. Gemini 3.x models drop `temperature`/`top_p`/`top_k` via `GeminiLLM._model_supports_param`: the API doesn't reject these outright, but Google's migration guidance says forcing them (e.g. this judge's `temperature=0` default) can cause looping or degraded reasoning quality. |
+
+### Claude per-model quirks
+
+`ClaudeLLM` keys additional per-model special-casing off substring markers matched against `model_name` (`_MODEL_QUIRKS` in [`claude_llm.py`](../llm_clients/claude_llm.py)), rather than adding another `is_x` branch per model:
+
+| Quirk | Applies to | Effect |
+|-------|------------|--------|
+| `adaptive_thinking` | `opus-4-7`, `opus-4-8`, `fable-5`, `sonnet-5` | Uses `thinking={"type": "adaptive"}` + `effort=<level>` instead of manual `budget_tokens` (which 400s on these models); rejects `temperature`/`top_p`/`top_k` at any non-default value. |
+| `defaults_thinking_on` | `sonnet-5` | Runs adaptive thinking by default when `thinking` is omitted, so `thinking_effort` must be explicitly unset to disable it. Not needed for `fable-5`, where adaptive thinking is always on and can't be disabled at all. |
+| `sparse_max_tokens_profile` | `sonnet-5` | The installed `langchain-anthropic` has no model-profile entry for this model, so it silently falls back to `max_tokens=4096` instead of the usual 64k–128k auto-set — too tight for structured output. The client sets an explicit default instead. |
+
+To onboard a new Claude model that needs similar special-casing, add its marker to `_MODEL_QUIRKS` with the applicable quirks rather than adding another `is_x` check.
+
 ## Important Notes
 
 - **Async Support**: The current implementation uses `async` to avoid blocking when multiple conversations are being generated
