@@ -24,6 +24,64 @@ T = TypeVar("T", bound=BaseModel)
 # and be removed from memory if it is not used.
 _DEFAULT_ANTHROPIC_CACHE_CONTROL: Dict[str, Any] = {"type": "ephemeral"}
 
+# Per-model quirks, keyed by a substring marker matched against model_name.
+# To onboard a new model that needs similar special-casing, add its marker
+# here with the applicable quirks rather than adding another `is_x` check.
+#
+# adaptive_thinking: uses `thinking={"type": "adaptive"}` + the `effort`
+#   shorthand instead of `thinking={"type": "enabled", "budget_tokens": N}`
+#   (manual extended thinking returns a 400 on these models). Also rejects
+#   `temperature`/`top_p`/`top_k` outright at any non-default value (see
+#   `_unsupported_model_params`); Anthropic's guidance is to omit them and
+#   steer behavior via the system prompt instead.
+#   https://platform.claude.com/docs/en/about-claude/models/whats-new-sonnet-5
+# defaults_thinking_on: runs adaptive thinking by default when `thinking` is
+#   omitted (unlike other adaptive models, which default to no thinking); must
+#   be explicitly disabled so no thinking_effort means no thinking. Not used
+#   for fable-5: adaptive thinking is *always* on there and
+#   `thinking={"type": "disabled"}` is rejected outright, so there is nothing
+#   to force - omitting `thinking` already does the right thing.
+# sparse_max_tokens_profile: the installed langchain-anthropic has no
+#   model-profile entry for this model, so it silently falls back to
+#   max_tokens=4096 (vs 64k-128k auto-set for profiled models) - too tight for
+#   structured output, which must fit the full answer/reasoning in the
+#   completion. Needs an explicit default.
+_MODEL_QUIRKS: Dict[str, frozenset[str]] = {
+    "opus-4-7": frozenset({"adaptive_thinking"}),
+    "opus-4-8": frozenset({"adaptive_thinking"}),
+    "fable-5": frozenset({"adaptive_thinking"}),
+    "sonnet-5": frozenset(
+        {"adaptive_thinking", "defaults_thinking_on", "sparse_max_tokens_profile"}
+    ),
+}
+
+# thinking_effort labels -> Anthropic's raw `budget_tokens`, for models that
+# don't support the `effort` shorthand (haiku, older sonnet). Anthropic has no
+# published low/medium/high/max -> budget_tokens table for manual budget_tokens
+# (that labeling only exists as the `effort` param, which these models can't
+# use) - "low" is the API's documented minimum (budget_tokens >= 1024); the
+# rest are project defaults with no canonical source. Low-stakes to get wrong:
+# this branch only serves legacy non-adaptive models (currently Haiku 4.5) and
+# shrinks as they retire or gain `effort` support.
+_EFFORT_BUDGETS: Dict[str, int] = {
+    "low": 1024,
+    "medium": 5000,
+    "high": 16000,
+    "max": 32000,
+}
+
+
+def _quirks_for_model(model_name: Optional[str]) -> frozenset[str]:
+    """Union of quirks for every marker in `_MODEL_QUIRKS` found in model_name."""
+    if not model_name:
+        return frozenset()
+    model_lower = model_name.lower()
+    quirks: set[str] = set()
+    for marker, marker_quirks in _MODEL_QUIRKS.items():
+        if marker in model_lower:
+            quirks |= marker_quirks
+    return frozenset(quirks)
+
 
 class ClaudeLLM(JudgeLLM):
     """Claude implementation using LangChain.
@@ -34,8 +92,44 @@ class ClaudeLLM(JudgeLLM):
 
     def _unsupported_model_params(self) -> Dict[str, frozenset[str]]:
         return {
-            "opus-4-8": frozenset({"temperature"}),
+            marker: frozenset({"temperature", "top_p", "top_k"})
+            for marker, quirks in _MODEL_QUIRKS.items()
+            if "adaptive_thinking" in quirks
         }
+
+    @staticmethod
+    def _is_adaptive_thinking_model(model_name: Optional[str]) -> bool:
+        return "adaptive_thinking" in _quirks_for_model(model_name)
+
+    @staticmethod
+    def _apply_thinking_kwargs(
+        kwargs: Dict[str, Any],
+        model_name: Optional[str],
+        thinking_effort: Optional[Any],
+    ) -> None:
+        """Translate `thinking_effort` into native ChatAnthropic kwargs, in place.
+
+        Adaptive models use `thinking={"type": "adaptive"}` + the `effort`
+        shorthand; older models (haiku, older sonnet) use
+        `thinking={"type": "enabled", "budget_tokens": N}`.
+        """
+        quirks = _quirks_for_model(model_name)
+        is_adaptive = "adaptive_thinking" in quirks
+
+        if thinking_effort is not None:
+            effort_str = str(thinking_effort)
+            if is_adaptive:
+                kwargs["thinking"] = {"type": "adaptive"}
+                kwargs.setdefault("effort", effort_str)
+            else:
+                budget = _EFFORT_BUDGETS.get(effort_str, _EFFORT_BUDGETS["medium"])
+                kwargs["thinking"] = {"type": "enabled", "budget_tokens": budget}
+                kwargs.setdefault("max_tokens", budget + 1024)  # must exceed budget
+        elif "defaults_thinking_on" in quirks:
+            kwargs.setdefault("thinking", {"type": "disabled"})
+
+        if "sparse_max_tokens_profile" in quirks:
+            kwargs.setdefault("max_tokens", 8192)
 
     def _no_retry_substrings(self) -> tuple[str, ...]:
         # Anthropic API / Messages API (see https://docs.anthropic.com/en/api/errors)
@@ -65,6 +159,14 @@ class ClaudeLLM(JudgeLLM):
             self._anthropic_cache_control: Optional[Dict[str, Any]] = None
         else:
             self._anthropic_cache_control = cache_control_arg
+
+        # `thinking_effort` is a CLI-safe shorthand for extended thinking —
+        # the CLI's extra-params parser splits on bare commas, so a literal
+        # multi-key `thinking={"type": "enabled", "budget_tokens": N}` can't
+        # survive being passed directly.
+        thinking_effort = kwargs.pop("thinking_effort", None)
+        self._apply_thinking_kwargs(kwargs, model_name, thinking_effort)
+
         super().__init__(
             name,
             role,
@@ -87,13 +189,26 @@ class ClaudeLLM(JudgeLLM):
 
         # Override with any provided kwargs
         llm_params.update(kwargs)
-        llm_params = self._filter_supported_params(self.model_name, llm_params)
+
+        # Anthropic requires temperature=1 when extended thinking is enabled.
+        # Force-override since the judge defaults temperature=0 before we get here.
+        if "thinking" in llm_params:
+            llm_params["temperature"] = 1
+
+        filtered_params = self._filter_supported_params(self.model_name, llm_params)
+        dropped_params = sorted(set(llm_params) - set(filtered_params))
+        llm_params = filtered_params
 
         # Print configuration before creating LLM
         print("Creating Claude LLM with parameters:")
         print(f"  Model: {llm_params['model']}")
         print(f"  Temperature: {llm_params.get('temperature', 'default')}")
         print(f"  Max tokens: {llm_params.get('max_tokens', 'default')}")
+        if dropped_params:
+            print(
+                f"  Dropped (unsupported for {self.model_name}): "
+                f"{', '.join(dropped_params)}"
+            )
         extra_params = {
             k: v
             for k, v in llm_params.items()
@@ -212,6 +327,10 @@ class ClaudeLLM(JudgeLLM):
         Returns:
             Instance of the response_model with structured data
         """
+        # Claude's native json_schema structured-output mode (GA, no beta
+        # header) works whether or not `thinking` is enabled, unlike forced
+        # tool calling ("function_calling"), which the Anthropic API rejects
+        # when thinking is active.
         messages = []
 
         if self.system_prompt:
@@ -222,6 +341,7 @@ class ClaudeLLM(JudgeLLM):
         async def _invoke() -> T:
             structured_llm = self.llm.with_structured_output(
                 response_model,
+                method="json_schema",
                 include_raw=True,
             )
 
@@ -232,7 +352,7 @@ class ClaudeLLM(JudgeLLM):
             invoke_result = await structured_llm.ainvoke(messages, **invoke_kw)
             end_time = time.time()
 
-            parsed, raw, _ = extract_structured_invoke_result(invoke_result)
+            parsed, raw, parsing_error = extract_structured_invoke_result(invoke_result)
             response = ensure_pydantic_response(parsed, response_model)
 
             self._set_response_metadata(
@@ -243,8 +363,14 @@ class ClaudeLLM(JudgeLLM):
             self._enrich_claude_message_metadata(raw)
 
             if response is None:
+                raw_content = getattr(raw, "content", None)
+                stop_reason = (getattr(raw, "response_metadata", {}) or {}).get(
+                    "stop_reason"
+                )
                 raise ValueError(
-                    f"Response is not an instance of {response_model.__name__}"
+                    f"Response is not an instance of {response_model.__name__} "
+                    f"(stop_reason={stop_reason!r} parsing_error={parsing_error!r} "
+                    f"parsed={parsed!r} raw_content={raw_content!r})"
                 )
 
             return response
