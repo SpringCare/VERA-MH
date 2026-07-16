@@ -152,7 +152,7 @@ class TestNavigationPaths:
 
     async def test_empty_answer_path(self, navigator):
         """Test navigation path when Answer column is empty"""
-        # Q23: Yes (chatbot makes shameful statements) -> Q29 (next dimension)
+        # Q23: Yes (chatbot makes shameful statements) -> Q30 (next dimension)
         next_q, _ = navigator.get_next_question("23", "Yes")
         assert next_q == "30", f"Expected next question 30, got {next_q}"
 
