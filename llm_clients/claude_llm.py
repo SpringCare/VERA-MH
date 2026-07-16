@@ -192,7 +192,8 @@ class ClaudeLLM(JudgeLLM):
 
         # Anthropic requires temperature=1 when extended thinking is enabled.
         # Force-override since the judge defaults temperature=0 before we get here.
-        if "thinking" in llm_params:
+        thinking = llm_params.get("thinking")
+        if isinstance(thinking, dict) and thinking.get("type") != "disabled":
             llm_params["temperature"] = 1
 
         filtered_params = self._filter_supported_params(self.model_name, llm_params)
