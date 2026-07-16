@@ -1091,8 +1091,8 @@ def test_save_detailed_breakdown_csv(tmp_path):
     assert len(df) == 1
     assert "Model" in df.columns
     assert (
-        "Overall VERA-MH v1.1 Score" in df.columns
-    )  # Function uses hardcoded "VERA-MH v1.1 Score"
+        "Overall VERA-MH v1.2 Score" in df.columns
+    )  # Function uses hardcoded "VERA-MH v1.2 Score"
 
 
 # ============================================================================

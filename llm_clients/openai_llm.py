@@ -1,3 +1,4 @@
+import re
 import time
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
@@ -18,6 +19,36 @@ from .llm_interface import (
 
 T = TypeVar("T", bound=BaseModel)
 
+# gpt-5+ (non-chat) reasoning models reject these sampling params outright
+# once reasoning is active. langchain_openai only silently strips
+# `temperature` for these models (see `validate_temperature` in
+# langchain_openai.chat_models.base) - top_p/penalties/logprobs reach the
+# API untouched and the request 400s. We filter all of them ourselves via
+# `_model_supports_param` so upstream defaults (e.g. the judge's
+# temperature=0) don't crash reasoning runs.
+#
+# Gated on major version (5+), not a fixed "gpt-5" prefix: OpenAI's reasoning
+# line is expected to continue, so we cover gpt-6+ without editing here. The
+# `*-chat` variants stay on the classic sampling params and are excluded.
+_REASONING_ONLY_GPT_MAJOR = 5
+_GPT_VERSION_RE = re.compile(r"gpt-(\d+)")
+_UNSUPPORTED_REASONING_PARAMS: frozenset[str] = frozenset(
+    {
+        "temperature",
+        "top_p",
+        "presence_penalty",
+        "frequency_penalty",
+        "logprobs",
+        "top_logprobs",
+    }
+)
+
+
+def _gpt_major_version(model_name: str) -> Optional[int]:
+    """Major version parsed from a GPT model name (``gpt-5.4-mini`` -> 5)."""
+    match = _GPT_VERSION_RE.search(model_name.lower())
+    return int(match.group(1)) if match else None
+
 
 class OpenAILLM(JudgeLLM):
     """OpenAI implementation using LangChain.
@@ -28,6 +59,19 @@ class OpenAILLM(JudgeLLM):
     Since this is automatic, we do not require something like
     Anthropic's ``cache_control``.
     """
+
+    def _model_supports_param(self, model_name: str, param_name: str) -> bool:
+        """gpt-5+ (excluding *-chat) reject sampling params when reasoning."""
+        model_lower = model_name.lower()
+        major = _gpt_major_version(model_lower)
+        is_reasoning = (
+            major is not None
+            and major >= _REASONING_ONLY_GPT_MAJOR
+            and "chat" not in model_lower
+        )
+        if is_reasoning and param_name.lower() in _UNSUPPORTED_REASONING_PARAMS:
+            return False
+        return super()._model_supports_param(model_name, param_name)
 
     def _no_retry_substrings(self) -> tuple[str, ...]:
         # https://platform.openai.com/docs/guides/error-codes
@@ -71,12 +115,20 @@ class OpenAILLM(JudgeLLM):
 
         # Override with any provided kwargs
         llm_params.update(kwargs)
+        filtered_params = self._filter_supported_params(self.model_name, llm_params)
+        dropped_params = sorted(set(llm_params) - set(filtered_params))
+        llm_params = filtered_params
 
         # Print configuration before creating LLM
         print("Creating OpenAI LLM with parameters:")
         print(f"  Model: {llm_params['model']}")
         print(f"  Temperature: {llm_params.get('temperature', 'default')}")
         print(f"  Max tokens: {llm_params.get('max_tokens', 'default')}")
+        if dropped_params:
+            print(
+                f"  Dropped (unsupported for {self.model_name}): "
+                f"{', '.join(dropped_params)}"
+            )
         extra_params = {
             k: v for k, v in llm_params.items() if k not in ["model", "openai_api_key"]
         }

@@ -65,6 +65,19 @@ def ensure_pydantic_response(response: Any, response_model: Type[T]) -> Optional
         try:
             return response_model.model_validate(response)
         except ValidationError:
+            # Some models (observed on claude-sonnet-5) occasionally wrap forced
+            # tool-call args in a single spurious key instead of the real field
+            # names - e.g. {"$PARAMETER_NAME": {"answer": ..., "reasoning": ...}}
+            # or {"$PARAMETER_VALUE": {...}}, echoing Anthropic's legacy XML
+            # tool-use template placeholders. If there's exactly one key and its
+            # value is itself a dict, retry against that inner dict.
+            if len(response) == 1:
+                key, inner = next(iter(response.items()))
+                if key.startswith("$PARAMETER_") and isinstance(inner, dict):
+                    try:
+                        return response_model.model_validate(inner)
+                    except ValidationError:
+                        return None
             return None
     return None
 

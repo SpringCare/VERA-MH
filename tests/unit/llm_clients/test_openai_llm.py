@@ -85,11 +85,12 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert llm.model_name == "gpt-4o-turbo"
 
     def test_init_with_kwargs(self, default_llm_kwargs):
-        """Test initialization with additional kwargs."""
+        """Test initialization with additional kwargs (non-reasoning model)."""
         with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
             OpenAILLM(
                 name="TestOpenAI",
                 role=Role.PERSONA,
+                model_name="gpt-4o",
                 **default_llm_kwargs,
             )
 
@@ -98,6 +99,78 @@ class TestOpenAILLM(TestJudgeLLMBase):
             assert call_kwargs["temperature"] == 0.5
             assert call_kwargs["max_tokens"] == 500
             assert call_kwargs["top_p"] == 0.9
+
+    def test_init_strips_unsupported_sampling_params_for_gpt5(self, default_llm_kwargs):
+        """gpt-5.x rejects temperature/top_p while reasoning; must not be sent."""
+        with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+            OpenAILLM(
+                name="TestOpenAI",
+                role=Role.JUDGE,
+                model_name="gpt-5.4",
+                **default_llm_kwargs,
+            )
+
+            call_kwargs = mock_chat.call_args[1]
+            assert "temperature" not in call_kwargs
+            assert "top_p" not in call_kwargs
+            assert call_kwargs["max_tokens"] == 500
+
+    def test_init_keeps_sampling_params_for_gpt5_chat(self, default_llm_kwargs):
+        """gpt-5*-chat variants support temperature/top_p; must not be stripped."""
+        with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+            OpenAILLM(
+                name="TestOpenAI",
+                role=Role.JUDGE,
+                model_name="gpt-5-chat",
+                **default_llm_kwargs,
+            )
+
+            call_kwargs = mock_chat.call_args[1]
+            assert call_kwargs["temperature"] == 0.5
+            assert call_kwargs["top_p"] == 0.9
+
+    def test_model_supports_param_unsupported_for_gpt5(self, default_llm_kwargs):
+        with patch("llm_clients.openai_llm.ChatOpenAI"):
+            llm = OpenAILLM(
+                name="TestOpenAI",
+                role=Role.JUDGE,
+                model_name="gpt-5.4",
+                **default_llm_kwargs,
+            )
+        assert not llm._model_supports_param("gpt-5.4", "temperature")
+        assert not llm._model_supports_param("gpt-5.4", "top_p")
+        assert not llm._model_supports_param("gpt-5.4-mini", "presence_penalty")
+        assert llm._model_supports_param("gpt-5.4", "max_tokens")
+        assert llm._model_supports_param("gpt-5-chat", "temperature")
+        assert llm._model_supports_param("gpt-4o", "temperature")
+        # Version-threshold check (not a fixed "gpt-5" prefix) applies to later
+        # major versions too, e.g. a hypothetical gpt-6.
+        assert not llm._model_supports_param("gpt-6", "temperature")
+        assert llm._model_supports_param("gpt-6-chat", "temperature")
+
+    def test_model_supports_param_case_insensitive(self, default_llm_kwargs):
+        with patch("llm_clients.openai_llm.ChatOpenAI"):
+            llm = OpenAILLM(
+                name="TestOpenAI",
+                role=Role.JUDGE,
+                model_name="gpt-5.4",
+                **default_llm_kwargs,
+            )
+        assert not llm._model_supports_param("GPT-5.4", "Temperature")
+
+    def test_filter_supported_params_strips_unsupported_for_gpt5(
+        self, default_llm_kwargs
+    ):
+        with patch("llm_clients.openai_llm.ChatOpenAI"):
+            llm = OpenAILLM(
+                name="TestOpenAI",
+                role=Role.JUDGE,
+                model_name="gpt-5.4",
+                **default_llm_kwargs,
+            )
+        params = {"temperature": 0, "max_tokens": 500, "top_p": 0.9}
+        filtered = llm._filter_supported_params("gpt-5.4", params)
+        assert filtered == {"max_tokens": 500}
 
     @pytest.mark.asyncio
     @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")

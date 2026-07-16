@@ -26,6 +26,8 @@
 #   VERA_USER_A          User agent for the first suite (default: gpt-5.2)
 #   VERA_USER_B          User agent for the second suite (default: claude-opus-4-5-20251101)
 #   VERA_JUDGE           Judge model (default: gpt-5.4)
+#   VERA_JUDGE_EXTRA_PARAMS  Judge model extra params, comma-separated key=value
+#                        (default: reasoning_effort=low; set empty to omit)
 #   VERA_MAX_CONCURRENT  Forwarded as --max-concurrent (default: 10)
 #   VERA_MAX_PERSONAS    Forwarded as --max-personas (default: 100)
 #   VERA_POOL_OUTPUT     Parent dir for pooled j_<judge>__p_* output (default: same as VERA_OUTPUT_PARENT)
@@ -54,6 +56,7 @@ OUTPUT_PARENT="${VERA_OUTPUT_PARENT:-output}"
 USER_A="${VERA_USER_A:-gpt-5.2}"
 USER_B="${VERA_USER_B:-claude-opus-4-5-20251101}"
 JUDGE="${VERA_JUDGE:-gpt-5.4}"
+JUDGE_EXTRA_PARAMS="${VERA_JUDGE_EXTRA_PARAMS:-reasoning_effort=low}"
 
 POOL_PARENT="${VERA_POOL_OUTPUT:-$OUTPUT_PARENT}"
 
@@ -66,6 +69,9 @@ COMMON_ARGS=(
   --judge-model "$JUDGE"
   --conversation-output "$OUTPUT_PARENT"
 )
+if [[ -n "$JUDGE_EXTRA_PARAMS" ]]; then
+  COMMON_ARGS+=(--judge-model-extra-params "$JUDGE_EXTRA_PARAMS")
+fi
 
 # Throttling and persona cap (defaults here; override with VERA_* env vars).
 COMMON_ARGS+=(--max-concurrent "${VERA_MAX_CONCURRENT:-10}" --max-personas "${VERA_MAX_PERSONAS:-100}")
