@@ -106,8 +106,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
             assert call_kwargs["max_tokens"] == 500
             assert call_kwargs["top_p"] == 0.9
 
-    def test_init_strips_temperature_for_opus_4_8(self, default_llm_kwargs):
-        """Opus 4.8 rejects temperature; it must not be passed to ChatAnthropic."""
+    def test_init_strips_sampling_params_for_opus_4_8(self, default_llm_kwargs):
+        """Opus 4.8 rejects temperature/top_p/top_k; none may reach ChatAnthropic."""
         with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-opus-4-8"
@@ -122,6 +122,45 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
             call_kwargs = mock_chat_anthropic.call_args[1]
             assert "temperature" not in call_kwargs
+            assert "top_p" not in call_kwargs
+            assert call_kwargs["max_tokens"] == 500
+
+    def test_init_strips_sampling_params_for_opus_4_7(self, default_llm_kwargs):
+        """Opus 4.7 shares Opus 4.8's sampling-param and manual-thinking 400s."""
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_llm = MagicMock()
+            mock_llm.model = "claude-opus-4-7"
+            mock_chat_anthropic.return_value = mock_llm
+
+            ClaudeLLM(
+                name="TestClaude",
+                role=Role.JUDGE,
+                model_name="claude-opus-4-7",
+                **default_llm_kwargs,
+            )
+
+            call_kwargs = mock_chat_anthropic.call_args[1]
+            assert "temperature" not in call_kwargs
+            assert "top_p" not in call_kwargs
+            assert call_kwargs["max_tokens"] == 500
+
+    def test_init_strips_sampling_params_for_fable_5(self, default_llm_kwargs):
+        """Fable 5 shares the same sampling-param 400s as Opus 4.7/4.8."""
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_llm = MagicMock()
+            mock_llm.model = "claude-fable-5"
+            mock_chat_anthropic.return_value = mock_llm
+
+            ClaudeLLM(
+                name="TestClaude",
+                role=Role.JUDGE,
+                model_name="claude-fable-5",
+                **default_llm_kwargs,
+            )
+
+            call_kwargs = mock_chat_anthropic.call_args[1]
+            assert "temperature" not in call_kwargs
+            assert "top_p" not in call_kwargs
             assert call_kwargs["max_tokens"] == 500
 
     def test_model_supports_param_unsupported_for_opus_4_8(self, default_llm_kwargs):
@@ -133,6 +172,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
                 **default_llm_kwargs,
             )
         assert not llm._model_supports_param("claude-opus-4-8", "temperature")
+        assert not llm._model_supports_param("claude-opus-4-8", "top_p")
+        assert not llm._model_supports_param("claude-opus-4-8", "top_k")
 
     def test_model_supports_param_case_insensitive(self, default_llm_kwargs):
         with patch("llm_clients.claude_llm.ChatAnthropic"):
@@ -144,7 +185,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
             )
         assert not llm._model_supports_param("Claude-Opus-4-8", "Temperature")
 
-    def test_filter_supported_params_strips_temperature_for_opus_4_8(
+    def test_filter_supported_params_strips_sampling_params_for_opus_4_8(
         self, default_llm_kwargs
     ):
         with patch("llm_clients.claude_llm.ChatAnthropic"):
@@ -154,9 +195,152 @@ class TestClaudeLLM(TestJudgeLLMBase):
                 model_name="claude-opus-4-8",
                 **default_llm_kwargs,
             )
-        params = {"temperature": 0, "max_tokens": 500, "top_p": 0.9}
+        params = {"temperature": 0, "max_tokens": 500, "top_p": 0.9, "top_k": 40}
         filtered = llm._filter_supported_params("claude-opus-4-8", params)
-        assert filtered == {"max_tokens": 500, "top_p": 0.9}
+        assert filtered == {"max_tokens": 500}
+
+    # ============================================================================
+    # Reasoning / extended-thinking effort translation
+    # ============================================================================
+
+    @pytest.mark.parametrize(
+        "model_name,expected",
+        [
+            ("claude-sonnet-5", True),
+            ("claude-opus-4-8", True),
+            ("claude-opus-4-7", True),
+            ("claude-fable-5", True),
+            ("claude-haiku-4-5", False),
+            ("claude-sonnet-4-5-20250929", False),
+            (None, False),
+        ],
+    )
+    def test_is_adaptive_thinking_model(self, model_name, expected):
+        assert ClaudeLLM._is_adaptive_thinking_model(model_name) is expected
+
+    def test_apply_thinking_kwargs_no_effort_sonnet_5_disables_thinking(self):
+        """Sonnet 5 runs adaptive thinking by default; no effort means disabled."""
+        kwargs: dict = {}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-sonnet-5", None)
+        assert kwargs == {"thinking": {"type": "disabled"}, "max_tokens": 8192}
+
+    def test_apply_thinking_kwargs_no_effort_sonnet_5_keeps_explicit_thinking(self):
+        """A caller-supplied `thinking` kwarg must survive the disabled default."""
+        kwargs: dict = {"thinking": {"type": "enabled", "budget_tokens": 5000}}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-sonnet-5", None)
+        assert kwargs["thinking"] == {"type": "enabled", "budget_tokens": 5000}
+
+    def test_apply_thinking_kwargs_no_effort_opus_4_8_is_untouched(self):
+        """Unlike sonnet-5, opus-4-8 defaults to no thinking already."""
+        kwargs: dict = {}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-opus-4-8", None)
+        assert kwargs == {}
+
+    def test_apply_thinking_kwargs_no_effort_fable_5_is_untouched(self):
+        """fable-5 can't disable thinking at all; omitting `thinking` already
+        gives the (only) adaptive-always-on behavior, so nothing is forced."""
+        kwargs: dict = {}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-fable-5", None)
+        assert kwargs == {}
+
+    def test_apply_thinking_kwargs_no_effort_non_adaptive_model_is_untouched(self):
+        kwargs: dict = {}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-haiku-4-5", None)
+        assert kwargs == {}
+
+    def test_apply_thinking_kwargs_effort_on_sonnet_5_uses_adaptive_and_effort(self):
+        kwargs: dict = {}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-sonnet-5", "high")
+        assert kwargs == {
+            "thinking": {"type": "adaptive"},
+            "effort": "high",
+            "max_tokens": 8192,
+        }
+
+    def test_apply_thinking_kwargs_effort_on_opus_4_8_uses_adaptive_and_effort(self):
+        kwargs: dict = {}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-opus-4-8", "high")
+        assert kwargs == {"thinking": {"type": "adaptive"}, "effort": "high"}
+
+    def test_apply_thinking_kwargs_effort_on_fable_5_uses_adaptive_and_effort(self):
+        kwargs: dict = {}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-fable-5", "xhigh")
+        assert kwargs == {"thinking": {"type": "adaptive"}, "effort": "xhigh"}
+
+    def test_apply_thinking_kwargs_effort_on_haiku_uses_budget_tokens(self):
+        kwargs: dict = {}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-haiku-4-5", "high")
+        assert kwargs == {
+            "thinking": {"type": "enabled", "budget_tokens": 16000},
+            "max_tokens": 17024,
+        }
+
+    def test_apply_thinking_kwargs_unknown_effort_falls_back_to_medium_budget(self):
+        kwargs: dict = {}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-haiku-4-5", "not-a-real-level")
+        assert kwargs["thinking"] == {"type": "enabled", "budget_tokens": 5000}
+        assert kwargs["max_tokens"] == 6024
+
+    def test_apply_thinking_kwargs_does_not_clobber_explicit_effort_or_max_tokens(self):
+        """setdefault semantics: caller-supplied overrides win."""
+        kwargs = {"effort": "low", "max_tokens": 100}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-sonnet-5", "high")
+        assert kwargs["effort"] == "low"
+        assert kwargs["max_tokens"] == 100
+        assert kwargs["thinking"] == {"type": "adaptive"}
+
+    def test_init_with_thinking_effort_forces_temperature_1_then_stripped_for_sonnet_5(
+        self,
+    ):
+        """Thinking forces temperature=1, but sonnet-5 rejects temperature outright."""
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_llm = MagicMock()
+            mock_llm.model = "claude-sonnet-5"
+            mock_chat_anthropic.return_value = mock_llm
+
+            ClaudeLLM(
+                name="TestClaude",
+                role=Role.JUDGE,
+                model_name="claude-sonnet-5",
+                thinking_effort="high",
+            )
+
+            call_kwargs = mock_chat_anthropic.call_args[1]
+            assert call_kwargs["thinking"] == {"type": "adaptive"}
+            assert call_kwargs["effort"] == "high"
+            assert "temperature" not in call_kwargs
+
+    def test_init_with_thinking_effort_forces_temperature_1_for_haiku(self):
+        """Haiku supports temperature, so the forced temperature=1 survives."""
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_llm = MagicMock()
+            mock_llm.model = "claude-haiku-4-5"
+            mock_chat_anthropic.return_value = mock_llm
+
+            ClaudeLLM(
+                name="TestClaude",
+                role=Role.JUDGE,
+                model_name="claude-haiku-4-5",
+                thinking_effort="high",
+            )
+
+            call_kwargs = mock_chat_anthropic.call_args[1]
+            assert call_kwargs["thinking"] == {
+                "type": "enabled",
+                "budget_tokens": 16000,
+            }
+            assert call_kwargs["temperature"] == 1
+
+    def test_unsupported_model_params_covers_all_adaptive_markers(self):
+        with patch("llm_clients.claude_llm.ChatAnthropic"):
+            llm = ClaudeLLM(name="TestClaude", role=Role.JUDGE)
+        unsupported = llm._unsupported_model_params()
+        assert unsupported == {
+            "opus-4-7": frozenset({"temperature", "top_p", "top_k"}),
+            "opus-4-8": frozenset({"temperature", "top_p", "top_k"}),
+            "fable-5": frozenset({"temperature", "top_p", "top_k"}),
+            "sonnet-5": frozenset({"temperature", "top_p", "top_k"}),
+        }
 
     @pytest.mark.asyncio
     @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
@@ -787,6 +971,88 @@ class TestClaudeLLM(TestJudgeLLMBase):
             assert metadata["model"] == "claude-sonnet-4-5-20250929"
             assert metadata["structured_output"] is True
             assert_response_timing(metadata)
+
+            # json_schema is Anthropic's native structured-output mode, and
+            # (unlike forced tool calling) works whether or not thinking is
+            # enabled. Regression guard against reverting to the default
+            # method="function_calling".
+            mock_llm.with_structured_output.assert_called_once_with(
+                TestResponse, method="json_schema", include_raw=True
+            )
+
+    @pytest.mark.asyncio
+    async def test_generate_structured_response_unpacks_include_raw_payload(self):
+        """Exercise the real `include_raw=True` shape, not a bare instance."""
+        from pydantic import BaseModel, Field
+
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_llm = MagicMock()
+            mock_llm.model = "claude-sonnet-4-5-20250929"
+
+            class TestResponse(BaseModel):
+                answer: str = Field(description="The answer")
+
+            test_response = TestResponse(answer="Yes")
+            raw_message = MagicMock()
+            raw_message.response_metadata = {"stop_reason": "end_turn"}
+
+            mock_structured_llm = MagicMock()
+            mock_structured_llm.ainvoke = AsyncMock(
+                return_value={
+                    "parsed": test_response,
+                    "raw": raw_message,
+                    "parsing_error": None,
+                }
+            )
+            mock_llm.with_structured_output = MagicMock(
+                return_value=mock_structured_llm
+            )
+            mock_chat_anthropic.return_value = mock_llm
+
+            llm = ClaudeLLM(name="TestClaude", role=Role.JUDGE)
+            response = await llm.generate_structured_response("Test", TestResponse)
+
+            assert response == test_response
+
+    @pytest.mark.asyncio
+    async def test_generate_structured_response_raises_with_diagnostics_on_none_parsed(
+        self,
+    ):
+        """When parsing fails, the error message must surface raw/stop_reason info."""
+        from pydantic import BaseModel
+
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_llm = MagicMock()
+            mock_llm.model = "claude-sonnet-4-5-20250929"
+
+            class TestResponse(BaseModel):
+                answer: str
+
+            raw_message = MagicMock()
+            raw_message.content = "not valid json"
+            raw_message.response_metadata = {"stop_reason": "max_tokens"}
+
+            mock_structured_llm = MagicMock()
+            mock_structured_llm.ainvoke = AsyncMock(
+                return_value={
+                    "parsed": None,
+                    "raw": raw_message,
+                    "parsing_error": ValueError("could not parse"),
+                }
+            )
+            mock_llm.with_structured_output = MagicMock(
+                return_value=mock_structured_llm
+            )
+            mock_chat_anthropic.return_value = mock_llm
+
+            llm = ClaudeLLM(name="TestClaude", role=Role.JUDGE)
+
+            with pytest.raises(LLMGenerationFailed) as exc_info:
+                await llm.generate_structured_response("Test", TestResponse)
+
+            message = str(exc_info.value)
+            assert "stop_reason='max_tokens'" in message
+            assert "raw_content='not valid json'" in message
 
     @pytest.mark.asyncio
     async def test_generate_structured_response_with_complex_model(
