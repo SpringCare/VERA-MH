@@ -178,12 +178,27 @@ Agents and contributors must comply. Import boundaries are documented in the [La
 - Overwrite an existing run's output folder silently — collision on an already-existing folder errors out (no overwrite, no auto-suffix).
 - Bypass architecture checks (pyright, required CI) to merge structural changes.
 
+### Stable interfaces (agent-coding optimization)
+
+This codebase is optimized for agent coding: most files are safe for an agent to change freely within a package's own boundaries, but a small set of **stable interfaces** are rarely meant to change and require a design doc before modification, not just a PR. These are called out individually in [`.github/CODEOWNERS`](../.github/CODEOWNERS) (not just covered by their package's blanket rule) so their significance is visible at a glance:
+
+| File | What it stabilizes |
+|------|---------------------|
+| `llm_clients/llm_interface.py` | `LLMInterface` ABC — every provider implements this |
+| `workers/queue.py` | `QueueProtocol` ABC — `LocalQueue`/future `SQSQueue` implement this |
+| `utils/role.py` | `Role` — the single shared definition across all packages |
+| `utils/naming.py` | The naming/layout module — single source of truth for run-id and folder-naming logic |
+| `utils/config_schema.py` | `config.json` schema — the contract every subcommand's `--config` resolves against |
+
+A change to any of these is an [ESCALATE](#escalate-stop-and-ask) case: write a short design doc (what's changing, why, what it breaks) before opening the PR.
+
 ### ESCALATE (stop and ask)
 
 Stop work and request maintainer approval before proceeding when a task would:
 
 - Add a new top-level package or move code between `generate_conversations/`, `judge/`, or `scoring/`.
 - Change import boundaries documented in this file.
+- Change any [stable interface](#stable-interfaces-agent-coding-optimization) — requires a design doc first.
 - Add a new runtime dependency or raise minimum Python version.
 - Change judge rubric/scoring contracts, pipeline output layout, naming scheme, or CLI flags affecting run folders.
 - Add or remove a `vera.py` subcommand.
@@ -197,10 +212,11 @@ Target state for automated checks:
 
 | Mechanism | What it checks |
 |-----------|----------------|
-| `uv run pyright` | Type checking — blocking (not continue-on-error) as of migration Phase 3 |
+| `uv run pyright` | Type checking — blocking (not continue-on-error) as of migration Phase 5 |
 | Pre-commit | Ruff format/lint |
-| CI | Ruff, pyright, `pytest -m "not live"` — coverage gate raised 30% → 60% as of migration Phase 3 |
-| import-linter + grimp | Declarative layer contracts (`pyproject.toml`) + custom import-graph assertions — added in migration Phase 3 |
+| CI | Ruff, pyright, `pytest -m "not live"` — coverage gate raised 30% → 60% as of migration Phase 5 |
+| import-linter | Declarative layer contracts (`pyproject.toml`) — added incrementally as each new boundary is created (Phase 2: `judge/` ⊥ `scoring/`; Phase 3: `utils/` leaf), completed with the full contract (all [Layer model](#layer-model) boundaries) in Phase 5 |
+| grimp | Custom import-graph assertions — added in migration Phase 5 |
 | `.github/CODEOWNERS` | Human review on `vera.py`, import boundaries, domain packages |
 
 Run before pushing structural changes:
@@ -212,18 +228,21 @@ uv run pytest -m "not live"
 
 ## Migration from current layout
 
-4 phases, scoped by risk rather than by package. Multi-rubric support gets its own phase, separate from the scoring split — moving code (Phase 2) is mechanical and behavior-preserving, while multi-rubric support (Phase 3) is genuinely new behavior:
+5 phases, scoped by risk and by dependency order — each phase only builds on artifacts that already exist by the time it runs. Every phase carries an explicit **Done when** bar; a phase isn't complete because its bullet list of changes landed, it's complete when that bar is met.
 
-| Phase | Goal | Key changes |
-|-------|------|--------------|
-| **1 — Cosmetic** | `vera.py` exists, nothing else changes | Thin wrapper calling the existing `generate.py`/`judge.py`/`run_pipeline.py` as-is; no internal refactor, no behavior change |
-| **2 — Scoring split** | Extract `scoring/` | `score.py`/`score_viz.py`/`pool.py` move out of `judge/` into `scoring/`; pure move, no new behavior |
-| **3 — Multi-rubric support** | Support multiple rubrics per run | `config.json`'s `judging.rubrics[]` schema implemented; per-rubric judge-model overrides; per-rubric `evaluations/<rubric>/` folder separation built |
-| **4 — Substantial refactoring** | Everything else | `workers/` unification (both `generate_conversations/runner.py` and `judge/runner.py` already hand-roll the same asyncio-queue worker-pool pattern independently — concrete evidence for this step); `llm_clients/` plugin-registry formalization; import-linter/grimp enforcement; quality-gate tightening (pyright blocking, coverage 30%→60%); root-clutter cleanup (see below); `u`/`c`/`j` naming scheme and `config.json`/`state.json` traceability model implemented |
+| Phase | Goal | Key changes | Done when |
+|-------|------|--------------|-----------|
+| **1 — New CLI + config** | `vera.py` fully replaces the top-level scripts | Not cosmetic: `vera.py` subcommands (`generate`, `judge`, `score`, `pool`, `pipeline`, `resume`) become the only entry points, replacing `generate.py`/`judge.py`/`run_pipeline.py` directly. `-u`/`-j`/`--sample` shorthand and `--config` ship now, using an **informal** `config.json` shape (mirrors the flags, `generation`/`judging` orthogonal blocks, mutual-exclusivity-with-CLI rule) — not yet locked as a stable interface. The resolved-form-printed-at-start traceability behavior ships now too (stdout only). Internals underneath still call the existing `generate_conversations`/`judge` code as-is — no scoring split, old `p_*`/`j_*` output layout retained until Phase 2/3. **Known risk, accepted explicitly:** configs written against this informal shape may need updating once Phase 3 formalizes `utils/config_schema.py` as a stable interface | `pytest -m "not live"` green; `vera.py` is the only documented entry point; `-u`/`-j`/`--sample`/`--config` all functional against the existing internals |
+| **2 — Scoring split** | Extract `scoring/` | `score.py`/`score_viz.py`/`pool.py` move out of `judge/` into `scoring/`; pure move, no new behavior. `vera.py` (now the only entry point per Phase 1) gets its imports updated directly — no shim needed, since the legacy root scripts are already gone. A minimal import-linter contract is added covering only the `judge/` ⊥ `scoring/` boundary this phase creates | `pytest -m "not live"` green; the `judge/` ⊥ `scoring/` import-linter contract passes; no code imports `judge.score`/`judge.pool` |
+| **3 — Traceability & naming** | Harden Phase 1's config shape; add persistence; swap in the new naming scheme | `utils/config_schema.py` formalizes Phase 1's informal `config.json` shape into a stable interface (design doc required for future changes), with `judging.rubrics` as a **list from day one** (even though only one rubric is used in practice until Phase 4) so Phase 4 adds behavior without a further breaking change. Adds the persisted artifacts: `config.json` written to disk + `state.json` + `.sha256` sidecar; `utils/naming.py` (the naming/layout module); the `u`/`c`/`j` naming scheme retires the `p_*`/`j_*` layout Phase 1 kept. Existing `output/` run folders under the old layout are left alone — no migration script, only new runs use the new layout. Import-linter contract extended to cover `utils/` as a leaf | `pytest -m "not live"` green; a run's `config.json` round-trips through `vera resume`; `utils/` leaf-layer import-linter contract passes |
+| **4 — Multi-rubric support** | Support multiple rubrics per run | Built on Phase 3's `config.json`/naming: `judging.rubrics[]` behavior implemented (schema already supported the list shape since Phase 3); per-rubric judge-model overrides; per-rubric `evaluations/<rubric>/` folder separation | `pytest -m "not live"` green; a config with 2+ rubrics produces separated `evaluations/<rubric>/` output for each |
+| **5 — Substantial refactoring** | Everything else | `workers/` unification (both `generate_conversations/runner.py` and `judge/runner.py` already hand-roll the same asyncio-queue worker-pool pattern independently — concrete evidence for this step); `llm_clients/` plugin-registry formalization; import-linter contract completed (all remaining boundaries) + grimp; quality-gate tightening (pyright blocking, coverage 30%→60%); root-clutter cleanup (see below); delete the deprecated `generate.py`/`judge.py`/`run_pipeline.py` stubs (functionally replaced since Phase 1, kept only as deprecation pointers until now) | `pytest -m "not live"` green; pyright blocking in CI; coverage ≥ 60%; full import-linter contract (all layer boundaries from the [Layer model](#layer-model) section) passes; no root-level Python entry points except `vera.py` |
 
-**Root-clutter disposition** (Phase 4 cleanup): `logging/`, `logs/`, `conversations/` (root), `human_validation/` — delete (legacy/duplicate generated dumps, already gitignored, superseded by the target `output/c_*` layout). `score_comparisons/` — keep the directory but stop committing generated CSV/PNG output; moves under `scoring/`. `spring_scripts/`, `openspec/`, `alba.md`, `Untitled.ipynb` — untracked scratch, outside architecture scope. `distribute_files.py` — move into `scripts/`. `docker-compose.yml` volume mounts — fix stale references (`./evaluations` doesn't exist, `./logs` is omitted) to match the target layout.
+**Rollback:** a phase that ships broken is reverted via its own PR(s) — there is no dual-path/feature-flag expectation carrying old and new behavior side by side during a phase's rollout.
 
-**Open item, not yet designed:** different personas may need different system prompts, so persona definitions should be linked to their own system prompt rather than assuming one global prompt for all personas. Exact mechanism (a `system_prompt` field on the persona object, a `system_prompt_file` pointer, or something else) is undecided — revisit when the persona schema itself gets formalized (likely Phase 3 or 4).
+**Root-clutter disposition** (Phase 5 cleanup): `logging/`, `logs/`, `conversations/` (root), `human_validation/` — delete (legacy/duplicate generated dumps, already gitignored, superseded by the target `output/c_*` layout). `score_comparisons/` — keep the directory but stop committing generated CSV/PNG output; moves under `scoring/`. `spring_scripts/`, `openspec/`, `alba.md`, `Untitled.ipynb` — untracked scratch, outside architecture scope. `distribute_files.py` — move into `scripts/`. `docker-compose.yml` volume mounts — fix stale references (`./evaluations` doesn't exist, `./logs` is omitted) to match the target layout.
+
+**Open item, not yet designed:** different personas may need different system prompts, so persona definitions should be linked to their own system prompt rather than assuming one global prompt for all personas. Exact mechanism (a `system_prompt` field on the persona object, a `system_prompt_file` pointer, or something else) is undecided — revisit when the persona schema itself gets formalized (likely Phase 3 or Phase 5).
 
 Legacy scripts should print a deprecation message pointing at the equivalent `vera.py` subcommand until removed.
 
