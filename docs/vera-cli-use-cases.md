@@ -51,7 +51,7 @@ vera judge -j claude:1 gpt:2
 
 `-j <model>:<repeats> ...` mirrors `-u`'s syntax for the judge side. `repeats` here means re-running the same transcript through the same judge model N times, to measure judge consistency/variance.
 
-**Resolved (multi-folder judge output):** judge keeps results independent per folder; the `scoring/` layer aggregates across folders when needed, not judge itself. There are also in-between options — e.g. kept separate, but the scoring layer aggregates them.
+**Resolved (multi-folder judge output):** judge keeps results independent per folder; the `score/` layer aggregates across folders when needed, not judge itself. There are also in-between options — e.g. kept separate, but the score layer aggregates them.
 
 **Resolved (multi-rubric output layout):** generated conversations for a run all live together in one unified folder regardless of which rubrics will later judge them — generation has no knowledge of rubrics. Judging output IS separated per rubric, since different rubrics produce different, non-comparable scores. (The unified-conversations choice is soft, not a hard invariant — may change if a concrete need for per-rubric conversation grouping emerges.)
 
@@ -73,7 +73,7 @@ Concatenate multiple existing evaluation output folders into one pooled result.
 vera pool --evaluations <folder> <folder> ...
 ```
 
-Owned by `scoring/`, consistent with scoring owning aggregation-across-runs (as opposed to judging's own within-run aggregation). This formalizes and generalizes the `vera pool` subcommand as a first-class, general-purpose capability.
+Owned by `score/`, consistent with score owning aggregation-across-runs (as opposed to judging's own within-run aggregation). This formalizes and generalizes the `vera pool` subcommand as a first-class, general-purpose capability.
 
 ## Use case 6 — Resume
 
@@ -149,4 +149,4 @@ output/
 - Every run-id is `<model>_<timestamp>_<sha>`: readable (which model), ordered (when), integrity-checked (sha256 of `config.json`).
 - Standalone judging (against one or many existing folders, not chained from a pipeline run) has no single parent run to nest under, so it uses its own top-level identity — the `config.json` sha256 — sibling to the `c_*` directories.
 
-All naming/layout construction logic MUST live in a single `utils/` module (extending `utils/conversation_layout.py`), never duplicated across `generate_conversations/`, `judge/`, or `scoring/` handlers — this scheme has already changed multiple times during design and is expected to keep evolving.
+All naming/layout construction logic MUST live in a single `utils/` module (extending `utils/conversation_layout.py`), never duplicated across `generate/`, `judge/`, or `score/` handlers — this scheme has already changed multiple times during design and is expected to keep evolving.
