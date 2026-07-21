@@ -5,7 +5,7 @@ purpose: build-substrate
 altitude: feature
 paradigm: 'Layered architecture (strict top-down dependency direction) with per-concern adapter-pattern interface colocation'
 scope: 'VERA-MH target architecture: pipeline CLI, generate/judge/score split, llm_clients/, workers/, storage/, utils/, and the config/naming/enforcement contract that binds them'
-status: draft
+status: final
 created: '2026-07-21'
 updated: '2026-07-21'
 binds: []
