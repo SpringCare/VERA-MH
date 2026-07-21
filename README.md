@@ -431,7 +431,7 @@ VERA-MH simulates realistic conversations between Large Language Models (LLMs) f
 
 See **[docs/architecture.md](docs/architecture.md)** for the target layer model, invariants, and single CLI orchestrator (`vera.py`). Below is a quick module reference; CLI usage and output layout are in the sections above.
 
-### Core Components
+### Core Components (current implementation)
 
 - **`generate.py`**: Main entry point for conversation generation with configurable parameters
 - **`judge.py`**: Main entry point for evaluating conversations using LLM judges

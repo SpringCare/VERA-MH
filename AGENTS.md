@@ -39,28 +39,13 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 | **Config** | `utils/model_config_loader.py`, `llm_clients/config.py` | Model name resolution, API keys |
 | **Shared utils** | `utils/` | Naming, logging, conversation layout |
 
-**Entry point (target):** `vera.py` subcommands only. Legacy scripts (`generate.py`, `judge.py`, `run_pipeline.py`) remain until migration — see [docs/architecture.md](docs/architecture.md#migration-from-current-layout).
+**Entry point (target):** `vera.py` subcommands only. Legacy scripts (`generate.py`, `judge.py`, `run_pipeline.py`) are deleted entirely at the end of Phase 1 of the migration (not the full 6-phase migration) — see [docs/architecture.md](docs/architecture.md#migration-from-current-layout).
 
 **Temporary experiments:** `tmp_tests/` (not committed). **Permanent tests:** `tests/`.
 
 ## Architecture compliance
 
-Read [docs/architecture.md](docs/architecture.md) before structural changes.
-
-**Stop and ask** when a task would:
-- Violate a MUST NOT in the architecture doc
-- Add a new dependency or top-level package
-- Change import boundaries documented in [architecture.md](docs/architecture.md)
-- Change judge rubric/scoring contracts, pipeline output layout, or CLI flags affecting run folders
-- Add or remove a `vera.py` subcommand
-- Refactor across multiple domain packages in one change without maintainer review
-
-Verify before pushing structural changes:
-
-```bash
-uv run pyright
-uv run pytest -m "not live"
-```
+Read [docs/architecture.md](docs/architecture.md) before structural changes. See its [ESCALATE section](docs/architecture.md#escalate-stop-and-ask) for when to stop and ask, and [Enforcement](docs/architecture.md#enforcement) for the pre-push verification commands.
 
 ## Testing
 
@@ -96,7 +81,7 @@ uv run pytest tests/integration/
 
 ## Key Commands
 
-Target CLI (`vera.py` — not implemented yet; use legacy commands below until migration):
+Target CLI (`vera.py` — not implemented yet; use legacy commands below until Phase 1 of the migration completes):
 
 ```bash
 # End-to-end pipeline (target)
