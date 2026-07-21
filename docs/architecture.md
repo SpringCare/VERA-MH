@@ -120,6 +120,8 @@ Paths are relative to the manifest's own folder. `personas` is **informational o
 
 **Separation of concerns, since these two now overlap in subject matter:** the manifest describes what a rubric **is** — its content, files, and intended personas — and changes rarely. `config.json`'s `judging.rubrics[].models` describes how to **run** it for a given invocation — which judge models, repeats, per-rubric overrides — and changes every run. Judge-model defaults belong in `config.json`, never in the manifest; the manifest never carries execution knobs.
 
+**`--target <name>` shorthand:** the manifest's `personas` field stays informational-only for every invocation shape *except one*. `vera pipeline --target <name>` resolves `<name>` to one rubric bundle manifest and expands to setting **both** `generation.personas` and `judging.rubrics` from it in a single shot — the manifest's `personas` field becomes the actual, authoritative generation input only for this shorthand. Every other invocation (`--rubric` plus independently-specified generation personas, or `--config` with both blocks set explicitly) keeps `generation`/`judging` fully orthogonal — `--target` is one deliberate, named exception, not a general weakening of that invariant.
+
 ## Package responsibilities
 
 | Package / path | Owns | Key modules |
@@ -162,6 +164,8 @@ output/evaluations/<config-sha256>/<rubric_name>/    ← standalone judging (ver
 
 Every run-id is `<model>_<timestamp>_<sha256-of-config.json>`. `config.json` is an immutable copy of the resolved config, hash-verified via its sidecar; `state.json` is the separate, mutable file that tracks resume progress.
 
+**Single canonical hash, not two independent computations:** the sha256 is computed exactly once, by exactly one function, and that single value is what both the run-id folder name's `<sha>` component and the `config.json.sha256` sidecar's content contain — never two independently-computed values that could drift apart. Rejected: embedding the hash in `config.json`'s own filename (e.g. `config.<sha>.json`) — doesn't remove the need for a verification step (a corrupted file wouldn't automatically stop matching its own filename; verification still requires hashing the actual bytes, which is the sidecar's job), and would put the same value in a third place with no added integrity benefit.
+
 ## Invariants
 
 Agents and contributors must comply. Import boundaries are documented in the [Layer model](#layer-model) section above.
@@ -171,14 +175,14 @@ Agents and contributors must comply. Import boundaries are documented in the [La
 - **Single CLI:** orchestration lives in `vera.py` only.
 - **Subcommands:** `generate`, `judge`, `score`, `pool`, `pipeline`, `resume` (add or remove only via [ESCALATE](#escalate-stop-and-ask)).
 - **Generation:** conversation simulation logic stays in `generate/`; the simulator core is pure (no filesystem, no logging) — the handler owns all I/O.
-- **Judging:** rubric navigation and LLM-judge logic stay in `judge/`, also pure-core-plus-handler. Judge never auto-scores — `vera score`/`vera pool` are separate subcommands.
+- **Judging:** rubric navigation and LLM-judge logic stay in `judge/`, also pure-core-plus-handler. Judge never auto-scores — `vera score`/`vera pool` are separate subcommands. **Rubric navigation logic lives in code, never in the prompt:** which question is asked next given an answer is determined entirely by `QuestionNavigator` walking `question_flow_data` parsed from the rubric TSV — the judge LLM answers/judges the current question only, and is never asked to decide or influence what comes next.
 - **Scoring:** aggregation, visualization, and pooling stay in `score/`, never re-absorbed into `judge/`.
 - **Config vs CLI:** `--config` and CLI flags are strictly either/or for a given run — never combined. `generation` and `judging` blocks in `config.json` are completely orthogonal; model selection for one must never influence the other.
 - **Naming/layout:** all folder/file naming logic (the `c_`/`u_`/`j_` scheme) lives in one `utils/` module — never duplicated across handlers.
 - **Traceability:** every run writes an immutable `config.json` (+ `.sha256` sidecar) and a separate, mutable `state.json`. `state.json` records both the requested and actual-resolved model identifier.
 - **LLM providers:** new providers implement [llm_clients/llm_interface.py](../llm_clients/llm_interface.py) and register in [llm_clients/llm_factory.py](../llm_clients/llm_factory.py). `models[].name` in config is always a specific model identifier, never a bare provider name.
 - **Shared types:** cross-layer enums (e.g. `Role`) live in `utils/` — not duplicated in domain packages.
-- **Data:** committed evaluation inputs in `data/`; runtime artifacts in `output/` (gitignored).
+- **Data:** committed evaluation inputs in `data/`; runtime artifacts in `output/` (gitignored). Rubric and persona content (dimensions, question flows, prompt text, persona definitions) MUST live in `data/`, never embedded in code — VERA-MH must be usable by non-developers who add or edit rubrics and personas without touching Python. No domain package may hardcode rubric/persona content as an alternative to reading it from `data/`.
 - **Tests:** permanent tests in `tests/`; one-off experiments in `tmp_tests/` (not committed).
 - **Dependencies:** add packages via `uv add` / `uv add --dev`; update lockfile in the same change.
 

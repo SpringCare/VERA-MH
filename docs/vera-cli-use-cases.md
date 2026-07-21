@@ -25,6 +25,8 @@ vera pipeline --config run.json
 
 **Resolved:** stays single-chatbot-per-invocation. Comparing chatbots is always an external loop over single-chatbot pipeline runs, consistent with use case 2. Native multi-chatbot support (one combined comparison report) is not built now — flagged as a possible future addition if a real need emerges, not ruled out permanently.
 
+**`--target <name>` shorthand:** `vera pipeline --target SI` resolves `SI` to one rubric bundle manifest (see [Rubric bundle manifest](../architecture.md#rubric-bundle-manifest)) and sets *both* the generation personas and the judging rubric from it in one shot — for the common case of "run the canonical test for X." This is the one deliberate exception to personas/rubrics being chosen independently; every other invocation (`--rubric` plus separately-specified personas, or explicit `--config` blocks) keeps generation and judging fully orthogonal.
+
 ## Use case 2 — Batch generate across personas
 
 One chatbot under test, generated against multiple personas, each carrying its own user-side LLM.
@@ -50,6 +52,8 @@ vera judge -j claude:1 gpt:2
 ```
 
 `-j <model>:<repeats> ...` mirrors `-u`'s syntax for the judge side. `repeats` here means re-running the same transcript through the same judge model N times, to measure judge consistency/variance.
+
+`--rubric`/`judging.rubrics[]` entries point at a [rubric bundle manifest](../architecture.md#rubric-bundle-manifest) (canonical definition), not a bare `.tsv` path.
 
 **Resolved (multi-folder judge output):** judge keeps results independent per folder; the `score/` layer aggregates across folders when needed, not judge itself. There are also in-between options — e.g. kept separate, but the score layer aggregates them.
 
@@ -122,7 +126,7 @@ Top-level `generation` and `judging` blocks are **completely orthogonal** — mo
 ## Per-run artifacts
 
 - **`config.json`** — immutable copy of the resolved config as actually used, written once at run start, never modified. Records both the *requested* model identifier and the *actual-resolved* one returned by the provider (relevant when aliases like "latest" resolve to a dated model).
-- **`config.json.sha256`** — sidecar checksum (hash lives outside the file it hashes, avoiding self-reference).
+- **`config.json.sha256`** — sidecar checksum (hash lives outside the file it hashes, avoiding self-reference). Computed exactly once, by exactly one function; that single value is what both this sidecar's content and the run-id folder name's `<sha>` component contain — never two independent computations that could drift apart. The hash never gets embedded in `config.json`'s own filename — that would put the same value in a third place without adding any integrity benefit, since a corrupted file wouldn't automatically stop matching its own filename.
 - **`state.json`** — separate, mutable file tracking run progress (completed items, errors, output paths so far). The only file `vera resume` writes to.
 - **Folder-already-exists behavior:** error out (no overwrite, no auto-suffix), as the default for now.
 
