@@ -54,7 +54,7 @@ Domain packages (generate/, judge/, score/)
     ↓ register handlers with
 Workers (workers/) — queue protocol, worker pool, job dispatch
     ↓ used by domain handlers
-Infrastructure (llm_clients/)
+Infrastructure (llm_clients/, storage/)
     ↓ used by all above
 Shared utilities (utils/) — leaf layer
 ```
@@ -63,10 +63,11 @@ Shared utilities (utils/) — leaf layer
 
 - Domain packages (`generate/`, `judge/`, `score/`) do not import each other.
 - `workers/` does not import domain packages — domain registers handlers upward (inversion of control), never the reverse.
-- `llm_clients/` does not import domain packages or `workers/`.
-- `utils/` is a leaf layer — it does not import domain, `workers/`, or `llm_clients/` packages.
+- `llm_clients/` and `storage/` do not import domain packages or `workers/`.
+- `utils/` is a leaf layer — it does not import domain, `workers/`, `llm_clients/`, or `storage/` packages.
 - `Role` is defined once, in `utils/role.py` — no package defines its own copy.
-- All folder/file naming and layout logic (the `c_`/`u_`/`j_` scheme, timestamp/sha composition, persistent-vs-flat nesting) lives in `utils/naming.py`, with `utils/conversation_layout.py` building on it (never the reverse) — never duplicated across handlers. This scheme changes over time, and centralizing it means a revision touches one file, not every caller.
+- All folder/file naming and layout logic (the `c_`/`u_`/`j_` scheme, timestamp/sha composition, persistent-vs-flat nesting) lives in `utils/naming.py`, with `utils/conversation_layout.py` building on it (never the reverse) — never duplicated across handlers. This scheme changes over time, and centralizing it means a revision touches one file, not every caller. `utils/naming.py` builds keys/paths only; it never persists bytes — that's `storage/`'s job.
+- Interfaces live with their implementations, not in a separate cross-cutting package: `llm_clients/` holds `LLMInterface` plus every provider, `workers/` holds `QueueProtocol` plus `LocalQueue`/`SQSQueue`, `storage/` holds `StorageBackend` plus `LocalFilesystemStorage`/`S3Storage` — grouped by concern (Common Closure Principle), not by "abstract vs. concrete."
 
 **Supporting paths** (not in the import graph):
 
@@ -128,12 +129,14 @@ Paths are relative to the manifest's own folder. `personas` is **informational o
 | `score/` | Aggregation, visualization, pooling — split out of `judge/` | `score.py`, `score_viz.py`, `pool.py` |
 | `workers/` | Shared queue protocol, worker pool, job dispatch | `queue.py`, `job_context.py` |
 | `llm_clients/` | Provider plugin registry; providers self-register, factory resolves by prefix | `llm_interface.py`, `llm_factory.py` |
+| `storage/` | Storage backend abstraction; raw bytes+keys, knows nothing about run semantics | `storage_backend.py`, `local_filesystem_storage.py` |
 | `utils/` | Cross-cutting types, naming/layout, I/O helpers | `role.py`, `naming.py`, `conversation_layout.py` |
 
 **Extension points:**
 
 - New LLM provider → [evaluating.md](./evaluating.md)
 - Structured judge responses → [structured-output.md](./structured-output.md)
+- New storage backend (e.g. S3) → implement `storage/storage_backend.py`'s `StorageBackend` (`write(key, bytes)` / `read(key)` / `exists(key)`)
 
 ## Data flow and artifacts
 
@@ -183,8 +186,8 @@ Agents and contributors must comply. Import boundaries are documented in the [La
 
 - Import between `generate/`, `judge/`, and `score/`.
 - Import domain packages from `workers/` — domain registers handlers upward, never the reverse.
-- Import domain packages or `workers/` from `llm_clients/`.
-- Import domain packages, `workers/`, or `llm_clients/` from `utils/`.
+- Import domain packages or `workers/` from `llm_clients/` or `storage/`.
+- Import domain packages, `workers/`, `llm_clients/`, or `storage/` from `utils/`.
 - Add root-level Python scripts (including keeping `generate.py`, `judge.py`, or `run_pipeline.py` as entry points after migration).
 - Put domain logic in `vera.py` — keep the CLI layer thin.
 - Commit generated output under `output/` or secrets in `.env`.
@@ -202,6 +205,7 @@ This codebase is optimized for agent coding: most files are safe for an agent to
 | `utils/role.py` | `Role` — the single shared definition across all packages |
 | `utils/naming.py` | The naming/layout module — single source of truth for run-id and folder-naming logic |
 | `utils/config_schema.py` | `config.json` schema — the contract every subcommand's `--config` resolves against |
+| `storage/storage_backend.py` | `StorageBackend` ABC — `LocalFilesystemStorage`/future `S3Storage` implement this |
 
 A change to any of these is an [ESCALATE](#escalate-stop-and-ask) case: write a short design doc (what's changing, why, what it breaks) before opening the PR.
 
@@ -245,11 +249,12 @@ uv run pytest -m "not live"
 
 ## Migration from current layout
 
-6 phases, scoped by risk and by dependency order — each phase only builds on artifacts that already exist by the time it runs. Every phase carries an explicit **Done when** bar; a phase isn't complete because its bullet list of changes landed, it's complete when that bar is met. **Every phase's Done-when implicitly includes updating `README.md`, `AGENTS.md`, and any other doc that phase's changes make stale** — stated once here rather than repeated in every row. `judging.rubrics` is a **list from day one, at every phase** starting with Phase 0 — only a length-1 list is supported/validated until Phase 4; this is the first step toward multi-rubric, not a hidden permanent limitation.
+6 phases, scoped by risk and by dependency order — each phase only builds on artifacts that already exist by the time it runs. Every phase carries an explicit **Done when** bar; a phase isn't complete because its bullet list of changes landed, it's complete when that bar is met. **Every phase's Done-when implicitly includes updating `README.md`, `AGENTS.md`, and any other doc that phase's changes make stale** — stated once here rather than repeated in every row. `judging.rubrics` is a **list from day one, at every phase** starting with Phase 0 — only a length-1 list is supported/validated until Phase 4; this is the first step toward multi-rubric, not a hidden permanent limitation. **Phase S (storage abstraction) is orthogonal to 0-5** — it has no dependency on, and nothing depends on it — so unlike the rest of the table, its position is a suggested default slot, not a strict dependency order; pull it earlier or run it in parallel with any other phase if a concrete need (e.g. an actual S3 requirement) shows up.
 
 | Phase | Goal | Key changes | Done when |
 |-------|------|--------------|-----------|
 | **0 — De-risk multi-rubric** | Prove out the rubric-bundle-manifest design cheaply, with code that survives into Phase 1 rather than being thrown away | Add a small, reusable helper (e.g. `judge/rubric_config.py::RubricConfig.load_bundle()` or similar — a library function, not inline in `judge.py`'s `main()`) that reads a **rubric bundle manifest** (see [Rubric bundle manifest](#rubric-bundle-manifest)) and loads the `RubricConfig` it describes. Wire `judge.py`'s existing `--rubrics` flag (`nargs="+"`, already list-shaped) to call this helper with `args.rubrics[0]`; passing more than one manifest prints a warning and uses only the first (list-from-day-one, length-1-for-now — the first step, not the final limitation). Because the helper lives in the library layer `judge.runner` already delegates to, Phase 1's `vera judge` reuses it directly instead of reimplementing rubric loading from scratch. Contained to `judge/` — no score split, no naming scheme, no `config.json`, no stable interfaces touched | `pytest -m "not live"` green; `--rubrics <manifest path>` actually loads that rubric bundle instead of the hardcoded `data/` one; a fixture for a second rubric bundle exists in `tests/fixtures/` to make this testable |
+| **S — Storage abstraction** *(orthogonal — see note above)* | Decouple "what path/key to use" from "how to persist bytes," so a future non-local backend (S3, etc.) is a new implementation, not a rewrite | New `storage/` package: `StorageBackend` (ABC) with `write(key, bytes)` / `read(key)` / `exists(key)`, plus `LocalFilesystemStorage` as the default implementation — mirrors the `LLMInterface`/`QueueProtocol` idiom (interface and implementations live together in one concern-scoped package). The backend knows nothing about run semantics; `utils/naming.py` still builds keys/paths, `storage/` just persists what it's given. All domain/`workers/` code that currently touches the filesystem directly switches to calling through `StorageBackend` instead | `pytest -m "not live"` green; no domain or `workers/` code calls `open()`/`pathlib` file-write directly for run artifacts — everything routes through `StorageBackend`; `LocalFilesystemStorage` is behaviorally identical to today's direct-filesystem writes |
 | **1 — New CLI + config** | `vera.py` fully replaces the top-level scripts | Not cosmetic: `vera.py` subcommands (`generate`, `judge`, `score`, `pool`, `pipeline`, `resume`) become the only entry points. `vera judge` exposes rubric selection via `--rubric` (reusing Phase 0's bundle-manifest helper directly) — rubric selection is not lost during the CLI replacement. `-u`/`-j`/`--sample` shorthand and `--config` ship now, using an **informal** `config.json` shape (mirrors the flags, `generation`/`judging` orthogonal blocks, mutual-exclusivity-with-CLI rule, `judging.rubrics` already a list) — not yet locked as a stable interface. The resolved-form-printed-at-start traceability behavior ships now too (stdout only). Internals underneath still call the existing `generate`/`judge` code as-is — no score split, old `p_*`/`j_*` output layout retained until Phase 2/3. `generate.py`/`judge.py`/`run_pipeline.py` are **deleted entirely at the end of this phase** — no deprecation-stub period. **Known risk, accepted explicitly:** configs written against this informal shape may need updating once Phase 3 formalizes `utils/config_schema.py` as a stable interface | `pytest -m "not live"` green; `vera.py` is the only documented entry point, and `generate.py`/`judge.py`/`run_pipeline.py` no longer exist in the repo; `-u`/`-j`/`--sample`/`--config`/`--rubric` all functional against the existing internals; a **structural** parity/regression test suite (same call sequence, arguments, and output structure — see the generation-testing note below) proves the new CLI wires into the same underlying engine calls the deleted scripts made. Comparatively low risk: Phase 1 only replaces the front end, the generation/judging engine itself (`generate/`, `judge/` internals) is untouched here — the higher-risk moment is Phase 5, where the engine itself changes |
 | **2 — Scoring split** | Extract `score/` | `score.py`/`score_viz.py`/`pool.py` move out of `judge/` into `score/`; pure move, no new behavior. `vera.py` (the only entry point since Phase 1) gets its imports updated directly — no shim needed, since the legacy root scripts no longer exist. A minimal import-linter contract is added covering only the `judge/` ⊥ `score/` boundary this phase creates | `pytest -m "not live"` green; the `judge/` ⊥ `score/` import-linter contract passes; no code imports `judge.score`/`judge.pool` |
 | **3 — Traceability & naming** | Harden Phase 1's config shape; add persistence; swap in the new naming scheme | `utils/config_schema.py` formalizes Phase 1's informal `config.json` shape into a stable interface (design doc required for future changes) — `judging.rubrics` stays a list (continuing the list-from-day-one approach already used since Phase 0/1), still length-1-only in practice until Phase 4. Adds the persisted artifacts: `config.json` written to disk + `state.json` + `.sha256` sidecar; `utils/naming.py` (the naming/layout module, already tracked today implementing the legacy `p_`/`a_` scheme) is **rewritten** for the `c_`/`u_`/`j_` scheme, retiring the `p_*`/`j_*` layout Phase 1 kept. Existing `output/` run folders under the old layout are left alone — no migration script, only new runs use the new layout. **Acknowledged compatibility break:** anything outside `vera.py` that parses the old `p_*`/`j_*` pattern directly (`spring_scripts/`, `distribute_files.py`, `score_comparison.py`, notebooks, human-review tooling) breaks the moment new runs use `c_*`/`u_*`/`j_*` instead — accepted, since the vast majority of real usage goes through the CLI, not direct path-parsing. Import-linter contract extended to cover `utils/` as a leaf | `pytest -m "not live"` green; a run's `config.json` round-trips through `vera resume`; `utils/` leaf-layer import-linter contract passes |
