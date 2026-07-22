@@ -51,8 +51,12 @@ def get_parser() -> argparse.ArgumentParser:
         "--rubrics",
         "-r",
         nargs="+",
-        default=["data/rubric.tsv"],
-        help="Rubric file(s) to use (default: data/rubric.tsv)",
+        default=["data/rubric_manifest.json"],
+        help=(
+            "Rubric bundle manifest(s) to use "
+            "(default: data/rubric_manifest.json). "
+            "Only the first is used; multi-rubric support is not yet implemented."
+        ),
     )
 
     # model
@@ -167,9 +171,17 @@ async def main(args) -> Optional[str]:
     models_str = ", ".join(f"{model}x{count}" for model, count in judge_models.items())
     print(f"🎯 LLM Judge | Models: {models_str}")
 
+    if len(args.rubrics) > 1:
+        print(
+            f"Warning: multiple rubrics passed ({args.rubrics}); "
+            f"multi-rubric support is not yet implemented, "
+            f"using only the first: {args.rubrics[0]}",
+            file=sys.stderr,
+        )
+
     # Load rubric configuration once at startup
     print("📚 Loading rubric configuration...")
-    rubric_config = await RubricConfig.load(rubric_folder="data")
+    rubric_config = await RubricConfig.load_bundle(args.rubrics[0])
 
     if args.conversation:
         # Single conversation with first judge model (single instance)
