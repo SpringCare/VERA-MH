@@ -57,7 +57,7 @@ class TestJudgeParser:
         """Optional args have expected defaults."""
         parser = get_parser()
         args = parser.parse_args(["-f", "folder", "-j", "gpt-4o"])
-        assert args.rubrics == ["data/rubric.tsv"]
+        assert args.rubrics == ["data/rubric_manifest.json"]
         assert args.output is None
         assert args.limit is None
         assert args.max_concurrent is None
@@ -144,13 +144,15 @@ class TestJudgeMain:
                 new_callable=AsyncMock,
             ) as judge_single,
         ):
-            RubricConfig.load = AsyncMock(return_value="rubric_config")
+            RubricConfig.load_bundle = AsyncMock(return_value="rubric_config")
             ConversationData.load = AsyncMock(return_value="conversation_data")
             LLMJudge.return_value = "judge_instance"
 
             result = await main(args)
 
-            RubricConfig.load.assert_called_once_with(rubric_folder="data")
+            RubricConfig.load_bundle.assert_called_once_with(
+                "data/rubric_manifest.json"
+            )
             ConversationData.load.assert_called_once_with("conv.txt")
             LLMJudge.assert_called_once_with(
                 judge_model="gpt-4o",
@@ -200,13 +202,15 @@ class TestJudgeMain:
                 new_callable=AsyncMock,
             ) as judge_convos,
         ):
-            RubricConfig.load = AsyncMock(return_value="rubric_config")
+            RubricConfig.load_bundle = AsyncMock(return_value="rubric_config")
             load_convos.return_value = []
             judge_convos.return_value = ([], "evaluations/run1_timestamp")
 
             result = await main(args)
 
-            RubricConfig.load.assert_called_once_with(rubric_folder="data")
+            RubricConfig.load_bundle.assert_called_once_with(
+                "data/rubric_manifest.json"
+            )
             expected_dir, _, _ = resolve_conversation_input("conversations/run1")
             load_convos.assert_called_once_with(expected_dir, limit=10)
             judge_convos.assert_awaited_once()
@@ -251,7 +255,7 @@ class TestJudgeMain:
                 _judge_script, "judge_conversations", new_callable=AsyncMock
             ) as judge_convos,
         ):
-            RubricConfig.load = AsyncMock(return_value="rubric_config")
+            RubricConfig.load_bundle = AsyncMock(return_value="rubric_config")
             load_convos.return_value = []
             judge_convos.return_value = ([], str(eval_folder))
 
@@ -262,3 +266,79 @@ class TestJudgeMain:
             assert call_kw["output_folder"] == str(eval_folder)
             assert call_kw["resume"] is True
             assert result == str(eval_folder)
+
+    @pytest.mark.asyncio
+    async def test_main_loads_distinct_rubric_bundles_end_to_end(self):
+        """--rubrics actually drives which bundle is loaded, not a hardcoded one.
+
+        Uses the real RubricConfig.load_bundle() against two different test
+        fixture manifests and checks the parsed rubrics differ, proving the
+        flag is live rather than a no-op.
+        """
+        parser = get_parser()
+
+        async def load_rubric_config(rubrics_arg):
+            args = parser.parse_args(
+                ["-f", "conversations/run1", "-j", "gpt-4o", "-r", rubrics_arg]
+            )
+            with (
+                patch.object(
+                    _judge_script, "load_conversations", new_callable=AsyncMock
+                ) as load_convos,
+                patch.object(
+                    _judge_script, "judge_conversations", new_callable=AsyncMock
+                ) as judge_convos,
+                patch.object(_judge_script, "RubricConfig") as RubricConfigMock,
+            ):
+                from judge.rubric_config import RubricConfig as RealRubricConfig
+
+                RubricConfigMock.load_bundle = RealRubricConfig.load_bundle
+                load_convos.return_value = []
+                judge_convos.return_value = ([], "evaluations/run1_timestamp")
+
+                await main(args)
+                return judge_convos.await_args[1]["rubric_config"]
+
+        simple = await load_rubric_config("tests/fixtures/rubric_manifest_simple.json")
+        multi_row = await load_rubric_config(
+            "tests/fixtures/rubric_manifest_multi_row.json"
+        )
+
+        assert simple.question_order != multi_row.question_order
+
+    @pytest.mark.asyncio
+    async def test_main_warns_on_multiple_rubrics(self, capsys):
+        """Passing multiple --rubrics values warns and uses only the first."""
+        parser = get_parser()
+        args = parser.parse_args(
+            [
+                "-f",
+                "conversations/run1",
+                "-j",
+                "gpt-4o",
+                "-r",
+                "tests/fixtures/rubric_manifest_simple.json",
+                "tests/fixtures/rubric_manifest_multi_row.json",
+            ]
+        )
+        with (
+            patch.object(_judge_script, "RubricConfig") as RubricConfig,
+            patch.object(
+                _judge_script, "load_conversations", new_callable=AsyncMock
+            ) as load_convos,
+            patch.object(
+                _judge_script, "judge_conversations", new_callable=AsyncMock
+            ) as judge_convos,
+        ):
+            RubricConfig.load_bundle = AsyncMock(return_value="rubric_config")
+            load_convos.return_value = []
+            judge_convos.return_value = ([], "evaluations/run1_timestamp")
+
+            await main(args)
+
+            RubricConfig.load_bundle.assert_called_once_with(
+                "tests/fixtures/rubric_manifest_simple.json"
+            )
+            captured = capsys.readouterr()
+            assert "Warning" in captured.err
+            assert "rubric_manifest_simple.json" in captured.err

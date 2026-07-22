@@ -68,7 +68,7 @@ def pipeline_args():
         judge_per_judge=False,
         judge_limit=None,
         judge_verbose_workers=False,
-        rubrics=["data/rubric.tsv"],
+        rubrics=["data/rubric_manifest.json"],
         resume_generate=False,
         resume_judge=False,
         skip_risk_analysis=False,
@@ -531,7 +531,7 @@ class TestPipelineNewArguments:
     def test_rubrics_argument_exists(self, pipeline_args):
         """Test that rubrics argument exists in pipeline args."""
         assert hasattr(pipeline_args, "rubrics")
-        assert pipeline_args.rubrics == ["data/rubric.tsv"]  # Default value
+        assert pipeline_args.rubrics == ["data/rubric_manifest.json"]  # Default value
 
     def test_rubrics_passed_to_judge(self, pipeline_args):
         """Test that rubrics are correctly passed to judge args."""
@@ -624,7 +624,7 @@ class TestPipelineNewArguments:
 
             # Check defaults
             assert args.run_id is None
-            assert args.rubrics == ["data/rubric.tsv"]
+            assert args.rubrics == ["data/rubric_manifest.json"]
             assert args.conversation_output == "output"
             assert args.judge_output is None
 

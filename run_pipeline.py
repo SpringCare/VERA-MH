@@ -398,8 +398,11 @@ Example:
     parser.add_argument(
         "--rubrics",
         nargs="+",
-        default=["data/rubric.tsv"],
-        help="Rubric file(s) to use for evaluation (default: data/rubric.tsv)",
+        default=["data/rubric_manifest.json"],
+        help=(
+            "Rubric bundle manifest(s) to use for evaluation "
+            "(default: data/rubric_manifest.json)"
+        ),
     )
 
     # Optional arguments for scoring

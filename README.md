@@ -223,7 +223,7 @@ This will generate conversations under `output/<p_* run>/conversations/` by defa
 | `-c` | `--conversation` | Path to a single conversation file to judge (mutually exclusive with `--folder`) |
 | `-j` | `--judge-model` | Model(s) to use for judging (required). Format: `model` or `model:count` for multiple instances. Can specify multiple: `--judge-model model1 model2:3`. Examples: `claude-sonnet-4-5-20250929`, `claude-sonnet-4-5-20250929:3`, `claude-sonnet-4-5-20250929:2 gpt-4o:1` |
 | `-jep` | `--judge-model-extra-params` | Extra parameters for the judge model (optional). Examples: `temperature=0.7,max_tokens=1000`. Default: `temperature=0` (unless overridden) |
-| `-r` | `--rubrics` | Rubric file(s) to use (default: `data/rubric.tsv`) |
+| `-r` | `--rubrics` | Rubric bundle manifest(s) to use (default: `data/rubric_manifest.json`). Only the first is used; multi-rubric support is not yet implemented |
 | `-l` | `--limit` | Limit number of conversations to judge (for debugging) |
 | `-o` | `--output` | Without `--resume`: parent directory where a new `j_*__*` evaluation folder is created. Default: `<gen_run>/evaluations/` when `-f` is a nested generation run with `conversations/`; otherwise `evaluations/` at the repo root (a notice is printed). With `--resume`: the existing `j_*` evaluation folder itself. |
 | | `--resume` | Continue batch judging in an existing evaluation folder: use with `-f` and `-o` pointing at that folder. Skips `(conversation, judge, instance)` jobs whose `.tsv` already exists, then rebuilds `results.csv` from all TSVs there. Not supported with `-c` / `--conversation`. |
