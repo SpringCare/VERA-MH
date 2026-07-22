@@ -6,6 +6,7 @@ as data structures rather than file paths.
 """
 
 import asyncio
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -122,6 +123,65 @@ class RubricConfig:
             question_order=question_order,
             rubric_prompt_beginning=rubric_prompt_beginning,
             question_prompt_template=question_prompt_template,
+        )
+
+    @classmethod
+    async def load_bundle(cls, manifest_path: str) -> "RubricConfig":
+        """Load a rubric from a rubric bundle manifest.
+
+        A rubric bundle manifest is a JSON file describing what a rubric
+        *is* -- its files and (informational only) intended personas -- as
+        opposed to how to run it, which belongs in a run config, not here.
+
+        Manifest shape:
+            {
+              "rubric_file": "rubric.tsv",
+              "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",
+              "question_prompt_file": "question_prompt.txt",
+              "personas": ["data/personas.tsv"]
+            }
+
+        `personas` is informational only -- it documents which personas this
+        rubric is intended/validated for; it is not read by this loader.
+        File paths in the manifest are relative to the manifest's own folder.
+
+        Args:
+            manifest_path: Path to the rubric bundle manifest JSON file
+
+        Returns:
+            Loaded RubricConfig with all data
+
+        Raises:
+            FileNotFoundError: If the manifest or any file it references
+                doesn't exist
+            ValueError: If the manifest is missing a required key
+        """
+        manifest_file = Path(manifest_path)
+        if not manifest_file.exists():
+            raise FileNotFoundError(
+                f"Rubric bundle manifest not found: {manifest_file}"
+            )
+
+        async with aiofiles.open(manifest_file, "r", encoding="utf-8") as f:
+            manifest = json.loads(await f.read())
+
+        required_keys = (
+            "rubric_file",
+            "rubric_prompt_beginning_file",
+            "question_prompt_file",
+        )
+        missing_keys = [key for key in required_keys if key not in manifest]
+        if missing_keys:
+            raise ValueError(
+                f"Rubric bundle manifest {manifest_file} is missing required "
+                f"key(s): {missing_keys}"
+            )
+
+        return await cls.load(
+            rubric_folder=str(manifest_file.parent),
+            rubric_file=manifest["rubric_file"],
+            rubric_prompt_beginning_file=manifest["rubric_prompt_beginning_file"],
+            question_prompt_file=manifest["question_prompt_file"],
         )
 
     @staticmethod

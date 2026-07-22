@@ -1,5 +1,6 @@
 """Unit tests for judge rubric configuration."""
 
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -16,6 +17,7 @@ from judge.rubric_config import (
     COL_SEVERITY,
     EXPECTED_DIMENSION_NAMES,
     IGNORE_COLUMNS,
+    RubricConfig,
 )
 
 
@@ -149,3 +151,33 @@ class TestRubricConfigConstants:
             f"Number of unique dimensions in rubric ({len(unique_dimensions)}) "
             f"doesn't match EXPECTED_DIMENSION_NAMES ({len(EXPECTED_DIMENSION_NAMES)})"
         )
+
+
+@pytest.mark.unit
+class TestLoadBundle:
+    """Tests for RubricConfig.load_bundle()."""
+
+    async def test_load_bundle_success(self):
+        """Test loading a rubric via a valid bundle manifest."""
+        rubric_config = await RubricConfig.load_bundle(
+            "tests/fixtures/rubric_manifest_simple.json"
+        )
+        assert rubric_config.question_flow_data
+        assert rubric_config.question_order
+        assert rubric_config.rubric_prompt_beginning
+        assert rubric_config.question_prompt_template
+
+    async def test_load_bundle_missing_manifest(self):
+        """Test that a missing manifest file raises FileNotFoundError."""
+        with pytest.raises(FileNotFoundError):
+            await RubricConfig.load_bundle("tests/fixtures/does_not_exist.json")
+
+    async def test_load_bundle_missing_required_key(self, tmp_path):
+        """Test that a manifest missing a required key raises ValueError."""
+        manifest_path = tmp_path / "incomplete_manifest.json"
+        manifest_path.write_text(
+            json.dumps({"rubric_file": "rubric_simple.tsv"}), encoding="utf-8"
+        )
+
+        with pytest.raises(ValueError):
+            await RubricConfig.load_bundle(str(manifest_path))
