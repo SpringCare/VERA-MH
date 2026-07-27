@@ -17,6 +17,8 @@ companions: []
 
 # Architecture Spine — VERA-MH Target Architecture
 
+These are our best guesses as of now, not settled forever — expect some ADs to change once actual implementation surfaces things design discussion alone couldn't. `status: final` above means this contract is ready to build against, not that it is immune to revision.
+
 ## Design Paradigm
 
 **Layered architecture, strict top-down dependency direction, with per-concern adapter-pattern interface colocation.**

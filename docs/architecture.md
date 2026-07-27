@@ -4,6 +4,8 @@ Validation of Ethical and Responsible AI in Mental Health: simulate mental-healt
 
 This document describes the **target architecture**. Implementation may lag; see [Migration from current layout](#migration-from-current-layout) for known gaps. [README.md](../README.md) covers setup and CLI usage; [vera-cli-use-cases.md](./vera-cli-use-cases.md) covers the CLI/config surface in detail; this doc defines structure, data flow, and what **must** hold. [ARCHITECTURE-SPINE.md](./ARCHITECTURE-SPINE.md) is the terse, numbered invariants-only contract this doc is derived from — cite an `AD-n` from there when a change needs to reference a specific rule.
 
+These are our best guesses as of now, not settled forever — expect some of this to change once actual implementation surfaces things design discussion alone couldn't.
+
 ## Entity vocabulary
 
 Three entities (`u`/`c`/`j`) run through the CLI, config, and file naming — full definitions in [vera-cli-use-cases.md#entity-vocabulary](./vera-cli-use-cases.md#entity-vocabulary) (canonical).
