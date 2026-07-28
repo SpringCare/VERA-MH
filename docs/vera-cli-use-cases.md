@@ -21,7 +21,7 @@ CLI shorthand and the input `config.json` are deliberately mirrored, flag-for-fi
 
 | Subcommand | CLI shorthand — minimum required | Input `config.json` — minimum required fields |
 |---|---|---|
-| `generate` | `-c <chatbot>` + `-u <model:repeats...>` (≥1) + (`--personas <file...>` **or** `--target <name>`) | `generation.chatbot`, `generation.models` (≥1), and (`generation.personas` (≥1) **or** top-level `target`) |
+| `generate` | `-c <chatbot>` + `-u <model:repeats...>` (≥1) + (`--personas <file...>` **or** `--target <name>`) | `generation.chatbot`, `generation.user` (≥1), and (`generation.personas` (≥1) **or** top-level `target`) |
 | `judge` | `-j <model:repeats...>` (≥1) + `--conversations <folder...>` + `--rubric <manifest>` | `judging.models` (≥1), `judging.rubrics` (≥1) — plus whatever conversations path the run is scoped to |
 | `pipeline` | everything `generate` needs **and** everything `judge` needs — or just `-c`, `-u`, `-j`, `--target <name>` (`--target` covers persona+rubric in one shot, pipeline-only) | both `generation` and `judging` blocks fully populated (their individual minimums above), or `-c`/`-u`/`-j`-equivalent fields plus a top-level `target` |
 | `score` | the results path (`-r <results.csv>`) — nothing else | n/a — `score` reads an existing `results.csv`, not a run config |
@@ -133,13 +133,13 @@ Reads the immutable `config.json` (verifying its `.sha256` sidecar first) plus t
 
 ### `config.json` shape
 
-Top-level `generation` and `judging` blocks are **completely orthogonal** — model selection for one must never influence or be influenced by the other. Each follows the same models-list pattern (a list, not an object keyed by name, so the same model can appear twice with different knobs):
+Top-level `generation` and `judging` blocks are **completely orthogonal** — model selection for one must never influence or be influenced by the other. Model-list fields (a list, not an object keyed by name, so the same model can appear twice with different knobs) are named per entity rather than a bare `models`, since `generation` has two LLM roles (`chatbot`, `user`) competing for that name; `judging` keeps `models` since only one LLM role exists there:
 
 ```json
 {
   "generation": {
     "chatbot": {"name": "claude-sonnet-2026xxxx", "repeats": 1},
-    "models": [
+    "user": [
       {"name": "claude-sonnet-2026xxxx", "repeats": 1, "temperature": 0.7},
       {"name": "gpt-5", "repeats": 2}
     ],
@@ -157,9 +157,9 @@ Top-level `generation` and `judging` blocks are **completely orthogonal** — mo
 }
 ```
 
-`generation.chatbot` is the chatbot under test — same shape as one entry in `generation.models`, but a single object, not a list (only one chatbot per run; see use case 1). It is distinct from `generation.models`, which is the user-side (`u`) LLM list.
+`generation.chatbot` is the chatbot under test — same shape as one entry in `generation.user`, but a single object, not a list (only one chatbot per run; see use case 1). It is distinct from `generation.user`, which is the user-side (`u`) LLM list — the two share a field shape but are never conflated: naming one `chatbot` and the other `user` (rather than both `models`) makes which is which unambiguous at the field-name level, not just from prose.
 
-`models[].name` is always a **specific model identifier** (e.g. `claude-sonnet-2026xxxx`), using the provider's own naming — never a bare provider name like `"openai"`. Bespoke sampling knobs (temperature, top_p, max_tokens) are config-only, never expressible via `-u`/`-j` shorthand; a model named only via the shorthand gets the provider's environment-sourced defaults. Provider connection details (endpoint, API version, region) stay env-sourced only, never overridable here.
+Each list entry's `name` is always a **specific model identifier** (e.g. `claude-sonnet-2026xxxx`), using the provider's own naming — never a bare provider name like `"openai"`. Bespoke sampling knobs (temperature, top_p, max_tokens) are config-only, never expressible via `-u`/`-j` shorthand; a model named only via the shorthand gets the provider's environment-sourced defaults. Provider connection details (endpoint, API version, region) stay env-sourced only, never overridable here.
 
 ## Per-run artifacts
 
