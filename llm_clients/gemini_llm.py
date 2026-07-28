@@ -1,4 +1,5 @@
 import json
+import re
 import time
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
@@ -20,6 +21,30 @@ from .llm_interface import (
 T = TypeVar("T", bound=BaseModel)
 
 _STRUCTURED_OUTPUT_MAX_LOG_CHARS = 4000
+
+# Gemini 3.x: Google's migration guidance says temperature/top_p/top_k are "no
+# longer recommended" and forcing low values (e.g. this judge's temperature=0
+# default) "can cause potential looping issues or performance degradation."
+# Unlike OpenAI's gpt-5.x, the API doesn't reject these outright -
+# langchain_google_genai passes them straight through untouched - so we drop
+# them ourselves rather than let an inherited default silently hurt judge
+# quality. See:
+# https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/migrate
+#
+# Gated on major version (3+), not a fixed "gemini-3" marker: this is Google's
+# steer-via-prompt direction for the model line, so we expect gemini-4+ to keep
+# rejecting these params until Google says otherwise.
+_REASONING_ONLY_GEMINI_MAJOR = 3
+_GEMINI_VERSION_RE = re.compile(r"gemini-(\d+)")
+_UNSUPPORTED_SAMPLING_PARAMS: frozenset[str] = frozenset(
+    {"temperature", "top_p", "top_k"}
+)
+
+
+def _gemini_major_version(model_name: str) -> Optional[int]:
+    """Major version parsed from a Gemini model name (``gemini-3-pro`` -> 3)."""
+    match = _GEMINI_VERSION_RE.search(model_name.lower())
+    return int(match.group(1)) if match else None
 
 
 def _truncate_for_log(
@@ -74,7 +99,25 @@ class GeminiLLM(JudgeLLM):
     **Explicit** Context Caching (``cached_content`` resource names) is not wired here;
     it needs a separate cache create/update lifecycle. There is no Anthropic-style
     ``cache_control`` on ``ChatGoogleGenerativeAI``.
+
+    Reasoning/thinking is controlled via two flat, native ``ChatGoogleGenerativeAI``
+    fields that pass straight through kwargs (e.g. ``-jep thinking_level=high``):
+    ``thinking_level`` (``"low"``/``"high"``, Gemini 3+, takes precedence) and
+    ``thinking_budget`` (int token budget, older/Gemini 2.5 models). No dict
+    wrapping is needed here, unlike Claude's ``thinking`` param.
+
+    Gemini 3.x and later drop ``temperature``/``top_p``/``top_k`` (see
+    ``_model_supports_param``); Google's own guidance says these are no longer
+    recommended and can degrade reasoning quality if forced.
     """
+
+    def _model_supports_param(self, model_name: str, param_name: str) -> bool:
+        """Filter out sampling params Gemini 3+ no longer wants."""
+        major = _gemini_major_version(model_name)
+        if major is not None and major >= _REASONING_ONLY_GEMINI_MAJOR:
+            if param_name.lower() in _UNSUPPORTED_SAMPLING_PARAMS:
+                return False
+        return super()._model_supports_param(model_name, param_name)
 
     def _no_retry_substrings(self) -> tuple[str, ...]:
         # Google AI / Gemini API (ai.google.dev); LangChain may wrap HTTP/GRPC text.
@@ -118,12 +161,20 @@ class GeminiLLM(JudgeLLM):
 
         # Override with any provided kwargs
         llm_params.update(kwargs)
+        filtered_params = self._filter_supported_params(self.model_name, llm_params)
+        dropped_params = sorted(set(llm_params) - set(filtered_params))
+        llm_params = filtered_params
 
         # Print configuration before creating LLM
         print("Creating Gemini LLM with parameters:")
         print(f"  Model: {llm_params['model']}")
         print(f"  Temperature: {llm_params.get('temperature', 'default')}")
         print(f"  Max tokens: {llm_params.get('max_tokens', 'default')}")
+        if dropped_params:
+            print(
+                f"  Dropped (unsupported for {self.model_name}): "
+                f"{', '.join(dropped_params)}"
+            )
         extra_params = {
             k: v for k, v in llm_params.items() if k not in ["model", "google_api_key"]
         }

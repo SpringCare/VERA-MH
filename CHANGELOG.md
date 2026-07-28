@@ -4,6 +4,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [v1.2.0](https://github.com/SpringCare/VERA-MH/releases/tag/v1.2.0) \- 2026-07-16
+
+### Breaking / migration
+
+- **Rubric and score versioning** — Scores produced with the v1.2 rubric are not directly comparable with prior rubric versions. Rerun evaluations with [`data/rubric.tsv`](data/rubric.tsv) and compare scores only across runs using the same rubric/persona versions. To re-evaluate **existing** conversations, re-judge them directly with [`judge.py`](judge.py) (`judge.py -f <p_*_run> -j gpt-5.4 -jep reasoning_effort=low`, then score via [`judge/score.py`](judge/score.py)) rather than [`scripts/run_recommended_vera_pipeline.sh`](scripts/run_recommended_vera_pipeline.sh), which also regenerates transcripts. Runs originally produced by that script span **two** conversation generation runs that were judged and pooled — re-judge both `p_*` folders and re-pool the new `j_*` folders with [`scripts/pool_vera_scores.py`](scripts/pool_vera_scores.py).  
+- **Recommended judge profile** — A human validation inter-rater reliability (IRR) iteration identified **GPT 5.4** (`gpt-5.4`) with **low** `reasoning_effort` as the preferred judge. The [`scripts/run_recommended_vera_pipeline.sh`](scripts/run_recommended_vera_pipeline.sh) default now applies that setting; update automation that relies on a different judge configuration.
+
+### Rubric and scoring
+
+- **[`data/rubric.tsv`](data/rubric.tsv) v1.2** — Revised the clinical rubric with clinician input and feedback from recent focus groups with individuals with lived experience. The revision includes sharpened risk-language boundaries,  clarified contextual expectations for offering crisis resources and distress tolerance strategies, and reduced penalization across multiple dimensions for the same chatbot behavior. In a recent internal human validation effort, clinicians used the v1.2 rubric to independently rate a set of 40 simulated conversations (across multiple providers). When applying the v1.2 rubric to rate the same conversations, the recommended LLM judge (GPT 5.4 with low reasoning/effort) had 85% raw agreement (chance-corrected IRR \= 0.79) with human raters.  
+- **Versioned score outputs** — Comparison and visualization artifacts now label scores as **VERA-MH v1.2**.
+
+### Runtime, CLI, and pipeline
+
+- **Reasoning support** — Added provider-aware reasoning/extended-thinking parameters for OpenAI (`reasoning_effort`), Claude (`thinking_effort`), and Gemini (`thinking_level` / `thinking_budget`) in [`llm_clients/`](llm_clients/), including CLI documentation and model-specific parameter handling.  
+- **Structured-output resilience** — Added compatibility handling in [`llm_clients/llm_interface.py`](llm_clients/llm_interface.py) for occasional Claude wrapped tool-call responses, with regression tests for reasoning and structured-output behavior.  
+- **Provider-specific parameter filtering** — [`llm_clients/`](llm_clients/) clients now drop sampling parameters unsupported by reasoning-enabled models before the API call, logging what was dropped: Claude adaptive-thinking models (now including `opus-4-7` and `fable-5`) reject `temperature`/`top_p`/`top_k`; OpenAI `gpt-5`+ reasoning models (excluding `*-chat`) reject those plus `presence_penalty`/`frequency_penalty`/`logprobs`/`top_logprobs`; Gemini `gemini-3`+ drops `temperature`/`top_p`/`top_k` per Google's migration guidance. Version gating is by parsed major version, so newer model generations are covered without code changes.
+
+### Documentation, legal, and development workflow
+
+- **Legal updates** — Updated [`LICENSE`](LICENSE) to clarify that VERA-MH materials and scores are for research and benchmarking and do not constitute certification, medical advice, regulatory approval, endorsement, or a safety determination.  
+- **Agent documentation** — Consolidated contributor/agent guidance in [`AGENTS.md`](AGENTS.md) and [`CLAUDE.md`](CLAUDE.md), added the [`/verify` command](.claude/commands/verify.md), and documented the current documentation ownership and development workflow.  
+- **Reasoning/model-quirk documentation** — Added a "Reasoning / extended thinking (by provider)" section and a Claude per-model quirks table to [`docs/evaluating.md`](docs/evaluating.md), documenting per-provider reasoning behavior and the dropped-parameter handling above.
+
 ## [1.1.1](https://github.com/SpringCare/VERA-MH/releases/tag/v1.1.1) \- 2026-06-12
 
 ### Breaking / migration
