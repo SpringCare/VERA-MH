@@ -218,23 +218,28 @@ class TestClaudeLLM(TestJudgeLLMBase):
     def test_is_adaptive_thinking_model(self, model_name, expected):
         assert ClaudeLLM._is_adaptive_thinking_model(model_name) is expected
 
-    def test_apply_thinking_kwargs_no_effort_sonnet_5_disables_thinking(self):
-        """Sonnet 5 runs adaptive thinking by default; no effort means disabled."""
+    def test_apply_thinking_kwargs_no_effort_sonnet_5_omits_thinking(self):
+        """No effort means `thinking` is omitted; the model's own default applies."""
         kwargs: dict = {}
         ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-sonnet-5", None)
-        assert kwargs == {"thinking": {"type": "disabled"}, "max_tokens": 8192}
+        assert kwargs == {"max_tokens": 8192}
 
     def test_apply_thinking_kwargs_no_effort_sonnet_5_keeps_explicit_thinking(self):
-        """A caller-supplied `thinking` kwarg must survive the disabled default."""
+        """A caller-supplied `thinking` kwarg must survive untouched."""
         kwargs: dict = {"thinking": {"type": "enabled", "budget_tokens": 5000}}
         ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-sonnet-5", None)
         assert kwargs["thinking"] == {"type": "enabled", "budget_tokens": 5000}
 
     def test_apply_thinking_kwargs_no_effort_opus_4_8_is_untouched(self):
-        """Unlike sonnet-5, opus-4-8 defaults to no thinking already."""
         kwargs: dict = {}
         ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-opus-4-8", None)
         assert kwargs == {}
+
+    def test_apply_thinking_kwargs_no_effort_opus_5_sets_max_tokens(self):
+        """opus-5 also lacks a langchain-anthropic model profile, like sonnet-5."""
+        kwargs: dict = {}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-opus-5", None)
+        assert kwargs == {"max_tokens": 8192}
 
     def test_apply_thinking_kwargs_no_effort_fable_5_is_untouched(self):
         """fable-5 can't disable thinking at all; omitting `thinking` already
@@ -338,6 +343,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert unsupported == {
             "opus-4-7": frozenset({"temperature", "top_p", "top_k"}),
             "opus-4-8": frozenset({"temperature", "top_p", "top_k"}),
+            "opus-5": frozenset({"temperature", "top_p", "top_k"}),
             "fable-5": frozenset({"temperature", "top_p", "top_k"}),
             "sonnet-5": frozenset({"temperature", "top_p", "top_k"}),
         }

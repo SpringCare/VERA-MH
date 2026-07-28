@@ -274,8 +274,7 @@ See [README.md](../README.md#reasoning--extended-thinking) for the user-facing `
 | Quirk | Applies to | Effect |
 |-------|------------|--------|
 | `adaptive_thinking` | `opus-4-7`, `opus-4-8`, `fable-5`, `sonnet-5` | Uses `thinking={"type": "adaptive"}` + `effort=<level>` instead of manual `budget_tokens` (which 400s on these models); rejects `temperature`/`top_p`/`top_k` at any non-default value. |
-| `defaults_thinking_on` | `sonnet-5` | Runs adaptive thinking by default when `thinking` is omitted, so `thinking_effort` must be explicitly unset to disable it. Not needed for `fable-5`, where adaptive thinking is always on and can't be disabled at all. |
-| `sparse_max_tokens_profile` | `sonnet-5` | The installed `langchain-anthropic` has no model-profile entry for this model, so it silently falls back to `max_tokens=4096` instead of the usual 64k–128k auto-set — too tight for structured output. The client sets an explicit default instead. |
+| `sparse_max_tokens_profile` | `opus-5`, `sonnet-5` | The installed `langchain-anthropic` has no model-profile entry for these models, so it silently falls back to `max_tokens=4096` instead of the usual 64k–128k auto-set — too tight for structured output. The client sets an explicit default instead. |
 
 To onboard a new Claude model that needs similar special-casing, add its marker to `_MODEL_QUIRKS` with the applicable quirks rather than adding another `is_x` check.
 
