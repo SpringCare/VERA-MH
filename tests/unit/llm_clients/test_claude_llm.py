@@ -237,6 +237,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
     def test_apply_thinking_kwargs_no_effort_opus_5_sets_max_tokens(self):
         """opus-5 also lacks a langchain-anthropic model profile, like sonnet-5."""
+        assert ClaudeLLM._is_adaptive_thinking_model("claude-opus-5")
         kwargs: dict = {}
         ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-opus-5", None)
         assert kwargs == {"max_tokens": 8192}
