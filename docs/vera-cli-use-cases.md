@@ -15,6 +15,8 @@ Three entities, each with a single-letter prefix used throughout the CLI, config
 - **`c` — chatbot**: the provider/agent LLM under test (previously called "provider" or "agent" inconsistently — `chatbot` is now the standard term).
 - **`j` — judge**: the LLM evaluating a transcript against a rubric.
 
+**These letters are `vera.py`-only and are not the same flags as today's scripts.** `generate.py`/`judge.py` already use `-c`/`-r` for unrelated things (`-c` is `--max-concurrent` in `generate.py` and `--conversation` in `judge.py`; `-r` is `--runs` in `generate.py` and `--rubrics` in `judge.py`). `vera.py` intentionally repurposes them for the `u`/`c`/`j` vocabulary above. There is no coexistence window: Phase 1 of the migration (see [architecture.md#migration-from-current-layout](./architecture.md#migration-from-current-layout)) deletes `generate.py`/`judge.py`/`run_pipeline.py` entirely in the same change that ships `vera.py`, so the old and new meanings of `-c`/`-r` never need to be told apart at runtime.
+
 ## Minimum required arguments
 
 CLI shorthand and the input `config.json` are deliberately mirrored, flag-for-field — the same information is required either way, just spelled differently:
@@ -40,7 +42,7 @@ vera pipeline --config run.json
 
 **Resolved:** stays single-chatbot-per-invocation. Comparing chatbots is always an external loop over single-chatbot pipeline runs, consistent with use case 2. Native multi-chatbot support (one combined comparison report) is not built now — flagged as a possible future addition if a real need emerges, not ruled out permanently.
 
-**`--target <name>` shorthand:** `vera pipeline --target SI` resolves `SI` to one rubric bundle manifest (see [Rubric bundle manifest](../architecture.md#rubric-bundle-manifest)) and sets *both* the generation personas and the judging rubric from it in one shot — for the common case of "run the canonical test for X." This is the one deliberate exception to personas/rubrics being chosen independently; every other invocation (`--rubric` plus separately-specified personas, or explicit `--config` blocks) keeps generation and judging fully orthogonal. `--target` never selects the chatbot — `-c`/`generation.chatbot` is required regardless of whether `--target` is used.
+**`--target <name>` shorthand:** `vera pipeline --target SI` resolves `SI` to one rubric bundle manifest (see [Rubric bundle manifest](./architecture.md#rubric-bundle-manifest)) and sets *both* the generation personas and the judging rubric from it in one shot — for the common case of "run the canonical test for X." This is the one deliberate exception to personas/rubrics being chosen independently; every other invocation (`--rubric` plus separately-specified personas, or explicit `--config` blocks) keeps generation and judging fully orthogonal. `--target` never selects the chatbot — `-c`/`generation.chatbot` is required regardless of whether `--target` is used.
 
 **No implicit "run everything":** if neither `--target` nor `--rubric`/`judging.rubrics` is given, the CLI errors rather than defaulting to some or all rubrics. To deliberately run every known evaluator, use `--target all`, which resolves every rubric bundle manifest — an explicit opt-in, not a default.
 
@@ -85,7 +87,7 @@ No `-c` here: judging is decoupled from chatbot selection by design (see the ort
 
 `-j <model>:<repeats> ...` mirrors `-u`'s syntax for the judge side. `repeats` here means re-running the same transcript through the same judge model N times, to measure judge consistency/variance.
 
-`--rubric`/`judging.rubrics[]` entries point at a [rubric bundle manifest](../architecture.md#rubric-bundle-manifest) (canonical definition), not a bare `.tsv` path.
+`--rubric`/`judging.rubrics[]` entries point at a [rubric bundle manifest](./architecture.md#rubric-bundle-manifest) (canonical definition), not a bare `.tsv` path.
 
 **Resolved (multi-folder judge output):** judge keeps results independent per folder; the `score/` layer aggregates across folders when needed, not judge itself. There are also in-between options — e.g. kept separate, but the score layer aggregates them.
 
@@ -129,7 +131,7 @@ Reads the immutable `config.json` (verifying its `.sha256` sidecar first) plus t
 - **CLI flags and `--config` are strictly either/or, never combined for the same run.** A given piece of information (model selection/repeats, sampling knobs, persona/rubric lists) is supplied via one or the other, never both — the implementation rejects the combination rather than silently merging.
 - Internally, `--config` always resolves to the same canonical flag-set the CLI would produce, so there is exactly one resolved form regardless of input path. The tool prints this resolved form at run start for terminal/CI-log visibility (it does not write to the shell's own history — an opt-in `--print` flag emits the resolved flag-string with no execution, for a caller who wants to `eval` it into their own shell explicitly).
 - JSON, not YAML — robust when passed as a one-line env var or stdin payload with no escaping ambiguity.
-- **Path fields inside `config.json` (`generation.personas`, etc.) resolve relative to `$ROOT`** — the directory containing `vera.py` — never relative to the current working directory the CLI was invoked from, and never relative to `config.json`'s own location. This is a single rule regardless of how the config arrives (`--config <file>`, `--config -`, or `VERA_RUN_CONFIG`), so a config's meaning never depends on where your shell happens to be or where you saved the file. This is distinct from the [rubric bundle manifest](../architecture.md#rubric-bundle-manifest), which deliberately resolves relative to *itself* instead, so a manifest folder stays portable across checkouts — `config.json` doesn't need that property, since it's checkout-specific by nature.
+- **Path fields inside `config.json` (`generation.personas`, etc.) resolve relative to `$ROOT`** — the directory containing `vera.py` — never relative to the current working directory the CLI was invoked from, and never relative to `config.json`'s own location. This is a single rule regardless of how the config arrives (`--config <file>`, `--config -`, or `VERA_RUN_CONFIG`), so a config's meaning never depends on where your shell happens to be or where you saved the file. This is distinct from the [rubric bundle manifest](./architecture.md#rubric-bundle-manifest), which deliberately resolves relative to *itself* instead, so a manifest folder stays portable across checkouts — `config.json` doesn't need that property, since it's checkout-specific by nature.
 
 ### `config.json` shape
 
