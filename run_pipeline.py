@@ -404,6 +404,17 @@ Example:
             "(default: data/rubric_manifest.json)"
         ),
     )
+    parser.add_argument(
+        "--rubric-manifest",
+        default=None,
+        help=(
+            "Rubric bundle manifest to load generation personas from (see "
+            "docs/architecture.md#rubric-bundle-manifest), instead of the "
+            "default data/personas.tsv. Independent of --rubrics: passing the "
+            "same manifest to both attaches this run's personas to the rubric "
+            "it's evaluated against."
+        ),
+    )
 
     # Optional arguments for scoring
     parser.add_argument(
@@ -494,6 +505,7 @@ async def main():
         max_personas=args.max_personas,
         persona_speaks_first=not args.provider_speaks_first,
         resume=args._pipeline_resume_generate,
+        rubric_manifest=args.rubric_manifest,
     )
 
     print("")
