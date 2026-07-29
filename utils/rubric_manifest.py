@@ -62,6 +62,11 @@ async def load_manifest_personas(manifest_path: str) -> list[str]:
     migration entry) to select personas from the same manifest that
     `judge.py` loads the rubric from. `personas` is optional in the
     manifest and defaults to an empty list.
+
+    Entries resolve relative to the manifest's own folder (never `$ROOT` or
+    the caller's working directory), per docs/architecture.md#rubric-bundle-manifest
+    -- the same rule `rubric_file`/etc. already follow via `RubricConfig.load()`.
     """
     manifest = await load_manifest(manifest_path)
-    return list(manifest.get("personas", []))
+    manifest_dir = Path(manifest_path).parent
+    return [str(manifest_dir / p) for p in manifest.get("personas", [])]

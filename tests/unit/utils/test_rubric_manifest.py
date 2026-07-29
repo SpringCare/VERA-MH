@@ -41,7 +41,7 @@ class TestLoadManifestPersonas:
                     "rubric_file": "rubric_simple.tsv",
                     "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",
                     "question_prompt_file": "question_prompt.txt",
-                    "personas": ["data/personas_a.tsv", "data/personas_b.tsv"],
+                    "personas": ["personas_a.tsv", "personas_b.tsv"],
                 }
             ),
             encoding="utf-8",
@@ -49,7 +49,29 @@ class TestLoadManifestPersonas:
 
         personas = await load_manifest_personas(str(manifest_path))
 
-        assert personas == ["data/personas_a.tsv", "data/personas_b.tsv"]
+        assert personas == [
+            str(tmp_path / "personas_a.tsv"),
+            str(tmp_path / "personas_b.tsv"),
+        ]
+
+    async def test_load_manifest_personas_absolute_entry_not_rejoined(self, tmp_path):
+        manifest_path = tmp_path / "manifest_with_absolute_persona.json"
+        absolute_personas_path = tmp_path / "elsewhere" / "personas.tsv"
+        manifest_path.write_text(
+            json.dumps(
+                {
+                    "rubric_file": "rubric_simple.tsv",
+                    "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",
+                    "question_prompt_file": "question_prompt.txt",
+                    "personas": [str(absolute_personas_path)],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        personas = await load_manifest_personas(str(manifest_path))
+
+        assert personas == [str(absolute_personas_path)]
 
     async def test_load_manifest_personas_defaults_to_empty(self):
         personas = await load_manifest_personas(
