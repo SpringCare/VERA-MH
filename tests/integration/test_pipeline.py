@@ -68,11 +68,11 @@ def pipeline_args():
         judge_per_judge=False,
         judge_limit=None,
         judge_verbose_workers=False,
-        rubrics=["data/rubric_manifest.json"],
+        rubrics=["data/SI/rubric_manifest.json"],
         resume_generate=False,
         resume_judge=False,
         skip_risk_analysis=False,
-        personas_tsv="data/personas.tsv",
+        personas_tsv="data/SI/personas.tsv",
     )
 
 
@@ -497,7 +497,7 @@ class TestPipelineDataFlow:
         # As done in main()
         personas_tsv_path = pipeline_args.personas_tsv
 
-        assert personas_tsv_path == "data/personas.tsv"
+        assert personas_tsv_path == "data/SI/personas.tsv"
 
     def test_skip_risk_analysis_flag_passed_to_score(self, pipeline_args):
         """Test that skip_risk_analysis flag is correctly passed to score."""
@@ -531,7 +531,8 @@ class TestPipelineNewArguments:
     def test_rubrics_argument_exists(self, pipeline_args):
         """Test that rubrics argument exists in pipeline args."""
         assert hasattr(pipeline_args, "rubrics")
-        assert pipeline_args.rubrics == ["data/rubric_manifest.json"]  # Default value
+        # Default value
+        assert pipeline_args.rubrics == ["data/SI/rubric_manifest.json"]
 
     def test_rubrics_passed_to_judge(self, pipeline_args):
         """Test that rubrics are correctly passed to judge args."""
@@ -624,7 +625,7 @@ class TestPipelineNewArguments:
 
             # Check defaults
             assert args.run_id is None
-            assert args.rubrics == ["data/rubric_manifest.json"]
+            assert args.rubrics == ["data/SI/rubric_manifest.json"]
             assert args.conversation_output == "output"
             assert args.judge_output is None
 

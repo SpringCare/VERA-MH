@@ -77,7 +77,7 @@ Use this when the **provider** you want to evaluate (the mental-health chatbot u
 Use this profile when you want a **reliable VERA-MH score comparable to the published VERA-MH v1.1 scores**:
 
 - **Personas**
-  - Use all **100** rows in [`data/personas.tsv`](data/personas.tsv).
+  - Use all **100** rows in [`data/SI/personas.tsv`](data/SI/personas.tsv).
   - Persona mix covers presenting concerns, SI risk, disclosure, and modifiers.
   - Full set probes safety more thoroughly than small persona slices.
   - Full set also tends to reduce score variability vs. smaller persona sets.
@@ -103,7 +103,7 @@ For the [recommended settings](#recommended-settings) (dual user agents, 30 turn
 
 Use the same **provider** model id you would pass to `run_pipeline.py` as `--provider-agent` (the system under evaluation). The script:
 
-- Runs `run_pipeline.py` **twice**: once with **GPT 5.2** as the user agent (`gpt-5.2`) and once with **Claude Opus 4.5** (`claude-opus-4-5-20251101`), each with **30** turns and **1** conversation per persona (all personas in `data/personas.tsv` unless you cap the count).
+- Runs `run_pipeline.py` **twice**: once with **GPT 5.2** as the user agent (`gpt-5.2`) and once with **Claude Opus 4.5** (`claude-opus-4-5-20251101`), each with **30** turns and **1** conversation per persona (all personas in `data/SI/personas.tsv` unless you cap the count).
 - Judges each batch with **GPT 5.4** (`gpt-5.4`).
 - Merges both evaluation runs via `scripts/pool_vera_scores.py` into a **single pooled** folder `j_<judge>__p_.../` (e.g. `j_gpt-5.4x1__p_gpt_5_2+claude_opus_4_5__a_.../`, next to your `p_*` runs by default) containing merged `results.csv`, `pool_metadata.json`, `scores/scores.json`, and the usual score / risk visualizations. Use that pooled folder for headline VERA-MH numbers across both user-agent suites.
 
@@ -191,7 +191,7 @@ uv run python run_pipeline.py --help
 | `-c` | `--max-concurrent` | Maximum number of concurrent conversations (defaults to None (no limit); use this if the provider you're testing times out) |
 | `-w` | `--max-total-words` | Optional maximum total words across all responses in a conversation |
 | `-i` | `--run-id` | Run ID for the conversations (if not provided, a default will be generated) |
-| `-mp` | `--max-personas` | Maximum number of personas to use (limits personas loaded from [data/personas.tsv](data/personas.tsv)) |
+| `-mp` | `--max-personas` | Maximum number of personas to use (limits personas loaded from [data/SI/personas.tsv](data/SI/personas.tsv)) |
 | `-psf` | `--provider-speaks-first` | Provider speaks first (default: persona speaks first). max_turns is adjusted so provider speaks last. |
 | `-pfm` | `--provider-first-message` | Static first message from provider (no LLM call for first turn). E.g. `"How are you today?"` Used on turn 0 when `--provider-speaks-first` is set. |
 | `-psp` | `--provider-start-prompt` | Prompt sent to provider LLM when starting the conversation (first turn). Used on turn 0 when `--provider-speaks-first` is set. Default: `"Start the conversation based on the system prompt"` |
@@ -223,7 +223,7 @@ This will generate conversations under `output/<p_* run>/conversations/` by defa
 | `-c` | `--conversation` | Path to a single conversation file to judge (mutually exclusive with `--folder`) |
 | `-j` | `--judge-model` | Model(s) to use for judging (required). Format: `model` or `model:count` for multiple instances. Can specify multiple: `--judge-model model1 model2:3`. Examples: `claude-sonnet-4-5-20250929`, `claude-sonnet-4-5-20250929:3`, `claude-sonnet-4-5-20250929:2 gpt-4o:1` |
 | `-jep` | `--judge-model-extra-params` | Extra parameters for the judge model (optional). Examples: `temperature=0.7,max_tokens=1000`. Default: `temperature=0` (unless overridden) |
-| `-r` | `--rubrics` | Rubric bundle manifest(s) to use (default: `data/rubric_manifest.json`). Only the first is used; multi-rubric support is not yet implemented |
+| `-r` | `--rubrics` | Rubric bundle manifest(s) to use (default: `data/SI/rubric_manifest.json`). Only the first is used; multi-rubric support is not yet implemented |
 | `-l` | `--limit` | Limit number of conversations to judge (for debugging) |
 | `-o` | `--output` | Without `--resume`: parent directory where a new `j_*__*` evaluation folder is created. Default: `<gen_run>/evaluations/` when `-f` is a nested generation run with `conversations/`; otherwise `evaluations/` at the repo root (a notice is printed). With `--resume`: the existing `j_*` evaluation folder itself. |
 | | `--resume` | Continue batch judging in an existing evaluation folder: use with `-f` and `-o` pointing at that folder. Skips `(conversation, judge, instance)` jobs whose `.tsv` already exists, then rebuilds `results.csv` from all TSVs there. Not supported with `-c` / `--conversation`. |
@@ -297,12 +297,12 @@ The output from this script goes to the `score_comparisons` folder by default.  
    ```bash
    uv run python3 scripts/summarize_results.py \
      --results output/{YOUR_P_RUN}/evaluations/{YOUR_J_RUN}/results.csv \
-     --rubric data/rubric.tsv \
+     --rubric data/SI/rubric.tsv \
      --out-stats output/{YOUR_J_RUN}/improvement_stats.json \
      --out-md output/{YOUR_J_RUN}/improvement_report.md
    ```
 
-After scoring, use `scripts/summarize_results.py` to turn a judge **`results.csv`** into a structured breakdown of where a provider failed and which rubric questions drove those failures. The script reads per-dimension outcome columns plus `*_yes_question_id` / `*_yes_reasoning` (the rubric branch that triggered a Suboptimal or High Potential for Harm rating), joins question text from **`data/rubric.tsv`**, and emits:
+After scoring, use `scripts/summarize_results.py` to turn a judge **`results.csv`** into a structured breakdown of where a provider failed and which rubric questions drove those failures. The script reads per-dimension outcome columns plus `*_yes_question_id` / `*_yes_reasoning` (the rubric branch that triggered a Suboptimal or High Potential for Harm rating), joins question text from **`data/SI/rubric.tsv`**, and emits:
 
 * **`--out-stats`** — JSON with dimension scores, global failure modes, and per-dimension counts broken down by outcome band and rubric question (including optional judge reasoning exemplars).
 * **`--out-md`** — Markdown **improvement report** with a TL;DR grouped by dimension (High Potential for Harm before Suboptimal), then detailed per-dimension sections with percentages, rubric question text, and sample judge reasoning.
@@ -314,7 +314,7 @@ If you omit both output paths, the script prints a short JSON meta summary and a
 | Flag | Description |
 |------|-------------|
 | `--results` | Path to judge **`results.csv`** (required) |
-| `--rubric` | Rubric TSV for question text and severity (default: `data/rubric.tsv`) |
+| `--rubric` | Rubric TSV for question text and severity (default: `data/SI/rubric.tsv`) |
 | `--out-stats` | Write structured JSON stats here |
 | `--out-md` | Write Markdown improvement report here |
 | `--top-questions` | Max rubric questions listed per outcome band per dimension (default: `12`) |
@@ -471,7 +471,7 @@ VERA-MH simulates realistic conversations between Large Language Models (LLMs) f
 
 The system uses a TSV-based approach for managing mental health patient personas:
 
-#### Persona Data Structure (`data/personas.tsv`)
+#### Persona Data Structure (`data/SI/personas.tsv`)
 Each persona includes:
 - **Demographics**: Name, Age, Gender, Background
 - **Mental Health Context**: Current mental health situation
@@ -572,7 +572,7 @@ uv run python generate.py
 ```
 
 The script will:
-1. Load personas from `data/personas.tsv`
+1. Load personas from `data/SI/personas.tsv`
 2. Generate conversations between each persona and the agent
 3. Run multiple iterations per persona (configurable)
 4. Save conversations and logs to timestamped folders
@@ -581,7 +581,7 @@ The script will:
 
 ### Custom Personas and Prompts
 
-#### 1. Add New Personas (`data/personas.tsv`)
+#### 1. Add New Personas (`data/SI/personas.tsv`)
 Add new rows to the TSV file with the required fields:
 - Name
 - Age

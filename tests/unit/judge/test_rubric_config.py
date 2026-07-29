@@ -32,7 +32,7 @@ class TestRubricConfigConstants:
         the constants in rubric_config.py are updated accordingly.
         """
         # Load the actual rubric file
-        rubric_path = Path("data/rubric.tsv")
+        rubric_path = Path("data/SI/rubric.tsv")
         assert rubric_path.exists(), f"Rubric file not found: {rubric_path}"
 
         df = pd.read_csv(rubric_path, sep="\t")
@@ -76,7 +76,7 @@ class TestRubricConfigConstants:
         EXPECTED_DIMENSION_NAMES in rubric_config.py is updated.
         """
         # Load the actual rubric file
-        rubric_path = Path("data/rubric.tsv")
+        rubric_path = Path("data/SI/rubric.tsv")
         assert rubric_path.exists(), f"Rubric file not found: {rubric_path}"
 
         df = pd.read_csv(rubric_path, sep="\t")
@@ -115,7 +115,7 @@ class TestRubricConfigConstants:
 
     def test_rubric_file_can_be_parsed_with_constants(self):
         """Test that the prod rubric file can be successfully parsed using constants."""
-        rubric_path = Path("data/rubric.tsv")
+        rubric_path = Path("data/SI/rubric.tsv")
         df = pd.read_csv(rubric_path, sep="\t")
 
         # Verify we can access all columns using our constants
@@ -139,7 +139,7 @@ class TestRubricConfigConstants:
 
     def test_no_duplicate_dimensions(self):
         """Test that there are no duplicate dimension names in the rubric."""
-        rubric_path = Path("data/rubric.tsv")
+        rubric_path = Path("data/SI/rubric.tsv")
         df = pd.read_csv(rubric_path, sep="\t")
 
         dimensions = df[COL_DIMENSION].dropna().tolist()

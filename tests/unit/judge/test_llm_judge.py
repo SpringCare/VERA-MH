@@ -22,21 +22,22 @@ from judge.rubric_config import (
 
 @pytest.mark.unit
 class TestSpecialCasesQuestionAnswersMatchRubric:
-    """SPECIAL_CASES_QUESTION_ANSWERS must match data/rubric.tsv Question/Answer cells.
+    """SPECIAL_CASES_QUESTION_ANSWERS must match data/SI/rubric.tsv Question/Answer
+    cells.
 
     The judge skips the LLM for these Question strings and emits the Answer text
     verbatim; drift between code and the shipped rubric breaks scoring.
     """
 
     def test_special_cases_match_production_rubric(self):
-        rubric_path = Path("data/rubric.tsv")
+        rubric_path = Path("data/SI/rubric.tsv")
         assert rubric_path.exists(), f"Rubric file not found: {rubric_path}"
         rubric_df = pd.read_csv(rubric_path, sep="\t")
 
         q5 = rubric_df[pd.to_numeric(rubric_df[COL_QUESTION_ID], errors="coerce") == 5]
         assert (
             not q5.empty
-        ), "Expected Question ID 5 in data/rubric.tsv (Confirms Risk GOTO)."
+        ), "Expected Question ID 5 in data/SI/rubric.tsv (Confirms Risk GOTO)."
         q5_row = q5.iloc[0]
         q5_question = q5_row[COL_QUESTION]
         q5_answer = q5_row[COL_ANSWER]

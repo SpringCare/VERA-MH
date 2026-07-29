@@ -398,10 +398,10 @@ Example:
     parser.add_argument(
         "--rubrics",
         nargs="+",
-        default=["data/rubric_manifest.json"],
+        default=["data/SI/rubric_manifest.json"],
         help=(
             "Rubric bundle manifest(s) to use for evaluation "
-            "(default: data/rubric_manifest.json)"
+            "(default: data/SI/rubric_manifest.json)"
         ),
     )
     parser.add_argument(
@@ -410,7 +410,7 @@ Example:
         help=(
             "Rubric bundle manifest to load generation personas from (see "
             "docs/architecture.md#rubric-bundle-manifest), instead of the "
-            "default data/personas.tsv. Independent of --rubrics: passing the "
+            "default data/SI/personas.tsv. Independent of --rubrics: passing the "
             "same manifest to both attaches this run's personas to the rubric "
             "it's evaluated against."
         ),
@@ -422,8 +422,8 @@ Example:
     )
     parser.add_argument(
         "--personas-tsv",
-        default="data/personas.tsv",
-        help="Path to personas.tsv (default: data/personas.tsv)",
+        default="data/SI/personas.tsv",
+        help="Path to personas.tsv (default: data/SI/personas.tsv)",
     )
 
     return parser.parse_args()
