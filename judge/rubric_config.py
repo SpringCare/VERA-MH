@@ -6,13 +6,14 @@ as data structures rather than file paths.
 """
 
 import asyncio
-import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import aiofiles
 import pandas as pd
+
+from utils.rubric_manifest import load_manifest
 
 # Rubric TSV column names - single source of truth for rubric structure
 COL_QUESTION_ID = "Question ID"
@@ -157,25 +158,7 @@ class RubricConfig:
             ValueError: If the manifest is missing a required key
         """
         manifest_file = Path(manifest_path)
-        if not manifest_file.exists():
-            raise FileNotFoundError(
-                f"Rubric bundle manifest not found: {manifest_file}"
-            )
-
-        async with aiofiles.open(manifest_file, "r", encoding="utf-8") as f:
-            manifest = json.loads(await f.read())
-
-        required_keys = (
-            "rubric_file",
-            "rubric_prompt_beginning_file",
-            "question_prompt_file",
-        )
-        missing_keys = [key for key in required_keys if key not in manifest]
-        if missing_keys:
-            raise ValueError(
-                f"Rubric bundle manifest {manifest_file} is missing required "
-                f"key(s): {missing_keys}"
-            )
+        manifest = await load_manifest(manifest_path)
 
         return await cls.load(
             rubric_folder=str(manifest_file.parent),
