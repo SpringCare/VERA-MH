@@ -1,5 +1,6 @@
 """Unit tests for generate.py resume behavior."""
 
+import json
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
@@ -55,5 +56,99 @@ async def test_main_resume_mismatch_raises_value_error(tmp_path: Path) -> None:
             runs_per_prompt=1,
             output_folder=str(run_folder),
             resume=True,
+            verbose=False,
+        )
+
+
+@pytest.mark.asyncio
+async def test_main_rubric_manifest_loads_personas_from_manifest(
+    tmp_path: Path,
+) -> None:
+    """--rubric-manifest should select personas from the manifest, not the default."""
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "rubric_file": "rubric.tsv",
+                "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",
+                "question_prompt_file": "question_prompt.txt",
+                "personas": ["personas_custom.tsv"],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    persona_model_config = {"model": "mock-persona"}
+    agent_model_config = {"model": "mock-agent", "name": "mock-agent"}
+
+    with patch("generate.ConversationRunner") as mock_runner_cls:
+        mock_runner = mock_runner_cls.return_value
+        mock_runner.run_conversations = AsyncMock(return_value=[])
+
+        await generate.main(
+            persona_model_config=persona_model_config,
+            agent_model_config=agent_model_config,
+            max_turns=4,
+            runs_per_prompt=1,
+            output_folder=str(tmp_path / "out"),
+            run_id="run1",
+            rubric_manifest=str(manifest_path),
+            verbose=False,
+        )
+
+    kwargs = mock_runner_cls.call_args.kwargs
+    assert kwargs["persona_prompt_path"] == str(tmp_path / "personas_custom.tsv")
+
+
+@pytest.mark.asyncio
+async def test_main_no_rubric_manifest_uses_default_personas(tmp_path: Path) -> None:
+    """Omitting --rubric-manifest should keep today's fixed-default persona path."""
+    persona_model_config = {"model": "mock-persona"}
+    agent_model_config = {"model": "mock-agent", "name": "mock-agent"}
+
+    with patch("generate.ConversationRunner") as mock_runner_cls:
+        mock_runner = mock_runner_cls.return_value
+        mock_runner.run_conversations = AsyncMock(return_value=[])
+
+        await generate.main(
+            persona_model_config=persona_model_config,
+            agent_model_config=agent_model_config,
+            max_turns=4,
+            runs_per_prompt=1,
+            output_folder=str(tmp_path / "out"),
+            run_id="run1",
+            verbose=False,
+        )
+
+    kwargs = mock_runner_cls.call_args.kwargs
+    assert kwargs["persona_prompt_path"] == "data/personas.tsv"
+
+
+@pytest.mark.asyncio
+async def test_main_rubric_manifest_without_personas_raises_value_error(
+    tmp_path: Path,
+) -> None:
+    """A manifest with no personas listed can't select a persona file."""
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "rubric_file": "rubric.tsv",
+                "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",
+                "question_prompt_file": "question_prompt.txt",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="no personas listed"):
+        await generate.main(
+            persona_model_config={"model": "mock-persona"},
+            agent_model_config={"model": "mock-agent", "name": "mock-agent"},
+            max_turns=4,
+            runs_per_prompt=1,
+            output_folder=str(tmp_path / "out"),
+            run_id="run1",
+            rubric_manifest=str(manifest_path),
             verbose=False,
         )
