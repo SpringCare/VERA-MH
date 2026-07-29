@@ -51,10 +51,10 @@ def get_parser() -> argparse.ArgumentParser:
         "--rubrics",
         "-r",
         nargs="+",
-        default=["data/rubric_manifest.json"],
+        default=["data/SI/rubric_manifest.json"],
         help=(
             "Rubric bundle manifest(s) to use "
-            "(default: data/rubric_manifest.json). "
+            "(default: data/SI/rubric_manifest.json). "
             "Only the first is used; multi-rubric support is not yet implemented."
         ),
     )

@@ -85,7 +85,7 @@ class TestNotRelevantGotoIntegrationAdvanced:
         """
         # Load main rubric.tsv directly from data/ directory
         rubric_config = await RubricConfig.load(
-            rubric_folder="data",
+            rubric_folder="data/SI",
             rubric_file="rubric.tsv",
             rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
             question_prompt_file="question_prompt.txt",

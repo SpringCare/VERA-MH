@@ -57,7 +57,7 @@ class TestJudgeParser:
         """Optional args have expected defaults."""
         parser = get_parser()
         args = parser.parse_args(["-f", "folder", "-j", "gpt-4o"])
-        assert args.rubrics == ["data/rubric_manifest.json"]
+        assert args.rubrics == ["data/SI/rubric_manifest.json"]
         assert args.output is None
         assert args.limit is None
         assert args.max_concurrent is None
@@ -151,7 +151,7 @@ class TestJudgeMain:
             result = await main(args)
 
             RubricConfig.load_bundle.assert_called_once_with(
-                "data/rubric_manifest.json"
+                "data/SI/rubric_manifest.json"
             )
             ConversationData.load.assert_called_once_with("conv.txt")
             LLMJudge.assert_called_once_with(
@@ -209,7 +209,7 @@ class TestJudgeMain:
             result = await main(args)
 
             RubricConfig.load_bundle.assert_called_once_with(
-                "data/rubric_manifest.json"
+                "data/SI/rubric_manifest.json"
             )
             expected_dir, _, _ = resolve_conversation_input("conversations/run1")
             load_convos.assert_called_once_with(expected_dir, limit=10)

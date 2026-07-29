@@ -669,7 +669,7 @@ class TestConversationRunnerMultiple:
         mock_llm_factory,
     ) -> None:
         """A custom persona_prompt_path (e.g. from --rubric-manifest) should reach
-        load_prompts_from_csv, not the hardcoded data/personas.tsv default."""
+        load_prompts_from_csv, not the hardcoded data/SI/personas.tsv default."""
         conv_folder = tmp_path / "conversations"
         runner = create_test_runner(
             basic_persona_config,

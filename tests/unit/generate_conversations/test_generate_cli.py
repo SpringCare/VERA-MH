@@ -125,9 +125,10 @@ async def test_main_no_rubric_manifest_uses_default_personas(tmp_path: Path) -> 
         )
 
     kwargs = mock_runner_cls.call_args.kwargs
-    assert kwargs["persona_prompt_path"] == "data/personas.tsv"
+    assert kwargs["persona_prompt_path"] == "data/SI/personas.tsv"
     assert (
-        kwargs["persona_context_template_path"] == "data/persona_context_template.txt"
+        kwargs["persona_context_template_path"]
+        == "data/SI/persona_context_template.txt"
     )
 
 
