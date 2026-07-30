@@ -192,6 +192,7 @@ uv run python run_pipeline.py --help
 | `-w` | `--max-total-words` | Optional maximum total words across all responses in a conversation |
 | `-i` | `--run-id` | Run ID for the conversations (if not provided, a default will be generated) |
 | `-mp` | `--max-personas` | Maximum number of personas to use (limits personas loaded from [data/SI/personas.tsv](data/SI/personas.tsv)) |
+| | `--rubric-manifest` | Rubric bundle manifest to load personas from (e.g. `data/SI/rubric_manifest.json`), instead of the default `data/SI/personas.tsv`. No default -- must be given explicitly. Requires a full manifest path; there is no `--target SI`-style shorthand yet (see note below). |
 | `-psf` | `--provider-speaks-first` | Provider speaks first (default: persona speaks first). max_turns is adjusted so provider speaks last. |
 | `-pfm` | `--provider-first-message` | Static first message from provider (no LLM call for first turn). E.g. `"How are you today?"` Used on turn 0 when `--provider-speaks-first` is set. |
 | `-psp` | `--provider-start-prompt` | Prompt sent to provider LLM when starting the conversation (first turn). Used on turn 0 when `--provider-speaks-first` is set. Default: `"Start the conversation based on the system prompt"` |
@@ -230,6 +231,8 @@ This will generate conversations under `output/<p_* run>/conversations/` by defa
 | `-m` | `--max-concurrent` | Maximum number of concurrent workers (default: None (no limit)). Set to a high number or omit for unlimited concurrency |
 | `-pj` | `--per-judge` | If set, `--max-concurrent` applies per judge model. Otherwise, it applies to total workers across all judges. Example: `-m 4 -pj` with two judge models runs up to 4 workers per model (8 total) |
 | `-vw` | `--verbose-workers` | Enable verbose worker logging to show concurrency behavior |
+
+**No `SI`-style shorthand yet:** `--rubrics`/`--rubric-manifest` both require a full path to a rubric bundle manifest (e.g. `data/SI/rubric_manifest.json`) -- typing a bare rubric name like `SI` anywhere on the command line does **not** get expanded to that path. Symbolic-name resolution (`--target SI`) is planned for the future `vera.py` CLI, not these scripts. In the meantime, `data/SI/rubric_manifest.json` is simply the current default for `judge.py`/`run_pipeline.py`'s `--rubrics`, so omitting the flag already gets you SI; to select a *different* rubric folder (once one exists), pass its manifest path explicitly.
 
 **Output from `judge.py`:**
 
