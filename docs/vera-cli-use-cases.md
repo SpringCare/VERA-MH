@@ -187,12 +187,15 @@ output/
           j_claude_<nickname>_<timestamp>_<sha>/            <- judge stays flat, no persistent per-judge-model parent
             results.csv
 
-  evaluations/<config-sha256>/<rubric_name>/                 <- standalone judging (vera judge run on its own), unchanged
+  evaluations/<config-sha256>/                                <- persistent per-config directory, same role as c_sonnet/
+    <rubric_name>/                                             <- standalone judging (vera judge run on its own)
+      j_claude_<nickname>_<timestamp>_<sha>/                   <- same run-root shape as the nested case -- re-runs don't collide
+        results.csv
 ```
 
 - **Generation** groups persistently by chatbot model (`c_sonnet/` accumulates every run against that model).
 - **Judging** stays flat per-run — intentionally asymmetric, not an inconsistency.
 - Every run-id is `<nickname>_<timestamp>_<sha>` when nested under a per-model parent (model already given by `c_sonnet/`), or `<model>_<nickname>_<timestamp>_<sha>` when flat (`j_claude_...`, nothing else names the model): readable (which model, where applicable), recognizable (`<nickname>` — a generated human-memorable tag, purely so a person can refer to a run without quoting a sha; carries no identity of its own and is never a substitute for it), ordered (when), integrity-checked (sha256 of `config.json`). The nickname never needs to encode which model was used — the surrounding path already does that.
-- Standalone judging (against one or many existing folders, not chained from a pipeline run) has no single parent run to nest under, so it uses its own top-level identity — the `config.json` sha256 — sibling to the `c_*` directories.
+- Standalone judging (against one or many existing folders, not chained from a pipeline run) has no single parent run to nest under, so it groups under its own top-level directory — `evaluations/<config-sha256>/` — sibling to the `c_*` directories. **This container is not a run-root**, exactly like `c_sonnet/` isn't one for generation: it exists purely so every run of one exact config is discoverable in one place, and it accumulates runs rather than being collision-checked itself. The run-root actually created and checked for collisions is still the `j_claude_<nickname>_<timestamp>_<sha>/` folder inside it — so re-invoking `vera judge` standalone with an identical config produces a new run alongside prior ones, never an error and never a silent overwrite, for the same reason re-running generation against the same chatbot never collides.
 
 All naming/layout construction logic MUST live in a single `utils/` module (extending `utils/conversation_layout.py`), never duplicated across `generate/`, `judge/`, or `score/` handlers — this scheme has already changed multiple times during design and is expected to keep evolving.

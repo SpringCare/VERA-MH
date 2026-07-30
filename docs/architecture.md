@@ -184,10 +184,14 @@ output/
                     ├── results.csv
                     └── scores/                            ← created by vera score
 
-output/evaluations/<config-sha256>/<rubric_name>/          ← standalone judging (vera judge run on its own)
+output/evaluations/<config-sha256>/                        ← persistent per-config directory, same role as c_sonnet/
+    └── <rubric_name>/                                     ← standalone judging (vera judge run on its own)
+        └── j_claude_<nickname>_<timestamp>_<sha>/         ← same run-root shape as the nested case -- re-runs don't collide
 ```
 
 Every run-id is `<nickname>_<timestamp>_<sha256-of-config.json>` when nested under a per-model parent (`c_sonnet/`, where the model is already given by the parent folder), or `<model>_<nickname>_<timestamp>_<sha>` when flat (`j_claude_.../`, where nothing else identifies the model). `<nickname>` is a generated human-memorable tag (e.g. via a word-pair generator), purely for a person to recognize a run at a glance — it carries no identifying information itself and is never a substitute for the sha; it never needs to encode which model was used, since the surrounding path already does that job. `config.json` is an immutable copy of the resolved config, hash-verified via its sidecar; `state.json` is the separate, mutable file that tracks resume progress.
+
+`<config-sha256>/` in the standalone-judging path is a **persistent, per-config grouping directory**, the same role `c_sonnet/` plays for generation — it is never itself a run-root and is never checked for collisions. The actual run-root inside it is still a freshly-generated `j_claude_<nickname>_<timestamp>_<sha>/` folder, so re-invoking `vera judge` standalone with an identical config produces a new, distinct run grouped alongside prior ones under the same `<config-sha256>/`, not an error and not a silent overwrite of the prior run.
 
 **Single canonical hash, not two independent computations:** the sha256 is computed exactly once, by exactly one function, and that single value is what both the run-id folder name's `<sha>` component and the `config.json.sha256` sidecar's content contain — never two independently-computed values that could drift apart. Rejected: embedding the hash in `config.json`'s own filename (e.g. `config.<sha>.json`) — doesn't remove the need for a verification step (a corrupted file wouldn't automatically stop matching its own filename; verification still requires hashing the actual bytes, which is the sidecar's job), and would put the same value in a third place with no added integrity benefit.
 
