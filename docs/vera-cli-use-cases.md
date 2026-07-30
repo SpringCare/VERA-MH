@@ -103,6 +103,8 @@ vera pipeline --config run.json --sample 2
 
 `--sample N` overrides the config's full persona (and rubric/judge, where relevant) list at run time. This avoids hand-maintaining a separate small-scale config just for smoke testing.
 
+**`--sample` is the sole, named exception to the CLI/`--config` either-or rule** (AD-17 in [ARCHITECTURE-SPINE.md](./ARCHITECTURE-SPINE.md)): it's a debug-only cap on how much of the config's already-resolved lists get used, never a way to set information `config.json` itself carries, and it's never written into the run's own `config.json` artifact -- `vera resume` on a sampled run still resolves against the full original config. No other flag gets this treatment.
+
 ## Use case 5 — Pool
 
 Concatenate multiple existing evaluation output folders into one pooled result.
@@ -128,7 +130,7 @@ Reads the immutable `config.json` (verifying its `.sha256` sidecar first) plus t
 - `--config <path>` — JSON file, for local use.
 - `--config -` — read JSON from stdin.
 - `VERA_RUN_CONFIG` env var — inline JSON content, for remote/CI dispatch where uploading or mounting a file isn't convenient.
-- **CLI flags and `--config` are strictly either/or, never combined for the same run.** A given piece of information (model selection/repeats, sampling knobs, persona/rubric lists) is supplied via one or the other, never both — the implementation rejects the combination rather than silently merging.
+- **CLI flags and `--config` are strictly either/or, never combined for the same run.** A given piece of information (model selection/repeats, sampling knobs, persona/rubric lists) is supplied via one or the other, never both — the implementation rejects the combination rather than silently merging. **`--sample <N>` (see [Use case 4](#use-case-4--smoke-test)) is the one deliberate exception:** it MAY be passed alongside `--config`, since it never carries information `config.json` defines -- it only caps how much of the already-resolved lists get used for that invocation, purely for debugging, and it's never written into the run's own `config.json` artifact.
 - Internally, `--config` always resolves to the same canonical flag-set the CLI would produce, so there is exactly one resolved form regardless of input path. The tool prints this resolved form at run start for terminal/CI-log visibility (it does not write to the shell's own history — an opt-in `--print` flag emits the resolved flag-string with no execution, for a caller who wants to `eval` it into their own shell explicitly).
 - JSON, not YAML — robust when passed as a one-line env var or stdin payload with no escaping ambiguity.
 - **Path fields inside `config.json` (`generation.personas`, etc.) resolve relative to `$ROOT`** — the directory containing `vera.py` — never relative to the current working directory the CLI was invoked from, and never relative to `config.json`'s own location. This is a single rule regardless of how the config arrives (`--config <file>`, `--config -`, or `VERA_RUN_CONFIG`), so a config's meaning never depends on where your shell happens to be or where you saved the file. This is distinct from the [rubric bundle manifest](./architecture.md#rubric-bundle-manifest), which deliberately resolves relative to *itself* instead, so a manifest folder stays portable across checkouts — `config.json` doesn't need that property, since it's checkout-specific by nature.
