@@ -237,6 +237,7 @@ This codebase is optimized for agent coding: most files are safe for an agent to
 | `workers/queue.py` | `QueueProtocol` ABC — `LocalQueue`/future `SQSQueue` implement this |
 | `utils/role.py` | `Role` — the single shared definition across all packages |
 | `utils/naming.py` | The naming/layout module — single source of truth for run-id and folder-naming logic |
+| `utils/conversation_layout.py` | Builds directly on `utils/naming.py` and is inseparable from it in practice — protected alongside it, not covered by a separate rationale |
 | `utils/config_schema.py` | `config.json` schema — the contract every subcommand's `--config` resolves against |
 | `storage/storage_backend.py` | `StorageBackend` ABC — `LocalFilesystemStorage`/future `S3Storage` implement this |
 
