@@ -49,8 +49,6 @@ graph TD
     GEN --> STORAGE["storage/"]
     JUDGE --> STORAGE
     SCORE --> STORAGE
-    WORKERS --> LLM
-    WORKERS --> STORAGE
     LLM --> UTILS["utils/ (leaf)"]
     STORAGE --> UTILS
     WORKERS --> UTILS
@@ -71,7 +69,32 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 - **Binds:** `generate/`, `judge/`, `score/`, `workers/`
 - **Prevents:** hidden coupling between domain packages; `workers/` becoming a place domain logic leaks into, or a place that has to know about domain packages to dispatch to them.
-- **Rule:** [ADOPTED] `generate/`, `judge/`, and `score/` never import each other. `workers/` never imports any domain package — domain registers handler instances into `workers/` at startup; control never flows the other way.
+- **Rule:** [ADOPTED] `generate/`, `judge/`, and `score/` never import each other. `workers/` never imports any domain package — domain registers handler instances into `workers/` at startup; control never flows the other way. **`workers/` dispatches opaque async callables and never imports `llm_clients/` (or `storage/`) itself** — this is what makes one `WorkerPool` implementation reusable for both generation and judging, whose job shapes are otherwise unrelated (a generation job is a whole multi-turn conversation loop; a judging job is a whole rubric-navigation walk). `workers/` bounds concurrency and awaits whatever coroutine it's handed; it has no opinion about, or dependency on, what that coroutine does inside:
+
+    ```python
+    # workers/worker_pool.py -- no import of llm_clients or storage anywhere in this file
+    class WorkerPool:
+        async def _worker_loop(self):
+            while True:
+                handler, job_payload = await self.queue.get()
+                result = await handler(job_payload)  # opaque coroutine; workers/ has no idea what's inside
+
+    # generate/runner.py -- the LLM call lives here, not in workers/
+    async def run_one_conversation(job_payload, persona_llm: LLMInterface, provider_llm: LLMInterface):
+        response = await persona_llm.generate_response(history)  # generate/'s own job shape
+        ...
+
+    # judge/runner.py -- a completely different job shape, same WorkerPool
+    async def run_one_judgment(job_payload, judge_llm: LLMInterface):
+        question = navigator.first_question()
+        while question:
+            answer = await judge_llm.generate_response(question.prompt)  # judge/'s own job shape
+            question = navigator.next(question, answer)
+
+    # vera.py wires both handlers into their own instance of the same WorkerPool class
+    generate_pool = WorkerPool(queue=LocalQueue(), handler=run_one_conversation)
+    judge_pool = WorkerPool(queue=LocalQueue(), handler=run_one_judgment)
+    ```
 
 ### AD-3 — Generation core purity
 
@@ -113,7 +136,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 - **Binds:** `llm_clients/`, `workers/`, `storage/`
 - **Prevents:** a cross-cutting `interfaces/` package that groups ABCs by "abstract vs. concrete" instead of by concern, creating indirection with no cohesion benefit; a provider shipping a synchronous call method that silently serializes the queue's intended concurrent fan-out.
-- **Rule:** [ADOPTED] Each infrastructure package owns its interface next to its own implementations: `llm_clients/` holds `LLMInterface` + providers, `workers/` holds `QueueProtocol` + queue implementations, `storage/` holds `StorageBackend` + storage implementations. A single global `interfaces/` package holding every ABC was explicitly considered and rejected. `LLMInterface`'s core call method is `async def` — `workers/`'s only implementation (`LocalQueue`, AD-8) is asyncio-based, and a synchronous provider implementation would block the event loop other providers' calls run on, silently serializing what `-u gpt:5 sonnet:5`-style fan-out is supposed to run concurrently.
+- **Rule:** [ADOPTED] Each infrastructure package owns its interface next to its own implementations: `llm_clients/` holds `LLMInterface` + providers, `workers/` holds `QueueProtocol` + queue implementations, `storage/` holds `StorageBackend` + storage implementations. A single global `interfaces/` package holding every ABC was explicitly considered and rejected. `LLMInterface`'s core call method is `async def` — `workers/`'s only implementation (`LocalQueue`, AD-8) is asyncio-based, and a synchronous provider implementation would block the event loop other providers' calls run on, silently serializing what `-u gpt:5 sonnet:5`-style fan-out is supposed to run concurrently. **This risk lives in the domain handler code that calls `LLMInterface` (`generate/runner.py`/`judge/runner.py`, per AD-2's example), not in `workers/` itself** — `workers/` never calls a provider directly, but it's the thing whose event loop stalls when a handler it's running awaits a blocking (non-`async`-friendly) provider call, which is why the interface's async contract matters even though `workers/` never imports it.
 
 ### AD-10 — Storage backend is a raw bytes/keys abstraction only
 
