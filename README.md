@@ -463,8 +463,9 @@ VERA-MH simulates realistic conversations between Large Language Models (LLMs) f
   - **`conversation_utils.py`**: Conversation formatting and file operations
   - **`logging_utils.py`**: Comprehensive logging for conversations
 - **`data/`**: Persona and configuration data
-  - **`personas.tsv`**: TSV file containing patient persona data
-  - **`persona_prompt_template.txt`**: Template for generating persona prompts
+  - **`SI/personas.tsv`**: TSV file containing patient persona data
+  - **`persona_prompt_template.txt`**: Shared template for persona behavior
+  - **`SI/persona_context_template.txt`**: SI-specific persona context fields
   - **`rubric.tsv`**: Clinical rubric for conversation evaluation
   - **`rubric_prompt_beginning.txt`**: System prompt for the judge
   - **`question_prompt.txt`**: Prompt template for asking rubric questions
@@ -484,7 +485,9 @@ Each persona includes:
 - **Sample Prompt**: Example of what they might say
 
 #### Prompt Templating (`data/persona_prompt_template.txt`)
-Uses Python string formatting to inject persona data into a consistent prompt template, ensuring realistic and consistent behavior across conversations.
+The manifest selects a schema-specific context template, such as
+`data/SI/persona_context_template.txt`. Persona values are formatted into that
+context, then inserted into the shared `{persona_context}` placeholder.
 
 ### Structured Output System
 
@@ -606,8 +609,10 @@ Add new rows to the TSV file with the required fields:
 - Recent Triggers and Stressors
 - Final Seed Phrase
 
-#### 2. Modify Prompt Template (`data/persona_prompt_template.txt`)
-Update the template to include new fields or modify behavior patterns.
+#### 2. Modify Prompt Templates
+Update `data/SI/persona_context_template.txt` to select or arrange TSV fields.
+Update `data/persona_prompt_template.txt` only for behavior shared by all persona
+schemas.
 
 #### 3. Configure Models (`model_config.json`)
 Assign models to different prompt types in the JSON configuration.
