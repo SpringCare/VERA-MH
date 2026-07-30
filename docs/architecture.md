@@ -95,6 +95,8 @@ Exactly **one** root-level orchestrator: **`vera.py`**. Subcommands parse argume
 | `vera pipeline` | orchestration layer | Full workflow for one chatbot; passes paths between steps |
 | `vera resume` | orchestration layer | Reads `config.json` (sha-verified) + `state.json`, continues an incomplete run |
 
+**Deferred resume contract:** `vera resume` is part of the target CLI, but the persistence and state-machine contract it depends on is not yet finalized. Before implementation, its run hierarchy, state ownership, task identity, retry/idempotency semantics, and partial-write recovery behavior must be specified in a dedicated design document and adopted as a stable contract. Those details will be fleshed out in a later migration phase.
+
 Config and CLI flags are strictly either/or, never combined for the same run — see [vera-cli-use-cases.md](./vera-cli-use-cases.md#config-mechanism). `-c` selects the chatbot under test; `-u`/`-j` shorthand selects models/repeats for the user/judge side respectively; bespoke sampling knobs are config-only. `--rubric` selects the rubric-bundle manifest (see [Rubric bundle manifest](#rubric-bundle-manifest) below) — always a list, though only a length-1 list is supported until Phase 4. `-c` is required for `generate`/`pipeline` whenever `--config` isn't used — there is no default chatbot.
 
 ```bash
