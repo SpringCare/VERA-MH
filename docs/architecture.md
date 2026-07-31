@@ -152,7 +152,7 @@ Same shape of field, same-looking relative string, two different rules — hence
 | Package / path | Owns | Key modules |
 |----------------|------|-------------|
 | `generate/` | Simulation, turns, batch runner (pure core; handler owns I/O) | `conversation_simulator.py`, `runner.py` |
-| `judge/` | Rubric navigation, LLM judge (pure core; handler owns I/O) | `question_navigator.py`, `llm_judge.py` |
+| `judge/` | Rubric navigation, LLM judge, improvement reporting (pure core; handler owns I/O) | `question_navigator.py`, `llm_judge.py`, `scripts/summarize_results.py` |
 | `score/` | Aggregation, visualization, pooling — split out of `judge/` | `score.py`, `score_viz.py`, `pool.py` |
 | `workers/` | Shared queue protocol, worker pool, job dispatch | `queue.py`, `job_context.py` |
 | `llm_clients/` | Provider plugin registry; providers self-register, factory resolves by prefix | `llm_interface.py`, `llm_factory.py` |
@@ -164,6 +164,7 @@ Same shape of field, same-looking relative string, two different rules — hence
 - New LLM provider → [evaluating.md](./evaluating.md)
 - Structured judge responses → [structured-output.md](./structured-output.md)
 - New storage backend (e.g. S3) → implement `storage/storage_backend.py`'s `StorageBackend` (`write(key, bytes)` / `read(key)` / `exists(key)`)
+- Improvement reporting today (`scripts/summarize_results.py`) is deterministic aggregation over `judge/`'s own output, so it belongs under `judge/`. If reporting grows to call an LLM for creative improvement suggestions rather than just stats, that's a different concern (it calls `llm_clients/`, like `generate/`/`judge/` do) and should split into its own `report/` package rather than being absorbed into `judge/` or `score/` — not yet designed, revisit if that feature is actually built.
 
 ## Data flow and artifacts
 
