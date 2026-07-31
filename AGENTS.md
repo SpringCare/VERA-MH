@@ -29,6 +29,7 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 
 | Area | Key paths | When to edit |
 |------|-----------|--------------|
+| **Unified CLI** | `vera.py`, `utils/config_schema.py` | Command/config wiring shared across generate, judge, score, pool, pipeline |
 | **Generation** | `generate.py`, `generate_conversations/` | Conversation simulation, turns, personas |
 | **Judging** | `judge.py`, `judge/` | Rubric scoring, TSV output, question navigation |
 | **LLM providers** | `llm_clients/`, `llm_clients/llm_factory.py` | New models, custom HTTP/API providers |
@@ -38,7 +39,7 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 | **Config** | `utils/model_config_loader.py`, `llm_clients/config.py` | Model name resolution, API keys |
 | **Shared utils** | `utils/` | Naming, logging, conversation layout |
 
-**Entry points:** `generate.py` (simulate), `judge.py` (evaluate), `run_pipeline.py` (full workflow), `judge/score.py` (scoring/visualization).
+**Entry points:** `vera.py` (unified CLI: generate/judge/score/pool/pipeline, see [README's Unified CLI section](./README.md#unified-cli)); `generate.py`, `judge.py`, `run_pipeline.py`, `judge/score.py` remain as legacy per-step scripts and compatibility adapters (see [docs/design/vera-cli-runtime-wiring.md](./docs/design/vera-cli-runtime-wiring.md)).
 
 **Temporary experiments:** `tmp_tests/` (not committed). **Permanent tests:** `tests/`.
 
@@ -75,6 +76,8 @@ uv run pytest tests/integration/
 **Scratch scripts:** use `tmp_tests/` for one-off experiments, not committed tests.
 
 ## Key Commands
+
+`vera.py` is the unified CLI (generate/judge/score/pool/pipeline); see [README's Unified CLI section](./README.md#unified-cli). The commands below use the legacy per-step scripts, still valid as compatibility adapters.
 
 ```bash
 # End-to-end pipeline (preferred for full workflows)
@@ -167,6 +170,7 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 - **Judge behavior:** [docs/judge.md](./docs/judge.md)
 - **Structured output:** [docs/structured-output.md](./docs/structured-output.md)
 - **Pre-commit hooks:** [docs/pre-commit-hooks.md](./docs/pre-commit-hooks.md)
+- **Unified CLI wiring:** [docs/design/vera-cli-runtime-wiring.md](./docs/design/vera-cli-runtime-wiring.md)
 - **Claude Code commands:** [CLAUDE.md](./CLAUDE.md), [.claude/commands/](./.claude/commands/)
 
 ## Docker
