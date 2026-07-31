@@ -679,6 +679,7 @@ class TestConversationRunnerMultiple:
             runs_per_prompt=1,
             folder_name=str(conv_folder),
             persona_prompt_path="data/personas_custom.tsv",
+            persona_context_template_path="data/persona_context_custom.txt",
         )
 
         with patch("generate_conversations.runner.load_prompts_from_csv") as mock_load:
@@ -688,6 +689,10 @@ class TestConversationRunnerMultiple:
                 await runner.run_conversations(persona_names=["Persona1"])
 
         assert mock_load.call_args.kwargs["prompt_path"] == "data/personas_custom.tsv"
+        assert (
+            mock_load.call_args.kwargs["persona_context_template_path"]
+            == "data/persona_context_custom.txt"
+        )
 
     async def test_concurrent_execution_limit(
         self,

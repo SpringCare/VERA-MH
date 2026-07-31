@@ -1,20 +1,38 @@
 """Unit tests for generate_conversations/utils.py"""
 
-from unittest.mock import patch
+from pathlib import Path
 
 import pytest
 
-from generate_conversations.utils import load_prompts_from_csv
+from generate_conversations.utils import load_prompts_from_csv as _load_prompts_from_csv
+
+
+def load_prompts_from_csv(*, prompt_template_path, **kwargs):
+    """Adapt concise test fixtures to the required two-template contract."""
+    if "persona_context_template_path" in kwargs:
+        return _load_prompts_from_csv(
+            prompt_template_path=prompt_template_path,
+            **kwargs,
+        )
+
+    context_template_path = Path(prompt_template_path)
+    shared_template_path = context_template_path.parent / "shared_template.txt"
+    shared_template_path.write_text("{persona_context}")
+    return _load_prompts_from_csv(
+        prompt_template_path=str(shared_template_path),
+        persona_context_template_path=str(context_template_path),
+        **kwargs,
+    )
 
 
 @pytest.mark.unit
 class TestLoadPromptsFromCsv:
     """Test suite for load_prompts_from_csv function."""
 
-    def test_load_all_personas_from_minimal_fixture(self, fixtures_dir):
+    def test_load_all_personas_from_minimal_fixture(self, fixtures_dir, tmp_path):
         """Test loading all personas from the minimal fixture file."""
         csv_path = fixtures_dir / "personas_minimal.tsv"
-        template_path = fixtures_dir / "rubric_prompt_beginning.txt"
+        template_path = tmp_path / "persona_context_template.txt"
 
         # Create a simple template file for testing
         template_content = (
@@ -114,6 +132,48 @@ class TestLoadPromptsFromCsv:
         assert "prompt" in result[0]
         assert result[0]["prompt"] == "Hello Alice"
 
+    def test_renders_schema_specific_context_into_shared_template(self, tmp_path):
+        csv_file = tmp_path / "personas.tsv"
+        csv_file.write_text("Name\tAge\tBackground\nAlice\t30\tTeacher")
+
+        template_file = tmp_path / "persona_prompt_template.txt"
+        template_file.write_text('Context:\n"""\n{persona_context}\n"""')
+
+        context_template_file = tmp_path / "persona_context_template.txt"
+        context_template_file.write_text(
+            "# Backstory:\n- Age: {Age}\n- Background: {Background}"
+        )
+
+        result = load_prompts_from_csv(
+            prompt_path=str(csv_file),
+            prompt_template_path=str(template_file),
+            persona_context_template_path=str(context_template_file),
+        )
+
+        assert result[0]["prompt"] == (
+            'Context:\n"""\n# Backstory:\n- Age: 30\n- Background: Teacher\n"""'
+        )
+
+    def test_context_template_missing_tsv_column_raises(self, tmp_path):
+        csv_file = tmp_path / "personas.tsv"
+        csv_file.write_text("Name\tAge\nAlice\t30")
+
+        template_file = tmp_path / "persona_prompt_template.txt"
+        template_file.write_text("{persona_context}")
+
+        context_template_file = tmp_path / "persona_context_template.txt"
+        context_template_file.write_text("- Background: {Background}")
+
+        with pytest.raises(
+            ValueError,
+            match="requires columns not found.*Background",
+        ):
+            load_prompts_from_csv(
+                prompt_path=str(csv_file),
+                prompt_template_path=str(template_file),
+                persona_context_template_path=str(context_template_file),
+            )
+
     def test_csv_not_found_raises_error(self, tmp_path):
         """Test that FileNotFoundError is raised when CSV file doesn't exist."""
         template_file = tmp_path / "template.txt"
@@ -129,52 +189,71 @@ class TestLoadPromptsFromCsv:
         """Test that FileNotFoundError is raised when template file doesn't exist."""
         csv_file = tmp_path / "personas.tsv"
         csv_file.write_text("Name\tAge\nAlice\t30")
+        context_template_file = tmp_path / "persona_context_template.txt"
+        context_template_file.write_text("{Name}")
 
         with pytest.raises(FileNotFoundError, match="Template file not found"):
             load_prompts_from_csv(
                 prompt_path=str(csv_file),
                 prompt_template_path="/nonexistent/path/template.txt",
+                persona_context_template_path=str(context_template_file),
             )
 
-    def test_missing_template_key_in_csv_data(self, tmp_path):
-        """Test handling of missing template keys in CSV data."""
+    def test_context_template_not_found_raises_error(self, tmp_path):
+        csv_file = tmp_path / "personas.tsv"
+        csv_file.write_text("Name\tAge\nAlice\t30")
+        template_file = tmp_path / "persona_prompt_template.txt"
+        template_file.write_text("{persona_context}")
+
+        with pytest.raises(
+            FileNotFoundError,
+            match="Persona context template file not found",
+        ):
+            load_prompts_from_csv(
+                prompt_path=str(csv_file),
+                prompt_template_path=str(template_file),
+                persona_context_template_path=str(tmp_path / "missing.txt"),
+            )
+
+    def test_context_template_path_is_required(self, tmp_path):
+        csv_file = tmp_path / "personas.tsv"
+        csv_file.write_text("Name\tAge\nAlice\t30")
+        template_file = tmp_path / "persona_prompt_template.txt"
+        template_file.write_text("{persona_context}")
+
+        with pytest.raises(TypeError, match="persona_context_template_path"):
+            _load_prompts_from_csv(
+                prompt_path=str(csv_file),
+                prompt_template_path=str(template_file),
+            )
+
+    def test_missing_context_template_key_raises(self, tmp_path):
+        """Missing TSV columns should fail before processing rows."""
         csv_file = tmp_path / "personas.tsv"
         csv_file.write_text("Name\tAge\n1\tAlice")
 
         template_file = tmp_path / "template.txt"
         template_file.write_text("Name: {Name}, Risk: {Risk}")
 
-        with patch("builtins.print") as mock_print:
-            result = load_prompts_from_csv(
+        with pytest.raises(ValueError, match="columns not found.*Risk"):
+            load_prompts_from_csv(
                 prompt_path=str(csv_file),
                 prompt_template_path=str(template_file),
             )
 
-        assert len(result) == 0
-        mock_print.assert_called()
-        args = mock_print.call_args[0][0]
-        assert "Warning" in args
-        assert "Missing key" in args
-        assert "Risk" in args
-
     def test_multiple_rows_with_missing_required_column(self, tmp_path):
-        """Test that rows with missing required columns are skipped."""
+        """Missing columns should fail once rather than warning for every row."""
         csv_file = tmp_path / "personas.tsv"
         csv_file.write_text("Name\tAge\nAlice\t30\nBob\t25")
 
         template_file = tmp_path / "template.txt"
-        # Template requires a column that doesn't exist in the CSV
         template_file.write_text("Name: {Name}, Risk: {Risk}")
 
-        with patch("builtins.print") as mock_print:
-            result = load_prompts_from_csv(
+        with pytest.raises(ValueError, match="columns not found.*Risk"):
+            load_prompts_from_csv(
                 prompt_path=str(csv_file),
                 prompt_template_path=str(template_file),
             )
-
-        # All rows should be skipped because Risk column doesn't exist
-        assert len(result) == 0
-        mock_print.assert_called()
 
     def test_empty_csv_file(self, tmp_path):
         """Test loading an empty CSV file (only headers)."""
