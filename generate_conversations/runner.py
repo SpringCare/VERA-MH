@@ -47,6 +47,7 @@ class ConversationRunner:
         session_types: Optional[List[str]] = None,
         resume: bool = False,
         persona_prompt_path: str = "data/personas.tsv",
+        persona_context_template_path: str = "data/persona_context_template.txt",
     ):
         self.persona_model_config = persona_model_config
         self.agent_model_config = agent_model_config
@@ -64,6 +65,7 @@ class ConversationRunner:
         self.session_types = session_types
         self.resume = resume
         self.persona_prompt_path = persona_prompt_path
+        self.persona_context_template_path = persona_context_template_path
 
         # folder_name: p_run root (or legacy flat). .txt and logs go in
         # transcripts_dir (e.g. p_run/conversations/), not folder_name.
@@ -258,6 +260,7 @@ class ConversationRunner:
         personas = load_prompts_from_csv(
             persona_names,
             prompt_path=self.persona_prompt_path,
+            persona_context_template_path=self.persona_context_template_path,
             max_personas=self.max_personas,
         )
         jobs: List[Tuple[dict, int, int, int]] = []
@@ -657,6 +660,7 @@ class ConversationRunner:
         personas = load_prompts_from_csv(
             persona_names,
             prompt_path=self.persona_prompt_path,
+            persona_context_template_path=self.persona_context_template_path,
             max_personas=self.max_personas,
         )
         persona_safe_names = {

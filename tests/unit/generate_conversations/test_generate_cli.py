@@ -73,6 +73,7 @@ async def test_main_rubric_manifest_loads_personas_from_manifest(
                 "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",
                 "question_prompt_file": "question_prompt.txt",
                 "personas": ["personas_custom.tsv"],
+                "persona_context_template_file": "persona_context_custom.txt",
             }
         ),
         encoding="utf-8",
@@ -98,6 +99,9 @@ async def test_main_rubric_manifest_loads_personas_from_manifest(
 
     kwargs = mock_runner_cls.call_args.kwargs
     assert kwargs["persona_prompt_path"] == str(tmp_path / "personas_custom.tsv")
+    assert kwargs["persona_context_template_path"] == str(
+        tmp_path / "persona_context_custom.txt"
+    )
 
 
 @pytest.mark.asyncio
@@ -122,6 +126,9 @@ async def test_main_no_rubric_manifest_uses_default_personas(tmp_path: Path) -> 
 
     kwargs = mock_runner_cls.call_args.kwargs
     assert kwargs["persona_prompt_path"] == "data/personas.tsv"
+    assert (
+        kwargs["persona_context_template_path"] == "data/persona_context_template.txt"
+    )
 
 
 @pytest.mark.asyncio

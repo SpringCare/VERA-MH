@@ -15,7 +15,10 @@ from utils.naming import (
     model_token_for_run_folder,
     parse_generation_run_folder_name,
 )
-from utils.rubric_manifest import load_manifest_personas
+from utils.rubric_manifest import (
+    load_manifest_persona_context_template,
+    load_manifest_personas,
+)
 from utils.utils import parse_key_value_list
 
 
@@ -97,6 +100,7 @@ async def main(
         output_folder = "output"
 
     persona_prompt_path = "data/personas.tsv"
+    persona_context_template_path = "data/persona_context_template.txt"
     if rubric_manifest:
         manifest_personas = await load_manifest_personas(rubric_manifest)
         if not manifest_personas:
@@ -111,6 +115,9 @@ async def main(
                 file=sys.stderr,
             )
         persona_prompt_path = manifest_personas[0]
+        persona_context_template_path = await load_manifest_persona_context_template(
+            rubric_manifest
+        )
 
     if resume:
         if not os.path.isdir(output_folder):
@@ -176,6 +183,7 @@ async def main(
         session_types=session_types,
         resume=resume,
         persona_prompt_path=persona_prompt_path,
+        persona_context_template_path=persona_context_template_path,
     )
 
     # Run conversations
