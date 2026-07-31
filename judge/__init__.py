@@ -4,10 +4,12 @@ from .llm_judge import LLMJudge
 from .runner import (
     judge_conversations,
     judge_single_conversation,
+    run_judging,
 )
 
 __all__ = [
     "LLMJudge",
     "judge_conversations",
     "judge_single_conversation",
+    "run_judging",
 ]

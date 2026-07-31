@@ -2,19 +2,12 @@
 
 import argparse
 import asyncio
-import os
 import sys
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from generate_conversations import ConversationRunner
+from generate_conversations import run_generation
 from llm_clients.llm_interface import DEFAULT_START_PROMPT
 from utils.debug import set_debug
-from utils.naming import (
-    build_generation_run_folder_name,
-    model_token_for_run_folder,
-    parse_generation_run_folder_name,
-)
 from utils.rubric_manifest import (
     load_manifest_persona_context_template,
     load_manifest_personas,
@@ -40,141 +33,35 @@ async def main(
     session_types: Optional[List[str]] = None,
     resume: bool = False,
     rubric_manifest: Optional[str] = None,
+    persona_files: Optional[List[str]] = None,
 ) -> tuple[List[Dict[str, Any]], str]:
-    """
-    Generate conversations and return results.
+    """Compatibility wrapper around the parser-independent generation service."""
+    if rubric_manifest and persona_files:
+        raise ValueError("rubric_manifest and persona_files are mutually exclusive")
 
-    Args:
-        # TODO: should the extra config be separated?
-        persona_model_config: Configuration dictionary for the persona model
-        agent_model_config: Configuration dictionary for the agent model
-        persona_extra_run_params: Extra parameters for the persona model
-        agent_extra_run_params: Extra parameters for the agent model
-        max_turns: Maximum turns per conversation
-        runs_per_prompt: Number of runs per prompt
-        persona_names: List of persona names to use. If None, uses all personas.
-        verbose: Whether to print status messages
-        output_folder: Parent directory for new runs (default ``output/``), or the
-            existing ``p_*`` run folder when ``resume`` is True.
-        max_total_words: Optional maximum total words across all responses
-        max_concurrent: Maximum number of concurrent conversations. If None, runs all
-            conversations concurrently.
-        max_personas: Optional maximum number of personas to load from CSV. If None,
-            loads all personas.
-        persona_speaks_first: If True (default), persona speaks first; else provider
-            speaks first. max_turns is adjusted so the provider always speaks last.
-        rubric_manifest: Optional path to a rubric bundle manifest (see
-            docs/architecture.md#rubric-bundle-manifest). When set, personas load
-            from the manifest's ``personas`` list instead of the default
-            ``data/SI/personas.tsv`` -- Phase 0's generation-side counterpart to
-            ``judge.py --rubrics``, so a manifest attaches personas and rubric
-            together. Only the first entry is used if the manifest lists more
-            than one.
-
-    Returns:
-        List of conversation results
-
-    Raises:
-        ValueError: Configuration error
-        Exception: Other errors
-    """
-    if verbose:
-        print("🔄 Generating conversations with the following parameters:")
-        print(f"  - Persona model: {persona_model_config}")
-        print(f"  - Agent model: {agent_model_config}")
-        print(f"  - Persona extra run params: {persona_extra_run_params}")
-        print(f"  - Agent extra run params: {agent_extra_run_params}")
-        print(f"  - Max turns: {max_turns}")
-        print(f"  - Runs per prompt: {runs_per_prompt}")
-        print(f"  - Persona names: {persona_names}")
-        print(f"  - Output folder: {output_folder}")
-        print(f"  - Run ID: {run_id}")
-        print(f"  - Max concurrent: {max_concurrent}")
-        print(f"  - Max total words: {max_total_words}")
-        print(f"  - Max personas: {max_personas}")
-        print(f"  - Persona speaks first: {persona_speaks_first}")
-        print(f"  - Resume: {resume}")
-
-    # Generate default folder name if not provided
-    if output_folder is None:
-        output_folder = "output"
-
-    persona_prompt_path = "data/SI/personas.tsv"
+    resolved_persona_files = persona_files or ["data/SI/personas.tsv"]
     persona_context_template_path = "data/SI/persona_context_template.txt"
     if rubric_manifest:
-        manifest_personas = await load_manifest_personas(rubric_manifest)
-        if not manifest_personas:
+        resolved_persona_files = await load_manifest_personas(rubric_manifest)
+        if not resolved_persona_files:
             raise ValueError(
                 f"Rubric bundle manifest {rubric_manifest} has no personas listed"
             )
-        if len(manifest_personas) > 1:
-            print(
-                f"Warning: manifest lists multiple persona files "
-                f"({manifest_personas}); multi-persona-file support is not yet "
-                f"implemented, using only the first: {manifest_personas[0]}",
-                file=sys.stderr,
-            )
-        persona_prompt_path = manifest_personas[0]
         persona_context_template_path = await load_manifest_persona_context_template(
             rubric_manifest
         )
 
-    if resume:
-        if not os.path.isdir(output_folder):
-            raise ValueError(
-                "Resume mode requires --output to point to an existing run folder."
-            )
-        run_folder_name = os.path.basename(os.path.normpath(output_folder))
-        run_meta = parse_generation_run_folder_name(run_folder_name)
-        expected_persona = model_token_for_run_folder(persona_model_config["model"])
-        expected_agent = model_token_for_run_folder(agent_model_config["model"])
-
-        if run_meta["persona"] != expected_persona:
-            raise ValueError(
-                "Resume folder persona model does not match current --user-agent. "
-                f"Expected p_{expected_persona}, got p_{run_meta['persona']}."
-            )
-        if run_meta["agent"] != expected_agent:
-            raise ValueError(
-                "Resume folder provider model does not match current --provider-agent. "
-                f"Expected a_{expected_agent}, got a_{run_meta['agent']}."
-            )
-        if run_meta["turns"] != max_turns:
-            raise ValueError(
-                "Resume folder max turns does not match current --turns. "
-                f"Expected t{max_turns}, got t{run_meta['turns']}."
-            )
-        if run_meta["runs"] != runs_per_prompt:
-            raise ValueError(
-                "Resume folder runs-per-prompt does not match current --runs. "
-                f"Expected r{runs_per_prompt}, got r{run_meta['runs']}."
-            )
-        if run_id is None:
-            run_id = run_folder_name
-        elif run_id != run_folder_name:
-            raise ValueError(
-                "Resume mode requires --run-id to match the run folder name when set."
-            )
-    elif run_id is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        run_id = build_generation_run_folder_name(
-            persona_model_config["model"],
-            agent_model_config["model"],
-            max_turns,
-            runs_per_prompt,
-            timestamp,
-        )
-        output_folder = f"{output_folder}/{run_id}"
-        # TODO: do we want to give a message if the folder already exists?
-        os.makedirs(output_folder, exist_ok=True)
-
-    # Configuration
-    runner = ConversationRunner(
+    return await run_generation(
         persona_model_config=persona_model_config,
         agent_model_config=agent_model_config,
+        persona_files=resolved_persona_files,
+        persona_extra_run_params=persona_extra_run_params,
+        agent_extra_run_params=agent_extra_run_params,
         max_turns=max_turns,
         runs_per_prompt=runs_per_prompt,
-        folder_name=output_folder,
+        persona_names=persona_names,
+        verbose=verbose,
+        output_folder=output_folder,
         run_id=run_id,
         max_concurrent=max_concurrent,
         max_total_words=max_total_words,
@@ -182,22 +69,8 @@ async def main(
         persona_speaks_first=persona_speaks_first,
         session_types=session_types,
         resume=resume,
-        persona_prompt_path=persona_prompt_path,
         persona_context_template_path=persona_context_template_path,
     )
-
-    # Run conversations
-    results = await runner.run_conversations(persona_names=persona_names)
-
-    if verbose:
-        skipped_n = sum(1 for r in results if r.get("skipped"))
-        ok_n = len(results) - skipped_n
-        msg = f"✅ Generated {ok_n} conversations → {output_folder}/"
-        if skipped_n:
-            msg += f" ({skipped_n} skipped)"
-        print(msg)
-
-    return results, output_folder
 
 
 if __name__ == "__main__":

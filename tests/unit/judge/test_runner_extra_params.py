@@ -11,6 +11,7 @@ from judge.runner import (
     _create_evaluation_jobs,
     batch_evaluate_with_individual_judges,
     judge_conversations,
+    run_judging,
 )
 from judge.utils import build_judge_task_log_path, judge_evaluation_tsv_filename
 
@@ -22,6 +23,52 @@ MOCK_EVALUATION_RESULT = {
         "yes_reasoning": "",
     }
 }
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_run_judging_is_parser_independent(tmp_path: Path) -> None:
+    """The application service accepts values directly and returns its run path."""
+    generation_run = tmp_path / "p_user__a_agent__t3__r1__20260731_120000"
+    conversations_dir = generation_run / "conversations"
+    conversations_dir.mkdir(parents=True)
+    rubric_config = MagicMock()
+    conversations = [MagicMock()]
+    expected_output = str(generation_run / "evaluations" / "j_run")
+
+    with (
+        patch(
+            "judge.runner.RubricConfig.load_bundle",
+            new_callable=AsyncMock,
+            return_value=rubric_config,
+        ) as load_bundle,
+        patch(
+            "judge.runner.load_conversations",
+            new_callable=AsyncMock,
+            return_value=conversations,
+        ) as load_conversations,
+        patch(
+            "judge.runner.judge_conversations",
+            new_callable=AsyncMock,
+            return_value=([], expected_output),
+        ) as judge_batch,
+    ):
+        output = await run_judging(
+            str(generation_run),
+            "rubric_manifest.json",
+            {"judge": 2},
+            judge_model_extra_params={"temperature": 0},
+            limit=3,
+        )
+
+    assert output == expected_output
+    load_bundle.assert_awaited_once_with("rubric_manifest.json")
+    load_conversations.assert_awaited_once_with(str(conversations_dir), limit=3)
+    assert judge_batch.await_args is not None
+    assert judge_batch.await_args.kwargs["output_root"] == str(
+        generation_run / "evaluations"
+    )
+    assert judge_batch.await_args.kwargs["judge_models"] == {"judge": 2}
 
 
 def _conversation(tmp_path: Path, index: int = 0) -> ConversationData:

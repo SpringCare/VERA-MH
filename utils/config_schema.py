@@ -33,6 +33,14 @@ class ModelSpec:
     repeats: int = 1
     extra_params: dict[str, Any] = dataclasses.field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError("model name cannot be empty")
+        if isinstance(self.repeats, bool) or not isinstance(self.repeats, int):
+            raise ValueError("model repeats must be an integer")
+        if self.repeats < 1:
+            raise ValueError("model repeats must be at least 1")
+
     def to_dict(self) -> dict[str, Any]:
         return {"name": self.name, "repeats": self.repeats, **self.extra_params}
 
@@ -46,10 +54,15 @@ class ModelSpec:
     @classmethod
     def from_shorthand(cls, token: str) -> "ModelSpec":
         """Parse `-u`/`-c`/`-j` shorthand: "<model>[:<repeats>]"."""
-        name, sep, repeats_str = token.partition(":")
+        name, sep, repeats_str = token.rpartition(":")
+        if not sep or not repeats_str.isdigit():
+            name = token
+            repeats_str = "1"
         if not name:
             raise ValueError(f"invalid model shorthand: {token!r}")
-        repeats = int(repeats_str) if sep else 1
+        repeats = int(repeats_str)
+        if repeats < 1:
+            raise ValueError(f"model repeats must be at least 1: {token!r}")
         return cls(name=name, repeats=repeats)
 
 
@@ -119,6 +132,7 @@ class JudgingConfig:
 
     models: list[ModelSpec] = dataclasses.field(default_factory=list)
     rubrics: list[RubricSpec] = dataclasses.field(default_factory=list)
+    conversations: list[str] = dataclasses.field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {}
@@ -126,6 +140,8 @@ class JudgingConfig:
             d["models"] = [m.to_dict() for m in self.models]
         if self.rubrics:
             d["rubrics"] = [r.to_dict() for r in self.rubrics]
+        if self.conversations:
+            d["conversations"] = self.conversations
         return d
 
     @classmethod
@@ -133,6 +149,7 @@ class JudgingConfig:
         return cls(
             models=[ModelSpec.from_dict(m) for m in data.get("models", [])],
             rubrics=[RubricSpec.from_dict(r) for r in data.get("rubrics", [])],
+            conversations=list(data.get("conversations", [])),
         )
 
 
@@ -155,7 +172,6 @@ class RunConfig:
     generation: Optional[GenerationConfig] = None
     judging: Optional[JudgingConfig] = None
     target: Optional[str] = None
-    sample: Optional[int] = None
 
     def __post_init__(self) -> None:
         if self.target is not None and self.generation and self.generation.personas:
@@ -177,8 +193,6 @@ class RunConfig:
             d["judging"] = self.judging.to_dict()
         if self.target is not None:
             d["target"] = self.target
-        if self.sample is not None:
-            d["sample"] = self.sample
         return d
 
     @classmethod
@@ -189,7 +203,6 @@ class RunConfig:
             generation=GenerationConfig.from_dict(generation) if generation else None,
             judging=JudgingConfig.from_dict(judging) if judging else None,
             target=data.get("target"),
-            sample=data.get("sample"),
         )
 
 
