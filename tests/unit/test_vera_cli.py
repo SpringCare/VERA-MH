@@ -221,6 +221,49 @@ async def test_generation_target_resolves_manifest_personas(tmp_path: Path) -> N
         str(manifest_dir / "personas.tsv")
     ]
     assert "rubric_manifest" not in run_generation.await_args.kwargs
+    assert "persona_context_template_path" not in run_generation.await_args.kwargs
+
+
+@pytest.mark.asyncio
+async def test_generation_target_resolves_manifest_persona_context_template(
+    tmp_path: Path,
+) -> None:
+    manifest_dir = tmp_path / "target"
+    manifest_dir.mkdir()
+    manifest = manifest_dir / "rubric_manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "rubric_file": "rubric.tsv",
+                "rubric_prompt_beginning_file": "rubric_prompt.txt",
+                "question_prompt_file": "question_prompt.txt",
+                "personas": ["personas.tsv"],
+                "persona_context_template_file": "persona_context_template.txt",
+            }
+        ),
+        encoding="utf-8",
+    )
+    run_config = RunConfig(
+        generation=GenerationConfig(
+            chatbot=ModelSpec(name="chatbot"),
+            user=[ModelSpec(name="user")],
+        ),
+        target="target",
+    )
+
+    with (
+        patch.object(vera, "_target_manifests", return_value=[manifest]),
+        patch(
+            "generate_conversations.run_generation", new_callable=AsyncMock
+        ) as run_generation,
+    ):
+        run_generation.return_value = ([], "output/generated")
+        await vera._run_generation(run_config, sample=None, debug=False)
+
+    assert run_generation.await_args is not None
+    assert run_generation.await_args.kwargs["persona_context_template_path"] == str(
+        manifest_dir / "persona_context_template.txt"
+    )
 
 
 @pytest.mark.asyncio
