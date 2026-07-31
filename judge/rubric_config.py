@@ -13,6 +13,8 @@ from typing import Any, Dict, List, Optional
 import aiofiles
 import pandas as pd
 
+from utils.rubric_manifest import load_manifest
+
 # Rubric TSV column names - single source of truth for rubric structure
 COL_QUESTION_ID = "Question ID"
 COL_DIMENSION = "Dimension"
@@ -122,6 +124,47 @@ class RubricConfig:
             question_order=question_order,
             rubric_prompt_beginning=rubric_prompt_beginning,
             question_prompt_template=question_prompt_template,
+        )
+
+    @classmethod
+    async def load_bundle(cls, manifest_path: str) -> "RubricConfig":
+        """Load a rubric from a rubric bundle manifest.
+
+        A rubric bundle manifest is a JSON file describing what a rubric
+        *is* -- its files and (informational only) intended personas -- as
+        opposed to how to run it, which belongs in a run config, not here.
+
+        Manifest shape:
+            {
+              "rubric_file": "rubric.tsv",
+              "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",
+              "question_prompt_file": "question_prompt.txt",
+              "personas": ["personas.tsv"]
+            }
+
+        `personas` is informational only -- it documents which personas this
+        rubric is intended/validated for; it is not read by this loader.
+        File paths in the manifest are relative to the manifest's own folder.
+
+        Args:
+            manifest_path: Path to the rubric bundle manifest JSON file
+
+        Returns:
+            Loaded RubricConfig with all data
+
+        Raises:
+            FileNotFoundError: If the manifest or any file it references
+                doesn't exist
+            ValueError: If the manifest is missing a required key
+        """
+        manifest_file = Path(manifest_path)
+        manifest = await load_manifest(manifest_path)
+
+        return await cls.load(
+            rubric_folder=str(manifest_file.parent),
+            rubric_file=manifest["rubric_file"],
+            rubric_prompt_beginning_file=manifest["rubric_prompt_beginning_file"],
+            question_prompt_file=manifest["question_prompt_file"],
         )
 
     @staticmethod
