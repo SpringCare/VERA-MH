@@ -12,6 +12,7 @@ We value every interaction that follows the [Code of Conduct](https://www.contri
 
 - [Getting Started](#getting-started)
 - [Environment setup](#environment-setup)
+- [Unified CLI](#unified-cli)
 - [Connecting your own LLM, Agent, or API](#connecting-your-own-llm-or-api)
 - [Recommended settings](#recommended-settings)
 - [Reliable VERA-MH score (automated)](#reliable-vera-mh-score-automated)
@@ -32,7 +33,7 @@ We value every interaction that follows the [Code of Conduct](https://www.contri
 
 # Getting started
 
-This page covers [Environment setup](#environment-setup), optional [custom provider wiring](#connecting-your-own-llm-or-api), [Recommended settings](#recommended-settings) for comparable scores, the [automated pooled pipeline](#reliable-vera-mh-score-automated), and [Running VERA-MH step by step](#running-vera-mh-step-by-step) (`run_pipeline.py`, `generate.py`, `judge.py`, scoring, comparison, and improvement reports).
+This page covers [Environment setup](#environment-setup), the [unified CLI](#unified-cli), optional [custom provider wiring](#connecting-your-own-llm-or-api), [Recommended settings](#recommended-settings) for comparable scores, the [automated pooled pipeline](#reliable-vera-mh-score-automated), and [Running VERA-MH step by step](#running-vera-mh-step-by-step) (`run_pipeline.py`, `generate.py`, `judge.py`, scoring, comparison, and improvement reports).
 
 ## Environment setup
 
@@ -57,6 +58,54 @@ This page covers [Environment setup](#environment-setup), optional [custom provi
    ```bash
    pre-commit install
    ```
+
+## Unified CLI
+
+`vera.py` provides one command surface for generation, judging, scoring, pooling,
+and the end-to-end pipeline. It calls parser-independent domain functions; the
+legacy `generate.py`, `judge.py`, and scoring CLIs are not runtime dependencies:
+
+```bash
+uv run python vera.py generate \
+  -c gpt-4o \
+  -u claude-sonnet-4-5-20250929 \
+  --personas data/SI/personas.tsv
+
+uv run python vera.py judge \
+  -j gpt-5.4 \
+  --rubric data/SI/rubric_manifest.json \
+  --conversations output/<generation-run>
+
+uv run python vera.py pipeline \
+  -c gpt-4o \
+  -u claude-sonnet-4-5-20250929 \
+  -j gpt-5.4 \
+  --target SI
+```
+
+Run-defining CLI flags and JSON config are strictly either/or. `--sample` is the
+sole debug-only flag that may accompany `--config`. For standalone judging, put
+conversation paths in `judging.conversations` when using config:
+
+```json
+{
+  "judging": {
+    "models": [{"name": "gpt-5.4", "repeats": 1}],
+    "rubrics": [{"name": "SI"}],
+    "conversations": ["output/example-run"]
+  }
+}
+```
+
+Then run `uv run python vera.py judge --config run.json`. Relative paths inside
+config resolve from the repository root. `--sample N` is a debug-only cap and is
+never serialized into the resolved run config. `vera resume` is reserved but fails
+explicitly until the checksum/state recovery contract is implemented.
+
+Generation always consumes persona files. `--target` is shorthand that resolves a
+rubric manifest into both its persona files and judging rubric. A target manifest
+without `personas` remains valid for judge-only use, but cannot be used to generate;
+VERA fails explicitly rather than silently selecting default personas.
 
 ## Connecting your own LLM, Agent, or API
 

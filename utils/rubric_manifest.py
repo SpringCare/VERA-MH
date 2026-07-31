@@ -1,12 +1,9 @@
 """Shared rubric bundle manifest reading.
 
-A rubric bundle manifest (docs/architecture.md#rubric-bundle-manifest)
-attaches a rubric and the personas it's validated for as one unit. Both
-`generate.py` (personas half) and `judge/rubric_config.py` (rubric half)
-read the same manifest file -- this lives in `utils/` (the leaf layer)
-rather than in `judge/` so `generate.py` never has to import a `judge/`
-module to read it (`generate/`/`judge/` must never import each other, per
-docs/architecture.md's Layer model).
+Manifest personas are optional and informational for ordinary judging. Explicit
+consumers such as ``vera --target`` and legacy ``generate.py --rubric-manifest``
+may resolve them into generation inputs. This helper lives in the leaf ``utils``
+layer so generation never imports judging code.
 """
 
 from __future__ import annotations
@@ -57,11 +54,9 @@ async def load_manifest(manifest_path: str) -> dict[str, Any]:
 async def load_manifest_personas(manifest_path: str) -> list[str]:
     """Read a rubric bundle manifest's `personas` list.
 
-    Used by `generate.py --rubric-manifest` (Phase 0's generation-side
-    counterpart to `judge.py --rubrics`, see docs/architecture.md's Phase 0
-    migration entry) to select personas from the same manifest that
-    `judge.py` loads the rubric from. `personas` is optional in the
-    manifest and defaults to an empty list.
+    Used by ``vera --target`` and the legacy ``generate.py --rubric-manifest``
+    adapter. ``personas`` is optional in the manifest and defaults to an empty
+    list; each caller decides whether its invocation requires personas.
 
     Entries resolve relative to the manifest's own folder (never `$ROOT` or
     the caller's working directory), per docs/architecture.md#rubric-bundle-manifest

@@ -5,6 +5,7 @@ Contains the main logic extracted from main_judge.py to reduce code duplication.
 
 import asyncio
 import os
+import sys
 from asyncio import Queue
 from datetime import datetime
 from pathlib import Path
@@ -12,8 +13,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import pandas as pd
 
+from utils.conversation_layout import resolve_conversation_input
+
 from .llm_judge import LLMJudge
-from .rubric_config import ConversationData, RubricConfig
+from .rubric_config import ConversationData, RubricConfig, load_conversations
 from .score_utils import build_dataframe_from_tsv_files
 from .utils import (
     build_evaluation_run_folder_path,
@@ -23,6 +26,65 @@ from .utils import (
 
 # In case this needs to be synced in the meta prompt for the judge
 EVALUATION_SEPARATOR = ":"
+
+
+async def run_judging(
+    conversation_folder: str,
+    rubric_manifest: str,
+    judge_models: Dict[str, int],
+    *,
+    judge_model_extra_params: Optional[Dict[str, Any]] = None,
+    limit: Optional[int] = None,
+    output_root: Optional[str] = None,
+    max_concurrent: Optional[int] = None,
+    per_judge: bool = False,
+    verbose_workers: bool = False,
+    debug: bool = False,
+) -> str:
+    """Judge a conversation folder without depending on a CLI parser."""
+    if debug:
+        from utils.debug import set_debug
+
+        set_debug(True)
+
+    models_str = ", ".join(f"{model}x{count}" for model, count in judge_models.items())
+    print(f"🎯 LLM Judge | Models: {models_str}")
+    print("📚 Loading rubric configuration...")
+    rubric_config = await RubricConfig.load_bundle(rubric_manifest)
+
+    transcripts_dir, gen_run, conv_basename = resolve_conversation_input(
+        conversation_folder
+    )
+    print(f"📂 Loading conversations from {transcripts_dir}...")
+    conversations = await load_conversations(transcripts_dir, limit=limit)
+    print(f"✅ Loaded {len(conversations)} conversations")
+
+    if output_root is None:
+        if gen_run is not None:
+            output_root = os.path.join(gen_run, "evaluations")
+        else:
+            output_root = "evaluations"
+            print(
+                "Note: flat conversation folder; writing evaluations under "
+                "evaluations/. New runs use output/p_*__/conversations/.",
+                file=sys.stderr,
+            )
+
+    _, output_folder = await judge_conversations(
+        judge_models=judge_models,
+        conversations=conversations,
+        rubric_config=rubric_config,
+        output_root=output_root,
+        max_concurrent=max_concurrent,
+        conversation_folder_name=conv_basename,
+        verbose=True,
+        judge_model_extra_params=judge_model_extra_params,
+        per_judge=per_judge,
+        verbose_workers=verbose_workers,
+        resume=False,
+    )
+    print(f"Evaluation output: {output_folder}/")
+    return output_folder
 
 
 def _parse_evaluation_to_dict(evaluation: Dict[str, Any]) -> Dict[str, Any]:

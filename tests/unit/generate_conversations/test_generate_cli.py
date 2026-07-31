@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 import generate
+from generate_conversations.service import run_generation
 
 
 @pytest.mark.asyncio
@@ -18,7 +19,7 @@ async def test_main_resume_uses_existing_run_folder(tmp_path: Path) -> None:
     persona_model_config = {"model": "mock-persona"}
     agent_model_config = {"model": "mock-agent", "name": "mock-agent"}
 
-    with patch("generate.ConversationRunner") as mock_runner_cls:
+    with patch("generate_conversations.service.ConversationRunner") as mock_runner_cls:
         mock_runner = mock_runner_cls.return_value
         mock_runner.run_conversations = AsyncMock(return_value=[])
 
@@ -82,7 +83,7 @@ async def test_main_rubric_manifest_loads_personas_from_manifest(
     persona_model_config = {"model": "mock-persona"}
     agent_model_config = {"model": "mock-agent", "name": "mock-agent"}
 
-    with patch("generate.ConversationRunner") as mock_runner_cls:
+    with patch("generate_conversations.service.ConversationRunner") as mock_runner_cls:
         mock_runner = mock_runner_cls.return_value
         mock_runner.run_conversations = AsyncMock(return_value=[])
 
@@ -110,7 +111,7 @@ async def test_main_no_rubric_manifest_uses_default_personas(tmp_path: Path) -> 
     persona_model_config = {"model": "mock-persona"}
     agent_model_config = {"model": "mock-agent", "name": "mock-agent"}
 
-    with patch("generate.ConversationRunner") as mock_runner_cls:
+    with patch("generate_conversations.service.ConversationRunner") as mock_runner_cls:
         mock_runner = mock_runner_cls.return_value
         mock_runner.run_conversations = AsyncMock(return_value=[])
 
@@ -130,6 +131,60 @@ async def test_main_no_rubric_manifest_uses_default_personas(tmp_path: Path) -> 
         kwargs["persona_context_template_path"]
         == "data/SI/persona_context_template.txt"
     )
+
+
+@pytest.mark.asyncio
+async def test_main_persona_files_uses_direct_cli_selection(tmp_path: Path) -> None:
+    """The unified CLI can select a persona file without a rubric manifest."""
+    persona_file = tmp_path / "personas.tsv"
+
+    with patch("generate_conversations.service.ConversationRunner") as mock_runner_cls:
+        mock_runner = mock_runner_cls.return_value
+        mock_runner.run_conversations = AsyncMock(return_value=[])
+
+        await generate.main(
+            persona_model_config={"model": "mock-persona"},
+            agent_model_config={"model": "mock-agent", "name": "mock-agent"},
+            output_folder=str(tmp_path / "out"),
+            run_id="run1",
+            persona_files=[str(persona_file)],
+            verbose=False,
+        )
+
+    kwargs = mock_runner_cls.call_args.kwargs
+    assert kwargs["persona_prompt_path"] == str(persona_file)
+    assert (
+        kwargs["persona_context_template_path"]
+        == "data/SI/persona_context_template.txt"
+    )
+
+
+@pytest.mark.asyncio
+async def test_main_rejects_persona_files_with_rubric_manifest(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        await generate.main(
+            persona_model_config={"model": "mock-persona"},
+            agent_model_config={"model": "mock-agent", "name": "mock-agent"},
+            output_folder=str(tmp_path / "out"),
+            run_id="run1",
+            persona_files=[str(tmp_path / "personas.tsv")],
+            rubric_manifest=str(tmp_path / "manifest.json"),
+            verbose=False,
+        )
+
+
+@pytest.mark.asyncio
+async def test_domain_generation_requires_resolved_persona_file() -> None:
+    with pytest.raises(ValueError, match="requires at least one persona file"):
+        await run_generation(
+            persona_model_config={"model": "mock-persona"},
+            agent_model_config={"model": "mock-agent", "name": "mock-agent"},
+            persona_files=[],
+            run_id="run1",
+            verbose=False,
+        )
 
 
 @pytest.mark.asyncio
