@@ -4,7 +4,11 @@ import json
 
 import pytest
 
-from utils.rubric_manifest import load_manifest, load_manifest_personas
+from utils.rubric_manifest import (
+    load_manifest,
+    load_manifest_persona_context_template,
+    load_manifest_personas,
+)
 
 
 @pytest.mark.unit
@@ -82,3 +86,32 @@ class TestLoadManifestPersonas:
     async def test_load_manifest_personas_missing_file(self):
         with pytest.raises(FileNotFoundError):
             await load_manifest_personas("tests/fixtures/does_not_exist.json")
+
+
+@pytest.mark.unit
+class TestLoadManifestPersonaContextTemplate:
+    """Tests for load_manifest_persona_context_template()."""
+
+    async def test_resolves_path_relative_to_manifest(self, tmp_path):
+        manifest_path = tmp_path / "manifest.json"
+        manifest_path.write_text(
+            json.dumps(
+                {
+                    "rubric_file": "rubric.tsv",
+                    "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",
+                    "question_prompt_file": "question_prompt.txt",
+                    "persona_context_template_file": "persona_context_template.txt",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        result = await load_manifest_persona_context_template(str(manifest_path))
+
+        assert result == str(tmp_path / "persona_context_template.txt")
+
+    async def test_missing_context_template_raises(self):
+        with pytest.raises(ValueError, match="persona_context_template_file"):
+            await load_manifest_persona_context_template(
+                "tests/fixtures/rubric_manifest_simple.json"
+            )

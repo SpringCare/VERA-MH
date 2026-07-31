@@ -70,3 +70,16 @@ async def load_manifest_personas(manifest_path: str) -> list[str]:
     manifest = await load_manifest(manifest_path)
     manifest_dir = Path(manifest_path).parent
     return [str(manifest_dir / p) for p in manifest.get("personas", [])]
+
+
+async def load_manifest_persona_context_template(manifest_path: str) -> str:
+    """Resolve a manifest's persona context template relative to the manifest."""
+    manifest = await load_manifest(manifest_path)
+    context_template = manifest.get("persona_context_template_file")
+    if not context_template:
+        raise ValueError(
+            f"Rubric bundle manifest {manifest_path} has no "
+            "persona_context_template_file"
+        )
+
+    return str(Path(manifest_path).parent / context_template)
