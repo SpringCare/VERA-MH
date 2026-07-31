@@ -2,5 +2,6 @@
   "rubric_file": "rubric.tsv",
   "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",
   "question_prompt_file": "question_prompt.txt",
-  "personas": ["personas.tsv"]
+  "personas": ["personas.tsv"],
+  "persona_context_template_file": "persona_context_template.txt"
 }
