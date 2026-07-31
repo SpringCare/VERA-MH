@@ -337,7 +337,10 @@ async def _run_generation(
     run_config: RunConfig, *, sample: Optional[int], debug: bool
 ) -> list[str]:
     from generate_conversations import run_generation
-    from utils.rubric_manifest import load_manifest_personas
+    from utils.rubric_manifest import (
+        load_manifest_persona_context_template,
+        load_manifest_personas,
+    )
 
     generation = run_config.generation
     if generation is None or generation.chatbot is None:
@@ -347,6 +350,7 @@ async def _run_generation(
 
     _enable_debug(debug)
     persona_sources: list[list[str]] = []
+    persona_context_templates: list[Optional[str]] = []
     manifests = _target_manifests(run_config.target)
     if manifests:
         for manifest in manifests:
@@ -359,14 +363,27 @@ async def _run_generation(
                     "independently."
                 )
             persona_sources.append(manifest_personas)
+            try:
+                persona_context_templates.append(
+                    await load_manifest_persona_context_template(str(manifest))
+                )
+            except ValueError:
+                persona_context_templates.append(None)
     else:
         persona_sources.extend([persona] for persona in generation.personas)
+        persona_context_templates.extend(None for _ in generation.personas)
     if sample is not None:
         persona_sources = persona_sources[:sample]
+        persona_context_templates = persona_context_templates[:sample]
 
     output_folders: list[str] = []
     for user in generation.user:
-        for persona_files in persona_sources:
+        for persona_files, context_template in zip(
+            persona_sources, persona_context_templates
+        ):
+            extra_kwargs: dict[str, Any] = {}
+            if context_template is not None:
+                extra_kwargs["persona_context_template_path"] = context_template
             _, output_folder = await run_generation(
                 persona_model_config=_model_config(user),
                 agent_model_config=_model_config(generation.chatbot, chatbot=True),
@@ -376,6 +393,7 @@ async def _run_generation(
                 runs_per_prompt=user.repeats,
                 max_personas=sample,
                 output_folder="output",
+                **extra_kwargs,
             )
             output_folders.append(output_folder)
     return output_folders
