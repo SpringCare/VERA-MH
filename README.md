@@ -3,6 +3,10 @@
 [![CI](https://github.com/SpringCare/VERA-MH/workflows/CI/badge.svg)](https://github.com/SpringCare/VERA-MH/actions/workflows/ci.yml)
 [![Docker](https://github.com/SpringCare/VERA-MH/workflows/Docker%20Build%20Validation/badge.svg)](https://github.com/SpringCare/VERA-MH/actions/workflows/docker.yml)
 
+**Project status:** VERA-MH 2.0 is under active development. It expands the framework's multi-target evaluation capabilities and introduces breaking changes, including a new unified CLI. The current README documents the existing version on `main`.
+
+See the [target architecture](https://github.com/SpringCare/VERA-MH/blob/a865fde39f1c7f29bf6efdaea15ed63ddff845b2/docs/architecture.md) for the planned design, and follow implementation progress in [PR #182](https://github.com/SpringCare/VERA-MH/pull/182). The design and implementation are still evolving.
+
 VERA-MH (Validation of Ethical and Responsible AI in Mental Health) is a framework for evaluating how AI systems respond in mental health scenarios that raise safety considerations. These evaluations help enable researchers, developers, and clinicians to systematically assess how AI systems handle sensitive mental health conversations across detecting potential risk, confirming risk, guiding to human support, communicating supportively, and holding safe boundaries. By simulating user-chatbot interactions using clinically-developed personas and rubrics, VERA-MH provides standardized evaluation metrics that can help determine whether AI mental health tools are safe for sensitive mental health conversations before, during, and after deployment. Please review the [License](https://github.com/SpringCare/VERA-MH/blob/main/LICENSE) documentation for additional information.
 
 This code should be considered a continuous work in progress (including this documentation), and the main avenue to offer feedback.
