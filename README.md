@@ -466,9 +466,9 @@ VERA-MH simulates realistic conversations between Large Language Models (LLMs) f
   - **`SI/personas.tsv`**: TSV file containing patient persona data
   - **`persona_prompt_template.txt`**: Shared template for persona behavior
   - **`SI/persona_context_template.txt`**: SI-specific persona context fields
-  - **`rubric.tsv`**: Clinical rubric for conversation evaluation
-  - **`rubric_prompt_beginning.txt`**: System prompt for the judge
-  - **`question_prompt.txt`**: Prompt template for asking rubric questions
+  - **`SI/rubric.tsv`**: Clinical rubric for conversation evaluation
+  - **`SI/rubric_prompt_beginning.txt`**: System prompt for the judge
+  - **`SI/question_prompt.txt`**: Prompt template for asking rubric questions
   - **`model_config.json`**: Model assignments for different prompt types
 
 ### Persona System
