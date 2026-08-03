@@ -15,6 +15,10 @@ from utils.naming import (
     model_token_for_run_folder,
     parse_generation_run_folder_name,
 )
+from utils.rubric_manifest import (
+    load_manifest_persona_context_template,
+    load_manifest_personas,
+)
 from utils.utils import parse_key_value_list
 
 
@@ -35,6 +39,7 @@ async def main(
     persona_speaks_first: bool = True,
     session_types: Optional[List[str]] = None,
     resume: bool = False,
+    rubric_manifest: Optional[str] = None,
 ) -> tuple[List[Dict[str, Any]], str]:
     """
     Generate conversations and return results.
@@ -58,6 +63,13 @@ async def main(
             loads all personas.
         persona_speaks_first: If True (default), persona speaks first; else provider
             speaks first. max_turns is adjusted so the provider always speaks last.
+        rubric_manifest: Optional path to a rubric bundle manifest (see
+            docs/architecture.md#rubric-bundle-manifest). When set, personas load
+            from the manifest's ``personas`` list instead of the default
+            ``data/personas.tsv`` -- Phase 0's generation-side counterpart to
+            ``judge.py --rubrics``, so a manifest attaches personas and rubric
+            together. Only the first entry is used if the manifest lists more
+            than one.
 
     Returns:
         List of conversation results
@@ -86,6 +98,26 @@ async def main(
     # Generate default folder name if not provided
     if output_folder is None:
         output_folder = "output"
+
+    persona_prompt_path = "data/personas.tsv"
+    persona_context_template_path = "data/persona_context_template.txt"
+    if rubric_manifest:
+        manifest_personas = await load_manifest_personas(rubric_manifest)
+        if not manifest_personas:
+            raise ValueError(
+                f"Rubric bundle manifest {rubric_manifest} has no personas listed"
+            )
+        if len(manifest_personas) > 1:
+            print(
+                f"Warning: manifest lists multiple persona files "
+                f"({manifest_personas}); multi-persona-file support is not yet "
+                f"implemented, using only the first: {manifest_personas[0]}",
+                file=sys.stderr,
+            )
+        persona_prompt_path = manifest_personas[0]
+        persona_context_template_path = await load_manifest_persona_context_template(
+            rubric_manifest
+        )
 
     if resume:
         if not os.path.isdir(output_folder):
@@ -150,6 +182,8 @@ async def main(
         persona_speaks_first=persona_speaks_first,
         session_types=session_types,
         resume=resume,
+        persona_prompt_path=persona_prompt_path,
+        persona_context_template_path=persona_context_template_path,
     )
 
     # Run conversations
@@ -344,6 +378,17 @@ if __name__ == "__main__":
         default=False,
     )
 
+    parser.add_argument(
+        "--rubric-manifest",
+        help=(
+            "Rubric bundle manifest to load personas from (see "
+            "docs/architecture.md#rubric-bundle-manifest), instead of the "
+            "default data/personas.tsv. Phase 0 stopgap: attaches a rubric's "
+            "intended personas to a generate.py run ahead of vera.py's --target."
+        ),
+        default=None,
+    )
+
     args = parser.parse_args()
 
     # Set debug mode if flag is provided
@@ -409,6 +454,7 @@ if __name__ == "__main__":
             persona_speaks_first=not args.provider_speaks_first,
             session_types=args.sessions,
             resume=args.resume,
+            rubric_manifest=args.rubric_manifest,
         )
     )
     if results and all(r.get("skipped") for r in results):
