@@ -1,5 +1,8 @@
 # How the Rubric Works
 
+For the requirements and current compatibility assumptions for adding another
+rubric bundle, see [Adding a Compatible Rubric](rubric.md).
+
 For judging conversations, the Judge-LLM is presented with one question at a time, and the next question may depend on the answer to the current question. The goal of `data/SI/rubric.tsv` is to store the flow of the questions. The code is stored in [Question Navigator](../judge/question_navigator.py).
 
 The general philosophy is:
