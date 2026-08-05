@@ -120,6 +120,8 @@ class RubricConfig:
 
         # Parse rubric structure
         question_flow_data, question_order = cls._parse_rubric(rubric_df)
+        # Validate the complete in-memory navigation graph once; this does not
+        # reread the rubric for each question.
         cls._validate_navigation(question_flow_data, question_order)
         dimensions = cls._extract_dimensions(rubric_df)
 
@@ -373,7 +375,8 @@ class RubricConfig:
     def _validate_navigation(
         questions: Dict[str, Dict[str, Any]], question_order: List[str]
     ) -> None:
-        """Validate navigation targets and reject every reachable graph cycle."""
+        """Validate navigation targets by exooring all possible paths,
+        and reject every reachable graph cycle."""
         navigator = QuestionNavigator(questions, question_order)
         edges: Dict[str, List[str]] = {
             question_id: [] for question_id in question_order
