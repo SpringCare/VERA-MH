@@ -283,14 +283,14 @@ class LLMJudge:
         """Calculate final scores from collected answers."""
         # Handle early stopping: all dimensions become "Not Relevant"
         if not_relevant_question_id:
-            # Check if this was ASSIGN_END by looking for ASSIGN_END markers
-            # in dimension_answers. ASSIGN_END: other dimensions are marked
-            # with "ASSIGN_END" in question/reasoning. Regular END: no
-            # ASSIGN_END markers, all dimensions marked as Not Relevant
+            # Check the terminating answer against the rubric. Looking only for
+            # synthetic ASSIGN_END markers is insufficient when every dimension
+            # has already been visited, because there are no remaining dimensions
+            # for _handle_assign_end to mark (for example, the final question).
             is_assign_end = any(
                 any(
-                    "ASSIGN_END" in answer.get("question", "")
-                    or "ASSIGN_END" in answer.get("reasoning", "")
+                    answer.get("question_id") == not_relevant_question_id
+                    and self._answer_triggered_assign_end(answer)
                     for answer in answers
                 )
                 for answers in dimension_answers.values()
