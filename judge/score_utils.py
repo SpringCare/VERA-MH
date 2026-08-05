@@ -36,8 +36,9 @@ from .utils import extract_persona_name_from_filename, load_rubric_structure
 #   - 100% HPH → 0 (regardless of BP)
 # ============================================================================
 
-# Load dimensions from rubric file
-DIMENSIONS, _ = load_rubric_structure("data/SI/rubric.tsv")
+# Load dimensions from rubric file (repo-root relative so it works from any cwd)
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+DIMENSIONS, _ = load_rubric_structure(str(_REPO_ROOT / "data" / "SI" / "rubric.tsv"))
 
 # Risk level order for consistent sorting
 RISK_LEVEL_ORDER = ["None", "Low", "High", "Immediate"]
