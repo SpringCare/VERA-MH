@@ -47,17 +47,32 @@ OUTCOME_BAND_HEADLINE: Dict[str, Tuple[str, str]] = {
 }
 
 
-def _parse_question_id(raw: Any) -> Optional[int]:
+def _parse_question_id(raw: Any) -> Optional[str]:
     if raw is None or (isinstance(raw, float) and pd.isna(raw)):
         return None
     s = str(raw).strip()
     if not s or s.lower() == "nan":
         return None
-    # Accept common formats like "5", "5.0", "Q5", "q5".
-    m = re.fullmatch(r"[Qq]?\s*(\d+)(?:\.0+)?", s)
-    if m:
-        return int(m.group(1))
-    return None
+
+    # Preserve question IDs as opaque strings. Continue accepting legacy
+    # numeric representations such as 5.0 and Q5, while also accepting IDs
+    # such as 1a and section-2.
+    prefixed = re.fullmatch(r"[Qq]\s*(\d[^\s:]*)", s)
+    if prefixed:
+        s = prefixed.group(1)
+    numeric = re.fullmatch(r"(\d+)\.0+", s)
+    if numeric:
+        return numeric.group(1)
+    return s
+
+
+def _question_id_sort_key(question_id: str) -> Tuple[Tuple[int, Any], ...]:
+    """Sort opaque IDs naturally while keeping numeric ordering stable."""
+    return tuple(
+        (0, int(part)) if part.isdigit() else (1, part)
+        for part in re.split(r"(\d+)", question_id.casefold())
+        if part
+    )
 
 
 def _norm_text(s: str) -> str:
@@ -89,20 +104,22 @@ def load_rubric_dimensions(rubric_path: Path) -> List[str]:
     return dimensions
 
 
-def load_rubric_question_map(rubric_path: Path) -> Dict[int, Dict[str, str]]:
+def load_rubric_question_map(rubric_path: Path) -> Dict[str, Dict[str, str]]:
     """Map Question ID to question text, severity, dimension (longest Question wins)."""
     df = pd.read_csv(rubric_path, sep="\t")
     if COL_QUESTION_ID not in df.columns:
         raise ValueError(f"Rubric missing {COL_QUESTION_ID}: {rubric_path}")
 
-    qid = pd.to_numeric(df[COL_QUESTION_ID], errors="coerce")
+    qid = df[COL_QUESTION_ID].map(_parse_question_id)
     df = df.assign(_qid=qid).copy()
     df["_qid"] = df["_qid"].ffill()
     df = df[df["_qid"].notna()]
-    df["_qid"] = df["_qid"].astype(int)
 
-    out: Dict[int, Dict[str, str]] = {}
-    qids = sorted(int(x) for x in cast(pd.Series, df["_qid"]).unique())
+    out: Dict[str, Dict[str, str]] = {}
+    qids = sorted(
+        (str(x) for x in cast(pd.Series, df["_qid"]).unique()),
+        key=_question_id_sort_key,
+    )
     for q in qids:
         g = cast(pd.DataFrame, df.loc[df["_qid"] == q])
         texts = cast(pd.Series, g[COL_QUESTION]).dropna().astype(str)
@@ -154,22 +171,22 @@ def _ordered_dimensions(dimensions: List[str], dims_present: List[str]) -> List[
 
 
 def _global_failure_mode_sort_key(
-    item: Tuple[Tuple[str, str, int], int],
-    rubric_map: Dict[int, Dict[str, str]],
-) -> Tuple[int, int, int, int]:
+    item: Tuple[Tuple[str, str, str], int],
+    rubric_map: Dict[str, Dict[str, str]],
+) -> Tuple[int, int, int, Tuple[Tuple[int, Any], ...]]:
     (_dim, outcome, qid), cnt = item
     rub = rubric_map.get(qid, {})
     return (
         -cnt,
         -_outcome_rank(outcome),
         -_severity_rank(rub.get("severity", "")),
-        qid,
+        _question_id_sort_key(qid),
     )
 
 
 def aggregate_improvements(
     df: pd.DataFrame,
-    rubric_map: Dict[int, Dict[str, str]],
+    rubric_map: Dict[str, Dict[str, str]],
     dimensions: List[str],
     *,
     exemplars_per_bucket: int = 3,
@@ -191,12 +208,12 @@ def aggregate_improvements(
         "dimensions": {},
     }
 
-    q_counts: DefaultDict[Tuple[str, str, int], int] = defaultdict(int)
+    q_counts: DefaultDict[Tuple[str, str, str], int] = defaultdict(int)
     # (filename, judge_model, reasoning) per bucket
-    ex_store: DefaultDict[Tuple[str, str, int], List[Tuple[str, str, str]]] = (
+    ex_store: DefaultDict[Tuple[str, str, str], List[Tuple[str, str, str]]] = (
         defaultdict(list)
     )
-    ex_seen: DefaultDict[Tuple[str, str, int], set] = defaultdict(set)
+    ex_seen: DefaultDict[Tuple[str, str, str], set] = defaultdict(set)
 
     for dim in dims_present:
         yid_col = f"{dim}_yes_question_id"

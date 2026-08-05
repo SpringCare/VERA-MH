@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional
 import aiofiles
 import pandas as pd
 
+from judge.question_navigator import QuestionNavigator
 from utils.rubric_manifest import load_manifest
 
 # Rubric TSV column names - single source of truth for rubric structure
@@ -24,6 +25,7 @@ COL_QUESTION = "Question"
 COL_EXAMPLES = "Examples"
 COL_ANSWER = "Answer"
 COL_GOTO = "GOTO"
+COL_AUTO_ANSWER = "Auto Answer"
 
 # Rubric TSV columns to ignore
 IGNORE_COLUMNS = {"Human notes", "Notes for Interpretability of GOTO logic"}
@@ -102,7 +104,9 @@ class RubricConfig:
             )
 
         # Load all files in parallel
-        rubric_df_task = asyncio.to_thread(pd.read_csv, str(rubric_path), sep=sep)
+        rubric_df_task = asyncio.to_thread(
+            pd.read_csv, str(rubric_path), sep=sep, dtype=str
+        )
         rubric_prompt_task = cls._read_file(rubric_prompt_beginning_path)
         question_prompt_task = cls._read_file(question_prompt_path)
 
@@ -116,6 +120,7 @@ class RubricConfig:
 
         # Parse rubric structure
         question_flow_data, question_order = cls._parse_rubric(rubric_df)
+        cls._validate_navigation(question_flow_data, question_order)
         dimensions = cls._extract_dimensions(rubric_df)
 
         return cls(
@@ -220,25 +225,40 @@ class RubricConfig:
         current_question_id = None
         current_question_data = None
 
-        for idx, row in rubric_df.iterrows():
+        for _, row in rubric_df.iterrows():
             question_id_raw = (
                 row[COL_QUESTION_ID] if pd.notna(row[COL_QUESTION_ID]) else None
             )
-            # Convert to string and clean up (remove .0 from floats)
-            if question_id_raw is not None:
-                question_id = (
-                    str(int(question_id_raw))
-                    if isinstance(question_id_raw, (int, float))
-                    else str(question_id_raw).strip()
-                )
-            else:
-                question_id = ""
+            question_id = RubricConfig._clean_identifier(question_id_raw)
 
             # If this row has a Question ID, it's a new question
             if question_id and question_id != "nan":
+                if question_id in questions or question_id == current_question_id:
+                    raise ValueError(f"Duplicate Question ID: {question_id!r}")
+
                 # Save previous question if exists
                 if current_question_id and current_question_data:
                     questions[current_question_id] = current_question_data
+
+                dimension = (
+                    str(row[COL_DIMENSION]).strip()
+                    if pd.notna(row[COL_DIMENSION])
+                    else ""
+                )
+                if not dimension or dimension == "nan":
+                    raise ValueError(
+                        f"Question {question_id!r} must declare a Dimension "
+                        "on its primary row"
+                    )
+
+                auto_answer_raw = (
+                    row[COL_AUTO_ANSWER]
+                    if COL_AUTO_ANSWER in rubric_df.columns
+                    else None
+                )
+                auto_answer = RubricConfig._parse_auto_answer(
+                    auto_answer_raw, question_id
+                )
 
                 # Read severity from the question row
                 severity = (
@@ -254,9 +274,7 @@ class RubricConfig:
                 current_question_id = question_id
                 question_order.append(question_id)
                 current_question_data = {
-                    "dimension": str(row[COL_DIMENSION]).strip()
-                    if pd.notna(row[COL_DIMENSION])
-                    else "",
+                    "dimension": dimension,
                     "risk_type": str(row[COL_RISK_TYPE]).strip()
                     if pd.notna(row[COL_RISK_TYPE])
                     else "",
@@ -267,6 +285,7 @@ class RubricConfig:
                     if pd.notna(row[COL_EXAMPLES])
                     else "",
                     "severity": severity,
+                    "auto_answer": auto_answer,
                     "answers": [],
                 }
 
@@ -275,11 +294,8 @@ class RubricConfig:
                     str(row[COL_ANSWER]).strip() if pd.notna(row[COL_ANSWER]) else ""
                 )
                 if answer and answer != "nan":
-                    goto_raw = row[COL_GOTO] if pd.notna(row[COL_GOTO]) else None
-                    goto = (
-                        str(int(goto_raw))
-                        if goto_raw and isinstance(goto_raw, (int, float))
-                        else (str(goto_raw).strip() if goto_raw else None)
+                    goto = RubricConfig._clean_identifier(
+                        row[COL_GOTO] if pd.notna(row[COL_GOTO]) else None
                     )
                     current_question_data["answers"].append(
                         {
@@ -294,11 +310,8 @@ class RubricConfig:
                     str(row[COL_ANSWER]).strip() if pd.notna(row[COL_ANSWER]) else ""
                 )
                 if answer and answer != "nan":
-                    goto_raw = row[COL_GOTO] if pd.notna(row[COL_GOTO]) else None
-                    goto = (
-                        str(int(goto_raw))
-                        if goto_raw and isinstance(goto_raw, (int, float))
-                        else (str(goto_raw).strip() if goto_raw else None)
+                    goto = RubricConfig._clean_identifier(
+                        row[COL_GOTO] if pd.notna(row[COL_GOTO]) else None
                     )
                     current_question_data["answers"].append(
                         {
@@ -317,6 +330,11 @@ class RubricConfig:
         # No -> next row. Severity is still assigned from the question row.
         for question_id in question_order:
             question_data = questions[question_id]
+            if question_data["auto_answer"] and len(question_data["answers"]) != 1:
+                raise ValueError(
+                    f"Question {question_id!r} has Auto Answer=true but must "
+                    "declare exactly one explicit answer"
+                )
             if len(question_data["answers"]) == 0:
                 question_data["implicit_yes_no"] = True
                 question_data["answers"] = [
@@ -325,6 +343,82 @@ class RubricConfig:
                 ]
 
         return questions, question_order
+
+    @staticmethod
+    def _clean_identifier(value: Any) -> str:
+        """Return a question ID or GOTO target as a stripped opaque string."""
+        if value is None or pd.isna(value):
+            return ""
+        if isinstance(value, float) and value.is_integer():
+            return str(int(value))
+        return str(value).strip()
+
+    @staticmethod
+    def _parse_auto_answer(value: Any, question_id: str) -> bool:
+        """Parse the optional Auto Answer cell on a primary question row."""
+        if value is None or pd.isna(value) or not str(value).strip():
+            return False
+
+        normalized = str(value).strip().casefold()
+        if normalized == "true":
+            return True
+        if normalized == "false":
+            return False
+        raise ValueError(
+            f"Question {question_id!r} has invalid Auto Answer value {value!r}; "
+            "expected true, false, or blank"
+        )
+
+    @staticmethod
+    def _validate_navigation(
+        questions: Dict[str, Dict[str, Any]], question_order: List[str]
+    ) -> None:
+        """Validate navigation targets and reject every reachable graph cycle."""
+        navigator = QuestionNavigator(questions, question_order)
+        edges: Dict[str, List[str]] = {
+            question_id: [] for question_id in question_order
+        }
+
+        for question_id in question_order:
+            for answer in questions[question_id]["answers"]:
+                next_question_id, _ = navigator.get_next_question(
+                    question_id, answer["option"]
+                )
+                if next_question_id is None:
+                    continue
+                if next_question_id not in questions:
+                    raise ValueError(
+                        f"Question {question_id!r} answer {answer['option']!r} "
+                        f"targets missing question {next_question_id!r}"
+                    )
+                edges[question_id].append(next_question_id)
+
+        state: Dict[str, int] = {}
+        stack: List[str] = []
+        stack_positions: Dict[str, int] = {}
+
+        def visit(question_id: str) -> None:
+            state[question_id] = 1
+            stack_positions[question_id] = len(stack)
+            stack.append(question_id)
+
+            for next_question_id in edges[question_id]:
+                if state.get(next_question_id) == 1:
+                    cycle_start = stack_positions[next_question_id]
+                    cycle = stack[cycle_start:] + [next_question_id]
+                    raise ValueError(
+                        "Rubric navigation contains a cycle: " + " -> ".join(cycle)
+                    )
+                if state.get(next_question_id, 0) == 0:
+                    visit(next_question_id)
+
+            stack.pop()
+            stack_positions.pop(question_id)
+            state[question_id] = 2
+
+        for question_id in question_order:
+            if state.get(question_id, 0) == 0:
+                visit(question_id)
 
 
 @dataclass
