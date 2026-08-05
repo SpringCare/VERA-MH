@@ -7,7 +7,7 @@ joins rubric question text, and emits global + per-dimension failure breakdowns.
 
 Usage:
   uv run python3 scripts/summarize_results.py \\
-    --results example.results.csv --rubric data/rubric.tsv \\
+    --results example.results.csv --rubric data/SI/rubric.tsv \\
     --out-stats output/improvement_stats.json --out-md output/improvement_report.md
 """
 
@@ -535,7 +535,7 @@ def main() -> None:
         description="Summarize results.csv into stats JSON + Markdown report."
     )
     p.add_argument("--results", type=Path, required=True, help="Path to results.csv")
-    p.add_argument("--rubric", type=Path, default=Path("data/rubric.tsv"))
+    p.add_argument("--rubric", type=Path, default=Path("data/SI/rubric.tsv"))
     p.add_argument("--out-stats", type=Path, help="Write structured JSON here")
     p.add_argument("--out-md", type=Path, help="Write Markdown report here")
     p.add_argument(

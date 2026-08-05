@@ -10,7 +10,7 @@ from typing import List, Optional
 # TODO: hardcoded names
 def load_prompts_from_csv(
     name_list: Optional[List[str]] = None,
-    prompt_path="data/personas.tsv",
+    prompt_path="data/SI/personas.tsv",
     prompt_template_path="data/persona_prompt_template.txt",
     *,
     persona_context_template_path: str,

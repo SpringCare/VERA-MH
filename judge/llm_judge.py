@@ -19,7 +19,7 @@ from llm_clients import LLMFactory, Role
 from llm_clients.llm_interface import JudgeLLM, LLMGenerationFailed
 
 # There are special cases that can navigate the rubric without calling the LLM.
-# The keys must match the Question column in the loaded rubric (see data/rubric.tsv).
+# The keys must match the Question column in the loaded rubric (see data/SI/rubric.tsv).
 # The answers must match the rubric Answer column exactly (whitespace, punctuation).
 # These cases are tested in:
 # - tests/unit/judge/test_llm_judge.py

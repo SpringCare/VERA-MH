@@ -46,8 +46,8 @@ class ConversationRunner:
         persona_speaks_first: bool = True,
         session_types: Optional[List[str]] = None,
         resume: bool = False,
-        persona_prompt_path: str = "data/personas.tsv",
-        persona_context_template_path: str = "data/persona_context_template.txt",
+        persona_prompt_path: str = "data/SI/personas.tsv",
+        persona_context_template_path: str = "data/SI/persona_context_template.txt",
     ):
         self.persona_model_config = persona_model_config
         self.agent_model_config = agent_model_config

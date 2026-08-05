@@ -21,7 +21,7 @@ async def navigator() -> QuestionNavigator:
     """Create a QuestionNavigator instance with the main rubric"""
     # Load production rubric from data/ directory
     rubric_config = await RubricConfig.load(
-        rubric_folder="data",
+        rubric_folder="data/SI",
         rubric_file="rubric.tsv",
         rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
         question_prompt_file="question_prompt.txt",

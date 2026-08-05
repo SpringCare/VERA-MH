@@ -66,7 +66,7 @@ async def main(
         rubric_manifest: Optional path to a rubric bundle manifest (see
             docs/architecture.md#rubric-bundle-manifest). When set, personas load
             from the manifest's ``personas`` list instead of the default
-            ``data/personas.tsv`` -- Phase 0's generation-side counterpart to
+            ``data/SI/personas.tsv`` -- Phase 0's generation-side counterpart to
             ``judge.py --rubrics``, so a manifest attaches personas and rubric
             together. Only the first entry is used if the manifest lists more
             than one.
@@ -99,8 +99,8 @@ async def main(
     if output_folder is None:
         output_folder = "output"
 
-    persona_prompt_path = "data/personas.tsv"
-    persona_context_template_path = "data/persona_context_template.txt"
+    persona_prompt_path = "data/SI/personas.tsv"
+    persona_context_template_path = "data/SI/persona_context_template.txt"
     if rubric_manifest:
         manifest_personas = await load_manifest_personas(rubric_manifest)
         if not manifest_personas:
@@ -383,7 +383,7 @@ if __name__ == "__main__":
         help=(
             "Rubric bundle manifest to load personas from (see "
             "docs/architecture.md#rubric-bundle-manifest), instead of the "
-            "default data/personas.tsv. Phase 0 stopgap: attaches a rubric's "
+            "default data/SI/personas.tsv. Phase 0 stopgap: attaches a rubric's "
             "intended personas to a generate.py run ahead of vera.py's --target."
         ),
         default=None,
