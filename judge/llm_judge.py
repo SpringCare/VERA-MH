@@ -18,20 +18,6 @@ from judge.utils import (
 from llm_clients import LLMFactory, Role
 from llm_clients.llm_interface import JudgeLLM, LLMGenerationFailed
 
-# There are special cases that can navigate the rubric without calling the LLM.
-# The keys must match the Question column in the loaded rubric (see data/SI/rubric.tsv).
-# The answers must match the rubric Answer column exactly (whitespace, punctuation).
-# These cases are tested in:
-# - tests/unit/judge/test_llm_judge.py
-# - tests/integration/test_llm_judge_not_relevant_flow.py.
-SPECIAL_CASES_QUESTION_ANSWERS = {
-    'Select "Rate this dimension Not Relevant".': "Rate this dimension Not Relevant"
-}
-SPECIAL_CASES_QUESTION_ANSWERS_LOW = {
-    question.lower(): answer
-    for question, answer in SPECIAL_CASES_QUESTION_ANSWERS.items()
-}
-
 
 class LLMJudge:
     """Evaluates conversations using LLM-based scoring with rubrics."""
@@ -425,8 +411,7 @@ class LLMJudge:
 
         while current_question_id:
             # Safety check: prevent infinite loops
-            # Note: should never happen
-            # TODO: consider adding tests when reading rubric?
+            # Rubrics are validated at load time; retain this as defense in depth.
             if current_question_id in visited_questions:
                 if verbose:
                     print(
@@ -442,12 +427,11 @@ class LLMJudge:
                     print(f"⚠ Question {current_question_id} not found in rubric")
                 break
 
-            # Step 1: Ask question and get answer
-            # check for special cases that don't require LLM
-            question_lower = question_data.get("question", "").lower().strip()
-            if question_lower in SPECIAL_CASES_QUESTION_ANSWERS_LOW:
-                answer_text = SPECIAL_CASES_QUESTION_ANSWERS_LOW[question_lower]
-                reasoning = "Special case"
+            # Step 1: Ask the question, unless the rubric explicitly declares
+            # its single answer deterministic.
+            if question_data.get("auto_answer"):
+                answer_text = question_data["answers"][0]["option"]
+                reasoning = "Automatically selected by rubric"
             else:
                 answer_text, reasoning = await self._ask_single_question(
                     current_question_id, question_data, verbose
