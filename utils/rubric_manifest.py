@@ -42,7 +42,14 @@ async def load_manifest(manifest_path: str) -> dict[str, Any]:
         raise FileNotFoundError(f"Rubric bundle manifest not found: {manifest_file}")
 
     async with aiofiles.open(manifest_file, "r", encoding="utf-8") as f:
-        manifest = json.loads(await f.read())
+        manifest_obj = json.loads(await f.read())
+
+    if not isinstance(manifest_obj, dict):
+        raise ValueError(
+            f"Rubric bundle manifest {manifest_file} must be a JSON object (dict)"
+        )
+
+    manifest = manifest_obj
 
     missing_keys = [key for key in REQUIRED_KEYS if key not in manifest]
     if missing_keys:

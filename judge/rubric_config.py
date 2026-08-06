@@ -135,7 +135,8 @@ class RubricConfig:
 
     @classmethod
     async def load_bundle(cls, manifest_path: str) -> "RubricConfig":
-        """Load a rubric from a rubric bundle manifest.
+        """Load a rubric's configuration and metadata
+        from a rubric bundle manifest.
 
         A rubric bundle manifest is a JSON file describing what a rubric
         *is* -- its files and (informational only) intended personas -- as

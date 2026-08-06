@@ -420,7 +420,7 @@ def pool_evaluation_directories(
     except Exception as e:
         print(f"Warning: could not create standard visualizations: {e}")
 
-    personas_tsv = personas_tsv or (REPO_ROOT / "data" / "personas.tsv")
+    personas_tsv = personas_tsv or (REPO_ROOT / "data" / "SI" / "personas.tsv")
     if not skip_risk_analysis and personas_tsv.is_file():
         try:
             risk_results = score_results_by_risk(

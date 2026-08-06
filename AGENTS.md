@@ -29,18 +29,23 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 
 | Area | Key paths | When to edit |
 |------|-----------|--------------|
-| **Generation** | `generate.py`, `generate_conversations/` | Conversation simulation, turns, personas |
-| **Judging** | `judge.py`, `judge/` | Rubric scoring, TSV output, question navigation |
+| **CLI** | `vera.py` | Subcommands: generate, judge, score, pool, pipeline |
+| **Generation** | `generate_conversations/` | Conversation simulation, turns, personas |
+| **Judging** | `judge/` | Rubric scoring, TSV output, question navigation |
 | **LLM providers** | `llm_clients/`, `llm_clients/llm_factory.py` | New models, custom HTTP/API providers |
-| **Pipeline** | `run_pipeline.py`, `scripts/` | End-to-end generate → judge → score workflows |
+| **Pipeline helpers** | `scripts/` | Pooling and automation until absorbed into `vera pool` |
 | **Data** | `data/` (personas, rubrics) | Evaluation inputs (committed) |
 | **Output** | `output/` (gitignored) | Generated transcripts, evaluations, logs |
 | **Config** | `utils/model_config_loader.py`, `llm_clients/config.py` | Model name resolution, API keys |
 | **Shared utils** | `utils/` | Naming, logging, conversation layout |
 
-**Entry points:** `generate.py` (simulate), `judge.py` (evaluate), `run_pipeline.py` (full workflow), `judge/score.py` (scoring/visualization).
+**Entry point (target):** `vera.py` subcommands only. Legacy scripts (`generate.py`, `judge.py`, `run_pipeline.py`) are deleted entirely at the end of Phase 1 of the migration (not the full 6-phase migration) — see [docs/architecture.md](docs/architecture.md#migration-from-current-layout).
 
 **Temporary experiments:** `tmp_tests/` (not committed). **Permanent tests:** `tests/`.
+
+## Architecture compliance
+
+Read [docs/architecture.md](docs/architecture.md) before structural changes. See its [ESCALATE section](docs/architecture.md#escalate-stop-and-ask) for when to stop and ask, and [Enforcement](docs/architecture.md#enforcement) for the pre-push verification commands.
 
 ## Testing
 
@@ -76,8 +81,27 @@ uv run pytest tests/integration/
 
 ## Key Commands
 
+Target CLI (`vera.py` — not implemented yet; use legacy commands below until Phase 1 of the migration completes):
+
 ```bash
-# End-to-end pipeline (preferred for full workflows)
+# End-to-end pipeline (target)
+uv run python vera.py pipeline \
+  --user-agent claude-sonnet-4-5-20250929 \
+  --provider-agent gpt-4o \
+  --runs 1 \
+  --turns 10 \
+  --judge-model claude-sonnet-4-5-20250929 \
+  --max-personas 5
+
+# Generate / judge / score (target)
+uv run python vera.py generate -u claude-sonnet-4-5-20250929 -p gpt-4o -t 6 -r 1
+uv run python vera.py judge -f output/{YOUR_P_RUN}/ -j claude-sonnet-4-5-20250929
+uv run python vera.py score -r output/{YOUR_P_RUN}/evaluations/{YOUR_J_RUN}/results.csv
+```
+
+Legacy (current implementation):
+
+```bash
 uv run python run_pipeline.py \
   --user-agent claude-sonnet-4-5-20250929 \
   --provider-agent gpt-4o \
@@ -86,18 +110,10 @@ uv run python run_pipeline.py \
   --judge-model claude-sonnet-4-5-20250929 \
   --max-personas 5
 
-# Generate conversations only
-uv run python generate.py \
-  -u claude-sonnet-4-5-20250929 \
-  -p gpt-4o \
-  -t 6 -r 1
+uv run python generate.py -u claude-sonnet-4-5-20250929 -p gpt-4o -t 6 -r 1
+uv run python judge.py -f output/{YOUR_P_RUN}/ -j claude-sonnet-4-5-20250929
 
-# Judge/evaluate an existing generation run
-uv run python judge.py \
-  -f output/{YOUR_P_RUN}/ \
-  -j claude-sonnet-4-5-20250929
-
-# Recommended published-score profile (scripted)
+# Recommended published-score profile (scripted; legacy)
 ./scripts/run_recommended_vera_pipeline.sh <provider-agent-model>
 
 # Development
@@ -119,7 +135,7 @@ Use dated model IDs (e.g. `claude-sonnet-4-5-20250929`) as in README; shorthand 
 - **Formatting:** `uv run ruff format .`
 - **Linting:** `uv run ruff check .`
 - **Type checking:** `uv run pyright` (basic mode)
-- **Pre-commit:** `pre-commit install` — see `docs/pre-commit-hooks.md`
+- **Pre-commit:** `pre-commit install` — see [docs/pre-commit-hooks.md](docs/pre-commit-hooks.md)
 - Configuration: `pyproject.toml`
 
 ## Git Conventions
@@ -151,7 +167,8 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 
 | Doc | Audience | Use for |
 |-----|----------|---------|
-| [README.md](./README.md) | Humans | Setup, CLI usage, output layout, detailed architecture |
+| [README.md](./README.md) | Humans | Setup, CLI usage, output layout |
+| [docs/architecture.md](./docs/architecture.md) | Humans and agents | Target architecture, invariants, layer model |
 | **AGENTS.md** (this file) | All coding agents | Style, architecture map, testing, key commands, git conventions |
 | [CLAUDE.md](./CLAUDE.md) | Claude Code only | Slash commands, `.claude/` maintenance |
 | [docs/](./docs/) | Humans and agents | Topic deep dives (see links below) |
@@ -162,6 +179,7 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 
 ### Links
 
+- **Architecture:** [docs/architecture.md](docs/architecture.md)
 - **Setup, pipeline, output layout:** [README.md](./README.md)
 - **Custom LLM providers:** [docs/evaluating.md](./docs/evaluating.md)
 - **Judge behavior:** [docs/judge.md](./docs/judge.md)

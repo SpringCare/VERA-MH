@@ -432,7 +432,9 @@ VERA-MH simulates realistic conversations between Large Language Models (LLMs) f
 
 ## Architecture
 
-### Core Components
+See **[docs/architecture.md](docs/architecture.md)** for the target layer model, invariants, and single CLI orchestrator (`vera.py`). Below is a quick module reference; CLI usage and output layout are in the sections above.
+
+### Core Components (current implementation)
 
 - **`generate.py`**: Main entry point for conversation generation with configurable parameters
 - **`judge.py`**: Main entry point for evaluating conversations using LLM judges
@@ -466,9 +468,9 @@ VERA-MH simulates realistic conversations between Large Language Models (LLMs) f
   - **`SI/personas.tsv`**: TSV file containing patient persona data
   - **`persona_prompt_template.txt`**: Shared template for persona behavior
   - **`SI/persona_context_template.txt`**: SI-specific persona context fields
-  - **`rubric.tsv`**: Clinical rubric for conversation evaluation
-  - **`rubric_prompt_beginning.txt`**: System prompt for the judge
-  - **`question_prompt.txt`**: Prompt template for asking rubric questions
+  - **`SI/rubric.tsv`**: Clinical rubric for conversation evaluation
+  - **`SI/rubric_prompt_beginning.txt`**: System prompt for the judge
+  - **`SI/question_prompt.txt`**: Prompt template for asking rubric questions
   - **`model_config.json`**: Model assignments for different prompt types
 
 ### Persona System
