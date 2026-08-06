@@ -1,2 +1,3 @@
 - Config files should also have the sha of the files they use (e.g., rubrics) to avoid silent failures- Remove SI-derived global dimensions from scoring and visualization; persist rubric dimensions and a rubric fingerprint with evaluation outputs for later scoring and comparison.
 - Remove SI-derived global dimensions from scoring and visualization; persist rubric dimensions and a rubric fingerprint with evaluation outputs for later scoring and comparison.
+
