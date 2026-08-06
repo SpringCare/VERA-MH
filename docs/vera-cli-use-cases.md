@@ -24,8 +24,8 @@ CLI shorthand and the input `config.json` are deliberately mirrored, flag-for-fi
 | Subcommand | CLI shorthand — minimum required | Input `config.json` — minimum required fields |
 |---|---|---|
 | `generate` | `-c <chatbot>` + `-u <model:repeats...>` (≥1) + (`--personas <file...>` **or** `--target <name>`) | `generation.chatbot`, `generation.user` (≥1), and (`generation.personas` (≥1) **or** top-level `target`) |
-| `judge` | `-j <model:repeats...>` (≥1) + `--conversations <folder...>` + `--rubric <manifest>` | `judging.models` (≥1), `judging.rubrics` (≥1) — plus whatever conversations path the run is scoped to |
-| `pipeline` | everything `generate` needs **and** everything `judge` needs — or just `-c`, `-u`, `-j`, `--target <name>` (`--target` covers persona+rubric in one shot, pipeline-only) | both `generation` and `judging` blocks fully populated (their individual minimums above), or `-c`/`-u`/`-j`-equivalent fields plus a top-level `target` |
+| `judge` | `-j <model:repeats...>` (≥1) + `--conversations <folder...>` + `--rubric <manifest>` | `judging.models` (≥1), `judging.rubrics` (≥1), and `judging.conversations` (≥1) |
+| `pipeline` | everything `generate` needs **and** everything `judge` needs — or just `-c`, `-u`, `-j`, `--target <name>` (`--target` covers persona+rubric in one shot) | both `generation` and `judging` blocks fully populated, or `-c`/`-u`/`-j`-equivalent fields plus a top-level `target`; `judging.conversations` is omitted because generation supplies it |
 | `score` | the results path (`-r <results.csv>`) — nothing else | n/a — `score` reads an existing `results.csv`, not a run config |
 | `pool` | `--evaluations <folder...>` (≥1) | n/a |
 | `resume` | `--config <run's own config.json>` — that's the entire invocation | n/a (it *is* the config being resumed) |
@@ -63,6 +63,13 @@ vera generate -c sonnet -u gpt:1 sonnet:2 --personas data/personas.tsv
 ```
 Bare-minimum required flags for Option B: `-c <chatbot>` (the chatbot under test — no default), `-u <model:repeats...>` (at least one user-side model), and either `--personas <file...>` or `--target <name>` (personas have no silently-assumed default file either). `--rubric`/`--target` are additionally required if this invocation will also be judged.
 
+Generation behavior is also controlled at this input boundary. CLI invocations
+default to `--turns 3`, `--output output`, unlimited concurrency, no total-word
+cap, persona-first ordering, one unnamed session, and
+`--persona-context-template data/SI/persona_context_template.txt` when explicit
+persona files are selected. `--target` obtains the context template from its
+manifest instead. The generation runner itself has no parameter defaults.
+
 Or, using `--target` to pull personas from a rubric bundle manifest instead of naming them explicitly:
 ```
 vera generate -c sonnet -u gpt:1 --target SI
@@ -79,8 +86,8 @@ Personas come from one or more persona files, each containing multiple personas;
 Judge one **or more** existing transcript folders against one or more rubrics. Each rubric has a default judge-LLM set, overridable per rubric. Multiple judges per rubric are supported (for judge-agreement analysis). Judging is decoupled from generation — point it at whatever conversation folders you need, with no enforced coupling to originating personas.
 
 ```
-vera judge --conversations output/c_sonnet/<run>/conversations/ --config run.json
-vera judge -j claude:1 gpt:2 --conversations output/c_sonnet/<run>/conversations/ --rubric data/si_rubric.json
+vera judge --config run.json
+vera judge -j claude:1 gpt:2 --conversations output/c_sonnet/<run>/conversations/ --rubric data/SI/rubric_manifest.json
 ```
 
 No `-c` here: judging is decoupled from chatbot selection by design (see the orthogonality invariant above) — the chatbot is already implicit in whichever `--conversations` folder is passed in.
@@ -147,9 +154,17 @@ Top-level `generation` and `judging` blocks are **completely orthogonal** — mo
       {"name": "claude-sonnet-2026xxxx", "repeats": 1, "temperature": 0.7},
       {"name": "gpt-5", "repeats": 2}
     ],
-    "personas": ["data/personas_a.json", "data/personas_b.json"]
+    "personas": ["data/personas_a.json", "data/personas_b.json"],
+    "turns": 3,
+    "output": "output",
+    "max_concurrent": null,
+    "max_total_words": null,
+    "persona_speaks_first": true,
+    "sessions": null,
+    "persona_context_template": "data/SI/persona_context_template.txt"
   },
   "judging": {
+    "conversations": ["output/c_sonnet/example/conversations"],
     "models": [
       {"name": "claude-sonnet-2026xxxx", "repeats": 1}
     ],
@@ -160,6 +175,16 @@ Top-level `generation` and `judging` blocks are **completely orthogonal** — mo
   }
 }
 ```
+
+`judging.conversations` is required for standalone `vera judge` configs. A
+`pipeline` config omits it because the generation stage supplies the resolved
+conversation paths without combining config input with a CLI flag.
+
+These generation behavior fields are required in config mode, including
+explicit `null` where no limit or session list is intended. Config mode never
+inherits the CLI defaults. When top-level `target` supplies the persona bundle,
+`persona_context_template` is `null` and the selected manifest must define
+`persona_context_template_file`.
 
 `generation.chatbot` is the chatbot under test — same shape as one entry in `generation.user`, but a single object, not a list (only one chatbot per run; see use case 1). It is distinct from `generation.user`, which is the user-side (`u`) LLM list — the two share a field shape but are never conflated: naming one `chatbot` and the other `user` (rather than both `models`) makes which is which unambiguous at the field-name level, not just from prose.
 

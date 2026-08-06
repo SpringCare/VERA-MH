@@ -1,0 +1,36 @@
+# VERA CLI runtime wiring decision record
+
+Status: Accepted
+Date: 2026-08-06
+
+## Context
+
+Wiring the unified CLI requires changes to `utils/config_schema.py`, a stable
+interface. Standalone judging also exposed an ambiguity: it needs conversation
+paths, while AD-17 forbids combining JSON config with run-defining CLI flags.
+
+## Decision
+
+The unified CLI runtime and configuration contracts are canonical in:
+
+- [Architecture: CLI runtime boundary](../architecture.md#cli-runtime-boundary)
+- [Architecture: input resolution](../architecture.md#input-resolution)
+- [Architecture: rubric bundle manifest](../architecture.md#rubric-bundle-manifest)
+- [CLI/config use cases](../vera-cli-use-cases.md)
+
+This record captures the rationale for the corresponding stable-interface
+changes without duplicating those contracts here. The implementation resolves
+every input into canonical values before dispatch and calls parser-independent
+domain functions.
+
+## Consequences
+
+- Existing pipeline configs may omit `judging.conversations`, because generation
+  supplies those paths. Standalone judge configs must now include it and may no
+  longer combine `--config` with `--conversations`.
+- Generation configs that relied on Python or CLI defaults must add the required
+  generation behavior fields explicitly. CLI invocations retain defaults at the
+  flag-definition boundary.
+- Legacy root scripts remain usable only during their feature-by-feature
+  replacement. They are not dependencies of the unified CLI and are removed in a
+  later cleanup PR.

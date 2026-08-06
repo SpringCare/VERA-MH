@@ -51,8 +51,12 @@ Deep dives: [judge.md](./judge.md) (question flow and rubric navigation), [struc
 ## Layer model
 
 ```text
-CLI orchestrator (vera.py) — thin, no business logic
-    ↓ delegates to
+CLI layer
+├── vera.py — sole executable; loads arguments and dispatches
+└── vera_cli/
+    ├── arguments.py — flags, defaults, and config resolution
+    └── commands.py — thin command adapters
+    ↓ calls
 Domain packages (generate/, judge/, score/)
     ↓ register handlers with
 Workers (workers/) — queue protocol, worker pool, job dispatch
@@ -64,6 +68,10 @@ Shared utilities (utils/) — leaf layer
 
 **Import rules:**
 
+- `vera.py` delegates CLI parsing, resolution, and command adaptation to
+  `vera_cli/`; it contains no business logic.
+- `vera_cli/` may import domain packages and `utils/`. Domain packages never
+  import `vera_cli/`.
 - Domain packages (`generate/`, `judge/`, `score/`) do not import each other.
 - `workers/` does not import domain packages — domain registers handlers upward (inversion of control), never the reverse.
 - `llm_clients/` and `storage/` do not import domain packages or `workers/`.
@@ -84,7 +92,39 @@ Shared utilities (utils/) — leaf layer
 
 ## CLI surface
 
-Exactly **one** root-level orchestrator: **`vera.py`**. Subcommands parse arguments and delegate to domain runners; they contain no business logic. Full flag/config reference: [vera-cli-use-cases.md](./vera-cli-use-cases.md).
+Exactly **one** root-level executable: **`vera.py`**. It loads the CLI arguments,
+requests a fully resolved invocation from `vera_cli/`, dispatches the selected
+command, and renders CLI errors. Full flag/config reference:
+[vera-cli-use-cases.md](./vera-cli-use-cases.md).
+
+### CLI runtime boundary
+
+The CLI layer has three responsibilities:
+
+- `vera.py` is the thin executable and contains no command-specific business
+  logic.
+- `vera_cli/arguments.py` defines flags and their CLI defaults, reads JSON from a
+  file, stdin, or `VERA_RUN_CONFIG`, enforces input exclusivity, resolves paths
+  and targets, and produces the complete canonical configuration before print,
+  persistence, or dispatch.
+- `vera_cli/commands.py` contains only orchestration adapters. It receives
+  resolved values and calls parser-independent domain functions directly; it
+  does not resolve configuration or invoke legacy CLI entry points.
+
+`utils/config_schema.py` owns schema validation and canonical serialization. It
+does not parse CLI arguments, read config or manifest files, resolve paths, or
+define CLI behavior defaults.
+
+Domain entry points accept resolved domain values rather than `argparse`
+namespaces, input config files, or rubric manifests. Generation exposes its
+application function directly from its runner; it has no service wrapper and no
+behavioral parameter defaults. Pooling likewise delegates to the function owned
+by the scoring domain rather than to a script entry point.
+
+Legacy root scripts may remain temporarily while their replacement feature is
+migrated, but they are compatibility adapters only. They are not architectural
+dependencies and are deleted after the corresponding `vera.py` command is
+available.
 
 | Subcommand | Delegates to | Purpose |
 |------------|--------------|---------|
@@ -97,12 +137,39 @@ Exactly **one** root-level orchestrator: **`vera.py`**. Subcommands parse argume
 
 **Deferred resume contract:** `vera resume` is part of the target CLI. The constraints already adopted in `ARCHITECTURE-SPINE.md` — `state.json` as the single mutable artifact `vera resume` writes with a single-writer rule (AD-18), resume's exemption from the run-collision check (AD-24), and its path-first stage contracts (AD-23) — remain stable and are not reopened by this note. What's still unspecified is the surrounding execution machinery: complete run hierarchy, state ownership beyond the single-writer rule, task identity, retry/idempotency semantics, and partial-write recovery behavior. Those must be specified in a dedicated design document and adopted as a stable contract in a later migration phase before resume implementation is considered complete.
 
-Config and CLI flags are strictly either/or, never combined for the same run — see [vera-cli-use-cases.md](./vera-cli-use-cases.md#config-mechanism). `-c` selects the chatbot under test; `-u`/`-j` shorthand selects models/repeats for the user/judge side respectively; bespoke sampling knobs are config-only. `--rubric` selects the rubric-bundle manifest (see [Rubric bundle manifest](#rubric-bundle-manifest) below) — always a list, though only a length-1 list is supported until Phase 4. `-c` is required for `generate`/`pipeline` whenever `--config` isn't used — there is no default chatbot.
+### Input resolution
+
+Config and run-defining CLI flags are strictly either/or, never combined for the
+same run — see [vera-cli-use-cases.md](./vera-cli-use-cases.md#config-mechanism).
+Debug and presentation controls such as `--sample`, `--debug`, and `--print` are
+invocation-only; they are not serialized into `RunConfig`. `-c` selects the
+chatbot under test; `-u`/`-j` shorthand selects models/repeats for the user/judge
+side respectively; bespoke sampling knobs are config-only. `--rubric` selects
+the rubric-bundle manifest (see [Rubric bundle manifest](#rubric-bundle-manifest)
+below) — always a list, though only a length-1 list is supported until Phase 4.
+`-c` is required for `generate`/`pipeline` whenever `--config` isn't used — there
+is no default chatbot.
+
+Generation behavior defaults are defined only at the CLI flag boundary. A
+config-driven run provides the corresponding generation fields explicitly; it
+does not inherit or merge CLI defaults. Both input forms resolve to a complete
+`RunConfig`, and the generation runner receives every parameter explicitly and
+defines no behavioral defaults of its own.
+
+Consequently, config-driven generation explicitly provides `turns`, `output`,
+`max_concurrent`, `max_total_words`, `persona_speaks_first`, `sessions`, and
+`persona_context_template`, using `null` where the schema allows no limit or no
+session list.
+
+Standalone judging follows the same rule: `JudgingConfig.conversations` mirrors
+`--conversations`. A standalone `judge` config must provide it; a `pipeline`
+config may omit it because the generation stage supplies the resolved
+conversation paths directly.
 
 ```bash
 uv run python vera.py pipeline --config run.json
-uv run python vera.py generate -c sonnet -u gpt:1
-uv run python vera.py judge -j claude:1 --rubric data/si_rubric.json --conversations output/c_sonnet/<run>/conversations/
+uv run python vera.py generate -c sonnet -u gpt:1 --target SI
+uv run python vera.py judge -j claude:1 --rubric data/SI/rubric_manifest.json --conversations output/c_sonnet/<run>/conversations/
 uv run python vera.py score -r output/.../results.csv
 uv run python vera.py pool --evaluations path/to/evaluations/... path/to/evaluations/...
 uv run python vera.py resume --config output/c_sonnet/<run>/config.json
@@ -119,9 +186,15 @@ A rubric is a self-describing bundle, not a bare `.tsv` path with assumed siblin
   "rubric_file": "rubric.tsv",
   "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",
   "question_prompt_file": "question_prompt.txt",
-  "personas": ["data/personas.tsv"]
+  "personas": ["data/personas.tsv"],
+  "persona_context_template_file": "persona_context_template.txt"
 }
 ```
+
+`personas` and `persona_context_template_file` remain optional for judge-only
+manifests. Both are contextually required when the manifest is selected for
+generation through `--target`; generation never substitutes SI files when either
+is absent.
 
 Paths are relative to the manifest's own folder — distinct from `config.json`, whose paths resolve relative to `$ROOT` (the directory containing `vera.py`), never to the manifest, the config file's own location, or the CLI's working directory (see [Config mechanism](./vera-cli-use-cases.md#config-mechanism)). `personas` is **informational only** — it documents which personas this rubric is intended/validated for, for humans and tooling to discover; it does not make generation consume it automatically. Generation still chooses personas independently (the `generation`/`judging` orthogonality invariant holds). This manifest shape is exactly what a `judging.rubrics[]` config entry looks like once Phase 3 formalizes the schema — the format isn't thrown away when the CLI is replaced, it's the design.
 
@@ -145,12 +218,28 @@ Same shape of field, same-looking relative string, two different rules — hence
 
 **Separation of concerns, since these two now overlap in subject matter:** the manifest describes what a rubric **is** — its content, files, and intended personas — and changes rarely. `config.json`'s `judging.rubrics[].models` describes how to **run** it for a given invocation — which judge models, repeats, per-rubric overrides — and changes every run. Judge-model defaults belong in `config.json`, never in the manifest; the manifest never carries execution knobs.
 
-**`--target <name>` shorthand:** the manifest's `personas` field stays informational-only for every invocation shape *except two, both deliberate and explicit opt-ins, never automatic*. `vera pipeline --target <name>` (Phase 1) resolves `<name>` to one rubric bundle manifest and expands to setting **both** `generation.personas` and `judging.rubrics` from it in a single shot. `generate.py --rubric-manifest <path>` (Phase 0's stopgap, on the legacy script, ahead of `vera.py` existing) does the same thing for the personas half only, on the same manifest shape. Every other invocation (`--rubric` plus independently-specified generation personas, or `--config` with both blocks set explicitly) keeps `generation`/`judging` fully orthogonal — these are two named exceptions, not a general weakening of that invariant.
+**`--target <name>` shorthand:** the manifest's `personas` field stays
+informational-only unless the caller explicitly selects the manifest as a target.
+`vera generate --target <name>` and `vera pipeline --target <name>` both expand
+the manifest into generation personas, the persona context template, and the
+judging rubric in the canonical `RunConfig`; `generate` dispatches only the
+generation values. A top-level `target` in an input config mirrors this
+expansion. Setting it alongside explicit
+`generation.personas` or `judging.rubrics` is an error, never a merge or override.
+
+Target expansion is complete before `--print`, persistence, or command dispatch.
+The canonical `RunConfig` contains concrete persona, context-template, and rubric
+paths rather than `target`, so a persisted run never needs to re-resolve a
+manifest that may later change. If generation selects a target whose manifest
+omits personas or `persona_context_template_file`, resolution fails explicitly;
+there is no fallback to SI data. Every invocation that independently specifies
+personas and rubrics keeps generation and judging orthogonal.
 
 ## Package responsibilities
 
 | Package / path | Owns | Key modules |
 |----------------|------|-------------|
+| `vera_cli/` | CLI flags/defaults, input resolution, thin command adapters | `arguments.py`, `commands.py` |
 | `generate/` | Simulation, turns, batch runner (pure core; handler owns I/O) | `conversation_simulator.py`, `runner.py` |
 | `judge/` | Rubric navigation, LLM judge, improvement reporting (pure core; handler owns I/O) | `question_navigator.py`, `llm_judge.py`, `scripts/summarize_results.py` |
 | `score/` | Aggregation, visualization, pooling — split out of `judge/` | `score.py`, `score_viz.py`, `pool.py` |
@@ -202,8 +291,12 @@ Agents and contributors must comply. Import boundaries are documented in the [La
 
 ### MUST
 
-- **Single CLI:** orchestration lives in `vera.py` only.
+- **Single CLI:** `vera.py` is the sole executable; CLI support code lives in
+  `vera_cli/`, and domain behavior remains in domain packages.
 - **Subcommands:** `generate`, `judge`, `score`, `pool`, `pipeline`, `resume` (add or remove only via [ESCALATE](#escalate-stop-and-ask)).
+- **Resolved boundary:** flags, config, paths, and targets resolve to canonical
+  values before print, persistence, or dispatch. Domain functions never parse
+  CLI/config inputs or define CLI behavior defaults.
 - **Generation:** conversation simulation logic stays in `generate/`; the simulator core is pure (no filesystem, no logging) — the handler owns all I/O.
 - **Judging:** rubric navigation and LLM-judge logic stay in `judge/`, also pure-core-plus-handler. Judge never auto-scores — `vera score`/`vera pool` are separate subcommands. **Rubric navigation logic lives in code, never in the prompt:** which question is asked next given an answer is determined entirely by `QuestionNavigator` walking `question_flow_data` parsed from the rubric TSV — the judge LLM answers/judges the current question only, and is never asked to decide or influence what comes next.
 - **Scoring:** aggregation, visualization, and pooling stay in `score/`, never re-absorbed into `judge/`.

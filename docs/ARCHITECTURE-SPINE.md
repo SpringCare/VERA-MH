@@ -7,7 +7,7 @@ paradigm: 'Layered architecture (strict top-down dependency direction) with per-
 scope: 'VERA-MH target architecture: pipeline CLI, generate/judge/score split, llm_clients/, workers/, storage/, utils/, and the config/naming/enforcement contract that binds them'
 status: final
 created: '2026-07-21'
-updated: '2026-07-27'
+updated: '2026-08-06'
 binds: []
 sources:
   - docs/architecture.md
@@ -29,7 +29,7 @@ Layer → package mapping:
 
 | Layer | Packages |
 | --- | --- |
-| CLI orchestrator | `vera.py` |
+| CLI | `vera.py`, `vera_cli/` |
 | Domain (mutually isolated) | `generate/`, `judge/`, `score/` |
 | Workers | `workers/` |
 | Infrastructure | `llm_clients/`, `storage/` |
@@ -39,7 +39,8 @@ Layer → package mapping:
 
 ```mermaid
 graph TD
-    CLI["vera.py (CLI, thin)"] --> GEN["generate/"]
+    ENTRY["vera.py (sole executable, thin)"] --> CLI["vera_cli/"]
+    CLI --> GEN["generate/"]
     CLI --> JUDGE["judge/"]
     CLI --> SCORE["score/"]
     GEN --> WORKERS["workers/"]
@@ -61,9 +62,9 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 ### AD-1 — Single, thin CLI entrypoint
 
-- **Binds:** `vera.py`, `generate/`, `judge/`, `score/`
+- **Binds:** `vera.py`, `vera_cli/`, `generate/`, `judge/`, `score/`
 - **Prevents:** business logic creeping into the CLI entrypoint; a fat orchestrator re-implementing what domain runners already do; a second root-level entrypoint script reappearing after migration.
-- **Rule:** [ADOPTED] `vera.py` is the only root-level orchestrator; domain packages are libraries, not invoked directly as scripts, and no root-level Python entry-point scripts exist alongside it. `vera.py` only parses arguments and delegates — pipeline step sequencing delegates to domain runners/handlers, never to inline logic in `vera.py` itself.
+- **Rule:** [ADOPTED] `vera.py` is the only root-level executable; domain packages are libraries, not invoked directly as scripts, and no root-level Python entry-point scripts exist alongside it. `vera.py` only loads arguments and dispatches. CLI support lives in `vera_cli/`: `arguments.py` owns flag definitions, CLI defaults, and complete input resolution; `commands.py` owns thin orchestration adapters that call parser-independent domain functions directly. Domain packages never import `vera_cli/`, and neither `vera.py` nor `vera_cli/` contains domain behavior.
 
 ### AD-2 — Domain package isolation and workers inversion of control
 
@@ -184,7 +185,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 - **Binds:** `vera.py`, `utils/config_schema.py`
 - **Prevents:** a merge/override mechanism between two config sources that would make the effective config ambiguous or order-dependent.
-- **Rule:** [ADOPTED] For a given run, a piece of information (model selection/repeats, sampling knobs, persona/rubric lists, etc.) is supplied via `--config` JSON or via CLI flags, never both. Supplying the same information through both is rejected/errors — there is no silent merge. `--config` always resolves internally to the same canonical flag-set the CLI would have produced, and that resolved form is printed at run start. **`--sample <N>` is the one deliberate, named exception:** it MAY be combined with `--config`, since it's a debug-only smoke-test override (UC4) — it never sets information `config.json` itself carries, it only caps how much of the already-resolved persona/rubric/judge lists get used for this invocation, and it's never persisted into the run's own `config.json` artifact (AD-18) or any resumed state. No other flag gets this treatment; a future flag needs its own named exception here, not an implicit ride on `--sample`'s.
+- **Rule:** [ADOPTED] For a given run, a piece of information (model selection/repeats, sampling knobs, persona/rubric lists, etc.) is supplied via `--config` JSON or via CLI flags, never both. Supplying the same information through both is rejected/errors — there is no silent merge. Both forms resolve to the same canonical `RunConfig` before print, persistence, or dispatch. CLI-only presentation/execution controls such as `--debug` and `--print` do not supply run configuration and may accompany either form. **`--sample <N>` is the one deliberate behavior-altering exception:** it MAY be combined with `--config`, since it's a debug-only smoke-test override (UC4) — it never sets information `config.json` itself carries, it only caps how much of the already-resolved persona/rubric/judge lists get used for this invocation, and it's never persisted into the run's own `config.json` artifact (AD-18) or any resumed state. No other run-scoping flag gets this treatment; a future flag needs its own named exception here, not an implicit ride on `--sample`'s.
 
 ### AD-18 — config.json and state.json are two distinct artifacts
 
@@ -208,7 +209,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 - **Binds:** rubric bundle manifest files, `utils/config_schema.py`, `judge/`
 - **Prevents:** judge-model defaults or other per-run execution knobs leaking into the manifest, which would make the same rubric bundle behave differently across runs without a visible reason.
-- **Rule:** [ADOPTED] A rubric bundle manifest describes what a rubric **is** (`rubric_file`, `rubric_prompt_beginning_file`, `question_prompt_file`, an informational `personas` list) — static content that changes rarely. `config.json`'s `judging.rubrics[].models` describes how to **run** it for a given invocation — judge models, repeats, per-rubric overrides — and changes every run. Judge-model defaults never belong in the manifest. When a config omits judge-model selection entirely, the fallback default MUST be defined in exactly one place — `utils/config_schema.py`, the protected stable interface for config shape (AD-15) — never in the manifest, and never re-defined inside `judge/rubric_config.py` (AD-22) or any other loader, which may only read the default, not define its own copy. This is a MUST, not descriptive prose: a default landing anywhere ungoverned would produce exactly the run-changing-behavior-with-no-visible-reason effect this AD exists to prevent, without escalating through AD-15's design-doc gate. **The manifest's `personas` field stays informational-only for every invocation shape except one:** `vera pipeline --target <name>` is an additive, opt-in shorthand that resolves `<name>` to one rubric bundle manifest and expands to setting BOTH `generation.personas` and `judging.rubrics` from it in a single shot — the manifest's `personas` field becomes the actual, authoritative generation input only for this shorthand. Any other invocation shape (`--rubric` plus independently-specified generation personas, or `--config` with both blocks set explicitly) keeps `generation`/`judging` fully orthogonal exactly as AD-19 requires — `--target` is the one deliberate, named exception, not a general weakening of AD-19. **`--target` and `config.json` mirror each other, including the exception's boundary:** a top-level `target` field in the input `config.json` performs the identical expansion `--target <name>` does on the CLI. Setting `target` alongside explicit `generation.personas` or `judging.rubrics` in the same input config is rejected outright — never silently merged or overridden — mirroring AD-17's either/or rule between CLI flags and `--config`. The run's own immutable `config.json` artifact (AD-18) always stores the fully-expanded form; `target` is resolved away before that artifact is written, the same way `-u`/`-j` shorthand already resolves into concrete model entries, so `vera resume` never has to re-resolve a manifest that might have changed on disk since the run started.
+- **Rule:** [ADOPTED] A rubric bundle manifest describes what a rubric **is** (`rubric_file`, `rubric_prompt_beginning_file`, `question_prompt_file`, optional `personas`, and optional `persona_context_template_file`) — static content that changes rarely. `config.json`'s `judging.rubrics[].models` describes how to **run** it for a given invocation — judge models, repeats, per-rubric overrides — and changes every run. Judge-model defaults never belong in the manifest. When a config omits judge-model selection entirely, the fallback default MUST be defined in exactly one place — `utils/config_schema.py`, the protected stable interface for config shape (AD-15) — never in the manifest, and never re-defined inside `judge/rubric_config.py` (AD-22) or any other loader, which may only read the default, not define its own copy. This is a MUST, not descriptive prose: a default landing anywhere ungoverned would produce exactly the run-changing-behavior-with-no-visible-reason effect this AD exists to prevent, without escalating through AD-15's design-doc gate. The manifest's generation fields stay informational-only unless the caller explicitly selects it with `--target` or top-level input-config `target`. Both `vera generate --target <name>` and `vera pipeline --target <name>` expand the manifest into generation personas, the persona context template, and the judging rubric in canonical `RunConfig`; generate dispatches only the generation values. The manifest's personas and context template are contextually required whenever the target is used for generation, and absence is an error with no SI fallback. Setting `target` alongside explicit `generation.personas` or `judging.rubrics` is rejected outright — never silently merged or overridden. Target expansion completes before print, persistence, or dispatch; the canonical and persisted `RunConfig` contains applicable concrete paths and no `target`, so resume never re-resolves a manifest that may have changed. Invocation shapes that independently select personas and rubrics keep generation and judging fully orthogonal exactly as AD-19 requires.
 
 ### AD-22 — Reusable rubric-loading logic lives in a library helper, not a doomed script
 
@@ -314,6 +315,9 @@ Package tree:
 
 ```text
 vera.py                          # CLI orchestrator, thin
+vera_cli/
+  arguments.py                   # flags, CLI defaults, config/target resolution
+  commands.py                    # thin adapters to domain functions
 generate/
   conversation_simulator.py      # pure core
   runner.py                      # owns I/O, delegates to workers/
