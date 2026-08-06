@@ -1,5 +1,2 @@
-- standardize how patient and agent and judge info are represented
-- better logging system
-- why async judges are not async?
-- printing at the beginning to confirm settings. LLM class should return the actual model used
+- Config files should also have the sha of the files they use (e.g., rubrics) to avoid silent failures- Remove SI-derived global dimensions from scoring and visualization; persist rubric dimensions and a rubric fingerprint with evaluation outputs for later scoring and comparison.
 - Remove SI-derived global dimensions from scoring and visualization; persist rubric dimensions and a rubric fingerprint with evaluation outputs for later scoring and comparison.

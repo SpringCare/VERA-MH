@@ -54,16 +54,31 @@ def load_prompts_from_csv(
     data = []
     with open(csv_path, "r", encoding="utf-8") as f:
         reader = csv.DictReader(f, delimiter="\t")
+        fieldnames = set(reader.fieldnames or [])
+
         context_fields = {
             field_name
             for _, field_name, _, _ in Formatter().parse(context_template)
             if field_name is not None
         }
-        missing_fields = context_fields - set(reader.fieldnames or [])
+        missing_fields = context_fields - fieldnames
         if missing_fields:
             missing = ", ".join(sorted(missing_fields))
             raise ValueError(
                 f"Persona context template requires columns not found in "
+                f"{csv_path}: {missing}"
+            )
+
+        prompt_fields = {
+            field_name
+            for _, field_name, _, _ in Formatter().parse(template)
+            if field_name is not None
+        }
+        missing_prompt_fields = (prompt_fields - {"persona_context"}) - fieldnames
+        if missing_prompt_fields:
+            missing = ", ".join(sorted(missing_prompt_fields))
+            raise ValueError(
+                f"Persona prompt template requires columns not found in "
                 f"{csv_path}: {missing}"
             )
 

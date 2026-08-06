@@ -1,0 +1,18 @@
+# Architecture and domain packages require maintainer review.
+/docs/architecture.md @SpringCare/vera-mh-maintainers
+/docs/vera-cli-use-cases.md @SpringCare/vera-mh-maintainers
+/llm_clients/ @SpringCare/vera-mh-maintainers
+/judge/ @SpringCare/vera-mh-maintainers
+/generate/ @SpringCare/vera-mh-maintainers
+/run_pipeline.py @SpringCare/vera-mh-maintainers
+/openspec/ @SpringCare/vera-mh-maintainers
+/pyproject.toml @SpringCare/vera-mh-maintainers
+
+# Stable interfaces -- changing these requires a design doc (see docs/architecture.md#stable-interfaces-agent-coding-optimization)
+/llm_clients/llm_interface.py    @SpringCare/vera-mh-maintainers
+/utils/role.py                   @SpringCare/vera-mh-maintainers
+/utils/naming.py                 @SpringCare/vera-mh-maintainers
+/utils/conversation_layout.py    @SpringCare/vera-mh-maintainers
+# /workers/queue.py, /utils/config_schema.py, and /storage/storage_backend.py will be
+# added here once each file exists (Phase 5, Phase 3, and Phase S respectively --
+# see docs/architecture.md#migration-from-current-layout)
