@@ -64,7 +64,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 - **Binds:** `vera.py`, `vera_cli/`, `generate/`, `judge/`, `score/`
 - **Prevents:** business logic creeping into the CLI entrypoint; a fat orchestrator re-implementing what domain runners already do; a second root-level entrypoint script reappearing after migration.
-- **Rule:** [ADOPTED] `vera.py` is the only root-level executable; domain packages are libraries, not invoked directly as scripts, and no root-level Python entry-point scripts exist alongside it. `vera.py` only loads arguments and dispatches. CLI support lives in `vera_cli/`: `arguments.py` owns flag definitions, CLI defaults, and complete input resolution; `commands.py` owns thin orchestration adapters that call parser-independent domain functions directly. Domain packages never import `vera_cli/`, and neither `vera.py` nor `vera_cli/` contains domain behavior.
+- **Rule:** [ADOPTED] `vera.py` is the only root-level executable in the target layout; domain packages are libraries, not invoked directly as scripts. `vera.py` only loads arguments and dispatches. CLI support lives in small, responsibility-focused `vera_cli/` modules: top-level parser, per-command flags/defaults, canonical config resolution, and thin command adapters. During migration an adapter may import a reusable function from a legacy root module, but never its CLI parser or a subprocess. Removing `generate.py` and introducing the permanent `generate/` package happen atomically. Domain packages never import `vera_cli/`, and neither `vera.py` nor `vera_cli/` contains domain behavior.
 
 ### AD-2 — Domain package isolation and workers inversion of control
 
@@ -213,9 +213,9 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 ### AD-22 — Target-manifest resolution belongs to the CLI boundary
 
-- **Binds:** `vera_cli/arguments.py`, `generate/`, `judge/`
+- **Binds:** `vera_cli/`, `generate/`, `judge/`
 - **Prevents:** either domain owning a cross-domain target definition; generation and judging reimplementing manifest resolution differently; legacy script parsers becoming architectural dependencies.
-- **Rule:** [ADOPTED] `vera_cli/arguments.py` loads and validates target manifests and expands them to concrete generation and judging inputs. Domain functions receive only their resolved values and never a target manifest. Explicit `--rubric <target>` consumes the rubric and judging-prompt portion; explicit `--personas <target>` consumes the personas and persona-prompt portion. Legacy helpers may adapt these inputs during migration but are not dependencies of the unified CLI.
+- **Rule:** [ADOPTED] `vera_cli/targets.py` loads and validates target manifests; each command's `*_config.py` resolver expands the relevant components into canonical inputs. Domain functions receive only their resolved values and never a target manifest. Explicit `--rubric <target>` consumes the rubric and judging-prompt portion; explicit `--personas <target>` consumes the personas and persona-prompt portion. Legacy helpers may adapt these inputs during migration but are not dependencies of the unified CLI.
 
 ### AD-23 — Output layout is nested-only, with path-first stage contracts
 
@@ -316,8 +316,11 @@ Package tree:
 ```text
 vera.py                          # CLI orchestrator, thin
 vera_cli/
-  arguments.py                   # flags, CLI defaults, config/target resolution
-  commands.py                    # thin adapters to domain functions
+  arguments.py                   # top-level parser
+  config.py, targets.py          # shared config and manifest helpers
+  *_arguments.py                 # per-command flags and CLI defaults
+  *_config.py                    # per-command canonical resolution
+  *_command.py                   # thin adapters to domain functions
 generate/
   conversation_simulator.py      # pure core
   runner.py                      # owns I/O, delegates to workers/

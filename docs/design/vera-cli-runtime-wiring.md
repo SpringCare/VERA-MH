@@ -35,6 +35,8 @@ domain functions.
   `--target` selects the bundle, while explicit `--personas` and `--rubric`
   select the named target's persona or rubric component, including that
   component's associated prompts.
-- Legacy root scripts remain usable only during their feature-by-feature
-  replacement. They are not dependencies of the unified CLI and are removed in a
-  later cleanup PR.
+- Legacy root parsers remain usable only during their feature-by-feature
+  replacement. A unified command may temporarily call an importable function
+  from the corresponding root module; it must not invoke that module's parser or
+  run it as a subprocess. Generation uses `generate.main` until the root module
+  is atomically replaced by the permanent `generate/` package.

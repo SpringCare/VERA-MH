@@ -55,8 +55,10 @@ Deep dives: [judge.md](./judge.md) (question flow and rubric navigation), [struc
 CLI layer
 ├── vera.py — sole executable; loads arguments and dispatches
 └── vera_cli/
-    ├── arguments.py — flags, defaults, and config resolution
-    └── commands.py — thin command adapters
+    ├── arguments.py — top-level parser
+    ├── *_arguments.py — per-command flags and CLI defaults
+    ├── *_config.py — per-command canonical resolution
+    └── *_command.py — thin command adapters
     ↓ calls
 Domain packages (generate/, judge/, score/)
     ↓ register handlers with
@@ -104,32 +106,35 @@ The CLI layer has three responsibilities:
 
 - `vera.py` is the thin executable and contains no command-specific business
   logic.
-- `vera_cli/arguments.py` defines flags and their CLI defaults, reads JSON from a
-  file, stdin, or `VERA_RUN_CONFIG`, enforces input exclusivity, resolves paths
-  and targets, and produces the complete canonical configuration before print,
-  persistence, or dispatch.
-- `vera_cli/commands.py` contains only orchestration adapters. It receives
-  resolved values and calls parser-independent domain functions directly; it
-  does not resolve configuration or invoke legacy CLI entry points.
+- `vera_cli/arguments.py` builds the top-level parser. Small per-command
+  `*_arguments.py` modules define that command's flags and CLI defaults.
+- Shared config input and target-manifest helpers stay in focused modules;
+  per-command `*_config.py` modules enforce input exclusivity and produce the
+  complete canonical configuration before print, persistence, or dispatch.
+- Per-command `*_command.py` modules contain only orchestration adapters. They
+  receive resolved values and call importable Python functions directly; they
+  never invoke another CLI parser or subprocess.
 
 `utils/config_schema.py` owns schema validation and canonical serialization. It
 does not parse CLI arguments, read config or manifest files, resolve paths, or
 define CLI behavior defaults.
 
 Domain entry points accept resolved domain values rather than `argparse`
-namespaces, input config files, or target manifests. Generation exposes its
-application function directly from its runner; it has no service wrapper and no
-behavioral parameter defaults. Pooling likewise delegates to the function owned
-by the scoring domain rather than to a script entry point.
+namespaces, input config files, or target manifests. They define no CLI behavior
+defaults. Pooling likewise delegates to the function owned by the scoring domain
+rather than to a script entry point.
 
 Legacy root scripts may remain temporarily while their replacement feature is
-migrated, but they are compatibility adapters only. They are not architectural
-dependencies and are deleted after the corresponding `vera.py` command is
-available.
+migrated. During that transition, `vera_cli` may import the reusable function
+from a root script, but never its argument parser. For generation, the temporary
+flow is `vera_cli.generate_command` → `generate.main`. Removing `generate.py`
+and moving that function plus the existing `generate_conversations/` code into
+the permanent `generate/` package is one atomic later change, so a root
+`generate.py` module and a top-level `generate/` package never coexist.
 
 | Subcommand | Delegates to | Purpose |
 |------------|--------------|---------|
-| `vera generate` | `generate.runner` | Simulate conversations → `c_<chatbot>/<run>/conversations/` |
+| `vera generate` | generation application function (temporarily `generate.main`) | Simulate conversations → `c_<chatbot>/<run>/conversations/` |
 | `vera judge` | `judge.runner` | Evaluate transcripts → `evaluations/<rubric>/j_*` |
 | `vera score` | `score.score` | Aggregate `results.csv` → scores and visualizations |
 | `vera pool` | `score.pool` | Concatenate multiple evaluation folders into one pooled result |
@@ -271,7 +276,7 @@ orthogonal.
 
 | Package / path | Owns | Key modules |
 |----------------|------|-------------|
-| `vera_cli/` | CLI flags/defaults, input resolution, thin command adapters | `arguments.py`, `commands.py` |
+| `vera_cli/` | CLI flags/defaults, input resolution, thin command adapters | `arguments.py`, `config.py`, `targets.py`, per-command modules |
 | `generate/` | Simulation, turns, batch runner (pure core; handler owns I/O) | `conversation_simulator.py`, `runner.py` |
 | `judge/` | Rubric navigation, LLM judge, improvement reporting (pure core; handler owns I/O) | `question_navigator.py`, `llm_judge.py`, `scripts/summarize_results.py` |
 | `score/` | Aggregation, visualization, pooling — split out of `judge/` | `score.py`, `score_viz.py`, `pool.py` |
