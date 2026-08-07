@@ -33,7 +33,8 @@ domain functions.
   flag-definition boundary.
 - Target manifests are complete bundles of rubric, personas, and prompts.
   `--target` selects the bundle, while explicit `--personas` and `--rubric`
-  remain available for callers who want to select components independently.
+  select the named target's persona or rubric component, including that
+  component's associated prompts.
 - Legacy root scripts remain usable only during their feature-by-feature
   replacement. They are not dependencies of the unified CLI and are removed in a
   later cleanup PR.

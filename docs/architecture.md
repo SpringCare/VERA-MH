@@ -147,10 +147,11 @@ invocation-only; they are not serialized into `RunConfig`. `-c` selects the
 chatbot under test; `-u`/`-j` shorthand selects models/repeats for the user/judge
 side respectively; bespoke sampling knobs are config-only. `--target` selects a
 complete target, while `--personas` and `--rubric` explicitly select only the
-generation or judging inputs from their respective sources. `--rubric` remains
-list-shaped, though only a length-1 list is supported until Phase 4. `-c` is
-required for `generate`/`pipeline` whenever `--config` isn't used — there is no
-default chatbot.
+persona or rubric component of a named target. Each component includes its
+associated prompt from that target's manifest. `--rubric` remains list-shaped,
+though only a length-1 list is supported until Phase 4. `-c` is required for
+`generate`/`pipeline` whenever `--config` isn't used — there is no default
+chatbot.
 
 Generation behavior defaults are defined only at the CLI flag boundary. A
 config-driven run provides the corresponding generation fields explicitly; it
@@ -171,8 +172,8 @@ conversation paths directly.
 ```bash
 uv run python vera.py pipeline --config run.json
 uv run python vera.py generate -c sonnet -u gpt:1 --target SI
-uv run python vera.py generate -c sonnet -u gpt:1 --personas data/custom/personas.tsv --persona-context-template data/custom/persona_prompt.txt
-uv run python vera.py judge -j claude:1 --rubric data/SI/manifest.json --conversations output/c_sonnet/<run>/conversations/
+uv run python vera.py generate -c sonnet -u gpt:1 --personas SI
+uv run python vera.py judge -j claude:1 --rubric SI --conversations output/c_sonnet/<run>/conversations/
 uv run python vera.py score -r output/.../results.csv
 uv run python vera.py pool --evaluations path/to/evaluations/... path/to/evaluations/...
 uv run python vera.py resume --config output/c_sonnet/<run>/config.json
@@ -243,11 +244,12 @@ persona-prompt fields; `vera judge --target ...` consumes its rubric and
 judging-prompt fields; `vera pipeline --target ...` consumes both.
 
 Advanced callers may keep generation and judging independent. `--personas`
-selects persona files explicitly (with `--persona-context-template` controlling
-their prompt), and `--rubric <name-or-manifest-path>` explicitly selects only the
-rubric and judging-prompt portion of a target manifest. A pipeline may use
-`--personas` and `--rubric` together instead of `--target`. These explicit forms
-do not pull in the target's other components.
+`<name-or-manifest-path>` selects only the personas and persona prompt from that
+target, while `--rubric <name-or-manifest-path>` selects only its rubric and
+judging prompts. For example, `--personas HFO --rubric SI` deliberately combines
+the persona side of HFO with the rubric side of SI. A pipeline may use both
+explicit flags instead of `--target`; neither flag pulls in the target's other
+component.
 
 A top-level `target` in an input config mirrors whole-target selection. Setting
 it alongside explicit `generation.personas` or `judging.rubrics` is an error,
@@ -329,7 +331,8 @@ Agents and contributors must comply. Import boundaries are documented in the [La
   CLI/config inputs or define CLI behavior defaults.
 - **Targets:** every `manifest.json` defines one complete target (rubric,
   personas, and prompts). `--target` selects the complete bundle;
-  `--personas` and `--rubric` remain explicit component-level alternatives.
+  `--personas <target>` and `--rubric <target>` remain explicit component-level
+  alternatives and include the selected component's prompts.
 - **Generation:** conversation simulation logic stays in `generate/`; the simulator core is pure (no filesystem, no logging) — the handler owns all I/O.
 - **Judging:** rubric navigation and LLM-judge logic stay in `judge/`, also pure-core-plus-handler. Judge never auto-scores — `vera score`/`vera pool` are separate subcommands. **Rubric navigation logic lives in code, never in the prompt:** which question is asked next given an answer is determined entirely by `QuestionNavigator` walking `question_flow_data` parsed from the rubric TSV — the judge LLM answers/judges the current question only, and is never asked to decide or influence what comes next.
 - **Scoring:** aggregation, visualization, and pooling stay in `score/`, never re-absorbed into `judge/`.
@@ -425,7 +428,7 @@ uv run pytest -m "not live"
 | **0 — De-risk multi-rubric** | Prove the target-manifest format on both generation and judging before the unified CLI replaces legacy scripts | Treat every manifest as one complete target containing a rubric, personas, and both prompt sets. Legacy judge code may consume only its rubric fields and legacy generation code only its persona fields, but both read the same complete manifest. Preserve the existing explicit persona/rubric paths so Phase 1 can offer both whole-target and component-level selection | `pytest -m "not live"` green; one complete fixture target drives both legacy generation and judging; incomplete manifests fail validation; explicit persona/rubric selection remains covered |
 | **S — Storage abstraction** *(orthogonal — see note above)* | Decouple "what path/key to use" from "how to persist bytes," so a future non-local backend (S3, etc.) is a new implementation, not a rewrite | New `storage/` package: `StorageBackend` (ABC) with `write(key, bytes)` / `read(key)` / `exists(key)`, plus `LocalFilesystemStorage` as the default implementation — mirrors the `LLMInterface`/`QueueProtocol` idiom (interface and implementations live together in one concern-scoped package). The backend knows nothing about run semantics; `utils/naming.py` still builds keys/paths, `storage/` just persists what it's given. All domain/`workers/` code that currently touches the filesystem directly switches to calling through `StorageBackend` instead | `pytest -m "not live"` green; no domain or `workers/` code calls `open()`/`pathlib` file-write directly for run artifacts — everything routes through `StorageBackend`; `LocalFilesystemStorage` is behaviorally identical to today's direct-filesystem writes |
 | **O — Adopt OpenSpec** *(orthogonal — see note above)* | Turn "consider an OpenSpec change if the team adopts that workflow" from a maybe into an actual, exercised requirement | Populate `openspec/changes/` with a real OpenSpec change document the next time a large multi-file feature lands (the existing ESCALATE trigger: new judge dimensions, pipeline CLI changes). Currently `openspec/` is empty scaffolding — this phase is "done" only once a real change has actually gone through it, not just once the config exists | A qualifying multi-file feature has shipped with a real OpenSpec change document under `openspec/changes/`, and the ESCALATE section's language is updated from "if the team adopts" to a firm MUST for future qualifying changes |
-| **1 — New CLI + config** | `vera.py` fully replaces the top-level scripts | Add whole-target selection through `--target` and top-level config `target`. Preserve explicit component selection through `--personas` plus `--persona-context-template`, and `--rubric`, so callers can keep generation and judging independent. Resolve target manifests before print or dispatch, then call existing domain behavior directly. Ship `-u`/`-j`/`--sample` and the informal config shape; delete `generate.py`/`judge.py`/`run_pipeline.py` at the end of the phase | `pytest -m "not live"` green; `vera.py` is the only documented entry point; target and explicit-component paths have structural parity tests; `--config`, `--target`, `--personas`, `--rubric`, `-u`, `-j`, and `--sample` are functional; legacy root scripts are gone |
+| **1 — New CLI + config** | `vera.py` fully replaces the top-level scripts | Add whole-target selection through `--target` and top-level config `target`. Preserve explicit component selection through `--personas <target>` and `--rubric <target>`, so callers can combine the persona side of one target with the rubric side of another. Resolve target manifests before print or dispatch, then call existing domain behavior directly. Ship `-u`/`-j`/`--sample` and the informal config shape; delete `generate.py`/`judge.py`/`run_pipeline.py` at the end of the phase | `pytest -m "not live"` green; `vera.py` is the only documented entry point; target and explicit-component paths have structural parity tests; `--config`, `--target`, `--personas`, `--rubric`, `-u`, `-j`, and `--sample` are functional; legacy root scripts are gone |
 | **2 — Scoring split** | Extract `score/` | `score.py`/`score_viz.py`/`pool.py` move out of `judge/` into `score/`; pure move, no new behavior. `vera.py` (the only entry point since Phase 1) gets its imports updated directly — no shim needed, since the legacy root scripts no longer exist. A minimal import-linter contract is added covering only the `judge/` ⊥ `score/` boundary this phase creates | `pytest -m "not live"` green; the `judge/` ⊥ `score/` import-linter contract passes; no code imports `judge.score`/`judge.pool` |
 | **3 — Traceability & naming** | Harden Phase 1's config shape; add persistence; swap in the new naming scheme | `utils/config_schema.py` formalizes Phase 1's informal `config.json` shape into a stable interface (design doc required for future changes) — `judging.rubrics` stays a list (continuing the list-from-day-one approach already used since Phase 0/1), still length-1-only in practice until Phase 4. Adds the persisted artifacts: `config.json` written to disk + `state.json` + `.sha256` sidecar; `utils/naming.py` (the naming/layout module, already tracked today implementing the legacy `p_`/`a_` scheme) is **rewritten** for the `c_`/`u_`/`j_` scheme, retiring the `p_*`/`j_*` layout Phase 1 kept. Existing `output/` run folders under the old layout are left alone — no migration script, only new runs use the new layout. **Acknowledged compatibility break:** anything outside `vera.py` that parses the old `p_*`/`j_*` pattern directly (`spring_scripts/`, `distribute_files.py`, `score_comparison.py`, notebooks, human-review tooling) breaks the moment new runs use `c_*`/`u_*`/`j_*` instead — accepted, since the vast majority of real usage goes through the CLI, not direct path-parsing. **This break is about auto-discovery, not about reading old data at all:** `vera judge --conversations <old p_* folder>` and `vera score -r <old results.csv>` keep working against existing old-layout output, since both take an explicit path and read files by their own format, never by re-deriving meaning from the parent folder's naming pattern. What genuinely doesn't carry over is `vera resume` on an old run — `config.json`/`.sha256`/`state.json` didn't exist under the old layout, so there's nothing for `resume` to read regardless of naming scheme. Import-linter contract extended to cover `utils/` as a leaf | `pytest -m "not live"` green; a run's `config.json` round-trips through `vera resume`; `utils/` leaf-layer import-linter contract passes |
 | **4 — Multi-rubric support** | Support multiple rubrics per run | Built on Phase 3's `config.json`/naming: `judging.rubrics[]` now supports length > 1 (the list shape has existed since Phase 0 — this phase lifts the length-1 restriction, it doesn't introduce the list); per-rubric judge-model overrides; per-rubric `evaluations/<rubric>/` folder separation | `pytest -m "not live"` green; a config with 2+ rubrics produces separated `evaluations/<rubric>/` output for each; **and** a pre-existing length-1 `judging.rubrics` config from Phase 1-3 still produces identical behavior — backward compatibility with the single-rubric case is verified, not just the new multi-rubric case |
