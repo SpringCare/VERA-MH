@@ -7,7 +7,7 @@ paradigm: 'Layered architecture (strict top-down dependency direction) with per-
 scope: 'VERA-MH target architecture: pipeline CLI, generate/judge/score split, llm_clients/, workers/, storage/, utils/, and the config/naming/enforcement contract that binds them'
 status: final
 created: '2026-07-21'
-updated: '2026-08-06'
+updated: '2026-08-07'
 binds: []
 sources:
   - docs/architecture.md
@@ -205,17 +205,17 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 - **Rule:** [ADOPTED] `judging.rubrics` (and its CLI precursor, `--rubrics`) is list-shaped starting at the very first phase that implements it, even while only a length-1 list is supported/validated until multi-rubric support ships. This closes a real schema-break risk: locking a scalar shape early would force a breaking config change later.
 - **Prevents:** a later multi-rubric phase requiring a breaking schema change for every config already written against a scalar `rubric` field.
 
-### AD-21 — Rubric bundle manifest vs config.json separation of concerns
+### AD-21 — Target manifest vs config.json separation of concerns
 
-- **Binds:** rubric bundle manifest files, `utils/config_schema.py`, `judge/`
-- **Prevents:** judge-model defaults or other per-run execution knobs leaking into the manifest, which would make the same rubric bundle behave differently across runs without a visible reason.
-- **Rule:** [ADOPTED] A rubric bundle manifest describes what a rubric **is** (`rubric_file`, `rubric_prompt_beginning_file`, `question_prompt_file`, optional `personas`, and optional `persona_context_template_file`) — static content that changes rarely. `config.json`'s `judging.rubrics[].models` describes how to **run** it for a given invocation — judge models, repeats, per-rubric overrides — and changes every run. Judge-model defaults never belong in the manifest. When a config omits judge-model selection entirely, the fallback default MUST be defined in exactly one place — `utils/config_schema.py`, the protected stable interface for config shape (AD-15) — never in the manifest, and never re-defined inside `judge/rubric_config.py` (AD-22) or any other loader, which may only read the default, not define its own copy. This is a MUST, not descriptive prose: a default landing anywhere ungoverned would produce exactly the run-changing-behavior-with-no-visible-reason effect this AD exists to prevent, without escalating through AD-15's design-doc gate. The manifest's generation fields stay informational-only unless the caller explicitly selects it with `--target` or top-level input-config `target`. Both `vera generate --target <name>` and `vera pipeline --target <name>` expand the manifest into generation personas, the persona context template, and the judging rubric in canonical `RunConfig`; generate dispatches only the generation values. The manifest's personas and context template are contextually required whenever the target is used for generation, and absence is an error with no SI fallback. Setting `target` alongside explicit `generation.personas` or `judging.rubrics` is rejected outright — never silently merged or overridden. Target expansion completes before print, persistence, or dispatch; the canonical and persisted `RunConfig` contains applicable concrete paths and no `target`, so resume never re-resolves a manifest that may have changed. Invocation shapes that independently select personas and rubrics keep generation and judging fully orthogonal exactly as AD-19 requires.
+- **Binds:** target manifests, `vera_cli/`, `utils/config_schema.py`, `generate/`, `judge/`
+- **Prevents:** partial manifests that work for one command but fail for another; per-run execution knobs leaking into reusable target definitions; selecting a target when the caller intended to control generation and judging independently.
+- **Rule:** [ADOPTED] A target is a complete evaluation bundle defined by `data/<target>/manifest.json`. Every manifest requires `rubric_file`, `rubric_prompt_beginning_file`, `question_prompt_file`, `personas`, and `persona_context_template_file`; paths resolve relative to the manifest. `--target <name-or-path>` and top-level config `target` consume the complete bundle. `--personas` plus `--persona-context-template` and `--rubric <name-or-manifest-path>` remain explicit alternatives that consume only the selected generation or judging components, and a pipeline may use both explicit forms instead of `--target`. Target selection is mutually exclusive with explicit persona/rubric selection. `--target all` produces one canonical invocation per discovered target and never merges different targets' personas, prompts, or rubrics. Target expansion completes before print, persistence, or dispatch; canonical and persisted `RunConfig` contains concrete paths and no `target`. Model defaults and all other run behavior belong in CLI flag definitions or `config.json`, never in the manifest.
 
-### AD-22 — Reusable rubric-loading logic lives in a library helper, not a doomed script
+### AD-22 — Target-manifest resolution belongs to the CLI boundary
 
-- **Binds:** `judge/`
-- **Prevents:** logic that later CLI phases need being thrown away with the CLI script it was first written inside.
-- **Rule:** [ADOPTED] The rubric-bundle-manifest loading logic is implemented as a library-layer helper (e.g. `judge/rubric_config.py`), not inline in a CLI script's `main()` that is slated for deletion. Later phases call the same helper rather than reimplementing rubric loading.
+- **Binds:** `vera_cli/arguments.py`, `generate/`, `judge/`
+- **Prevents:** either domain owning a cross-domain target definition; generation and judging reimplementing manifest resolution differently; legacy script parsers becoming architectural dependencies.
+- **Rule:** [ADOPTED] `vera_cli/arguments.py` loads and validates target manifests and expands them to concrete generation and judging inputs. Domain functions receive only their resolved values and never a target manifest. Explicit `--rubric` consumes the rubric and judging-prompt portion of a complete target manifest; explicit `--personas` consumes caller-provided persona files and its separately resolved persona-context template. Legacy helpers may adapt these inputs during migration but are not dependencies of the unified CLI.
 
 ### AD-23 — Output layout is nested-only, with path-first stage contracts
 
@@ -231,13 +231,13 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 ### AD-25 — Rubric/persona content lives outside code proper, never requiring a code change
 
-- **Binds:** `data/`, the rubric bundle manifest (AD-21), persona files, all packages that consume them
+- **Binds:** `data/`, target manifests (AD-21), persona and rubric files, all packages that consume them
 - **Prevents:** an engineer embedding rubric dimensions, question flows, or persona definitions directly in Python (e.g. as constants, dataclass defaults, or inline dicts) rather than as data files — which would silently reintroduce a code-change requirement for a non-developer-facing workflow, and would fragment "where does rubric/persona content live" across code and data depending on who built which part.
 - **Rule:** [ADOPTED] Rubric and persona content (dimensions, question flows, prompt text, persona definitions) MUST live in `data/` (or another location outside any Python package), never embedded in code, because VERA-MH must be usable by non-developers who add or edit rubrics and personas without touching Python. `data/` is a supporting path outside the import graph specifically for this reason — no domain package may hardcode rubric/persona content as an alternative to reading it from `data/`.
 
 ### AD-26 — Rubric navigation logic lives in code, never in the prompt
 
-- **Binds:** `judge/`, rubric bundle manifests (AD-21), `data/` (AD-25)
+- **Binds:** `judge/`, target manifests (AD-21), `data/` (AD-25)
 - **Prevents:** an engineer embedding flow-control hints ("if the answer is X, the next relevant topic is Y") inside prompt text and asking the LLM to decide what happens next — non-deterministic, untestable, and a divergence risk between two engineers who might otherwise put navigation logic in different places (one in code, one in a prompt) for the same rubric.
 - **Rule:** [ADOPTED] Which question is asked next given an answer (the rubric's `GOTO`/`END`/`ASSIGN_END`/conditional-jump directives, per `judge.md`) is determined entirely by code — the rubric's question-flow data (parsed from its TSV into `question_flow_data`) navigated deterministically by `QuestionNavigator`. The judge LLM's role is strictly to answer/judge the current question; it is never asked to decide or influence which question comes next. Rubric content in `data/` (AD-25) may describe *what* the flow is (the TSV's navigation column), but the *logic that walks it* is code, not something inferred from prompt text.
 
@@ -247,11 +247,11 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 - **Prevents:** the chatbot under test being inferred from context or defaulted silently; `generation.user` (the user/persona-side LLM list) being mistaken for chatbot selection, or vice versa, since both are LLM-selection fields in the same `generation` block; a bare `models` field leaving it ambiguous which of the two roles it names.
 - **Rule:** [ADOPTED] The chatbot under test is selected via `-c <model>[:repeats]` on the CLI or `generation.chatbot` in `config.json` — a single object, not a list (AD-19's single-chatbot-per-invocation scope), and required whenever `--config` is not used. There is no default chatbot. `generation.chatbot` is distinct from `generation.user`, which selects the user-side (`u`) LLM(s); the two are never conflated or merged into one field, and neither is named the generic `models` precisely because `generation` has two competing LLM roles — each gets its own entity-specific field name instead. `vera judge` never takes `-c` — judging is decoupled from chatbot selection by design (AD-5), and the chatbot is already implicit in whichever `--conversations` folder is passed in.
 
-### AD-28 — Config path fields resolve to $ROOT; manifest path fields resolve to themselves
+### AD-28 — Config path fields resolve to $ROOT; target-manifest paths resolve to themselves
 
-- **Binds:** `utils/config_schema.py`, rubric bundle manifests (AD-21)
-- **Prevents:** a config's meaning depending on the working directory the CLI happened to be invoked from, or on where the config file itself was saved — the exact ambiguity that made an earlier CWD-relative design fragile; a reader assuming both JSON files (`config.json` and the rubric bundle manifest) share one path-resolution rule just because they look structurally similar.
-- **Rule:** [ADOPTED] Path fields inside `config.json` (e.g. `generation.personas`) resolve relative to `$ROOT` — the directory containing `vera.py` — regardless of the CLI's working directory, the config file's own location, or how the config arrives (`--config <file>`, `--config -`, or `VERA_RUN_CONFIG`); this is a single rule across all three input forms, not a rule-plus-fallback. Rubric bundle manifest path fields resolve relative to the manifest's own folder instead (AD-21), a deliberately different anchor that keeps a manifest folder portable across checkouts — `config.json` doesn't need that property, since it is checkout-specific by nature.
+- **Binds:** `utils/config_schema.py`, target manifests (AD-21)
+- **Prevents:** a config's meaning depending on the working directory the CLI happened to be invoked from, or on where the config file itself was saved; a reader assuming `config.json` and a target manifest share one path-resolution rule because both are JSON.
+- **Rule:** [ADOPTED] Path fields inside `config.json` (e.g. `generation.personas`) resolve relative to `$ROOT` — the directory containing `vera.py` — regardless of the CLI's working directory, the config file's own location, or how the config arrives (`--config <file>`, `--config -`, or `VERA_RUN_CONFIG`). Target-manifest path fields resolve relative to the manifest's own folder instead (AD-21), keeping the complete target directory portable across checkouts.
 
 ## Consistency Conventions
 
@@ -325,7 +325,7 @@ judge/
   question_navigator.py          # pure core
   llm_judge.py                   # pure core
   runner.py                      # owns I/O, delegates to workers/
-  rubric_config.py               # reusable rubric-bundle-manifest loader (AD-22)
+  rubric_config.py               # rubric-domain configuration after CLI resolution
 score/
   score.py
   score_viz.py

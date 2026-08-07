@@ -15,7 +15,7 @@ The unified CLI runtime and configuration contracts are canonical in:
 
 - [Architecture: CLI runtime boundary](../architecture.md#cli-runtime-boundary)
 - [Architecture: input resolution](../architecture.md#input-resolution)
-- [Architecture: rubric bundle manifest](../architecture.md#rubric-bundle-manifest)
+- [Architecture: target manifest](../architecture.md#target-manifest)
 - [CLI/config use cases](../vera-cli-use-cases.md)
 
 This record captures the rationale for the corresponding stable-interface
@@ -31,6 +31,9 @@ domain functions.
 - Generation configs that relied on Python or CLI defaults must add the required
   generation behavior fields explicitly. CLI invocations retain defaults at the
   flag-definition boundary.
+- Target manifests are complete bundles of rubric, personas, and prompts.
+  `--target` selects the bundle, while explicit `--personas` and `--rubric`
+  remain available for callers who want to select components independently.
 - Legacy root scripts remain usable only during their feature-by-feature
   replacement. They are not dependencies of the unified CLI and are removed in a
   later cleanup PR.
