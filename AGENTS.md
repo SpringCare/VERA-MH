@@ -47,6 +47,12 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 
 Read [docs/architecture.md](docs/architecture.md) before structural changes. See its [ESCALATE section](docs/architecture.md#escalate-stop-and-ask) for when to stop and ask, and [Enforcement](docs/architecture.md#enforcement) for the pre-push verification commands.
 
+When an architecture escalation requires a design record, create it under
+[`docs/design/`](docs/design/) and follow the required format and lifecycle in
+[`docs/design/README.md`](docs/design/README.md). Keep current normative rules in
+the architecture documentation; design records preserve rationale and
+consequences without duplicating that contract.
+
 ## Testing
 
 The project uses [pytest](https://docs.pytest.org/) with unit and integration tests under `tests/`. Coverage is enforced (`--cov-fail-under=30` in `pyproject.toml`).
@@ -169,6 +175,7 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 |-----|----------|---------|
 | [README.md](./README.md) | Humans | Setup, CLI usage, output layout |
 | [docs/architecture.md](./docs/architecture.md) | Humans and agents | Target architecture, invariants, layer model |
+| [docs/design/](./docs/design/) | Humans and agents | Historical design decisions, rationale, and compatibility consequences |
 | **AGENTS.md** (this file) | All coding agents | Style, architecture map, testing, key commands, git conventions |
 | [CLAUDE.md](./CLAUDE.md) | Claude Code only | Slash commands, `.claude/` maintenance |
 | [docs/](./docs/) | Humans and agents | Topic deep dives (see links below) |
@@ -180,6 +187,7 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 ### Links
 
 - **Architecture:** [docs/architecture.md](docs/architecture.md)
+- **Design decision records:** [docs/design/README.md](docs/design/README.md)
 - **Setup, pipeline, output layout:** [README.md](./README.md)
 - **Custom LLM providers:** [docs/evaluating.md](./docs/evaluating.md)
 - **Judge behavior:** [docs/judge.md](./docs/judge.md)
