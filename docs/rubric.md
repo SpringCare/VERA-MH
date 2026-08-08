@@ -35,13 +35,17 @@ A complete bundle used for both generation and judging has this shape:
 
 ```text
 data/NEW_RUBRIC/
-├── rubric_manifest.json
+├── manifest.json
 ├── rubric.tsv
 ├── rubric_prompt_beginning.txt
 ├── question_prompt.txt
 ├── personas.tsv
 └── persona_context_template.txt
 ```
+
+`manifest.json` is the canonical target manifest used by the unified CLI. The
+legacy scripts still read `rubric_manifest.json`; retain an equivalent copy
+under that name while those compatibility entry points remain.
 
 `personas.tsv` and `persona_context_template.txt` are needed for conversation
 generation. Judging existing conversations only requires the rubric and judge
@@ -99,6 +103,18 @@ For more detail about ordinary Yes/No navigation, see
 [How the Rubric Works](judge.md).
 
 ## Running a compatible rubric
+
+Generate conversations with the unified CLI by naming the target directory:
+
+```bash
+uv run python vera.py generate \
+  -c <chatbot-model> \
+  -u <user-model>:1 \
+  --target NEW_RUBRIC
+```
+
+The commands below use the legacy compatibility entry points and therefore
+refer to `rubric_manifest.json`.
 
 Judge existing conversations with the new bundle:
 

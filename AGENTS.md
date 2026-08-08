@@ -29,7 +29,7 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 
 | Area | Key paths | When to edit |
 |------|-----------|--------------|
-| **CLI** | `vera.py` | Subcommands: generate, judge, score, pool, pipeline |
+| **CLI** | `vera.py`, `vera_cli/`, `utils/config_schema.py` | Thin entry point, command adapters, and shared command/config wiring |
 | **Generation** | `generate_conversations/` | Conversation simulation, turns, personas |
 | **Judging** | `judge/` | Rubric scoring, TSV output, question navigation |
 | **LLM providers** | `llm_clients/`, `llm_clients/llm_factory.py` | New models, custom HTTP/API providers |
@@ -39,7 +39,11 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 | **Config** | `utils/model_config_loader.py`, `llm_clients/config.py` | Model name resolution, API keys |
 | **Shared utils** | `utils/` | Naming, logging, conversation layout |
 
-**Entry point (target):** `vera.py` subcommands only. Legacy scripts (`generate.py`, `judge.py`, `run_pipeline.py`) are deleted entirely at the end of Phase 1 of the migration (not the full 6-phase migration) — see [docs/architecture.md](docs/architecture.md#migration-from-current-layout).
+**Entry points:** `vera.py generate` is the first unified CLI feature. `generate.py`
+remains temporarily as a compatibility adapter, while `judge.py` and
+`run_pipeline.py` remain the current entry points for features not migrated yet.
+Each legacy script is removed after its replacement feature is available; see
+[docs/architecture.md](docs/architecture.md#migration-from-current-layout).
 
 **Temporary experiments:** `tmp_tests/` (not committed). **Permanent tests:** `tests/`.
 
@@ -87,25 +91,16 @@ uv run pytest tests/integration/
 
 ## Key Commands
 
-Target CLI (`vera.py` — not implemented yet; use legacy commands below until Phase 1 of the migration completes):
+Unified generation CLI:
 
 ```bash
-# End-to-end pipeline (target)
-uv run python vera.py pipeline \
-  --user-agent claude-sonnet-4-5-20250929 \
-  --provider-agent gpt-4o \
-  --runs 1 \
-  --turns 10 \
-  --judge-model claude-sonnet-4-5-20250929 \
-  --max-personas 5
-
-# Generate / judge / score (target)
-uv run python vera.py generate -u claude-sonnet-4-5-20250929 -p gpt-4o -t 6 -r 1
-uv run python vera.py judge -f output/{YOUR_P_RUN}/ -j claude-sonnet-4-5-20250929
-uv run python vera.py score -r output/{YOUR_P_RUN}/evaluations/{YOUR_J_RUN}/results.csv
+uv run python vera.py generate \
+  -c gpt-4o \
+  -u claude-sonnet-4-5-20250929:1 \
+  --target SI
 ```
 
-Legacy (current implementation):
+Legacy commands for pipeline, judging, and compatibility:
 
 ```bash
 uv run python run_pipeline.py \

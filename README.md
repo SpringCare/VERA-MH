@@ -15,6 +15,7 @@ We value every interaction that follows the [Code of Conduct](https://www.contri
 - [Connecting your own LLM, Agent, or API](#connecting-your-own-llm-or-api)
 - [Recommended settings](#recommended-settings)
 - [Reliable VERA-MH score (automated)](#reliable-vera-mh-score-automated)
+- [Unified CLI: generation](#unified-cli-generation)
 - [Running VERA-MH step by step](#running-vera-mh-step-by-step)
 - [Using Extra Parameters](#using-extra-parameters)
 - [Data Files](#data-files)
@@ -32,7 +33,7 @@ We value every interaction that follows the [Code of Conduct](https://www.contri
 
 # Getting started
 
-This page covers [Environment setup](#environment-setup), optional [custom provider wiring](#connecting-your-own-llm-or-api), [Recommended settings](#recommended-settings) for comparable scores, the [automated pooled pipeline](#reliable-vera-mh-score-automated), and [Running VERA-MH step by step](#running-vera-mh-step-by-step) (`run_pipeline.py`, `generate.py`, `judge.py`, scoring, comparison, and improvement reports).
+This page covers [Environment setup](#environment-setup), optional [custom provider wiring](#connecting-your-own-llm-or-api), [Recommended settings](#recommended-settings) for comparable scores, the [automated pooled pipeline](#reliable-vera-mh-score-automated), the [unified generation CLI](#unified-cli-generation), and [Running VERA-MH step by step](#running-vera-mh-step-by-step) (`run_pipeline.py`, `generate.py`, `judge.py`, scoring, comparison, and improvement reports).
 
 ## Environment setup
 
@@ -129,6 +130,43 @@ uv run python scripts/pool_vera_scores.py -o <pool_parent_dir> \
 ```
 
 Use `uv run python scripts/pool_vera_scores.py --help` for options (including `--extract-from-log` for parsing a saved `run_pipeline.py` log).
+
+## Unified CLI: generation
+
+`vera.py generate` is the first command available through the unified CLI. A
+target selects the complete reusable evaluation bundle; generation consumes its
+personas and persona prompt:
+
+```bash
+uv run python vera.py generate \
+  -c gpt-4o \
+  -u claude-sonnet-4-5-20250929:1 \
+  --target SI
+```
+
+Use `--personas SI` when you want only SI's persona component explicitly:
+
+```bash
+uv run python vera.py generate \
+  -c gpt-4o \
+  -u claude-sonnet-4-5-20250929:1 \
+  --personas SI
+```
+
+Both forms resolve `data/SI/manifest.json` before dispatch. CLI defaults are
+defined at the flag boundary (`--turns 3`, `--output output`, unlimited
+concurrency, persona first). Config-driven runs provide every generation
+behavior field explicitly:
+
+```bash
+uv run python vera.py generate --config run.json
+```
+
+Run-defining flags and `--config` cannot be mixed. `--sample`, `--debug`, and
+`--print` are invocation-only controls and may accompany config input. The
+legacy `generate.py` remains temporarily as a compatibility adapter; judging
+and pipeline execution continue to use `judge.py` and `run_pipeline.py` until
+their unified commands are added.
 
 ## Running VERA-MH step by step
 
