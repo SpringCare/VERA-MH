@@ -53,12 +53,11 @@ Deep dives: [judge.md](./judge.md) (question flow and rubric navigation), [struc
 
 ```text
 CLI layer
-├── vera.py — sole executable; loads arguments and dispatches
+├── vera.py — sole executable; builds the root parser and dispatches
 └── vera_cli/
-    ├── arguments.py — top-level parser
-    ├── *_arguments.py — per-command flags and CLI defaults
-    ├── *_config.py — per-command canonical resolution
-    └── *_command.py — thin command adapters
+    ├── <command>.py — flags, defaults, resolution, and thin adapter
+    ├── config.py — shared config input helpers
+    └── targets.py — shared target-manifest resolution
     ↓ calls
 Domain packages (generate/, judge/, score/)
     ↓ register handlers with
@@ -71,8 +70,8 @@ Shared utilities (utils/) — leaf layer
 
 **Import rules:**
 
-- `vera.py` delegates CLI parsing, resolution, and command adaptation to
-  `vera_cli/`; it contains no business logic.
+- `vera.py` owns only the root parser, explicit subcommand registration, and
+  dispatch. It contains no command-specific flags, defaults, or business logic.
 - `vera_cli/` may import domain packages and `utils/`. Domain packages never
   import `vera_cli/`.
 - Domain packages (`generate/`, `judge/`, `score/`) do not import each other.
@@ -102,18 +101,16 @@ command, and renders CLI errors. Full flag/config reference:
 
 ### CLI runtime boundary
 
-The CLI layer has three responsibilities:
+The CLI layer has two levels of responsibility:
 
-- `vera.py` is the thin executable and contains no command-specific business
-  logic.
-- `vera_cli/arguments.py` builds the top-level parser. Small per-command
-  `*_arguments.py` modules define that command's flags and CLI defaults.
-- Shared config input and target-manifest helpers stay in focused modules;
-  per-command `*_config.py` modules enforce input exclusivity and produce the
-  complete canonical configuration before print, persistence, or dispatch.
-- Per-command `*_command.py` modules contain only orchestration adapters. They
-  receive resolved values and call importable Python functions directly; they
-  never invoke another CLI parser or subprocess.
+- `vera.py` builds the root parser, explicitly registers each supported
+  subcommand, parses once, and dispatches. It contains no command-specific
+  flags, defaults, resolution, or business logic.
+- One `vera_cli/<command>.py` adapter per subcommand keeps that command's flags,
+  CLI defaults, canonical resolution, and thin call to the domain function
+  together. Shared config input and target-manifest mechanics stay in
+  `vera_cli/config.py` and `vera_cli/targets.py`. Command adapters never invoke
+  another CLI parser or subprocess.
 
 `utils/config_schema.py` owns schema validation and canonical serialization. It
 does not parse CLI arguments, read config or manifest files, resolve paths, or
@@ -127,7 +124,7 @@ rather than to a script entry point.
 Legacy root scripts may remain temporarily while their replacement feature is
 migrated. During that transition, `vera_cli` may import the reusable function
 from a root script, but never its argument parser. For generation, the temporary
-flow is `vera_cli.generate_command` → `generate.main`. Removing `generate.py`
+flow is `vera_cli.generate` → `generate.main`. Removing `generate.py`
 and moving that function plus the existing `generate_conversations/` code into
 the permanent `generate/` package is one atomic later change, so a root
 `generate.py` module and a top-level `generate/` package never coexist.
@@ -276,7 +273,7 @@ orthogonal.
 
 | Package / path | Owns | Key modules |
 |----------------|------|-------------|
-| `vera_cli/` | CLI flags/defaults, input resolution, thin command adapters | `arguments.py`, `config.py`, `targets.py`, per-command modules |
+| `vera_cli/` | One cohesive adapter per command plus shared config/target helpers | `generate.py`, `judge.py`, `config.py`, `targets.py` |
 | `generate/` | Simulation, turns, batch runner (pure core; handler owns I/O) | `conversation_simulator.py`, `runner.py` |
 | `judge/` | Rubric navigation, LLM judge, improvement reporting (pure core; handler owns I/O) | `question_navigator.py`, `llm_judge.py`, `scripts/summarize_results.py` |
 | `score/` | Aggregation, visualization, pooling — split out of `judge/` | `score.py`, `score_viz.py`, `pool.py` |

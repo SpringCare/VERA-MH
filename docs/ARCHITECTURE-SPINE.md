@@ -215,7 +215,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 - **Binds:** `vera_cli/`, `generate/`, `judge/`
 - **Prevents:** either domain owning a cross-domain target definition; generation and judging reimplementing manifest resolution differently; legacy script parsers becoming architectural dependencies.
-- **Rule:** [ADOPTED] `vera_cli/targets.py` loads and validates target manifests; each command's `*_config.py` resolver expands the relevant components into canonical inputs. Domain functions receive only their resolved values and never a target manifest. Explicit `--rubric <target>` consumes the rubric and judging-prompt portion; explicit `--personas <target>` consumes the personas and persona-prompt portion. Legacy helpers may adapt these inputs during migration but are not dependencies of the unified CLI.
+- **Rule:** [ADOPTED] `vera_cli/targets.py` loads and validates target manifests; each `vera_cli/<command>.py` adapter expands the relevant components into canonical inputs. Domain functions receive only their resolved values and never a target manifest. Explicit `--rubric <target>` consumes the rubric and judging-prompt portion; explicit `--personas <target>` consumes the personas and persona-prompt portion. Legacy helpers may adapt these inputs during migration but are not dependencies of the unified CLI.
 
 ### AD-23 — Output layout is nested-only, with path-first stage contracts
 
@@ -314,13 +314,10 @@ output/
 Package tree:
 
 ```text
-vera.py                          # CLI orchestrator, thin
+vera.py                          # root parser, command registration, dispatch
 vera_cli/
-  arguments.py                   # top-level parser
   config.py, targets.py          # shared config and manifest helpers
-  *_arguments.py                 # per-command flags and CLI defaults
-  *_config.py                    # per-command canonical resolution
-  *_command.py                   # thin adapters to domain functions
+  <command>.py                   # flags, defaults, resolution, thin adapter
 generate/
   conversation_simulator.py      # pure core
   runner.py                      # owns I/O, delegates to workers/
