@@ -1,4 +1,4 @@
-"""Resolved-input application function for conversation generation."""
+"""Resolved-input workflow for conversation generation."""
 
 from __future__ import annotations
 
