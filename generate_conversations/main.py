@@ -1,4 +1,9 @@
-"""Resolved-input workflow for conversation generation."""
+"""Main application entry point for one resolved generation invocation.
+
+This module owns run-level setup and validation, then delegates conversation
+execution to ``ConversationRunner``. CLI parsing, defaults, and target/config
+resolution belong outside the generation domain.
+"""
 
 from __future__ import annotations
 
