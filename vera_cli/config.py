@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from utils.config_schema import RunConfig
+from utils.config_schema import InvocationConfig, ModelSpec, RunConfig
 
 ROOT = Path(__file__).resolve().parents[1]
 VERA_RUN_CONFIG_ENV = "VERA_RUN_CONFIG"
@@ -54,21 +54,73 @@ def load_config(config_path: str | None) -> dict[str, Any] | None:
     return value
 
 
+def required(data: dict[str, Any], field: str, *, section: str) -> Any:
+    """Return a required config field with one consistent error shape."""
+    if field not in data:
+        raise ConfigError(f"{section} is missing required field: {field}")
+    return data[field]
+
+
+def model_from_config(value: Any, *, field: str) -> ModelSpec:
+    if not isinstance(value, dict):
+        raise ConfigError(f"{field} must be an object")
+    return ModelSpec.from_dict(value)
+
+
+def models_from_config(value: Any, *, field: str) -> list[ModelSpec]:
+    if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
+        raise ConfigError(f"{field} must be a list of objects")
+    return [ModelSpec.from_dict(item) for item in value]
+
+
+def resolve_input(
+    args: Any,
+    *,
+    run_fields: tuple[str, ...],
+    allowed_fields: set[str],
+) -> tuple[dict[str, Any] | None, InvocationConfig]:
+    """Load one input form and resolve controls shared by every command."""
+    config = load_config(getattr(args, "config", None))
+    supplied = [field for field in run_fields if hasattr(args, field)]
+    if config is not None and supplied:
+        flags = ", ".join(f"--{field.replace('_', '-')}" for field in supplied)
+        raise ConfigError(
+            f"config input cannot be combined with run-defining CLI flags: {flags}"
+        )
+
+    persisted: dict[str, Any] = {}
+    if config is not None:
+        unknown = set(config).difference(allowed_fields | {"invocation"})
+        if unknown:
+            raise ConfigError(
+                f"unknown top-level config field(s): {', '.join(sorted(unknown))}"
+            )
+        value = config.get("invocation", {})
+        if not isinstance(value, dict):
+            raise ConfigError("invocation must be an object")
+        unknown = set(value).difference({"debug", "sample"})
+        if unknown:
+            raise ConfigError(
+                f"unknown invocation field(s): {', '.join(sorted(unknown))}"
+            )
+        persisted = value
+
+    try:
+        invocation = InvocationConfig(
+            debug=getattr(args, "debug", persisted.get("debug", False)),
+            sample=getattr(args, "sample", persisted.get("sample")),
+        )
+    except ValueError as error:
+        raise ConfigError(str(error)) from error
+    return config, invocation
+
+
 def print_resolved_config(run_config: RunConfig) -> None:
     print(json.dumps(run_config.to_dict(), indent=2))
 
 
-def render_invocation(
-    run_config: RunConfig, *, command: str, sample: int | None, debug: bool
-) -> str:
+def render_invocation(run_config: RunConfig, *, command: str) -> str:
     compact = json.dumps(run_config.to_dict(), sort_keys=True, separators=(",", ":"))
-    controls: list[str] = []
-    if sample is not None:
-        controls.extend(["--sample", str(sample)])
-    if debug:
-        controls.append("--debug")
-    suffix = f" {shlex.join(controls)}" if controls else ""
     return (
-        f"{VERA_RUN_CONFIG_ENV}={shlex.quote(compact)} "
-        f"uv run python vera.py {command}{suffix}"
+        f"{VERA_RUN_CONFIG_ENV}={shlex.quote(compact)} uv run python vera.py {command}"
     )

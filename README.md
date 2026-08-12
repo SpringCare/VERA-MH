@@ -154,7 +154,7 @@ uv run python vera.py generate \
 ```
 
 Both forms resolve `data/SI/manifest.json` before dispatch. CLI defaults are
-defined at the flag boundary (`--turns 3`, `--output output`, unlimited
+defined at the flag boundary (`--turns 30`, `--output output`, unlimited
 concurrency, persona first). Config-driven runs provide every generation
 behavior field explicitly:
 
@@ -163,7 +163,8 @@ uv run python vera.py generate --config run.json
 ```
 
 Run-defining flags and `--config` cannot be mixed. `--sample`, `--debug`, and
-`--print` are invocation-only controls and may accompany config input. The
+`--print` may accompany config input. Executed runs record `sample` and `debug`
+as invocation metadata in their resolved config; `--print` creates no run. The
 legacy `generate.py` remains temporarily as a compatibility adapter; judging
 and pipeline execution continue to use `judge.py` and `run_pipeline.py` until
 their unified commands are added.

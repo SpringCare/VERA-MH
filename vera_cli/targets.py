@@ -6,7 +6,7 @@ import dataclasses
 import json
 from pathlib import Path
 
-from .config import ROOT, ConfigError, existing_file
+from .config import ROOT, ConfigError, existing_file, path_from_root, required
 
 REQUIRED_FIELDS = (
     "rubric_file",
@@ -105,3 +105,52 @@ def load_target(manifest_path: Path) -> ResolvedTarget:
             "persona_context_template_file", value["persona_context_template_file"]
         ),
     )
+
+
+def resolve_generation_personas(
+    config: dict[str, object], generation: dict[str, object]
+) -> list[tuple[list[str], str]]:
+    """Resolve target-backed or explicit persona inputs for generation."""
+    target = config.get("target")
+    if target is not None:
+        if not isinstance(target, str) or not target:
+            raise ConfigError("target must be a non-empty string")
+        overlap = {"personas", "persona_context_template"}.intersection(generation)
+        if overlap:
+            raise ConfigError(
+                "target is mutually exclusive with explicit generation fields: "
+                f"{', '.join(sorted(overlap))}"
+            )
+        judging = config.get("judging")
+        if isinstance(judging, dict) and judging.get("rubrics"):
+            raise ConfigError("target is mutually exclusive with judging.rubrics")
+        return [
+            (resolved.personas, resolved.persona_context_template)
+            for resolved in (
+                load_target(manifest) for manifest in target_manifest_paths(target)
+            )
+        ]
+
+    personas = required(generation, "personas", section="generation config")
+    context = required(
+        generation, "persona_context_template", section="generation config"
+    )
+    if (
+        not isinstance(personas, list)
+        or not personas
+        or not all(isinstance(persona, str) and persona for persona in personas)
+    ):
+        raise ConfigError("generation.personas must be a non-empty list of paths")
+    if not isinstance(context, str) or not context:
+        raise ConfigError("generation.persona_context_template must be a path")
+    return [
+        (
+            [
+                existing_file(path_from_root(persona), field="generation.personas")
+                for persona in personas
+            ],
+            existing_file(
+                path_from_root(context), field="generation.persona_context_template"
+            ),
+        )
+    ]

@@ -124,10 +124,34 @@ class GenerationConfig:
 
 
 @dataclasses.dataclass(frozen=True)
+class InvocationConfig:
+    """Controls that describe how this resolved run is executed."""
+
+    debug: bool
+    sample: int | None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.debug, bool):
+            raise ValueError("invocation.debug must be a boolean")
+        if self.sample is not None:
+            if isinstance(self.sample, bool) or not isinstance(self.sample, int):
+                raise ValueError("invocation.sample must be null or an integer")
+            if self.sample < 1:
+                raise ValueError("--sample must be at least 1")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"debug": self.debug, "sample": self.sample}
+
+
+@dataclasses.dataclass(frozen=True)
 class RunConfig:
     """Canonical resolved form of one ``vera generate`` invocation."""
 
+    invocation: InvocationConfig
     generation: GenerationConfig
 
     def to_dict(self) -> dict[str, Any]:
-        return {"generation": self.generation.to_dict()}
+        return {
+            "invocation": self.invocation.to_dict(),
+            "generation": self.generation.to_dict(),
+        }

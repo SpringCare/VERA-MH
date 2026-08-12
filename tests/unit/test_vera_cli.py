@@ -11,14 +11,9 @@ import pytest
 import vera
 from utils.config_schema import ModelSpec
 from vera_cli import (
-    arguments,
-    generate_command,
-    generate_config,
-    targets,
-)
-from vera_cli import (
     config as cli_config,
 )
+from vera_cli import generate, targets
 
 
 @pytest.fixture(autouse=True)
@@ -37,7 +32,7 @@ def _generation_config(**overrides: object) -> dict:
         "chatbot": {"name": "gpt-5", "repeats": 1},
         "user": [{"name": "claude-sonnet-5", "repeats": 1}],
         "personas": ["data/SI/personas.tsv"],
-        "turns": 3,
+        "turns": 30,
         "output": "output",
         "max_concurrent": None,
         "max_total_words": None,
@@ -82,7 +77,7 @@ def _write_target(tmp_path: Path, *, persona_count: int = 1) -> Path:
 
 def test_entry_point_stays_thin_and_generate_only() -> None:
     source = Path(vera.__file__).read_text(encoding="utf-8")
-    parser = arguments.build_parser()
+    parser = vera.build_parser()
 
     assert len(source.splitlines()) < 50
     assert "generate_conversations" not in source
@@ -101,7 +96,7 @@ def test_model_shorthand_preserves_provider_colons() -> None:
 
 
 def test_target_and_personas_resolve_same_generation_inputs() -> None:
-    parser = arguments.build_parser()
+    parser = vera.build_parser()
     target_args = parser.parse_args(
         ["generate", "-c", "gpt-5", "-u", "claude-sonnet-5", "--target", "SI"]
     )
@@ -117,8 +112,8 @@ def test_target_and_personas_resolve_same_generation_inputs() -> None:
         ]
     )
 
-    assert generate_config.resolve_generate_configs(target_args) == (
-        generate_config.resolve_generate_configs(personas_args)
+    assert generate.resolve_configs(target_args) == generate.resolve_configs(
+        personas_args
     )
 
 
@@ -139,14 +134,14 @@ def test_cli_defaults_resolve_before_print(capsys: pytest.CaptureFixture) -> Non
     rendered = capsys.readouterr().out.strip()
     assert result == 0
     assert rendered.startswith(f"{cli_config.VERA_RUN_CONFIG_ENV}=")
-    assert '"turns":3' in rendered
+    assert '"turns":30' in rendered
     assert '"repeats":2' in rendered
     assert "data/SI/personas.tsv" in rendered
 
 
 def test_generation_delegates_every_value_to_generate_main() -> None:
     with patch.object(
-        generate_command, "generate_conversations", new_callable=AsyncMock
+        generate, "generate_conversations", new_callable=AsyncMock
     ) as generate_main:
         generate_main.return_value = ([], "output/generated")
         result = vera.main(
@@ -197,7 +192,7 @@ def test_generation_delegates_every_value_to_generate_main() -> None:
 def test_each_user_model_gets_one_generate_main_call(tmp_path: Path) -> None:
     manifest = _write_target(tmp_path, persona_count=2)
     with patch.object(
-        generate_command, "generate_conversations", new_callable=AsyncMock
+        generate, "generate_conversations", new_callable=AsyncMock
     ) as generate_main:
         generate_main.return_value = ([], "output/generated")
         vera.main(
@@ -234,9 +229,9 @@ def test_config_requires_all_generation_behavior_fields(tmp_path: Path) -> None:
 
 def test_config_paths_resolve_from_repository_root(tmp_path: Path) -> None:
     config = _write_config(tmp_path, _generation_config())
-    args = arguments.build_parser().parse_args(["generate", "--config", str(config)])
+    args = vera.build_parser().parse_args(["generate", "--config", str(config)])
 
-    generation = generate_config.resolve_generate_configs(args)[0].generation
+    generation = generate.resolve_configs(args)[0].generation
     assert generation.personas == [
         str((cli_config.ROOT / "data/SI/personas.tsv").resolve())
     ]
@@ -251,9 +246,9 @@ def test_config_target_expands_to_concrete_generation_paths(tmp_path: Path) -> N
     del generation["personas"]
     del generation["persona_context_template"]
     config = _write_config(tmp_path, {"target": "SI", "generation": generation})
-    args = arguments.build_parser().parse_args(["generate", "--config", str(config)])
+    args = vera.build_parser().parse_args(["generate", "--config", str(config)])
 
-    resolved = generate_config.resolve_generate_configs(args)[0].to_dict()
+    resolved = generate.resolve_configs(args)[0].to_dict()
     assert "target" not in resolved
     assert resolved["generation"]["personas"] == [
         str((cli_config.ROOT / "data/SI/personas.tsv").resolve())
@@ -298,7 +293,21 @@ def test_config_allows_debug_sample_and_print_controls(
     assert result == 0
     rendered = capsys.readouterr().out
     assert rendered.startswith(cli_config.VERA_RUN_CONFIG_ENV)
-    assert "uv run python vera.py generate --sample 1 --debug" in rendered
+    assert '"debug":true' in rendered
+    assert '"sample":1' in rendered
+    assert rendered.rstrip().endswith("uv run python vera.py generate")
+
+
+def test_persisted_invocation_metadata_is_accepted(tmp_path: Path) -> None:
+    config_data = _generation_config()
+    config_data["invocation"] = {"debug": True, "sample": 2}
+    config = _write_config(tmp_path, config_data)
+    args = vera.build_parser().parse_args(["generate", "--config", str(config)])
+
+    invocation = generate.resolve_configs(args)[0].invocation
+
+    assert invocation.debug is True
+    assert invocation.sample == 2
 
 
 @pytest.mark.parametrize("field", ["sample", "debug", "print"])
@@ -341,7 +350,7 @@ def test_incomplete_target_fails_before_dispatch(tmp_path: Path) -> None:
 
     with (
         patch.object(
-            generate_command, "generate_conversations", new_callable=AsyncMock
+            generate, "generate_conversations", new_callable=AsyncMock
         ) as runner,
         pytest.raises(SystemExit) as error,
     ):
@@ -364,12 +373,12 @@ def test_incomplete_target_fails_before_dispatch(tmp_path: Path) -> None:
 def test_target_all_produces_one_config_per_manifest(tmp_path: Path) -> None:
     first = _write_target(tmp_path / "first")
     second = _write_target(tmp_path / "second")
-    args = arguments.build_parser().parse_args(
+    args = vera.build_parser().parse_args(
         ["generate", "-c", "gpt-5", "-u", "claude-sonnet-5", "--target", "all"]
     )
 
     with patch.object(targets, "target_catalog", return_value=[first, second]):
-        run_configs = generate_config.resolve_generate_configs(args)
+        run_configs = generate.resolve_configs(args)
 
     assert len(run_configs) == 2
 

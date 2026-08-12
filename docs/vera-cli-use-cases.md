@@ -98,7 +98,7 @@ a supported first-class path, not only a compatibility fallback; it selects the
 persona files and persona prompt from that target's manifest.
 
 Generation behavior is also controlled at this input boundary. CLI invocations
-default to `--turns 3`, `--output output`, unlimited concurrency, no total-word
+default to `--turns 30`, `--output output`, unlimited concurrency, no total-word
 cap, persona-first ordering, and one unnamed session. The explicit persona
 component includes the files and context template resolved from the target named
 by `--personas`; `--target` resolves the same fields while also selecting the
@@ -198,7 +198,7 @@ Top-level `generation` and `judging` blocks are **completely orthogonal** — mo
       {"name": "gpt-5", "repeats": 2}
     ],
     "personas": ["data/personas_a.json", "data/personas_b.json"],
-    "turns": 3,
+    "turns": 30,
     "output": "output",
     "max_concurrent": null,
     "max_total_words": null,
