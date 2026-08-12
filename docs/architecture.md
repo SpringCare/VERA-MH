@@ -144,16 +144,18 @@ the permanent `generate/` package is one atomic later change, so a root
 
 Config and run-defining CLI flags are strictly either/or, never combined for the
 same run — see [vera-cli-use-cases.md](./vera-cli-use-cases.md#config-mechanism).
-Debug and presentation controls such as `--sample`, `--debug`, and `--print` are
-invocation-only; they are not serialized into `RunConfig`. `-c` selects the
-chatbot under test; `-u`/`-j` shorthand selects models/repeats for the user/judge
-side respectively; bespoke sampling knobs are config-only. `--target` selects a
-complete target, while `--personas` and `--rubric` explicitly select only the
-persona or rubric component of a named target. Each component includes its
-associated prompt from that target's manifest. `--rubric` remains list-shaped,
-though only a length-1 list is supported until Phase 4. `-c` is required for
-`generate`/`pipeline` whenever `--config` isn't used — there is no default
-chatbot.
+Debug and presentation controls such as `--sample`, `--debug`, and `--print`
+may accompany either input form. Executed runs record `sample` and `debug` as
+invocation metadata in their immutable `config.json`, so it describes how the
+run actually executed; `--print` creates no run and is not persisted. `-c`
+selects the chatbot under test; `-u`/`-j` shorthand selects models/repeats for
+the user/judge side respectively; bespoke sampling knobs are config-only.
+`--target` selects a complete target, while `--personas` and `--rubric`
+explicitly select only the persona or rubric component of a named target. Each
+component includes its associated prompt from that target's manifest.
+`--rubric` remains list-shaped, though only a length-1 list is supported until
+Phase 4. `-c` is required for `generate`/`pipeline` whenever `--config` isn't
+used — there is no default chatbot.
 
 Generation behavior defaults are defined only at the CLI flag boundary. A
 config-driven run provides the corresponding generation fields explicitly; it
@@ -219,7 +221,6 @@ project-root/                         ← $ROOT (contains vera.py)
 ├── configs/
 │   └── run.json                      ← config.json
 └── data/
-    ├── personas_a.json
     └── SI/
         ├── manifest.json             ← target manifest
         ├── personas.tsv
@@ -229,7 +230,7 @@ project-root/                         ← $ROOT (contains vera.py)
         └── question_prompt.txt
 ```
 
-- `configs/run.json`'s `generation.personas: ["data/personas_a.json"]` always means `project-root/data/personas_a.json` — resolved against `$ROOT`, no matter where you run `vera.py` from or where `run.json` itself lives.
+- `configs/run.json`'s `generation.personas: ["data/SI/personas.tsv"]` always means `project-root/data/SI/personas.tsv` — resolved against `$ROOT`, no matter where you run `vera.py` from or where `run.json` itself lives.
 - `data/SI/manifest.json`'s `personas: ["personas.tsv"]` always means `data/SI/personas.tsv` — resolved against the manifest's own folder, so the whole target directory stays portable if copied into a different checkout, independent of `$ROOT`.
 
 Same shape of field, same-looking relative string, two different rules — hence calling both out explicitly here rather than leaving it implicit.
@@ -244,6 +245,13 @@ manifest.
 loads the whole manifest. `vera generate --target ...` consumes its persona and
 persona-prompt fields; `vera judge --target ...` consumes its rubric and
 judging-prompt fields; `vera pipeline --target ...` consumes both.
+
+For standalone judging, `--target SI` and `--rubric SI` therefore resolve to
+the same rubric and judging prompts. The difference is wording, not runtime
+behavior: `--target` says “select SI's complete target” even though judge uses
+only its judging component, while `--rubric` explicitly names that component.
+Both forms remain available so a caller can express either intent consistently
+with `generate` and `pipeline`.
 
 Advanced callers may keep generation and judging independent. `--personas`
 `<name-or-manifest-path>` selects only the personas and persona prompt from that
@@ -338,7 +346,7 @@ Agents and contributors must comply. Import boundaries are documented in the [La
 - **Generation:** conversation simulation logic stays in `generate/`; the simulator core is pure (no filesystem, no logging) — the handler owns all I/O.
 - **Judging:** rubric navigation and LLM-judge logic stay in `judge/`, also pure-core-plus-handler. Judge never auto-scores — `vera score`/`vera pool` are separate subcommands. **Rubric navigation logic lives in code, never in the prompt:** which question is asked next given an answer is determined entirely by `QuestionNavigator` walking `question_flow_data` parsed from the rubric TSV — the judge LLM answers/judges the current question only, and is never asked to decide or influence what comes next.
 - **Scoring:** aggregation, visualization, and pooling stay in `score/`, never re-absorbed into `judge/`.
-- **Config vs CLI:** `--config` and CLI flags are strictly either/or for a given run — never combined, except `--sample <N>` (see [Use case 4](./vera-cli-use-cases.md#use-case-4--smoke-test)), a debug-only smoke-test override that never carries information `config.json` itself defines and is never persisted into the run's own `config.json`. `generation` and `judging` blocks in `config.json` are completely orthogonal; model selection for one must never influence the other.
+- **Config vs CLI:** `--config` and run-defining CLI flags are strictly either/or for a given run. `--sample <N>`, `--debug`, and `--print` may accompany either form; executed runs record `sample` and `debug` as invocation metadata in their immutable `config.json`, while `--print` creates no run. `generation` and `judging` blocks in `config.json` are completely orthogonal; model selection for one must never influence the other.
 - **Naming/layout:** all folder/file naming logic (the `c_`/`u_`/`j_` scheme) lives in one `utils/` module — never duplicated across handlers.
 - **Traceability:** every run writes an immutable `config.json` (+ `.sha256` sidecar) and a separate, mutable `state.json`. `state.json` records both the requested and actual-resolved model identifier.
 - **LLM providers:** new providers implement [llm_clients/llm_interface.py](../llm_clients/llm_interface.py) and register in [llm_clients/llm_factory.py](../llm_clients/llm_factory.py). Every model-list entry's `name` in config is always a specific model identifier, never a bare provider name.

@@ -31,6 +31,8 @@ domain functions.
 - Generation configs that relied on Python or CLI defaults must add the required
   generation behavior fields explicitly. CLI invocations retain defaults at the
   flag-definition boundary.
+- Executed runs persist the effective `debug` and `sample` values as invocation
+  metadata in their immutable `config.json`; `--print` creates no run artifact.
 - Target manifests are complete bundles of rubric, personas, and prompts.
   `--target` selects the bundle, while explicit `--personas` and `--rubric`
   select the named target's persona or rubric component, including that
