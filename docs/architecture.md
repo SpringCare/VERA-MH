@@ -53,12 +53,12 @@ Deep dives: [judge.md](./judge.md) (question flow and rubric navigation), [struc
 
 ```text
 CLI layer
-├── vera.py — sole executable; loads arguments and dispatches
+├── vera.py — sole executable; builds the root parser and dispatches
 └── vera_cli/
-    ├── arguments.py — top-level parser
-    ├── *_arguments.py — per-command flags and CLI defaults
-    ├── *_config.py — per-command canonical resolution
-    └── *_command.py — thin command adapters
+    ├── <command>.py — one module per command: flags, CLI defaults,
+    │                  canonical resolution, and the domain call
+    ├── config.py — shared config input, input exclusivity, path resolution
+    └── targets.py — target discovery and manifest validation
     ↓ calls
 Domain packages (generate/, judge/, score/)
     ↓ register handlers with
@@ -105,15 +105,20 @@ command, and renders CLI errors. Full flag/config reference:
 The CLI layer has three responsibilities:
 
 - `vera.py` is the thin executable and contains no command-specific business
-  logic.
-- `vera_cli/arguments.py` builds the top-level parser. Small per-command
-  `*_arguments.py` modules define that command's flags and CLI defaults.
-- Shared config input and target-manifest helpers stay in focused modules;
-  per-command `*_config.py` modules enforce input exclusivity and produce the
-  complete canonical configuration before print, persistence, or dispatch.
-- Per-command `*_command.py` modules contain only orchestration adapters. They
-  receive resolved values and call importable Python functions directly; they
-  never invoke another CLI parser or subprocess.
+  logic. It builds the root parser, registers each command, and renders CLI
+  errors.
+- One `vera_cli/<command>.py` module owns everything specific to that command:
+  its flags, its CLI defaults, its canonical resolution, and its call into the
+  domain. A command is reachable only once registered in `vera.py`.
+- Resolution completes before print, persistence, or dispatch: input
+  exclusivity is enforced, names become verified absolute paths, and the result
+  is a canonical configuration.
+- The domain call is an orchestration adapter only. It receives resolved values
+  and calls importable Python functions directly; it never invokes another CLI
+  parser or subprocess.
+- Shared input and target-manifest helpers stay in focused modules
+  (`vera_cli/config.py`, `vera_cli/targets.py`). See
+  [../vera_cli/README.md](../vera_cli/README.md) for the command contract.
 
 `utils/config_schema.py` owns schema validation and canonical serialization. It
 does not parse CLI arguments, read config or manifest files, resolve paths, or
@@ -127,14 +132,22 @@ rather than to a script entry point.
 Legacy root scripts may remain temporarily while their replacement feature is
 migrated. During that transition, `vera_cli` may import the reusable function
 from a root script, but never its argument parser. For generation, the temporary
-flow is `vera_cli.generate_command` → `generate.main`. Removing `generate.py`
-and moving that function plus the existing `generate_conversations/` code into
-the permanent `generate/` package is one atomic later change, so a root
-`generate.py` module and a top-level `generate/` package never coexist.
+flow is `vera_cli.generate` → `generate.run_for_user_models` → `generate.main`.
+Removing `generate.py` and moving those functions plus the existing
+`generate_conversations/` code into the permanent `generate/` package is one
+atomic later change, so a root `generate.py` module and a top-level `generate/`
+package never coexist.
+
+`run_for_user_models` and its `_legacy_model_config` helper are explicit
+stopgaps. They put the expansion of a run's user models, and the flattening of
+`ModelSpec` into the legacy dict signature, on the domain side of the boundary
+rather than in the CLI. Both are deleted when the generation domain accepts
+`ModelSpec` directly, which is also what lets `generate` and `judge` describe
+models identically.
 
 | Subcommand | Delegates to | Purpose |
 |------------|--------------|---------|
-| `vera generate` | generation application function (temporarily `generate.main`) | Simulate conversations → `c_<chatbot>/<run>/conversations/` |
+| `vera generate` | generation application function (temporarily `generate.run_for_user_models`) | Simulate conversations → `c_<chatbot>/<run>/conversations/` |
 | `vera judge` | `judge.runner` | Evaluate transcripts → `evaluations/<rubric>/j_*` |
 | `vera score` | `score.score` | Aggregate `results.csv` → scores and visualizations |
 | `vera pool` | `score.pool` | Concatenate multiple evaluation folders into one pooled result |
@@ -276,7 +289,7 @@ orthogonal.
 
 | Package / path | Owns | Key modules |
 |----------------|------|-------------|
-| `vera_cli/` | CLI flags/defaults, input resolution, thin command adapters | `arguments.py`, `config.py`, `targets.py`, per-command modules |
+| `vera_cli/` | CLI flags/defaults, input resolution, thin command adapters | `<command>.py` per command, `config.py`, `targets.py` |
 | `generate/` | Simulation, turns, batch runner (pure core; handler owns I/O) | `conversation_simulator.py`, `runner.py` |
 | `judge/` | Rubric navigation, LLM judge, improvement reporting (pure core; handler owns I/O) | `question_navigator.py`, `llm_judge.py`, `scripts/summarize_results.py` |
 | `score/` | Aggregation, visualization, pooling — split out of `judge/` | `score.py`, `score_viz.py`, `pool.py` |
