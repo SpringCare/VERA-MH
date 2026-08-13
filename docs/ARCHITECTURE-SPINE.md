@@ -7,7 +7,7 @@ paradigm: 'Layered architecture (strict top-down dependency direction) with per-
 scope: 'VERA-MH target architecture: pipeline CLI, generate/judge/score split, llm_clients/, workers/, storage/, utils/, and the config/naming/enforcement contract that binds them'
 status: final
 created: '2026-07-21'
-updated: '2026-07-27'
+updated: '2026-08-07'
 binds: []
 sources:
   - docs/architecture.md
@@ -29,7 +29,7 @@ Layer → package mapping:
 
 | Layer | Packages |
 | --- | --- |
-| CLI orchestrator | `vera.py` |
+| CLI | `vera.py`, `vera_cli/` |
 | Domain (mutually isolated) | `generate/`, `judge/`, `score/` |
 | Workers | `workers/` |
 | Infrastructure | `llm_clients/`, `storage/` |
@@ -39,7 +39,8 @@ Layer → package mapping:
 
 ```mermaid
 graph TD
-    CLI["vera.py (CLI, thin)"] --> GEN["generate/"]
+    ENTRY["vera.py (sole executable, thin)"] --> CLI["vera_cli/"]
+    CLI --> GEN["generate/"]
     CLI --> JUDGE["judge/"]
     CLI --> SCORE["score/"]
     GEN --> WORKERS["workers/"]
@@ -61,9 +62,9 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 ### AD-1 — Single, thin CLI entrypoint
 
-- **Binds:** `vera.py`, `generate/`, `judge/`, `score/`
+- **Binds:** `vera.py`, `vera_cli/`, `generate/`, `judge/`, `score/`
 - **Prevents:** business logic creeping into the CLI entrypoint; a fat orchestrator re-implementing what domain runners already do; a second root-level entrypoint script reappearing after migration.
-- **Rule:** [ADOPTED] `vera.py` is the only root-level orchestrator; domain packages are libraries, not invoked directly as scripts, and no root-level Python entry-point scripts exist alongside it. `vera.py` only parses arguments and delegates — pipeline step sequencing delegates to domain runners/handlers, never to inline logic in `vera.py` itself.
+- **Rule:** [ADOPTED] `vera.py` is the only root-level executable in the target layout; domain packages are libraries, not invoked directly as scripts. `vera.py` only loads arguments and dispatches. CLI support lives in small, responsibility-focused `vera_cli/` modules: top-level parser, per-command flags/defaults, canonical config resolution, and thin command adapters. During migration an adapter may import a reusable function from a legacy root module, but never its CLI parser or a subprocess. Removing `generate.py` and introducing the permanent `generate/` package happen atomically. Domain packages never import `vera_cli/`, and neither `vera.py` nor `vera_cli/` contains domain behavior.
 
 ### AD-2 — Domain package isolation and workers inversion of control
 
@@ -184,13 +185,13 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 - **Binds:** `vera.py`, `utils/config_schema.py`
 - **Prevents:** a merge/override mechanism between two config sources that would make the effective config ambiguous or order-dependent.
-- **Rule:** [ADOPTED] For a given run, a piece of information (model selection/repeats, sampling knobs, persona/rubric lists, etc.) is supplied via `--config` JSON or via CLI flags, never both. Supplying the same information through both is rejected/errors — there is no silent merge. `--config` always resolves internally to the same canonical flag-set the CLI would have produced, and that resolved form is printed at run start. **`--sample <N>` is the one deliberate, named exception:** it MAY be combined with `--config`, since it's a debug-only smoke-test override (UC4) — it never sets information `config.json` itself carries, it only caps how much of the already-resolved persona/rubric/judge lists get used for this invocation, and it's never persisted into the run's own `config.json` artifact (AD-18) or any resumed state. No other flag gets this treatment; a future flag needs its own named exception here, not an implicit ride on `--sample`'s.
+- **Rule:** [ADOPTED] For a given run, a piece of information (model selection/repeats, sampling knobs, persona/rubric lists, etc.) is supplied via `--config` JSON or via CLI flags, never both. Supplying the same information through both is rejected/errors — there is no silent merge. Both forms resolve to the same canonical `RunConfig` before print, persistence, or dispatch. CLI-only controls such as `--debug`, `--sample`, and `--print` may accompany either form. `--debug` and `--sample <N>` are recorded as invocation metadata in the run's persisted `config.json`, because they describe how the run actually executed; a resumed sampled run retains that sampled scope. `--print` is not persisted because it exits without creating a run. **`--sample <N>` is the one deliberate behavior-altering exception:** it caps how much of the already-resolved persona/rubric/judge lists this invocation uses without replacing those canonical lists. No other run-scoping flag gets this treatment; a future flag needs its own named exception here, not an implicit ride on `--sample`'s.
 
 ### AD-18 — config.json and state.json are two distinct artifacts
 
 - **Binds:** `utils/config_schema.py`, all subcommands that write run output
 - **Prevents:** one evolving "manifest" file trying to be both the immutable record of what was requested and the mutable record of what happened — which is exactly the resume-correctness bug this split avoids; two independent code paths racing to mutate `state.json` with no defined lock or merge order; the same logical config hashing differently across two implementations and silently defeating the idempotency signal the hash exists to provide.
-- **Rule:** [ADOPTED] Every run writes `config.json` (immutable copy of the resolved config, written once at run start, never modified afterward) plus a `config.json.sha256` sidecar (hash lives outside the file it hashes, avoiding self-referential canonicalization). `config.json.sha256` is computed over a canonical serialization of `config.json`'s content — sorted keys, fixed separators, no incidental whitespace — and that content excludes any wall-clock/generation timestamp field, so identical semantic configs (same models, rubrics, personas, knobs) hash identically regardless of when or how many times they are produced. **This is computed exactly once, by exactly one function, and that single value is what both the run-id folder name's `<sha>` component (Consistency Conventions, Naming) and the `config.json.sha256` sidecar's content contain — never two independent computations that could drift apart.** The filename `config.json` itself never carries the hash (rejected: would put the same value in a third place with no added integrity benefit, since a corrupted file wouldn't automatically stop matching its own filename — verification still requires hashing the actual bytes, which is what the sidecar is for). `state.json` is a separate, mutable file tracking run progress (completed items, errors, output paths so far) — it is the only file `vera resume` writes to. `state.json` records both the requested and the actual-resolved model identifier. `state.json` has exactly one writer per run: the domain-package runner (`generate/runner.py` / `judge/runner.py`) that owns I/O per AD-3/AD-4. `workers/`'s `JobContext` observes job start/end for logging (AD-13) but never writes `state.json` itself.
+- **Rule:** [ADOPTED] Every run writes `config.json` (immutable copy of the resolved config and its invocation metadata, written once at run start, never modified afterward) plus a `config.json.sha256` sidecar (hash lives outside the file it hashes, avoiding self-referential canonicalization). `config.json.sha256` is computed over a canonical serialization of `config.json`'s content — sorted keys, fixed separators, no incidental whitespace — and that content excludes any wall-clock/generation timestamp field, so identical semantic configs and invocation controls (same models, rubrics, personas, knobs, `debug`, and `sample`) hash identically regardless of when or how many times they are produced. **This is computed exactly once, by exactly one function, and that single value is what both the run-id folder name's `<sha>` component (Consistency Conventions, Naming) and the `config.json.sha256` sidecar's content contain — never two independent computations that could drift apart.** The filename `config.json` itself never carries the hash (rejected: would put the same value in a third place with no added integrity benefit, since a corrupted file wouldn't automatically stop matching its own filename — verification still requires hashing the actual bytes, which is what the sidecar is for). `state.json` is a separate, mutable file tracking run progress (completed items, errors, output paths so far) — it is the only file `vera resume` writes to. `state.json` records both the requested and the actual-resolved model identifier. `state.json` has exactly one writer per run: the domain-package runner (`generate/runner.py` / `judge/runner.py`) that owns I/O per AD-3/AD-4. `workers/`'s `JobContext` observes job start/end for logging (AD-13) but never writes `state.json` itself.
 
 ### AD-19 — generation and judging config blocks are orthogonal
 
@@ -204,17 +205,17 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 - **Rule:** [ADOPTED] `judging.rubrics` (and its CLI precursor, `--rubrics`) is list-shaped starting at the very first phase that implements it, even while only a length-1 list is supported/validated until multi-rubric support ships. This closes a real schema-break risk: locking a scalar shape early would force a breaking config change later.
 - **Prevents:** a later multi-rubric phase requiring a breaking schema change for every config already written against a scalar `rubric` field.
 
-### AD-21 — Rubric bundle manifest vs config.json separation of concerns
+### AD-21 — Target manifest vs config.json separation of concerns
 
-- **Binds:** rubric bundle manifest files, `utils/config_schema.py`, `judge/`
-- **Prevents:** judge-model defaults or other per-run execution knobs leaking into the manifest, which would make the same rubric bundle behave differently across runs without a visible reason.
-- **Rule:** [ADOPTED] A rubric bundle manifest describes what a rubric **is** (`rubric_file`, `rubric_prompt_beginning_file`, `question_prompt_file`, an informational `personas` list) — static content that changes rarely. `config.json`'s `judging.rubrics[].models` describes how to **run** it for a given invocation — judge models, repeats, per-rubric overrides — and changes every run. Judge-model defaults never belong in the manifest. When a config omits judge-model selection entirely, the fallback default MUST be defined in exactly one place — `utils/config_schema.py`, the protected stable interface for config shape (AD-15) — never in the manifest, and never re-defined inside `judge/rubric_config.py` (AD-22) or any other loader, which may only read the default, not define its own copy. This is a MUST, not descriptive prose: a default landing anywhere ungoverned would produce exactly the run-changing-behavior-with-no-visible-reason effect this AD exists to prevent, without escalating through AD-15's design-doc gate. **The manifest's `personas` field stays informational-only for every invocation shape except one:** `vera pipeline --target <name>` is an additive, opt-in shorthand that resolves `<name>` to one rubric bundle manifest and expands to setting BOTH `generation.personas` and `judging.rubrics` from it in a single shot — the manifest's `personas` field becomes the actual, authoritative generation input only for this shorthand. Any other invocation shape (`--rubric` plus independently-specified generation personas, or `--config` with both blocks set explicitly) keeps `generation`/`judging` fully orthogonal exactly as AD-19 requires — `--target` is the one deliberate, named exception, not a general weakening of AD-19. **`--target` and `config.json` mirror each other, including the exception's boundary:** a top-level `target` field in the input `config.json` performs the identical expansion `--target <name>` does on the CLI. Setting `target` alongside explicit `generation.personas` or `judging.rubrics` in the same input config is rejected outright — never silently merged or overridden — mirroring AD-17's either/or rule between CLI flags and `--config`. The run's own immutable `config.json` artifact (AD-18) always stores the fully-expanded form; `target` is resolved away before that artifact is written, the same way `-u`/`-j` shorthand already resolves into concrete model entries, so `vera resume` never has to re-resolve a manifest that might have changed on disk since the run started.
+- **Binds:** target manifests, `vera_cli/`, `utils/config_schema.py`, `generate/`, `judge/`
+- **Prevents:** partial manifests that work for one command but fail for another; per-run execution knobs leaking into reusable target definitions; selecting a target when the caller intended to control generation and judging independently.
+- **Rule:** [ADOPTED] A target is a complete evaluation bundle defined by `data/<target>/manifest.json`. Every manifest requires `rubric_file`, `rubric_prompt_beginning_file`, `question_prompt_file`, `personas`, and `persona_context_template_file`; paths resolve relative to the manifest. `--target <name-or-path>` and top-level config `target` consume the complete bundle. `--personas <name-or-manifest-path>` and `--rubric <name-or-manifest-path>` remain explicit alternatives: the former consumes the target's personas and persona prompt, while the latter consumes its rubric and judging prompts. A pipeline may combine components from different targets, such as `--personas HFO --rubric SI`. Whole-target selection is mutually exclusive with explicit component selection. `--target all` produces one canonical invocation per discovered target and never merges different targets' personas, prompts, or rubrics. Target expansion completes before print, persistence, or dispatch; canonical and persisted `RunConfig` contains concrete paths and no target selectors. Model defaults and all other run behavior belong in CLI flag definitions or `config.json`, never in the manifest.
 
-### AD-22 — Reusable rubric-loading logic lives in a library helper, not a doomed script
+### AD-22 — Target-manifest resolution belongs to the CLI boundary
 
-- **Binds:** `judge/`
-- **Prevents:** logic that later CLI phases need being thrown away with the CLI script it was first written inside.
-- **Rule:** [ADOPTED] The rubric-bundle-manifest loading logic is implemented as a library-layer helper (e.g. `judge/rubric_config.py`), not inline in a CLI script's `main()` that is slated for deletion. Later phases call the same helper rather than reimplementing rubric loading.
+- **Binds:** `vera_cli/`, `generate/`, `judge/`
+- **Prevents:** either domain owning a cross-domain target definition; generation and judging reimplementing manifest resolution differently; legacy script parsers becoming architectural dependencies.
+- **Rule:** [ADOPTED] `vera_cli/targets.py` loads and validates target manifests; each `vera_cli/<command>.py` adapter expands the relevant components into canonical inputs. Domain functions receive only their resolved values and never a target manifest. Explicit `--rubric <target>` consumes the rubric and judging-prompt portion; explicit `--personas <target>` consumes the personas and persona-prompt portion. Legacy helpers may adapt these inputs during migration but are not dependencies of the unified CLI.
 
 ### AD-23 — Output layout is nested-only, with path-first stage contracts
 
@@ -230,13 +231,13 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 ### AD-25 — Rubric/persona content lives outside code proper, never requiring a code change
 
-- **Binds:** `data/`, the rubric bundle manifest (AD-21), persona files, all packages that consume them
+- **Binds:** `data/`, target manifests (AD-21), persona and rubric files, all packages that consume them
 - **Prevents:** an engineer embedding rubric dimensions, question flows, or persona definitions directly in Python (e.g. as constants, dataclass defaults, or inline dicts) rather than as data files — which would silently reintroduce a code-change requirement for a non-developer-facing workflow, and would fragment "where does rubric/persona content live" across code and data depending on who built which part.
 - **Rule:** [ADOPTED] Rubric and persona content (dimensions, question flows, prompt text, persona definitions) MUST live in `data/` (or another location outside any Python package), never embedded in code, because VERA-MH must be usable by non-developers who add or edit rubrics and personas without touching Python. `data/` is a supporting path outside the import graph specifically for this reason — no domain package may hardcode rubric/persona content as an alternative to reading it from `data/`.
 
 ### AD-26 — Rubric navigation logic lives in code, never in the prompt
 
-- **Binds:** `judge/`, rubric bundle manifests (AD-21), `data/` (AD-25)
+- **Binds:** `judge/`, target manifests (AD-21), `data/` (AD-25)
 - **Prevents:** an engineer embedding flow-control hints ("if the answer is X, the next relevant topic is Y") inside prompt text and asking the LLM to decide what happens next — non-deterministic, untestable, and a divergence risk between two engineers who might otherwise put navigation logic in different places (one in code, one in a prompt) for the same rubric.
 - **Rule:** [ADOPTED] Which question is asked next given an answer (the rubric's `GOTO`/`END`/`ASSIGN_END`/conditional-jump directives, per `judge.md`) is determined entirely by code — the rubric's question-flow data (parsed from its TSV into `question_flow_data`) navigated deterministically by `QuestionNavigator`. The judge LLM's role is strictly to answer/judge the current question; it is never asked to decide or influence which question comes next. Rubric content in `data/` (AD-25) may describe *what* the flow is (the TSV's navigation column), but the *logic that walks it* is code, not something inferred from prompt text.
 
@@ -246,11 +247,11 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 - **Prevents:** the chatbot under test being inferred from context or defaulted silently; `generation.user` (the user/persona-side LLM list) being mistaken for chatbot selection, or vice versa, since both are LLM-selection fields in the same `generation` block; a bare `models` field leaving it ambiguous which of the two roles it names.
 - **Rule:** [ADOPTED] The chatbot under test is selected via `-c <model>[:repeats]` on the CLI or `generation.chatbot` in `config.json` — a single object, not a list (AD-19's single-chatbot-per-invocation scope), and required whenever `--config` is not used. There is no default chatbot. `generation.chatbot` is distinct from `generation.user`, which selects the user-side (`u`) LLM(s); the two are never conflated or merged into one field, and neither is named the generic `models` precisely because `generation` has two competing LLM roles — each gets its own entity-specific field name instead. `vera judge` never takes `-c` — judging is decoupled from chatbot selection by design (AD-5), and the chatbot is already implicit in whichever `--conversations` folder is passed in.
 
-### AD-28 — Config path fields resolve to $ROOT; manifest path fields resolve to themselves
+### AD-28 — Config path fields resolve to $ROOT; target-manifest paths resolve to themselves
 
-- **Binds:** `utils/config_schema.py`, rubric bundle manifests (AD-21)
-- **Prevents:** a config's meaning depending on the working directory the CLI happened to be invoked from, or on where the config file itself was saved — the exact ambiguity that made an earlier CWD-relative design fragile; a reader assuming both JSON files (`config.json` and the rubric bundle manifest) share one path-resolution rule just because they look structurally similar.
-- **Rule:** [ADOPTED] Path fields inside `config.json` (e.g. `generation.personas`) resolve relative to `$ROOT` — the directory containing `vera.py` — regardless of the CLI's working directory, the config file's own location, or how the config arrives (`--config <file>`, `--config -`, or `VERA_RUN_CONFIG`); this is a single rule across all three input forms, not a rule-plus-fallback. Rubric bundle manifest path fields resolve relative to the manifest's own folder instead (AD-21), a deliberately different anchor that keeps a manifest folder portable across checkouts — `config.json` doesn't need that property, since it is checkout-specific by nature.
+- **Binds:** `utils/config_schema.py`, target manifests (AD-21)
+- **Prevents:** a config's meaning depending on the working directory the CLI happened to be invoked from, or on where the config file itself was saved; a reader assuming `config.json` and a target manifest share one path-resolution rule because both are JSON.
+- **Rule:** [ADOPTED] Path fields inside `config.json` (e.g. `generation.personas`) resolve relative to `$ROOT` — the directory containing `vera.py` — regardless of the CLI's working directory, the config file's own location, or how the config arrives (`--config <file>`, `--config -`, or `VERA_RUN_CONFIG`). Target-manifest path fields resolve relative to the manifest's own folder instead (AD-21), keeping the complete target directory portable across checkouts.
 
 ## Consistency Conventions
 
@@ -258,7 +259,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 | --- | --- |
 | Naming (entities, files, folders) | Three-entity vocabulary `u`/`c`/`j` (user/persona LLM, chatbot under test, judge) applies at both folder and file level. Run-id = `<nickname>_<timestamp>_<sha256-of-config.json>` when nested under a per-model parent (model already given by the parent folder), or `<model>_<nickname>_<timestamp>_<sha>` when flat (nothing else names the model). `<nickname>` is a generated human-memorable tag (e.g. a word-pair generator) purely so a person can recognize a run without quoting a sha — it carries no identity of its own, is never a substitute for the sha, and never needs to encode which model was used since the surrounding path already does that job. Conversation filename = `u_<persona-file>_<persona-name>_c_<chatbot-model>.json`. Generation groups persistently per chatbot (`c_<model>/` accumulates every run against that model); judging stays flat per run (`j_<model>_<nickname>_<timestamp>_<sha>/`, no persistent per-judge-model parent) — an intentional asymmetry, not an inconsistency. Standalone judging (no parent pipeline run to nest under) groups under `evaluations/<config-sha256>/<rubric_name>/`, sibling to the `c_*` directories — a persistent, per-config container, exactly mirroring how `c_<chatbot>/` accumulates every run against that model rather than being itself a run-root. The actual run-root inside it is still a freshly-generated `j_<judge>_<nickname>_<timestamp>_<sha>/` folder, so re-invoking with an identical config never collides — AD-24 needs no exemption for it, the same as it needs none for `c_<chatbot>/`. The sha in the container name is for discoverability (grouping every run of one exact config together for a human or tool to find), never for deduplication or idempotency — re-running the same config is a new, distinct run, same as generation. |
 | Data & formats (config shape, hashing, model identifiers) | `config.json` is JSON only, never YAML (robust for stdin/env-var transport with no escaping ambiguity). `generation.user` and `judging.models` are each a **list** of `{name, repeats, <knobs>}` objects, not an object keyed by model name — so the same model can appear twice with different knobs in one run; `generation` names its two LLM-list fields by entity (`chatbot`, `user`) rather than a shared `models`, since `judging` has only one LLM role and keeps the generic name unambiguously. Every list entry's `name` is always a specific model identifier in the provider's own naming (e.g. `claude-sonnet-2026xxxx`), never a bare provider name. Bespoke sampling knobs (temperature, top_p, max_tokens) are config-only, never expressible via `-u`/`-j` shorthand. Provider connection details (endpoint, API version, region) stay env-sourced only. `config.json.sha256` lives as a sidecar file, never as a field inside `config.json` itself. |
-| State & cross-cutting (config/CLI exclusivity, logging, resume) | `--config` and CLI flags are strictly either/or (AD-17) — except `--sample <N>`, a debug-only smoke-test override that MAY combine with `--config`; the resolved form is printed at run start (stdout only) for traceability, with an opt-in `--print` flag to emit it without executing. `vera resume` is the only path that writes to `state.json`, and it first verifies `config.json` against its `.sha256` sidecar before reading either file. Logging is wrapper/context-owned only (AD-13) — never inline in a pure core. Folder-already-exists on run start errors out, no overwrite (AD-24). |
+| State & cross-cutting (config/CLI exclusivity, logging, resume) | `--config` and run-defining CLI flags are strictly either/or (AD-17). `--debug`, `--sample`, and `--print` MAY accompany config input; executed runs persist `debug` and `sample` as invocation metadata, while `--print` creates no run. The resolved form is printed at run start for traceability. `vera resume` is the only path that writes to `state.json`, and it first verifies `config.json` against its `.sha256` sidecar before reading either file. Logging is wrapper/context-owned only (AD-13) — never inline in a pure core. Folder-already-exists on run start errors out, no overwrite (AD-24). |
 
 ## Stack
 
@@ -313,7 +314,10 @@ output/
 Package tree:
 
 ```text
-vera.py                          # CLI orchestrator, thin
+vera.py                          # root parser, command registration, dispatch
+vera_cli/
+  config.py, targets.py          # shared config and manifest helpers
+  <command>.py                   # flags, defaults, resolution, thin adapter
 generate/
   conversation_simulator.py      # pure core
   runner.py                      # owns I/O, delegates to workers/
@@ -321,7 +325,7 @@ judge/
   question_navigator.py          # pure core
   llm_judge.py                   # pure core
   runner.py                      # owns I/O, delegates to workers/
-  rubric_config.py               # reusable rubric-bundle-manifest loader (AD-22)
+  rubric_config.py               # rubric-domain configuration after CLI resolution
 score/
   score.py
   score_viz.py

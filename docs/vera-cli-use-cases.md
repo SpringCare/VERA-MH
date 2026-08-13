@@ -17,20 +17,37 @@ Three entities, each with a single-letter prefix used throughout the CLI, config
 
 **These letters are `vera.py`-only and are not the same flags as today's scripts.** `generate.py`/`judge.py` already use `-c`/`-r` for unrelated things (`-c` is `--max-concurrent` in `generate.py` and `--conversation` in `judge.py`; `-r` is `--runs` in `generate.py` and `--rubrics` in `judge.py`). `vera.py` intentionally repurposes them for the `u`/`c`/`j` vocabulary above. There is no coexistence window: Phase 1 of the migration (see [architecture.md#migration-from-current-layout](./architecture.md#migration-from-current-layout)) deletes `generate.py`/`judge.py`/`run_pipeline.py` entirely in the same change that ships `vera.py`, so the old and new meanings of `-c`/`-r` never need to be told apart at runtime.
 
+A **target** is separate from the u/c/j entities: it is a reusable evaluation
+bundle containing a rubric, personas, and all generation/judging prompts. A
+target is represented by `data/<target>/manifest.json`.
+
 ## Minimum required arguments
 
-CLI shorthand and the input `config.json` are deliberately mirrored, flag-for-field — the same information is required either way, just spelled differently:
+CLI shorthand and input `config.json` resolve to the same canonical form. CLI
+component selectors use target names for convenience; explicit config fields
+may state the resulting concrete paths directly.
 
 | Subcommand | CLI shorthand — minimum required | Input `config.json` — minimum required fields |
 |---|---|---|
-| `generate` | `-c <chatbot>` + `-u <model:repeats...>` (≥1) + (`--personas <file...>` **or** `--target <name>`) | `generation.chatbot`, `generation.user` (≥1), and (`generation.personas` (≥1) **or** top-level `target`) |
-| `judge` | `-j <model:repeats...>` (≥1) + `--conversations <folder...>` + `--rubric <manifest>` | `judging.models` (≥1), `judging.rubrics` (≥1) — plus whatever conversations path the run is scoped to |
-| `pipeline` | everything `generate` needs **and** everything `judge` needs — or just `-c`, `-u`, `-j`, `--target <name>` (`--target` covers persona+rubric in one shot, pipeline-only) | both `generation` and `judging` blocks fully populated (their individual minimums above), or `-c`/`-u`/`-j`-equivalent fields plus a top-level `target` |
+| `generate` | `-c <chatbot>` + `-u <model:repeats...>` (≥1) + (`--target <name-or-path>` **or** explicit `--personas <name-or-manifest-path>`) | `generation.chatbot`, `generation.user` (≥1), and (top-level `target` **or** explicit `generation.personas` + `generation.persona_context_template`) |
+| `judge` | `-j <model:repeats...>` (≥1) + `--conversations <folder...>` + (`--target <name-or-path>` **or** explicit `--rubric <name-or-manifest-path>`) | `judging.models` (≥1), `judging.conversations` (≥1), and (top-level `target` **or** explicit `judging.rubrics` (≥1)) |
+| `pipeline` | everything `generate` needs **and** everything `judge` needs — or just `-c`, `-u`, `-j`, `--target <name>` (`--target` covers persona+rubric in one shot) | both `generation` and `judging` blocks fully populated, or `-c`/`-u`/`-j`-equivalent fields plus a top-level `target`; `judging.conversations` is omitted because generation supplies it |
 | `score` | the results path (`-r <results.csv>`) — nothing else | n/a — `score` reads an existing `results.csv`, not a run config |
 | `pool` | `--evaluations <folder...>` (≥1) | n/a |
 | `resume` | `--config <run's own config.json>` — that's the entire invocation | n/a (it *is* the config being resumed) |
 
-**`target` mirrors `--target` exactly, including its mutual-exclusivity rule:** a top-level `target` field in the input `config.json` expands to `generation.personas` + `judging.rubrics` from the resolved rubric bundle manifest, the same expansion `--target <name>` performs on the CLI. **Setting `target` alongside explicit `generation.personas` or `judging.rubrics` in the same input config is an error** — rejected outright, not silently merged or overridden — mirroring the existing either/or rule between CLI flags and `--config`. The run's own immutable `config.json` artifact (written to `output/.../config.json`, the one `vera resume` reads) always stores the fully-expanded form — `target` is resolved away before that artifact is written, the same way `-u`/`-j` shorthand is already resolved into concrete model entries today, so `vera resume` never has to re-resolve a manifest that might have changed on disk since the run started.
+**`target` mirrors `--target` exactly, including its mutual-exclusivity rule:**
+a top-level `target` field in the input `config.json` resolves one complete target
+manifest and expands its personas, persona prompt, rubric, and judging prompts.
+Setting `target` alongside explicit `generation.personas` or
+`judging.rubrics` is an error — rejected outright, not silently merged or
+overridden. The run's own immutable `config.json` always stores the fully
+expanded form, so `vera resume` never re-resolves a manifest that might have
+changed.
+
+Whole-target selection is optional. Callers who want independent control may
+use `--personas HFO` for the persona side and `--rubric SI` for the rubric side;
+a pipeline can use both explicit forms instead of `--target`.
 
 ## Use case 1 — End-to-end test of one LLM
 
@@ -42,9 +59,16 @@ vera pipeline --config run.json
 
 **Resolved:** stays single-chatbot-per-invocation. Comparing chatbots is always an external loop over single-chatbot pipeline runs, consistent with use case 2. Native multi-chatbot support (one combined comparison report) is not built now — flagged as a possible future addition if a real need emerges, not ruled out permanently.
 
-**`--target <name>` shorthand:** `vera pipeline --target SI` resolves `SI` to one rubric bundle manifest (see [Rubric bundle manifest](./architecture.md#rubric-bundle-manifest)) and sets *both* the generation personas and the judging rubric from it in one shot — for the common case of "run the canonical test for X." This is the one deliberate exception to personas/rubrics being chosen independently; every other invocation (`--rubric` plus separately-specified personas, or explicit `--config` blocks) keeps generation and judging fully orthogonal. `--target` never selects the chatbot — `-c`/`generation.chatbot` is required regardless of whether `--target` is used.
+**`--target <name-or-path>` shorthand:** `vera pipeline --target SI` resolves
+`data/SI/manifest.json` and selects its personas, persona prompt, rubric, and
+judging prompts in one shot — the common case of “run the canonical test for
+SI.” It never selects the chatbot. Explicit `--personas` and `--rubric` remain
+available when the caller deliberately wants different components.
 
-**No implicit "run everything":** if neither `--target` nor `--rubric`/`judging.rubrics` is given, the CLI errors rather than defaulting to some or all rubrics. To deliberately run every known evaluator, use `--target all`, which resolves every rubric bundle manifest — an explicit opt-in, not a default.
+**No implicit "run everything":** if neither `--target` nor explicit
+`--rubric`/`judging.rubrics` is given where judging is requested, the CLI errors.
+`--target all` deliberately resolves every discovered target manifest as a
+separate invocation. It never merges personas or prompts from different targets.
 
 ## Use case 2 — Batch generate across personas
 
@@ -59,11 +83,23 @@ vera generate --config run.json
 
 **Option B — CLI shorthand:**
 ```
-vera generate -c sonnet -u gpt:1 sonnet:2 --personas data/personas.tsv
+vera generate -c sonnet -u gpt:1 sonnet:2 --personas SI
 ```
-Bare-minimum required flags for Option B: `-c <chatbot>` (the chatbot under test — no default), `-u <model:repeats...>` (at least one user-side model), and either `--personas <file...>` or `--target <name>` (personas have no silently-assumed default file either). `--rubric`/`--target` are additionally required if this invocation will also be judged.
+Bare-minimum required flags for Option B: `-c <chatbot>` (the chatbot under
+test — no default), `-u <model:repeats...>` (at least one user-side model), and
+either a complete `--target` or explicit `--personas <target>`. `--personas` is
+a supported first-class path, not only a compatibility fallback; it selects the
+persona files and persona prompt from that target's manifest.
 
-Or, using `--target` to pull personas from a rubric bundle manifest instead of naming them explicitly:
+Generation behavior is also controlled at this input boundary. CLI invocations
+default to `--turns 30`, `--output output`, unlimited concurrency, no total-word
+cap, persona-first ordering, and one unnamed session. The explicit persona
+component includes the files and context template resolved from the target named
+by `--personas`; `--target` resolves the same fields while also selecting the
+rubric side. The generation runner itself has no parameter defaults.
+
+Or, using `--target` to select the complete target manifest instead of naming
+the generation inputs explicitly:
 ```
 vera generate -c sonnet -u gpt:1 --target SI
 ```
@@ -76,18 +112,37 @@ Personas come from one or more persona files, each containing multiple personas;
 
 ## Use case 3 — Judge existing conversations
 
-Judge one **or more** existing transcript folders against one or more rubrics. Each rubric has a default judge-LLM set, overridable per rubric. Multiple judges per rubric are supported (for judge-agreement analysis). Judging is decoupled from generation — point it at whatever conversation folders you need, with no enforced coupling to originating personas.
+Judge one **or more** existing transcript folders using either a complete target
+or an explicitly selected rubric. Each rubric has a default judge-LLM set,
+overridable per rubric. Multiple judges per rubric are supported. Judging remains
+decoupled from generation.
 
 ```
-vera judge --conversations output/c_sonnet/<run>/conversations/ --config run.json
-vera judge -j claude:1 gpt:2 --conversations output/c_sonnet/<run>/conversations/ --rubric data/si_rubric.json
+vera judge --config run.json
+vera judge -j claude:1 --conversations output/c_sonnet/<run>/conversations/ --target SI
+vera judge -j claude:1 gpt:2 --conversations output/c_sonnet/<run>/conversations/ --rubric SI
 ```
 
 No `-c` here: judging is decoupled from chatbot selection by design (see the orthogonality invariant above) — the chatbot is already implicit in whichever `--conversations` folder is passed in.
 
 `-j <model>:<repeats> ...` mirrors `-u`'s syntax for the judge side. `repeats` here means re-running the same transcript through the same judge model N times, to measure judge consistency/variance.
 
-`--rubric`/`judging.rubrics[]` entries point at a [rubric bundle manifest](./architecture.md#rubric-bundle-manifest) (canonical definition), not a bare `.tsv` path.
+`--target` consumes the rubric and judging prompts from the selected complete
+[target manifest](./architecture.md#target-manifest). Explicit `--rubric SI`
+consumes only SI's rubric and judging prompts and does not select SI's personas
+or persona prompt. Both flags accept a target name or manifest path, never a bare
+TSV with implicitly assumed sibling prompts.
+
+For standalone `judge`, these are two ways to word the same effective request:
+
+```text
+--target SI  → select SI, from which judge consumes the rubric and judge prompts
+--rubric SI  → explicitly select SI's rubric and judge prompts
+```
+
+They resolve to identical judging inputs. The distinction becomes meaningful
+for `pipeline`, where `--target` also supplies the generation personas and
+persona prompt, while `--rubric` supplies only the judging component.
 
 **Resolved (multi-folder judge output):** judge keeps results independent per folder; the `score/` layer aggregates across folders when needed, not judge itself. There are also in-between options — e.g. kept separate, but the score layer aggregates them.
 
@@ -101,9 +156,17 @@ Run the full pipeline (or generate/judge alone) against a small sample of person
 vera pipeline --config run.json --sample 2
 ```
 
-`--sample N` overrides the config's full persona (and rubric/judge, where relevant) list at run time. This avoids hand-maintaining a separate small-scale config just for smoke testing.
+`--sample N` caps the config's full persona (and rubric/judge, where relevant)
+list at run time. This avoids hand-maintaining a separate small-scale config
+just for smoke testing.
 
-**`--sample` is the sole, named exception to the CLI/`--config` either-or rule** (AD-17 in [ARCHITECTURE-SPINE.md](./ARCHITECTURE-SPINE.md)): it's a debug-only cap on how much of the config's already-resolved lists get used, never a way to set information `config.json` itself carries, and it's never written into the run's own `config.json` artifact -- `vera resume` on a sampled run still resolves against the full original config. No other flag gets this treatment.
+**`--sample` is the sole behavior-altering exception to the CLI/`--config`
+either-or rule** (AD-17 in
+[ARCHITECTURE-SPINE.md](./ARCHITECTURE-SPINE.md)): it caps how much of the
+already-resolved lists get used rather than replacing those lists. The executed
+value is recorded in the run's persisted `config.json` invocation metadata, so
+`vera resume` retains the same sampled scope. `--debug` is recorded alongside
+it; `--print` creates no run and therefore has nothing to persist.
 
 ## Use case 5 — Pool
 
@@ -130,26 +193,59 @@ Reads the immutable `config.json` (verifying its `.sha256` sidecar first) plus t
 - `--config <path>` — JSON file, for local use.
 - `--config -` — read JSON from stdin.
 - `VERA_RUN_CONFIG` env var — inline JSON content, for remote/CI dispatch where uploading or mounting a file isn't convenient.
-- **CLI flags and `--config` are strictly either/or, never combined for the same run.** A given piece of information (model selection/repeats, sampling knobs, persona/rubric lists) is supplied via one or the other, never both — the implementation rejects the combination rather than silently merging. **`--sample <N>` (see [Use case 4](#use-case-4--smoke-test)) is the one deliberate exception:** it MAY be passed alongside `--config`, since it never carries information `config.json` defines -- it only caps how much of the already-resolved lists get used for that invocation, purely for debugging, and it's never written into the run's own `config.json` artifact.
+- **Run-defining CLI flags and `--config` are strictly either/or, never combined for the same run.** A given piece of information (model selection/repeats, sampling knobs, persona/rubric lists) is supplied via one or the other, never both — the implementation rejects the combination rather than silently merging. Invocation controls `--sample`, `--debug`, and `--print` MAY accompany config input. Executed runs persist `sample` and `debug` under `invocation` in their immutable `config.json`; `--print` exits without creating a run.
 - Internally, `--config` always resolves to the same canonical flag-set the CLI would produce, so there is exactly one resolved form regardless of input path. The tool prints this resolved form at run start for terminal/CI-log visibility (it does not write to the shell's own history — an opt-in `--print` flag emits the resolved flag-string with no execution, for a caller who wants to `eval` it into their own shell explicitly).
 - JSON, not YAML — robust when passed as a one-line env var or stdin payload with no escaping ambiguity.
-- **Path fields inside `config.json` (`generation.personas`, etc.) resolve relative to `$ROOT`** — the directory containing `vera.py` — never relative to the current working directory the CLI was invoked from, and never relative to `config.json`'s own location. This is a single rule regardless of how the config arrives (`--config <file>`, `--config -`, or `VERA_RUN_CONFIG`), so a config's meaning never depends on where your shell happens to be or where you saved the file. This is distinct from the [rubric bundle manifest](./architecture.md#rubric-bundle-manifest), which deliberately resolves relative to *itself* instead, so a manifest folder stays portable across checkouts — `config.json` doesn't need that property, since it's checkout-specific by nature.
+- **Path fields inside `config.json` (`generation.personas`, etc.) resolve relative to `$ROOT`** — the directory containing `vera.py` — never relative to the current working directory or the config file. A [target manifest](./architecture.md#target-manifest) deliberately resolves its fields relative to its own directory so the complete target remains portable.
+
+For example, given `configs/run.json` and `data/SI/manifest.json`:
+
+```text
+configs/run.json:       "personas": ["data/SI/personas.tsv"]
+                                    └─ resolves from $ROOT
+
+data/SI/manifest.json:  "personas": ["personas.tsv"]
+                                    └─ resolves from data/SI/
+
+Both resolve to:         $ROOT/data/SI/personas.tsv
+```
+
+The different anchors let a run config remain checkout-relative while a target
+directory remains portable as a unit.
 
 ### `config.json` shape
+
+The persisted run artifact includes generated `invocation` metadata in addition
+to the resolved generation and judging inputs. A fresh input config does not
+need to author this block: the CLI records the effective `--debug` and
+`--sample` values when it creates the run. `vera resume` reads those persisted
+values and retains the same invocation scope.
 
 Top-level `generation` and `judging` blocks are **completely orthogonal** — model selection for one must never influence or be influenced by the other. Model-list fields (a list, not an object keyed by name, so the same model can appear twice with different knobs) are named per entity rather than a bare `models`, since `generation` has two LLM roles (`chatbot`, `user`) competing for that name; `judging` keeps `models` since only one LLM role exists there:
 
 ```json
 {
+  "invocation": {
+    "debug": false,
+    "sample": null
+  },
   "generation": {
     "chatbot": {"name": "claude-sonnet-2026xxxx", "repeats": 1},
     "user": [
       {"name": "claude-sonnet-2026xxxx", "repeats": 1, "temperature": 0.7},
       {"name": "gpt-5", "repeats": 2}
     ],
-    "personas": ["data/personas_a.json", "data/personas_b.json"]
+    "personas": ["data/SI/personas.tsv"],
+    "turns": 30,
+    "output": "output",
+    "max_concurrent": null,
+    "max_total_words": null,
+    "persona_speaks_first": true,
+    "sessions": null,
+    "persona_context_template": "data/SI/persona_context_template.txt"
   },
   "judging": {
+    "conversations": ["output/c_sonnet/example/conversations"],
     "models": [
       {"name": "claude-sonnet-2026xxxx", "repeats": 1}
     ],
@@ -160,6 +256,22 @@ Top-level `generation` and `judging` blocks are **completely orthogonal** — mo
   }
 }
 ```
+
+`judging.conversations` is required for standalone `vera judge` configs. A
+`pipeline` config omits it because the generation stage supplies the resolved
+conversation paths without combining config input with a CLI flag.
+
+In an input config, `judging.rubrics` is the explicit component-selection path:
+each entry identifies a target name or manifest and consumes only its rubric and
+judging prompts. In the persisted canonical config, those entries contain the
+resolved concrete paths rather than a manifest reference.
+
+These generation behavior fields are required in config mode, including
+explicit `null` where no limit or session list is intended. Config mode never
+inherits the CLI defaults. Top-level `target` expands a complete manifest into
+the concrete generation and judging fields before the canonical config is
+printed or persisted. Explicit `generation.personas` and `judging.rubrics`
+remain supported when no top-level target is set.
 
 `generation.chatbot` is the chatbot under test — same shape as one entry in `generation.user`, but a single object, not a list (only one chatbot per run; see use case 1). It is distinct from `generation.user`, which is the user-side (`u`) LLM list — the two share a field shape but are never conflated: naming one `chatbot` and the other `user` (rather than both `models`) makes which is which unambiguous at the field-name level, not just from prose.
 
