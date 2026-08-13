@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+import generate as generation_domain
 import vera
 from utils.config_schema import ModelSpec
 from vera_cli import (
@@ -141,7 +142,7 @@ def test_cli_defaults_resolve_before_print(capsys: pytest.CaptureFixture) -> Non
 
 def test_generation_delegates_every_value_to_generate_main() -> None:
     with patch.object(
-        generate, "generate_conversations", new_callable=AsyncMock
+        generation_domain, "main", new_callable=AsyncMock
     ) as generate_main:
         generate_main.return_value = ([], "output/generated")
         result = vera.main(
@@ -192,7 +193,7 @@ def test_generation_delegates_every_value_to_generate_main() -> None:
 def test_each_user_model_gets_one_generate_main_call(tmp_path: Path) -> None:
     manifest = _write_target(tmp_path, persona_count=2)
     with patch.object(
-        generate, "generate_conversations", new_callable=AsyncMock
+        generation_domain, "main", new_callable=AsyncMock
     ) as generate_main:
         generate_main.return_value = ([], "output/generated")
         vera.main(
@@ -264,11 +265,33 @@ def test_config_target_rejects_explicit_persona_component(tmp_path: Path) -> Non
     assert error.value.code == 2
 
 
-def test_config_rejects_any_run_defining_cli_flag(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "flag",
+    [
+        ["-c", "gpt-5"],
+        ["-u", "gpt-5"],
+        ["--target", "SI"],
+        ["--personas", "SI"],
+        ["--turns", "3"],
+        ["--output", "elsewhere"],
+        ["--max-concurrent", "2"],
+        ["--max-total-words", "10"],
+        ["--provider-speaks-first"],
+        ["--sessions", "intake"],
+    ],
+)
+def test_config_rejects_any_run_defining_cli_flag(
+    tmp_path: Path, flag: list[str]
+) -> None:
+    """Every run-defining flag is refused alongside ``--config``.
+
+    Covers each flag behaviorally rather than asserting a hand-maintained list,
+    so a flag that is wrongly classified as invocation-only fails here.
+    """
     config = _write_config(tmp_path, _generation_config())
 
     with pytest.raises(SystemExit) as error:
-        vera.main(["generate", "--config", str(config), "--turns", "3"])
+        vera.main(["generate", "--config", str(config), *flag])
 
     assert error.value.code == 2
 
@@ -349,9 +372,7 @@ def test_incomplete_target_fails_before_dispatch(tmp_path: Path) -> None:
     manifest.write_text(json.dumps({"personas": ["personas.tsv"]}), encoding="utf-8")
 
     with (
-        patch.object(
-            generate, "generate_conversations", new_callable=AsyncMock
-        ) as runner,
+        patch.object(generation_domain, "main", new_callable=AsyncMock) as runner,
         pytest.raises(SystemExit) as error,
     ):
         vera.main(
@@ -386,6 +407,19 @@ def test_target_all_produces_one_config_per_manifest(tmp_path: Path) -> None:
 def test_generate_requires_explicit_target_or_personas() -> None:
     with pytest.raises(SystemExit) as error:
         vera.main(["generate", "-c", "gpt-5", "-u", "claude-sonnet-5"])
+
+    assert error.value.code == 2
+
+
+def test_config_rejects_judging_section(tmp_path: Path) -> None:
+    """``generate`` rejects a judging block rather than silently ignoring it."""
+    config = _write_config(
+        tmp_path,
+        {**_generation_config(), "judging": {"rubrics": ["data/SI/rubric.tsv"]}},
+    )
+
+    with pytest.raises(SystemExit) as error:
+        vera.main(["generate", "--config", str(config)])
 
     assert error.value.code == 2
 

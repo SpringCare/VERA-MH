@@ -14,12 +14,23 @@ from utils.config_schema import InvocationConfig, ModelSpec, RunConfig
 ROOT = Path(__file__).resolve().parents[1]
 VERA_RUN_CONFIG_ENV = "VERA_RUN_CONFIG"
 
+# Namespace attributes the dispatcher puts there, not flags the user passed.
+# Excluded when deriving which run-defining flags were supplied.
+DISPATCH_ATTRIBUTES = frozenset({"command", "handler"})
+
 
 class ConfigError(ValueError):
     """Raised when CLI/config input cannot produce a valid invocation."""
 
 
 def path_from_root(path: str) -> str:
+    """Make a config-supplied path absolute, relative to the repository root.
+
+    Config files are checked in and shared, so their relative paths mean
+    "relative to the repo", not to whatever directory `vera` was invoked from.
+    CLI paths deliberately differ: they resolve against the current directory,
+    like every other command-line tool.
+    """
     candidate = Path(path)
     if not candidate.is_absolute():
         candidate = ROOT / candidate
@@ -27,6 +38,11 @@ def path_from_root(path: str) -> str:
 
 
 def existing_file(path: str, *, field: str) -> str:
+    """Return `path` absolute, failing if it is not an existing file.
+
+    Called during resolution so a missing input fails before any model is
+    called, naming the field that referenced it.
+    """
     resolved = Path(path).resolve()
     if not resolved.is_file():
         raise ConfigError(f"{field} does not exist or is not a file: {resolved}")
@@ -62,12 +78,14 @@ def required(data: dict[str, Any], field: str, *, section: str) -> Any:
 
 
 def model_from_config(value: Any, *, field: str) -> ModelSpec:
+    """Build one `ModelSpec` from a config object, reporting the field on error."""
     if not isinstance(value, dict):
         raise ConfigError(f"{field} must be an object")
     return ModelSpec.from_dict(value)
 
 
 def models_from_config(value: Any, *, field: str) -> list[ModelSpec]:
+    """Build a `ModelSpec` list from a config array of objects."""
     if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
         raise ConfigError(f"{field} must be a list of objects")
     return [ModelSpec.from_dict(item) for item in value]
@@ -76,12 +94,33 @@ def models_from_config(value: Any, *, field: str) -> list[ModelSpec]:
 def resolve_input(
     args: Any,
     *,
-    run_fields: tuple[str, ...],
-    allowed_fields: set[str],
+    invocation_only_flags: frozenset[str],
+    allowed_config_fields: set[str],
 ) -> tuple[dict[str, Any] | None, InvocationConfig]:
-    """Load one input form and resolve controls shared by every command."""
+    """Pick the single input form for this run and resolve shared controls.
+
+    Enforces the one rule every command obeys: a run is defined by CLI flags or
+    by a config file, never a mixture, so a resolved run always has one
+    traceable origin.
+
+    A flag is run-defining unless the command names it invocation-only, and the
+    run-defining set is derived here by subtraction rather than listed. That
+    makes the rule structural: a flag added to a command's parser is covered
+    without being registered anywhere else. It works because run-defining flags
+    use `argparse.SUPPRESS`, so a flag reaches the namespace only when the user
+    actually passed it (see `vera_cli/generate.py:register`).
+
+    Both parameters are caller-supplied because the *rule* is shared but the
+    *fields* are per-command — `generate` and a future `judge` differ in both.
+    `allowed_config_fields` lists the top-level config keys this command
+    understands; anything else is rejected rather than ignored, so a typo or a
+    section belonging to another command fails loudly instead of silently doing
+    nothing.
+    """
     config = load_config(getattr(args, "config", None))
-    supplied = [field for field in run_fields if hasattr(args, field)]
+    supplied = sorted(
+        set(vars(args)) - invocation_only_flags - DISPATCH_ATTRIBUTES,
+    )
     if config is not None and supplied:
         flags = ", ".join(f"--{field.replace('_', '-')}" for field in supplied)
         raise ConfigError(
@@ -90,7 +129,7 @@ def resolve_input(
 
     persisted: dict[str, Any] = {}
     if config is not None:
-        unknown = set(config).difference(allowed_fields | {"invocation"})
+        unknown = set(config).difference(allowed_config_fields | {"invocation"})
         if unknown:
             raise ConfigError(
                 f"unknown top-level config field(s): {', '.join(sorted(unknown))}"
@@ -116,10 +155,17 @@ def resolve_input(
 
 
 def print_resolved_config(run_config: RunConfig) -> None:
+    """Echo the resolved run before executing it, so runs are self-documenting."""
     print(json.dumps(run_config.to_dict(), indent=2))
 
 
 def render_invocation(run_config: RunConfig, *, command: str) -> str:
+    """Render a resolved run as a copy-pasteable command that reproduces it.
+
+    This is what `--print` emits. The resolved config travels in the
+    environment variable rather than a temp file so the output is a single
+    self-contained line.
+    """
     compact = json.dumps(run_config.to_dict(), sort_keys=True, separators=(",", ":"))
     return (
         f"{VERA_RUN_CONFIG_ENV}={shlex.quote(compact)} uv run python vera.py {command}"
