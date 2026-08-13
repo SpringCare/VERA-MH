@@ -85,11 +85,46 @@ class RubricConfig:
         Raises:
             FileNotFoundError: If any required file doesn't exist
         """
-        rubric_path = Path(rubric_folder) / rubric_file
-        rubric_prompt_beginning_path = (
-            Path(rubric_folder) / rubric_prompt_beginning_file
+        return await cls.from_paths(
+            rubric_file=str(Path(rubric_folder) / rubric_file),
+            rubric_prompt_beginning_file=str(
+                Path(rubric_folder) / rubric_prompt_beginning_file
+            ),
+            question_prompt_file=str(Path(rubric_folder) / question_prompt_file),
+            sep=sep,
         )
-        question_prompt_path = Path(rubric_folder) / question_prompt_file
+
+    @classmethod
+    async def from_paths(
+        cls,
+        *,
+        rubric_file: str,
+        rubric_prompt_beginning_file: str,
+        question_prompt_file: str,
+        sep: str = "\t",
+    ) -> "RubricConfig":
+        """Load rubric data from three already-resolved file paths.
+
+        This is the resolved-value entry point: callers pass complete paths and
+        this does no joining, defaulting, or manifest reading. `load` and
+        `load_bundle` are the convenience wrappers that resolve their inputs
+        down to these three paths.
+
+        Args:
+            rubric_file: Path to the rubric TSV
+            rubric_prompt_beginning_file: Path to the system prompt template
+            question_prompt_file: Path to the question prompt template
+            sep: Separator for the rubric TSV (default: tab)
+
+        Returns:
+            Loaded RubricConfig with all data
+
+        Raises:
+            FileNotFoundError: If any required file doesn't exist
+        """
+        rubric_path = Path(rubric_file)
+        rubric_prompt_beginning_path = Path(rubric_prompt_beginning_file)
+        question_prompt_path = Path(question_prompt_file)
 
         # Validate files exist
         if not rubric_path.exists():
