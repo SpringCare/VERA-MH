@@ -10,7 +10,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 from judge import judge_single_conversation, run_judging
 from judge.llm_judge import LLMJudge
@@ -25,7 +25,7 @@ from utils.naming import (
     build_single_conversation_run_folder_name,
     is_judge_run_folder_basename,
 )
-from utils.rubric_manifest import load_manifest
+from utils.rubric_manifest import load_manifest_rubric_paths
 from utils.utils import parse_key_value_list
 
 
@@ -159,23 +159,6 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-async def _resolve_rubric_paths(manifest_path: str) -> Dict[str, str]:
-    """Resolve a rubric bundle manifest to its three concrete file paths.
-
-    Manifest paths are relative to the manifest's own folder. Doing this here
-    keeps manifest reading in the CLI layer, so the domain receives paths.
-    """
-    manifest = await load_manifest(manifest_path)
-    folder = Path(manifest_path).parent
-    return {
-        "rubric_file": str(folder / manifest["rubric_file"]),
-        "rubric_prompt_beginning_file": str(
-            folder / manifest["rubric_prompt_beginning_file"]
-        ),
-        "question_prompt_file": str(folder / manifest["question_prompt_file"]),
-    }
-
-
 def _resolve_output_target(
     args, gen_run: Optional[str]
 ) -> tuple[Optional[str], Optional[str]]:
@@ -224,9 +207,9 @@ async def main(args) -> Optional[str]:
     """Legacy CLI entry point: resolve ``args``, then call the judging domain.
 
     This is CLI glue, not a domain entry point. It owns everything specific to
-    this script's argument conventions — model shorthand parsing, manifest
-    reading, output-location policy, resume validation, and debug setup — and
-    hands fully resolved values to `judge.run_judging`.
+    this script's argument conventions — model shorthand parsing, the
+    manifest-path input form, output-location policy, resume validation, and
+    debug setup — and hands fully resolved values to `judge.run_judging`.
 
     `vera judge` does not call this. It calls `run_judging` directly and
     resolves its own inputs, so nothing new belongs here: this script is
@@ -248,7 +231,7 @@ async def main(args) -> Optional[str]:
             file=sys.stderr,
         )
 
-    rubric_paths = await _resolve_rubric_paths(args.rubrics[0])
+    rubric_paths = await load_manifest_rubric_paths(args.rubrics[0])
 
     if args.conversation:
         # Single-conversation judging is legacy-only: `vera judge` drops this

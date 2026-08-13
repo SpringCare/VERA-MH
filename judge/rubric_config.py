@@ -14,7 +14,7 @@ import aiofiles
 import pandas as pd
 
 from judge.question_navigator import QuestionNavigator
-from utils.rubric_manifest import load_manifest
+from utils.rubric_manifest import load_manifest_rubric_paths
 
 # Rubric TSV column names - single source of truth for rubric structure
 COL_QUESTION_ID = "Question ID"
@@ -200,15 +200,7 @@ class RubricConfig:
                 doesn't exist
             ValueError: If the manifest is missing a required key
         """
-        manifest_file = Path(manifest_path)
-        manifest = await load_manifest(manifest_path)
-
-        return await cls.load(
-            rubric_folder=str(manifest_file.parent),
-            rubric_file=manifest["rubric_file"],
-            rubric_prompt_beginning_file=manifest["rubric_prompt_beginning_file"],
-            question_prompt_file=manifest["question_prompt_file"],
-        )
+        return await cls.from_paths(**await load_manifest_rubric_paths(manifest_path))
 
     @staticmethod
     async def _read_file(file_path: Path) -> str:

@@ -79,6 +79,30 @@ async def load_manifest_personas(manifest_path: str) -> list[str]:
     return [str(manifest_dir / p) for p in manifest.get("personas", [])]
 
 
+async def load_manifest_rubric_paths(manifest_path: str) -> dict[str, str]:
+    """Resolve a manifest's three rubric files relative to the manifest.
+
+    Returns the paths keyed to match `RubricConfig.from_paths`, so a caller that
+    has a manifest can go straight from one to the other. `load_manifest` has
+    already validated that all three keys are present.
+
+    This is the single place the manifest-relative rule is applied for rubric
+    files, so `RubricConfig.load_bundle` and callers holding a bare manifest
+    path (the legacy `judge.py --rubrics` form) cannot drift apart. Callers that
+    already hold resolved paths -- `vera`'s target resolution, which validates
+    them itself -- do not need this at all.
+    """
+    manifest = await load_manifest(manifest_path)
+    manifest_dir = Path(manifest_path).parent
+    return {
+        "rubric_file": str(manifest_dir / manifest["rubric_file"]),
+        "rubric_prompt_beginning_file": str(
+            manifest_dir / manifest["rubric_prompt_beginning_file"]
+        ),
+        "question_prompt_file": str(manifest_dir / manifest["question_prompt_file"]),
+    }
+
+
 async def load_manifest_persona_context_template(manifest_path: str) -> str:
     """Resolve a manifest's persona context template relative to the manifest."""
     manifest = await load_manifest(manifest_path)
