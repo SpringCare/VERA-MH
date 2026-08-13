@@ -1,4 +1,24 @@
-"""Canonical run configuration shared by unified CLI input forms."""
+"""The canonical resolved form of one unified-CLI run.
+
+`vera` accepts a run in two input forms — CLI flags, or a JSON config file —
+and they are strictly either/or for a single run. Both forms converge on the
+types in this module before anything executes, so the rest of the codebase has
+exactly one shape to read.
+
+What "resolved" means here: every value is final. Names are looked up, relative
+paths are absolute, target manifests are expanded into concrete persona files,
+and defaults are already applied. Nothing downstream re-interprets a field.
+
+This module validates and serializes that form and does nothing else. It does
+not parse arguments, read files, resolve paths, or define defaults — CLI
+behavior defaults live beside the flags in `vera_cli/generate.py`, and
+config-driven runs must state every behavior field explicitly. `to_dict` is the
+inverse of the config input format, which is what makes a resolved run
+round-trippable: `--print` emits a config that reproduces the same run.
+
+The two halves of `RunConfig` split along one axis — whether a value defines
+*which run this is*. See `GenerationConfig` and `InvocationConfig`.
+"""
 
 from __future__ import annotations
 
@@ -8,7 +28,17 @@ from typing import Any
 
 @dataclasses.dataclass(frozen=True)
 class ModelSpec:
-    """One model selection and its number of full persona-set repeats."""
+    """One model selection and its number of full persona-set repeats.
+
+    `repeats` is how many times the entire persona set runs against this model,
+    not a per-persona count. `extra_params` holds provider-specific request
+    parameters (temperature, thinking budget, ...) passed through untouched.
+
+    This is the single model type for every entity in the CLI vocabulary —
+    user, chatbot, and later judge — so all three commands describe models the
+    same way. `from_shorthand` parses the CLI form (`gpt-5:3`), `from_dict` the
+    config form; both produce this.
+    """
 
     name: str
     repeats: int
@@ -50,7 +80,17 @@ class ModelSpec:
 
 @dataclasses.dataclass(frozen=True)
 class GenerationConfig:
-    """Fully resolved generation values passed to the generation command."""
+    """What run to perform — the run-defining half of a `RunConfig`.
+
+    Every field here is part of the run's identity: change one and it is a
+    different run producing different output. Because these values define the
+    run, they must come from exactly one input form — supplying any of them as
+    a CLI flag alongside `--config` is an error, not a merge (see
+    `vera_cli.config.resolve_input`).
+
+    Contrast `InvocationConfig`, which describes how a single invocation is
+    executed and is not part of run identity.
+    """
 
     chatbot: ModelSpec
     user: list[ModelSpec]
@@ -125,7 +165,16 @@ class GenerationConfig:
 
 @dataclasses.dataclass(frozen=True)
 class InvocationConfig:
-    """Controls that describe how this resolved run is executed."""
+    """How this one invocation is executed — the non-run-defining half.
+
+    These controls change what you observe while a run executes, not which run
+    it is: `debug` adds logging, `sample` caps personas loaded per file for
+    quick smoke checks. Because they are not part of run identity, they are the
+    only fields that may accompany `--config` on the command line — you can
+    replay a stored run with `--debug` without editing the config.
+
+    Contrast `GenerationConfig`, which defines the run itself.
+    """
 
     debug: bool
     sample: int | None
@@ -145,7 +194,11 @@ class InvocationConfig:
 
 @dataclasses.dataclass(frozen=True)
 class RunConfig:
-    """Canonical resolved form of one ``vera generate`` invocation."""
+    """One fully resolved `vera generate` run, ready to execute.
+
+    `--target all` resolves to one `RunConfig` per target; every other input
+    resolves to exactly one.
+    """
 
     invocation: InvocationConfig
     generation: GenerationConfig
