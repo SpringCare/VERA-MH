@@ -14,8 +14,13 @@ from utils.config_schema import InvocationConfig, ModelSpec, RunConfig
 ROOT = Path(__file__).resolve().parents[1]
 VERA_RUN_CONFIG_ENV = "VERA_RUN_CONFIG"
 
-# Namespace attributes the dispatcher puts there, not flags the user passed.
-# Excluded when deriving which run-defining flags were supplied.
+# Not every attribute on the parsed namespace came from a flag the user typed.
+# Dispatch adds two of its own: `command` (from `add_subparsers(dest="command")`
+# in `vera.py`) and `handler` (from each command's `set_defaults(handler=...)`).
+#
+# `resolve_input` decides which run-defining flags the user supplied by looking
+# at what is present on the namespace, so these two must be excluded or they
+# would be counted as user input and make every run look CLI-defined.
 DISPATCH_ATTRIBUTES = frozenset({"command", "handler"})
 
 

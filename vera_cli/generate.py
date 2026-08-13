@@ -48,6 +48,10 @@ from .targets import (
 # These defaults are CLI-only. A config-driven run states every behavior field
 # explicitly, so no run silently inherits a value that is not written down
 # somewhere the user controls.
+#
+# Every default here is discoverable via `vera generate -h`: each flag's help
+# text states it. Keep that true when adding a flag — a default a user cannot
+# see is a value they cannot predict.
 DEFAULTS: dict[str, Any] = {
     "turns": 30,
     "output": "output",
@@ -66,9 +70,19 @@ DEFAULTS: dict[str, Any] = {
 # automatically rather than needing to be listed somewhere second.
 INVOCATION_ONLY_FLAGS = frozenset({"config", "sample", "debug", "print_only"})
 
-# Top-level config keys `generate` accepts. `judging` is deliberately absent:
-# until `vera judge` exists there is nothing to do with it, and accepting a key
-# this command ignores is worse than rejecting it.
+# Top-level object keys allowed inside a `--config` JSON document. These are
+# *not* CLI flags — there is no `--generation`. A config looks like:
+#
+#     {"target": "SI", "generation": {"chatbot": {...}, "user": [...], ...}}
+#
+# `generation` holds the run-defining values; `target` names a bundle that
+# supplies some of them. Note that `target` exists in both input forms (here as
+# a config key, and as the `--target` flag), while `generation` is config-only:
+# on the command line its contents are spelled as individual flags.
+#
+# `invocation` is always allowed and is added by `resolve_input`. `judging` is
+# deliberately absent: until `vera judge` exists there is nothing to do with it,
+# and accepting a key this command ignores is worse than rejecting it.
 ALLOWED_CONFIG_FIELDS = {"generation", "target"}
 
 
@@ -151,7 +165,10 @@ def register(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--sessions",
         default=argparse.SUPPRESS,
-        help="Comma-separated session types to run in order",
+        help=(
+            "Comma-separated session types to run in order "
+            "(default: one session, using the chatbot's own session type)"
+        ),
     )
     parser.add_argument("--config", help="JSON path or '-' for stdin")
     parser.add_argument(
