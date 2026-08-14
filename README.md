@@ -57,6 +57,12 @@ This page covers [Environment setup](#environment-setup), optional [custom provi
    # Edit .env and add your API keys (e.g., ANTHROPIC_API_KEY, OPENAI_API_KEY, AZURE_API_KEY, AZURE_ENDPOINT)
    ```
 
+   To send Claude/OpenAI/Gemini calls through a proxy or gateway (e.g. LiteLLM)
+   instead of the providers' public APIs, set `API_BASE_URL` — or the
+   per-provider `ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL` / `GOOGLE_BASE_URL`,
+   which override it. The matching `*_API_KEY` must then be a key the gateway
+   accepts; sending a gateway key to a provider's public API returns HTTP 401.
+
 3. **(Optional) Install pre-commit hooks** for automatic code formatting/linting:
    ```bash
    pre-commit install

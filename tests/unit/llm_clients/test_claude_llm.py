@@ -106,6 +106,28 @@ class TestClaudeLLM(TestJudgeLLMBase):
             assert call_kwargs["max_tokens"] == 500
             assert call_kwargs["top_p"] == 0.9
 
+    def test_init_passes_base_url_when_configured(self):
+        """A configured base URL reaches ChatAnthropic."""
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_chat_anthropic.return_value = MagicMock()
+            with patch(
+                "llm_clients.claude_llm.Config.get_base_url",
+                return_value="https://gateway.example.com",
+            ):
+                ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+
+            call_kwargs = mock_chat_anthropic.call_args[1]
+            assert call_kwargs["base_url"] == "https://gateway.example.com"
+
+    def test_init_omits_base_url_when_not_configured(self):
+        """Without an override, base_url is left out so ChatAnthropic defaults."""
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_chat_anthropic.return_value = MagicMock()
+            with patch("llm_clients.claude_llm.Config.get_base_url", return_value=None):
+                ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+
+            assert "base_url" not in mock_chat_anthropic.call_args[1]
+
     def test_init_strips_sampling_params_for_opus_4_8(self, default_llm_kwargs):
         """Opus 4.8 rejects temperature/top_p/top_k; none may reach ChatAnthropic."""
         with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:

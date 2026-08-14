@@ -178,6 +178,11 @@ class ClaudeLLM(JudgeLLM):
             "model": self.model_name,
         }
 
+        # Only set base_url when overridden, so ChatAnthropic keeps its own default
+        base_url = Config.get_base_url("anthropic")
+        if base_url:
+            llm_params["base_url"] = base_url
+
         # Override with any provided kwargs
         llm_params.update(kwargs)
 
