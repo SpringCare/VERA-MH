@@ -22,10 +22,12 @@ from typing import Any
 from generate import run_for_user_models
 from utils.config_schema import GenerationConfig, InvocationConfig, ModelSpec, RunConfig
 from utils.debug import set_debug
+from utils.utils import parse_key_value_list
 
 from .config import (
     ConfigError,
     model_from_config,
+    models_from_cli,
     models_from_config,
     path_from_root,
     print_resolved_config,
@@ -34,10 +36,12 @@ from .config import (
     resolve_input,
 )
 from .targets import (
-    generation_persona_sets,
+    config_path,
+    config_paths,
     load_target,
     resolve_target_manifest,
     target_manifest_paths,
+    targets_from_config,
 )
 
 # CLI behavior defaults. They live here, beside the flag definitions, rather than
@@ -81,8 +85,9 @@ INVOCATION_ONLY_FLAGS = frozenset({"config", "sample", "debug", "print_only"})
 # on the command line its contents are spelled as individual flags.
 #
 # `invocation` is always allowed and is added by `resolve_input`. `judging` is
-# deliberately absent: until `vera judge` exists there is nothing to do with it,
-# and accepting a key this command ignores is worse than rejecting it.
+# deliberately absent: `vera judge` owns that section, and accepting a key this
+# command would ignore is worse than rejecting it. A later `pipeline` accepts
+# both.
 ALLOWED_CONFIG_FIELDS = {"generation", "target"}
 
 
@@ -169,6 +174,20 @@ def register(subparsers: argparse._SubParsersAction) -> None:
             "Comma-separated session types to run in order "
             "(default: one session, using the chatbot's own session type)"
         ),
+    )
+    parser.add_argument(
+        "--user-params",
+        type=parse_key_value_list,
+        default=argparse.SUPPRESS,
+        metavar="k=v[,k=v...]",
+        help="Provider parameters applied to every -u model (default: none)",
+    )
+    parser.add_argument(
+        "--chatbot-params",
+        type=parse_key_value_list,
+        default=argparse.SUPPRESS,
+        metavar="k=v[,k=v...]",
+        help="Provider parameters applied to the -c model (default: none)",
     )
     parser.add_argument("--config", help="JSON path or '-' for stdin")
     parser.add_argument(
@@ -277,8 +296,10 @@ def _from_cli(
     return [
         _run_config(
             invocation,
-            chatbot=ModelSpec.from_shorthand(chatbot),
-            users=[ModelSpec.from_shorthand(user) for user in users],
+            chatbot=models_from_cli([chatbot], getattr(args, "chatbot_params", None))[
+                0
+            ],
+            users=models_from_cli(users, getattr(args, "user_params", None)),
             personas=resolved.personas,
             persona_context_template=resolved.persona_context_template,
             turns=_value(args, "turns"),
@@ -330,6 +351,34 @@ def _from_config(
         raise ConfigError("generation.output must be a path string")
     behavior["output"] = path_from_root(behavior["output"])
 
+    targets = targets_from_config(
+        config,
+        generation,
+        explicit_fields=("personas", "persona_context_template"),
+        section_name="generation",
+    )
+    if targets is not None:
+        persona_sets = [
+            (target.personas, target.persona_context_template) for target in targets
+        ]
+    else:
+        persona_sets = [
+            (
+                config_paths(
+                    required(generation, "personas", section="generation config"),
+                    field="generation.personas",
+                ),
+                config_path(
+                    required(
+                        generation,
+                        "persona_context_template",
+                        section="generation config",
+                    ),
+                    field="generation.persona_context_template",
+                ),
+            )
+        ]
+
     return [
         _run_config(
             invocation,
@@ -339,7 +388,7 @@ def _from_config(
             persona_context_template=context,
             **behavior,
         )
-        for personas, context in generation_persona_sets(config, generation)
+        for personas, context in persona_sets
     ]
 
 
@@ -413,6 +462,7 @@ async def _execute(run_configs: list[RunConfig]) -> None:
     second-granularity timestamps, so concurrent starts would collide.
     """
     for run_config in run_configs:
-        await run_for_user_models(
-            run_config.generation, max_personas=run_config.invocation.sample
-        )
+        generation = run_config.generation
+        if generation is None:  # pragma: no cover - resolve_configs always sets it
+            raise ConfigError("generate produced a run with no generation section")
+        await run_for_user_models(generation, max_personas=run_config.invocation.sample)

@@ -79,6 +79,42 @@ class ModelSpec:
 
 
 @dataclasses.dataclass(frozen=True)
+class RubricFiles:
+    """The three resolved files that make up one rubric.
+
+    They travel together because a rubric is not usable without all three, and
+    they are named as files rather than as a manifest path because this is the
+    resolved form — nothing downstream re-reads a manifest to find them.
+    """
+
+    rubric_file: str
+    rubric_prompt_beginning_file: str
+    question_prompt_file: str
+
+    def __post_init__(self) -> None:
+        for field in dataclasses.fields(self):
+            value = getattr(self, field.name)
+            if not isinstance(value, str) or not value:
+                raise ValueError(f"judging.rubrics {field.name} must be a path")
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "RubricFiles":
+        names = {field.name for field in dataclasses.fields(cls)}
+        missing = sorted(names.difference(data))
+        if missing:
+            raise ValueError(
+                f"rubric is missing required field(s): {', '.join(missing)}"
+            )
+        unknown = sorted(set(data).difference(names))
+        if unknown:
+            raise ValueError(f"rubric has unknown field(s): {', '.join(unknown)}")
+        return cls(**data)
+
+    def to_dict(self) -> dict[str, Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass(frozen=True)
 class GenerationConfig:
     """What run to perform — the run-defining half of a `RunConfig`.
 
@@ -193,18 +229,116 @@ class InvocationConfig:
 
 
 @dataclasses.dataclass(frozen=True)
+class JudgingConfig:
+    """What judging run to perform — the run-defining half for `vera judge`.
+
+    The counterpart of `GenerationConfig`, and subject to the same rule: every
+    field here is part of the run's identity, so all of them must come from one
+    input form.
+
+    `rubrics` is list-shaped from day one per AD-20 while only length 1 is
+    accepted, so lifting the multi-rubric restriction later is not a schema
+    break. Each entry holds the three resolved rubric files rather than a
+    manifest path, because the resolved form names concrete files.
+    `conversations` is list-shaped for the same reason and likewise length 1.
+    """
+
+    models: list[ModelSpec]
+    conversations: list[str]
+    rubrics: list[RubricFiles]
+    output: str
+    max_concurrent: int | None
+    per_judge: bool
+
+    def __post_init__(self) -> None:
+        if not self.models:
+            raise ValueError("judging.models must contain at least one model")
+        names = [model.name for model in self.models]
+        if len(set(names)) != len(names):
+            raise ValueError(
+                "judging.models must not repeat a model name; use repeats to run "
+                "several instances of the same model"
+            )
+        # The judging domain takes one provider-parameter dict for the whole run,
+        # so per-model parameters cannot be honored yet. Reject them rather than
+        # silently applying one model's parameters to all. Drop this check when
+        # the domain accepts per-model parameters.
+        distinct_params = {
+            tuple(sorted(model.extra_params.items())) for model in self.models
+        }
+        if len(distinct_params) > 1:
+            raise ValueError(
+                "judging.models must all use the same provider parameters; "
+                "per-model judge parameters are not supported yet"
+            )
+        if len(self.conversations) != 1:
+            raise ValueError(
+                "judging.conversations must contain exactly one folder; judge "
+                "each folder separately and combine the results with vera pool"
+            )
+        if not all(isinstance(folder, str) and folder for folder in self.conversations):
+            raise ValueError("judging.conversations entries must be non-empty paths")
+        if len(self.rubrics) != 1:
+            raise ValueError(
+                "judging.rubrics must contain exactly one rubric; multi-rubric "
+                "support is not implemented yet"
+            )
+        if not self.output:
+            raise ValueError("judging.output cannot be empty")
+        if self.max_concurrent is not None:
+            if isinstance(self.max_concurrent, bool) or not isinstance(
+                self.max_concurrent, int
+            ):
+                raise ValueError("judging.max_concurrent must be null or an integer")
+            if self.max_concurrent < 0:
+                raise ValueError(
+                    "judging.max_concurrent must be null, 0, or a positive integer"
+                )
+        if not isinstance(self.per_judge, bool):
+            raise ValueError("judging.per_judge must be a boolean")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "models": [model.to_dict() for model in self.models],
+            "conversations": list(self.conversations),
+            "rubrics": [rubric.to_dict() for rubric in self.rubrics],
+            "output": self.output,
+            "max_concurrent": self.max_concurrent,
+            "per_judge": self.per_judge,
+        }
+
+
+@dataclasses.dataclass(frozen=True)
 class RunConfig:
-    """One fully resolved `vera generate` run, ready to execute.
+    """One fully resolved `vera` run, ready to execute.
+
+    Holds one section per command taking part in the run. `generate` populates
+    `generation`, `judge` populates `judging`, and a later `pipeline` populates
+    both; at least one is required.
 
     `--target all` resolves to one `RunConfig` per target; every other input
     resolves to exactly one.
     """
 
     invocation: InvocationConfig
-    generation: GenerationConfig
+    generation: GenerationConfig | None = None
+    judging: JudgingConfig | None = None
+
+    def __post_init__(self) -> None:
+        if self.generation is None and self.judging is None:
+            raise ValueError("a run must define generation, judging, or both")
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "invocation": self.invocation.to_dict(),
-            "generation": self.generation.to_dict(),
-        }
+        """Serialize, omitting sections this run does not define.
+
+        Absent sections are left out rather than emitted as null. That keeps the
+        output a valid input config: a command rejects top-level fields it does
+        not own, so a `null` judging section would make `vera generate --print`
+        emit something `vera generate` itself refuses.
+        """
+        config: dict[str, Any] = {"invocation": self.invocation.to_dict()}
+        if self.generation is not None:
+            config["generation"] = self.generation.to_dict()
+        if self.judging is not None:
+            config["judging"] = self.judging.to_dict()
+        return config

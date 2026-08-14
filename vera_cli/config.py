@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import os
 import shlex
@@ -87,6 +88,27 @@ def model_from_config(value: Any, *, field: str) -> ModelSpec:
     if not isinstance(value, dict):
         raise ConfigError(f"{field} must be an object")
     return ModelSpec.from_dict(value)
+
+
+def models_from_cli(
+    tokens: list[str], role_params: dict[str, Any] | None
+) -> list[ModelSpec]:
+    """Build `ModelSpec`s from CLI `name[:repeats]` tokens plus role parameters.
+
+    Provider parameters are supplied per *role* on the command line (one
+    `--*-params` flag covering every model of that role), matching what the
+    legacy scripts accepted. The resolved form stays per-model: each `ModelSpec`
+    gets its own copy, so `--print` shows exactly what each model will use and a
+    printed config can then be edited per model.
+
+    Per-model differentiation is a config-only capability; the CLI shorthand has
+    no room to express it.
+    """
+    params = dict(role_params or {})
+    return [
+        dataclasses.replace(ModelSpec.from_shorthand(token), extra_params=dict(params))
+        for token in tokens
+    ]
 
 
 def models_from_config(value: Any, *, field: str) -> list[ModelSpec]:
