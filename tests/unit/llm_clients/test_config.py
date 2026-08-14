@@ -14,8 +14,10 @@ class TestConfig:
         # These should be None or set depending on the test environment
         # We just verify the attributes exist
         assert hasattr(Config, "ANTHROPIC_API_KEY")
+        assert hasattr(Config, "ANTHROPIC_BASE_URL")
         assert hasattr(Config, "OPENAI_API_KEY")
         assert hasattr(Config, "GOOGLE_API_KEY")
+        assert hasattr(Config, "GOOGLE_BASE_URL")
 
     def test_get_claude_config(self):
         """Test get_claude_config returns expected structure."""
@@ -75,10 +77,21 @@ class TestConfig:
         from llm_clients import config
 
         importlib.reload(config)
-
         assert config.Config.ANTHROPIC_API_KEY == "test-anthropic-key"
 
         # Reload again to restore original state
+        importlib.reload(config)
+
+    @patch.dict("os.environ", {"ANTHROPIC_BASE_URL": "https://anthropic.example/v1"})
+    def test_anthropic_base_url_from_env(self):
+        """Test that ANTHROPIC_BASE_URL can be loaded from environment."""
+        import importlib
+
+        from llm_clients import config
+
+        importlib.reload(config)
+        assert config.Config.ANTHROPIC_BASE_URL == "https://anthropic.example/v1"
+
         importlib.reload(config)
 
     @patch.dict("os.environ", {"OPENAI_API_KEY": "test-openai-key"})
@@ -102,5 +115,17 @@ class TestConfig:
 
         importlib.reload(config)
         assert config.Config.GOOGLE_API_KEY == "test-google-key"
+
+        importlib.reload(config)
+
+    @patch.dict("os.environ", {"GOOGLE_BASE_URL": "https://google.example/v1"})
+    def test_google_base_url_from_env(self):
+        """Test that GOOGLE_BASE_URL can be loaded from environment."""
+        import importlib
+
+        from llm_clients import config
+
+        importlib.reload(config)
+        assert config.Config.GOOGLE_BASE_URL == "https://google.example/v1"
 
         importlib.reload(config)

@@ -106,6 +106,22 @@ class TestClaudeLLM(TestJudgeLLMBase):
             assert call_kwargs["max_tokens"] == 500
             assert call_kwargs["top_p"] == 0.9
 
+    @patch(
+        "llm_clients.claude_llm.Config.ANTHROPIC_BASE_URL",
+        "https://anthropic.example/v1",
+    )
+    def test_init_uses_anthropic_base_url_from_config(self):
+        """Forward a configured custom endpoint to ChatAnthropic."""
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_chat_anthropic.return_value.model = "claude-sonnet-4-5-20250929"
+
+            ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+
+            assert (
+                mock_chat_anthropic.call_args[1]["base_url"]
+                == "https://anthropic.example/v1"
+            )
+
     def test_init_strips_sampling_params_for_opus_4_8(self, default_llm_kwargs):
         """Opus 4.8 rejects temperature/top_p/top_k; none may reach ChatAnthropic."""
         with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:

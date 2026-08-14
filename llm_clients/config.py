@@ -25,10 +25,13 @@ class Config:
 
     # API Keys
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+    ANTHROPIC_BASE_URL = os.getenv("ANTHROPIC_BASE_URL")
 
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
 
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    GOOGLE_BASE_URL = os.getenv("GOOGLE_BASE_URL")
 
     AZURE_API_KEY = os.getenv("AZURE_API_KEY")
     AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT")

@@ -178,6 +178,9 @@ class ClaudeLLM(JudgeLLM):
             "model": self.model_name,
         }
 
+        if Config.ANTHROPIC_BASE_URL:
+            llm_params["base_url"] = Config.ANTHROPIC_BASE_URL
+
         # Override with any provided kwargs
         llm_params.update(kwargs)
 

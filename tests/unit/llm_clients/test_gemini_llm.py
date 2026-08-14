@@ -119,6 +119,19 @@ class TestGeminiLLM(TestJudgeLLMBase):
             assert call_kwargs["max_tokens"] == 500
             assert call_kwargs["top_p"] == 0.9
 
+    @patch(
+        "llm_clients.gemini_llm.Config.GOOGLE_BASE_URL",
+        "https://google.example/v1",
+    )
+    def test_init_uses_google_base_url_from_config(self):
+        """Forward a configured custom endpoint to ChatGoogleGenerativeAI."""
+        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+            mock_chat.return_value.model = "gemini-1.5-pro"
+
+            GeminiLLM(name="TestGemini", role=Role.PERSONA)
+
+            assert mock_chat.call_args[1]["base_url"] == "https://google.example/v1"
+
     def test_init_strips_sampling_params_for_gemini_3(self, default_llm_kwargs):
         """Gemini 3.x: temperature/top_p/top_k are no longer recommended and
         must not be forced onto the model (Google migration guidance)."""
