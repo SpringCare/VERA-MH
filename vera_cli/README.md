@@ -93,3 +93,12 @@ generations, and `_legacy_model_config`, which flattens a `ModelSpec` into the
 dict shape the old signature expects. Both disappear when the generation domain
 accepts `ModelSpec` directly. See
 [../docs/architecture.md](../docs/architecture.md) for the boundary contract.
+
+`data/SI/rubric_manifest.json` is a symlink to `manifest.json` for the same
+reason. `targets.py` reads only `manifest.json`, but `judge.py`,
+`run_pipeline.py`, and the root `generate.py` still default to the old name. A
+symlink rather than a copy because the two would otherwise describe the same
+bundle in two editable places, and a one-sided edit would silently point
+`vera generate` and the legacy scripts at different personas. **Delete the
+symlink when the last legacy script that reads it is removed** — it has no
+purpose beyond them, and nothing in `vera_cli` will notice it is gone.
