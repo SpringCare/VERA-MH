@@ -20,7 +20,24 @@ not built yet.
 
 ## Adding a command
 
-**An operation does not exist until it is registered.** Two steps:
+**Registering** a command means binding its name in the root parser and attaching
+the function to call for it. A command's `register` function does both.
+
+`subparsers.add_parser("<name>")` binds the name: it maps the literal word the
+user types to a new, independent `ArgumentParser` that owns that command's flags.
+Flags belong to that sub-parser rather than the root one, which is why `-c` is
+free to mean something different under each command.
+`parser.set_defaults(handler=run)` attaches the handler by putting a `handler`
+attribute on the parsed namespace, so the namespace carries its own destination
+and `vera.py` dispatches with `args.handler(args)` instead of comparing command
+names. Those two dispatch-added attributes, `command` and `handler`, are what
+`config.DISPATCH_ATTRIBUTES` exists to filter out — see the flag-presence rule
+below, which infers user input from what is present on the namespace.
+
+**An operation does not exist until it is registered.** A command module can be
+complete and tested, and `vera <name>` will still fail with `invalid choice`
+until `build_parser` calls its `register` — the module is unreachable code. Two
+steps:
 
 1. In your command module, define `register(subparsers)`. It adds a subparser,
    declares that command's flags, and ends with
