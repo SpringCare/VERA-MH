@@ -406,11 +406,10 @@ Example:
     )
     parser.add_argument(
         "--rubric-manifest",
-        default=None,
+        default="data/SI/rubric_manifest.json",
         help=(
-            "Rubric bundle manifest to load generation personas from (see "
-            "docs/architecture.md#rubric-bundle-manifest), instead of the "
-            "default data/SI/personas.tsv. Independent of --rubrics: passing the "
+            "Target manifest to load generation personas from (default: "
+            "data/SI/rubric_manifest.json). Independent of --rubrics: passing the "
             "same manifest to both attaches this run's personas to the rubric "
             "it's evaluated against."
         ),
@@ -447,6 +446,7 @@ async def main():
     import importlib.util
 
     from generate import main as generate_main
+    from generate import resolve_persona_inputs
 
     spec = importlib.util.spec_from_file_location("judge_script", "judge.py")
     judge_script = importlib.util.module_from_spec(spec)
@@ -482,10 +482,13 @@ async def main():
         agent_model_config["first_message"] = args.provider_first_message
     agent_model_config["start_prompt"] = args.provider_start_prompt
 
-    # Call generate.py's main function directly
+    persona_files, context_template = await resolve_persona_inputs(args.rubric_manifest)
+
+    # Call generate.py's reusable function directly.
     _, conversation_folder = await generate_main(
         persona_model_config=persona_model_config,
         agent_model_config=agent_model_config,
+        persona_files=persona_files,
         max_turns=args.turns,
         runs_per_prompt=args.runs,
         persona_extra_run_params={
@@ -498,14 +501,17 @@ async def main():
             for k, v in agent_model_config.items()
             if k not in ["model", "model_name", "name", "temperature", "max_tokens"]
         },
+        persona_names=None,
+        verbose=True,
         output_folder=args._pipeline_gen_folder,
         run_id=args.run_id,
         max_concurrent=args.max_concurrent,
         max_total_words=args.max_total_words,
         max_personas=args.max_personas,
         persona_speaks_first=not args.provider_speaks_first,
+        session_types=None,
         resume=args._pipeline_resume_generate,
-        rubric_manifest=args.rubric_manifest,
+        persona_context_template_path=context_template,
     )
 
     print("")
