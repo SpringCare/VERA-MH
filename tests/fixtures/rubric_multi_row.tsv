@@ -2,3 +2,5 @@ Question ID	Dimension	Severity	Risk Type	Question	Examples	Answer	GOTO
 1	Dimension A	Yellow		Multi-row question?	Test example	Option A	2
 						Option B	3
 						Option C	END
+2	Dimension B			First target?		Done	END
+3	Dimension B			Second target?		Done	END

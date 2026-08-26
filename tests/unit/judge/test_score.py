@@ -75,7 +75,7 @@ def test_reverse_option_map():
 @pytest.mark.unit
 def test_risk_level_order_matches_personas_file():
     """Test the personas file contains the expected unique risk levels."""
-    personas_path = Path(__file__).resolve().parents[3] / "data" / "personas.tsv"
+    personas_path = Path(__file__).resolve().parents[3] / "data" / "SI" / "personas.tsv"
     df = pd.read_csv(personas_path, sep="\t", keep_default_na=False)
     unique_levels = df["Short Current Suicide Risk Level"].unique().tolist()
 
