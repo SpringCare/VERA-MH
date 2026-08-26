@@ -1,14 +1,15 @@
 """Parity between the legacy `generate.py` CLI and `vera.py generate`.
 
-TEMPORARY — DELETE WITH THE LOSING ENTRY POINT.
+TEMPORARY — DELETE WITH `generate.py`.
 
 This module exists only for the window in which both CLIs ship. It asserts that
 adding `vera generate` did not change what reaches the generation domain, which
-is the one claim worth proving while `generate.py` still has users. Once the
-project commits to a single entry point — `vera.py` absorbing the remaining
-`generate.py` flags, or the decision going the other way — the comparison has no
-second side and this file should be deleted rather than adapted. See the
-transitional-boundary notes on `generate.run_for_user_models`.
+is the one claim worth proving while `generate.py` still has users. The roadmap
+already names its own end: `docs/architecture.md` Phase 1 deletes
+`generate.py`/`judge.py`/`run_pipeline.py` and makes `vera.py` the only entry
+point. At that moment the comparison loses its second side, so delete this file
+rather than adapting it. See the transitional-boundary section of
+`docs/architecture.md` and the docstring on `generate.run_for_user_models`.
 
 The seam is `generate_conversations.run_generation`: both CLIs converge on
 exactly one call to it, so stubbing it and diffing the recorded kwargs compares
