@@ -6,6 +6,7 @@ from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
 
+import judge.run as _judge_run
 from utils.conversation_layout import resolve_conversation_input
 
 # Load judge.py script (project root) so we can test get_parser and main
@@ -17,6 +18,17 @@ _judge_script = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_judge_script)
 get_parser = _judge_script.get_parser
 main = _judge_script.main
+
+# main() resolves whichever manifest --rubrics names into three concrete paths.
+# Tests below drive that with a test manifest rather than the shipped
+# data/SI/rubric_manifest.json, so renaming a real rubric file can't break them;
+# that the default *is* data/SI/... is asserted once, in test_defaults.
+FIXTURE_MANIFEST = "tests/fixtures/rubric_manifest_simple.json"
+FIXTURE_RUBRIC_PATHS = {
+    "rubric_file": "tests/fixtures/rubric_simple.tsv",
+    "rubric_prompt_beginning_file": "tests/fixtures/rubric_prompt_beginning.txt",
+    "question_prompt_file": "tests/fixtures/question_prompt.txt",
+}
 
 
 @pytest.mark.unit
@@ -132,6 +144,8 @@ class TestJudgeMain:
                 "conv.txt",
                 "-j",
                 "gpt-4o",
+                "-r",
+                FIXTURE_MANIFEST,
             ]
         )
         with (
@@ -144,15 +158,15 @@ class TestJudgeMain:
                 new_callable=AsyncMock,
             ) as judge_single,
         ):
-            RubricConfig.load_bundle = AsyncMock(return_value="rubric_config")
+            RubricConfig.from_paths = AsyncMock(return_value="rubric_config")
             ConversationData.load = AsyncMock(return_value="conversation_data")
             LLMJudge.return_value = "judge_instance"
 
             result = await main(args)
 
-            RubricConfig.load_bundle.assert_called_once_with(
-                "data/SI/rubric_manifest.json"
-            )
+            # main() resolves the manifest to concrete paths, then the rubric is
+            # built from those paths rather than from the manifest itself.
+            RubricConfig.from_paths.assert_called_once_with(**FIXTURE_RUBRIC_PATHS)
             ConversationData.load.assert_called_once_with("conv.txt")
             LLMJudge.assert_called_once_with(
                 judge_model="gpt-4o",
@@ -187,30 +201,32 @@ class TestJudgeMain:
                 "4",
                 "-pj",
                 "-vw",
+                "-r",
+                FIXTURE_MANIFEST,
             ]
         )
+        # Loading and dispatch now happen inside `judge.run.run_judging`, so the
+        # seams are patched there; main()'s job is to resolve and delegate.
         with (
-            patch.object(_judge_script, "RubricConfig") as RubricConfig,
+            patch.object(_judge_run, "RubricConfig") as RubricConfig,
             patch.object(
-                _judge_script,
+                _judge_run,
                 "load_conversations",
                 new_callable=AsyncMock,
             ) as load_convos,
             patch.object(
-                _judge_script,
+                _judge_run,
                 "judge_conversations",
                 new_callable=AsyncMock,
             ) as judge_convos,
         ):
-            RubricConfig.load_bundle = AsyncMock(return_value="rubric_config")
+            RubricConfig.from_paths = AsyncMock(return_value="rubric_config")
             load_convos.return_value = []
             judge_convos.return_value = ([], "evaluations/run1_timestamp")
 
             result = await main(args)
 
-            RubricConfig.load_bundle.assert_called_once_with(
-                "data/SI/rubric_manifest.json"
-            )
+            RubricConfig.from_paths.assert_called_once_with(**FIXTURE_RUBRIC_PATHS)
             expected_dir, _, _ = resolve_conversation_input("conversations/run1")
             load_convos.assert_called_once_with(expected_dir, limit=10)
             judge_convos.assert_awaited_once()
@@ -243,19 +259,21 @@ class TestJudgeMain:
                 "gpt-4o:2",
                 "-o",
                 str(eval_folder),
+                "-r",
+                FIXTURE_MANIFEST,
                 "--resume",
             ]
         )
         with (
-            patch.object(_judge_script, "RubricConfig") as RubricConfig,
+            patch.object(_judge_run, "RubricConfig") as RubricConfig,
             patch.object(
-                _judge_script, "load_conversations", new_callable=AsyncMock
+                _judge_run, "load_conversations", new_callable=AsyncMock
             ) as load_convos,
             patch.object(
-                _judge_script, "judge_conversations", new_callable=AsyncMock
+                _judge_run, "judge_conversations", new_callable=AsyncMock
             ) as judge_convos,
         ):
-            RubricConfig.load_bundle = AsyncMock(return_value="rubric_config")
+            RubricConfig.from_paths = AsyncMock(return_value="rubric_config")
             load_convos.return_value = []
             judge_convos.return_value = ([], str(eval_folder))
 
@@ -283,16 +301,18 @@ class TestJudgeMain:
             )
             with (
                 patch.object(
-                    _judge_script, "load_conversations", new_callable=AsyncMock
+                    _judge_run, "load_conversations", new_callable=AsyncMock
                 ) as load_convos,
                 patch.object(
-                    _judge_script, "judge_conversations", new_callable=AsyncMock
+                    _judge_run, "judge_conversations", new_callable=AsyncMock
                 ) as judge_convos,
-                patch.object(_judge_script, "RubricConfig") as RubricConfigMock,
+                patch.object(_judge_run, "RubricConfig") as RubricConfigMock,
             ):
                 from judge.rubric_config import RubricConfig as RealRubricConfig
 
-                RubricConfigMock.load_bundle = RealRubricConfig.load_bundle
+                # Real parsing, so the two fixtures must produce different
+                # rubrics -- proving --rubrics is live, not a no-op.
+                RubricConfigMock.from_paths = RealRubricConfig.from_paths
                 load_convos.return_value = []
                 judge_convos.return_value = ([], "evaluations/run1_timestamp")
 
@@ -322,22 +342,27 @@ class TestJudgeMain:
             ]
         )
         with (
-            patch.object(_judge_script, "RubricConfig") as RubricConfig,
+            patch.object(_judge_run, "RubricConfig") as RubricConfig,
             patch.object(
-                _judge_script, "load_conversations", new_callable=AsyncMock
+                _judge_run, "load_conversations", new_callable=AsyncMock
             ) as load_convos,
             patch.object(
-                _judge_script, "judge_conversations", new_callable=AsyncMock
+                _judge_run, "judge_conversations", new_callable=AsyncMock
             ) as judge_convos,
         ):
-            RubricConfig.load_bundle = AsyncMock(return_value="rubric_config")
+            RubricConfig.from_paths = AsyncMock(return_value="rubric_config")
             load_convos.return_value = []
             judge_convos.return_value = ([], "evaluations/run1_timestamp")
 
             await main(args)
 
-            RubricConfig.load_bundle.assert_called_once_with(
-                "tests/fixtures/rubric_manifest_simple.json"
+            # Only the first manifest's files are resolved and loaded.
+            RubricConfig.from_paths.assert_called_once_with(
+                rubric_file="tests/fixtures/rubric_simple.tsv",
+                rubric_prompt_beginning_file=(
+                    "tests/fixtures/rubric_prompt_beginning.txt"
+                ),
+                question_prompt_file="tests/fixtures/question_prompt.txt",
             )
             captured = capsys.readouterr()
             assert "Warning" in captured.err
