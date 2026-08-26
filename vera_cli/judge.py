@@ -3,13 +3,18 @@
 Structured exactly like `vera_cli/generate.py`, which is the reference
 implementation of the command contract in `vera_cli/README.md`:
 
-1. `register` declares the flags and attaches `run` as the subparser's handler.
-2. `run` is the entry point `vera.py` dispatches to.
-3. `resolve_configs` picks one input form and produces canonical `RunConfig`s.
-4. `_execute` hands each resolved run to the judging domain.
+1. `run` is the entry point `vera.py` dispatches to.
+2. `resolve_configs` picks one input form and produces canonical `RunConfig`s.
+3. `_execute` hands each resolved run to the judging domain.
+4. `register` declares the flags and attaches `run` as the subparser's handler.
 
-Nothing below step 3 reads an `argparse.Namespace`, and nothing above it touches
-the judging domain.
+Steps 1-3 are the path one run takes, in the order it takes them. `register`
+comes last for the reason given in `generate.py`: it is a declaration rather
+than a step, and its ~95 lines of flag definitions sit between the reader and
+the logic if they come first.
+
+Nothing after `resolve_configs` reads an `argparse.Namespace`, and nothing
+before `_execute` touches the judging domain.
 
 One deliberate difference from legacy `judge.py`, recorded in
 docs/vera-cli-use-cases.md: no single-conversation mode. Judge a folder
@@ -37,6 +42,7 @@ from utils.utils import parse_key_value_list
 
 from .config import (
     ConfigError,
+    config_dir,
     flag_value,
     models_from_cli,
     models_from_config,
@@ -45,12 +51,11 @@ from .config import (
     render_invocation,
     required,
     resolve_input,
+    rubrics_from_config,
 )
 from .targets import (
-    config_dir,
     load_target,
     resolve_target_manifest,
-    rubrics_from_config,
     targets_from_config,
 )
 
@@ -75,102 +80,6 @@ INVOCATION_ONLY_FLAGS = frozenset({"config", "sample", "debug", "print_only"})
 # reason `generate` rejects `judging`: a key this command would ignore is worse
 # rejected than accepted. A later `pipeline` accepts both.
 ALLOWED_CONFIG_FIELDS = {"judging", "target"}
-
-
-def register(subparsers: argparse._SubParsersAction) -> None:
-    """Register ``judge`` with the root parser.
-
-    Uses the same `argparse.SUPPRESS` convention as `generate`: run-defining
-    flags are absent from the namespace unless the user passed them, which is
-    what makes the config-or-flags rule enforceable.
-
-    Note `-c` is deliberately *not* accepted. Judging is decoupled from chatbot
-    selection by design, and in legacy `judge.py` `-c` meant `--conversation`,
-    which this command does not have.
-    """
-    parser = subparsers.add_parser("judge", help="Evaluate conversations")
-    parser.add_argument(
-        "-j",
-        "--judge",
-        nargs="+",
-        metavar="<model>[:<instances>]",
-        default=argparse.SUPPRESS,
-        help="Judge model(s) and how many instances of each to run",
-    )
-    parser.add_argument(
-        "--conversations",
-        nargs="+",
-        metavar="<folder>",
-        default=argparse.SUPPRESS,
-        help=(
-            "Conversation run folder to judge (exactly one; judge folders "
-            "separately and combine with 'vera pool')"
-        ),
-    )
-    target = parser.add_mutually_exclusive_group()
-    target.add_argument(
-        "--target",
-        default=argparse.SUPPRESS,
-        help="Complete target name or manifest path supplying the rubric",
-    )
-    target.add_argument(
-        "--rubric",
-        default=argparse.SUPPRESS,
-        help="Target name or manifest path whose rubric and prompts should be used",
-    )
-    parser.add_argument(
-        "-o",
-        "--output",
-        default=argparse.SUPPRESS,
-        help=(
-            "Parent directory for the evaluation run folder "
-            "(default: <conversation run>/evaluations/)"
-        ),
-    )
-    parser.add_argument(
-        "--max-concurrent",
-        type=int,
-        default=argparse.SUPPRESS,
-        help="Maximum concurrent judge workers (default: unlimited)",
-    )
-    parser.add_argument(
-        "--per-judge",
-        action="store_true",
-        default=argparse.SUPPRESS,
-        help=(
-            "Apply --max-concurrent per judge model rather than across all "
-            "(default: across all)"
-        ),
-    )
-    parser.add_argument(
-        "--judge-params",
-        type=parse_key_value_list,
-        default=argparse.SUPPRESS,
-        metavar="k=v[,k=v...]",
-        help="Provider parameters applied to every -j model (default: none)",
-    )
-    parser.add_argument("--config", help="JSON path or '-' for stdin")
-    parser.add_argument(
-        "--sample",
-        type=int,
-        default=argparse.SUPPRESS,
-        help="Debug-only cap on conversations judged",
-    )
-    parser.add_argument(
-        "-d",
-        "--debug",
-        action="store_true",
-        default=argparse.SUPPRESS,
-        help="Enable debug logging",
-    )
-    parser.add_argument(
-        "--print",
-        action="store_true",
-        dest="print_only",
-        help="Print the resolved invocation without executing it",
-    )
-
-    parser.set_defaults(handler=run)
 
 
 def run(args: argparse.Namespace) -> int:
@@ -214,60 +123,6 @@ def resolve_configs(args: argparse.Namespace) -> list[RunConfig]:
         raise
     except (TypeError, ValueError) as error:
         raise ConfigError(f"invalid judging config: {error}") from error
-
-
-def _reject_target_all(selection: str) -> str:
-    """Reject `all` for judging, which cannot yet attribute its output.
-
-    Judging every target means evaluating the same conversations under N rubrics.
-    That resolves cleanly, but every run would land in the same
-    `<run>/evaluations/` distinguishable only by timestamp, because the judge run
-    folder name encodes the judge model and time, not the rubric. Erroring beats
-    writing output nobody can attribute. Lifted in Phase 4, which adds the
-    `evaluations/<target>/` segment (see docs/architecture.md).
-    """
-    if selection.casefold() == "all":
-        raise ConfigError(
-            "judge does not support --target all yet: evaluations for different "
-            "rubrics would share one output folder and could not be told apart. "
-            "Judge one target at a time."
-        )
-    return selection
-
-
-def _rubric_from_target(selection: str) -> RubricFiles:
-    """Resolve a target name or manifest path to its three rubric files."""
-    target = load_target(resolve_target_manifest(_reject_target_all(selection)))
-    return RubricFiles(
-        rubric_file=target.rubric,
-        rubric_prompt_beginning_file=target.rubric_prompt_beginning,
-        question_prompt_file=target.question_prompt,
-    )
-
-
-def _output_root(conversations: str, output: str | None) -> str:
-    """Decide where the evaluation run folder goes.
-
-    Defaults beside the transcripts being judged, at
-    `<conversation run>/evaluations/`, so the output records what produced it.
-
-    When the input is not a recognizable generation run — a legacy flat folder of
-    `.txt` files — there is nothing to derive from, and `-o` is required. Legacy
-    `judge.py` instead wrote to `evaluations/` relative to the working directory;
-    that silently detached results from their input and is not carried over. See
-    the breaking-change note in CHANGELOG.md.
-    """
-    if output is not None:
-        return str(Path(output).resolve())
-
-    _, generation_run, _ = resolve_conversation_input(conversations)
-    if generation_run is None:
-        raise ConfigError(
-            f"cannot derive an output location from {conversations}: it is not a "
-            "generation run folder. Pass -o/--output to say where evaluations "
-            "should go."
-        )
-    return str((Path(generation_run) / "evaluations").resolve())
 
 
 def _from_cli(
@@ -383,6 +238,60 @@ def _from_config(
     ]
 
 
+def _reject_target_all(selection: str) -> str:
+    """Reject `all` for judging, which cannot yet attribute its output.
+
+    Judging every target means evaluating the same conversations under N rubrics.
+    That resolves cleanly, but every run would land in the same
+    `<run>/evaluations/` distinguishable only by timestamp, because the judge run
+    folder name encodes the judge model and time, not the rubric. Erroring beats
+    writing output nobody can attribute. Lifted in Phase 4, which adds the
+    `evaluations/<target>/` segment (see docs/architecture.md).
+    """
+    if selection.casefold() == "all":
+        raise ConfigError(
+            "judge does not support --target all yet: evaluations for different "
+            "rubrics would share one output folder and could not be told apart. "
+            "Judge one target at a time."
+        )
+    return selection
+
+
+def _rubric_from_target(selection: str) -> RubricFiles:
+    """Resolve a target name or manifest path to its three rubric files."""
+    target = load_target(resolve_target_manifest(_reject_target_all(selection)))
+    return RubricFiles(
+        rubric_file=target.rubric,
+        rubric_prompt_beginning_file=target.rubric_prompt_beginning,
+        question_prompt_file=target.question_prompt,
+    )
+
+
+def _output_root(conversations: str, output: str | None) -> str:
+    """Decide where the evaluation run folder goes.
+
+    Defaults beside the transcripts being judged, at
+    `<conversation run>/evaluations/`, so the output records what produced it.
+
+    When the input is not a recognizable generation run — a legacy flat folder of
+    `.txt` files — there is nothing to derive from, and `-o` is required. Legacy
+    `judge.py` instead wrote to `evaluations/` relative to the working directory;
+    that silently detached results from their input and is not carried over. See
+    the breaking-change note in CHANGELOG.md.
+    """
+    if output is not None:
+        return str(Path(output).resolve())
+
+    _, generation_run, _ = resolve_conversation_input(conversations)
+    if generation_run is None:
+        raise ConfigError(
+            f"cannot derive an output location from {conversations}: it is not a "
+            "generation run folder. Pass -o/--output to say where evaluations "
+            "should go."
+        )
+    return str((Path(generation_run) / "evaluations").resolve())
+
+
 def _string_list(value: Any, *, field: str) -> list[str]:
     """Validate a config value is a non-empty list of non-empty strings."""
     if (
@@ -457,3 +366,101 @@ async def _execute(run_configs: list[RunConfig]) -> None:
             verbose=True,
             resume=False,
         )
+
+
+def register(subparsers: argparse._SubParsersAction) -> None:
+    """Register ``judge`` with the root parser.
+
+    Uses the same `argparse.SUPPRESS` convention as `generate`: run-defining
+    flags are absent from the namespace unless the user passed them, which is
+    what makes the config-or-flags rule enforceable.
+
+    Note `-c` is deliberately *not* accepted. Judging is decoupled from chatbot
+    selection by design, and in legacy `judge.py` `-c` meant `--conversation`,
+    which this command does not have.
+    """
+    parser = subparsers.add_parser("judge", help="Evaluate conversations")
+    parser.add_argument(
+        "-j",
+        "--judge",
+        nargs="+",
+        metavar="<model>[:<instances>]",
+        default=argparse.SUPPRESS,
+        help="Judge model(s) and how many instances of each to run",
+    )
+    parser.add_argument(
+        "--conversations",
+        nargs="+",
+        metavar="<folder>",
+        default=argparse.SUPPRESS,
+        help=(
+            "Conversation run folder to judge (exactly one; judge folders "
+            "separately and combine with 'vera pool')"
+        ),
+    )
+    target = parser.add_mutually_exclusive_group()
+    target.add_argument(
+        "--target",
+        default=argparse.SUPPRESS,
+        help="Complete target name or manifest path supplying the rubric",
+    )
+    target.add_argument(
+        "--rubric",
+        default=argparse.SUPPRESS,
+        help="Target name or manifest path whose rubric and prompts should be used",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        default=argparse.SUPPRESS,
+        help=(
+            "Parent directory for the evaluation run folder "
+            "(default: <conversation run>/evaluations/)"
+        ),
+    )
+    parser.add_argument(
+        "--max-concurrent",
+        type=int,
+        default=argparse.SUPPRESS,
+        help="Maximum concurrent judge workers (default: unlimited)",
+    )
+    parser.add_argument(
+        "--per-judge",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help=(
+            "Apply --max-concurrent per judge model rather than across all "
+            "(default: across all)"
+        ),
+    )
+    parser.add_argument(
+        "--judge-params",
+        type=parse_key_value_list,
+        default=argparse.SUPPRESS,
+        metavar="k=v[,k=v...]",
+        help="Provider parameters applied to every -j model (default: none)",
+    )
+    parser.add_argument("--config", help="JSON path or '-' for stdin")
+    parser.add_argument(
+        "--sample",
+        type=int,
+        default=argparse.SUPPRESS,
+        help="Debug-only cap on conversations judged",
+    )
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Enable debug logging",
+    )
+    parser.add_argument(
+        "--print",
+        action="store_true",
+        dest="print_only",
+        help="Print the resolved invocation without executing it",
+    )
+
+    # `run` is this module's handler, defined at the top of the module. `vera.py`
+    # dispatches to whatever a subparser records here.
+    parser.set_defaults(handler=run)

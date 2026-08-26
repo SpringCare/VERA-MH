@@ -31,6 +31,8 @@ from utils.debug import set_debug
 
 from .config import (
     ConfigError,
+    config_path,
+    config_paths,
     flag_value,
     model_from_config,
     models_from_config,
@@ -41,8 +43,6 @@ from .config import (
     resolve_input,
 )
 from .targets import (
-    config_path,
-    config_paths,
     load_target,
     resolve_target_manifest,
     target_manifest_paths,
