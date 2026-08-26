@@ -22,13 +22,11 @@ from typing import Any
 from generate import run_for_user_models
 from utils.config_schema import GenerationConfig, InvocationConfig, ModelSpec, RunConfig
 from utils.debug import set_debug
-from utils.utils import parse_key_value_list
 
 from .config import (
     ConfigError,
     flag_value,
     model_from_config,
-    models_from_cli,
     models_from_config,
     path_from_root,
     print_resolved_config,
@@ -48,7 +46,7 @@ from .targets import (
 # CLI behavior defaults. They live here, beside the flag definitions, rather than
 # in the parser or the schema: the parser uses `argparse.SUPPRESS` so that flag
 # *presence* stays detectable (see `register`), which means defaults cannot be
-# parser defaults and are instead applied during resolution by `_value`.
+# parser defaults and are instead applied during resolution by `flag_value`.
 #
 # These defaults are CLI-only. A config-driven run states every behavior field
 # explicitly, so no run silently inherits a value that is not written down
@@ -176,20 +174,6 @@ def register(subparsers: argparse._SubParsersAction) -> None:
             "(default: one session, using the chatbot's own session type)"
         ),
     )
-    parser.add_argument(
-        "--user-params",
-        type=parse_key_value_list,
-        default=argparse.SUPPRESS,
-        metavar="k=v[,k=v...]",
-        help="Provider parameters applied to every -u model (default: none)",
-    )
-    parser.add_argument(
-        "--chatbot-params",
-        type=parse_key_value_list,
-        default=argparse.SUPPRESS,
-        metavar="k=v[,k=v...]",
-        help="Provider parameters applied to the -c model (default: none)",
-    )
     parser.add_argument("--config", help="JSON path or '-' for stdin")
     parser.add_argument(
         "--sample",
@@ -297,10 +281,8 @@ def _from_cli(
     return [
         _run_config(
             invocation=invocation,
-            chatbot=models_from_cli([chatbot], getattr(args, "chatbot_params", None))[
-                0
-            ],
-            users=models_from_cli(users, getattr(args, "user_params", None)),
+            chatbot=ModelSpec.from_shorthand(chatbot),
+            users=[ModelSpec.from_shorthand(user) for user in users],
             personas=resolved.personas,
             persona_context_template=resolved.persona_context_template,
             turns=flag_value(args, "turns", defaults=DEFAULTS),
