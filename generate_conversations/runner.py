@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+"""Execute the conversations in an already-configured generation run.
+
+``ConversationRunner`` loads the resolved personas, schedules persona/run jobs,
+executes their sessions, and writes transcripts and logs. It does not define
+the user-facing CLI contract or resolve config files and target manifests.
+"""
+
 import asyncio
 import logging
 import os

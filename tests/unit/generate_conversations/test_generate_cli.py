@@ -48,7 +48,7 @@ async def test_main_resume_uses_existing_run_folder(tmp_path: Path) -> None:
     run_folder = tmp_path / "p_mock_persona__a_mock_agent__t4__r1__20260331_120000"
     run_folder.mkdir(parents=True, exist_ok=True)
 
-    with patch("generate_conversations.run.ConversationRunner") as mock_runner_cls:
+    with patch("generate_conversations.main.ConversationRunner") as mock_runner_cls:
         mock_runner = mock_runner_cls.return_value
         mock_runner.run_conversations = AsyncMock(return_value=[])
 

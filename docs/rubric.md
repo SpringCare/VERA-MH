@@ -49,8 +49,17 @@ reads. It carries no compatibility fallback: the new CLI does not look for
 
 The legacy scripts listed under
 [Legacy entry points](#legacy-entry-points-being-removed) still read
-`rubric_manifest.json`. Only add a copy under that name if you need to run those
-scripts against this bundle before they are removed.
+`rubric_manifest.json`. In `data/SI/` that name is a **symlink** to
+`manifest.json`, not a second file: the two describe the same bundle, so a copy
+could drift and let `vera generate` and `run_pipeline.py` run against different
+personas. The symlink exists only to keep those scripts working and is deleted
+with them.
+
+Add it to a new bundle only if you need to run the legacy scripts against it:
+
+```bash
+ln -s manifest.json data/NEW_TARGET/rubric_manifest.json
+```
 
 `personas.tsv` and `persona_context_template.txt` are needed for conversation
 generation. Judging existing conversations only requires the rubric and judge
@@ -123,7 +132,8 @@ uv run python vera.py generate \
 Judging and pipeline runs have no `vera` command yet, so they still go through
 the legacy root scripts. These scripts are being deleted one at a time as each
 `vera` command replaces them, and they are the only reason a bundle needs a
-`rubric_manifest.json` copy. Nothing below reflects the unified CLI's behavior.
+`rubric_manifest.json` symlink. When the last of them is gone, the symlink goes
+with it. Nothing below reflects the unified CLI's behavior.
 
 Judge existing conversations with the new bundle:
 
