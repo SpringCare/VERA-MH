@@ -15,6 +15,8 @@ import dataclasses
 import json
 from pathlib import Path
 
+from utils.config_schema import RubricFiles
+
 from .config import ROOT, ConfigError, existing_file, path_from_root
 
 # A manifest must describe a *complete* target: enough for both generation and
@@ -185,6 +187,44 @@ def targets_from_config(
             f"{', '.join(sorted(overlap))}"
         )
     return [load_target(manifest) for manifest in target_manifest_paths(target)]
+
+
+def rubrics_from_config(value: object) -> list[RubricFiles]:
+    """Resolve explicit `judging.rubrics` config entries into resolved rubrics.
+
+    Lives here, not in the `judge` command, because the rule it applies is the
+    shared one every command's explicit-component branch uses: a config path is
+    repo-relative and must exist. That is the same rule as `config_path` beside
+    it. What stays with `judge` is the *decision* — target or explicit — not the
+    path handling; the command receives rubrics already resolved.
+
+    It also cannot live with `RubricFiles` in `utils/config_schema.py`, tidy as
+    that would be: resolution needs `path_from_root`, and `utils/` is the leaf
+    layer, so it must not import `vera_cli`.
+
+    `RubricFiles` is constructed exactly once per entry, already resolved. The
+    previous version built it twice — once from raw config strings, then again
+    from those resolved — which left the type transiently holding unresolved
+    paths despite its docstring defining it as the resolved form.
+    """
+    if not isinstance(value, list) or not value:
+        raise ConfigError("judging.rubrics must be a non-empty list of objects")
+    rubrics = []
+    for entry in value:
+        if not isinstance(entry, dict):
+            raise ConfigError("judging.rubrics entries must be objects")
+        # `from_dict` on the raw entry would give an unresolved `RubricFiles`,
+        # so borrow only its field validation and resolve before constructing.
+        RubricFiles.validate_dict(entry)
+        rubrics.append(
+            RubricFiles(
+                **{
+                    field: config_path(entry[field], field=f"judging.rubrics.{field}")
+                    for field in RubricFiles.field_names()
+                }
+            )
+        )
+    return rubrics
 
 
 def config_dir(value: object, *, field: str) -> str:

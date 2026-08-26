@@ -48,9 +48,9 @@ from .config import (
 )
 from .targets import (
     config_dir,
-    config_path,
     load_target,
     resolve_target_manifest,
+    rubrics_from_config,
     targets_from_config,
 )
 
@@ -360,7 +360,7 @@ def _from_config(
             )
         ]
     else:
-        rubrics = _rubrics_from_config(
+        rubrics = rubrics_from_config(
             required(judging, "rubrics", section="judging config")
         )
 
@@ -392,32 +392,6 @@ def _string_list(value: Any, *, field: str) -> list[str]:
     ):
         raise ConfigError(f"{field} must be a non-empty list of paths")
     return value
-
-
-def _rubrics_from_config(value: Any) -> list[RubricFiles]:
-    """Build `RubricFiles` from explicit config entries, resolving each path."""
-    if not isinstance(value, list) or not value:
-        raise ConfigError("judging.rubrics must be a non-empty list of objects")
-    rubrics = []
-    for entry in value:
-        if not isinstance(entry, dict):
-            raise ConfigError("judging.rubrics entries must be objects")
-        files = RubricFiles.from_dict(entry)
-        rubrics.append(
-            RubricFiles(
-                **{
-                    field: config_path(
-                        getattr(files, field), field=f"judging.rubrics.{field}"
-                    )
-                    for field in (
-                        "rubric_file",
-                        "rubric_prompt_beginning_file",
-                        "question_prompt_file",
-                    )
-                }
-            )
-        )
-    return rubrics
 
 
 def _run_config(

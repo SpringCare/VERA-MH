@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 import vera
+from utils.config_schema import RubricFiles
 from vera_cli import config as cli_config
 from vera_cli import judge
 
@@ -277,6 +278,39 @@ def test_config_paths_resolve_from_repository_root(tmp_path: Path) -> None:
         (cli_config.ROOT / "data/SI/rubric.tsv").resolve()
     )
     assert judging.output == str((cli_config.ROOT / "output").resolve())
+
+
+def test_every_rubric_file_is_resolved_not_just_the_first(tmp_path: Path) -> None:
+    """`RubricFiles` is the resolved form, so all three fields must be absolute.
+
+    Asserting only `rubric_file` (as the test above does) would pass even if the
+    two prompt paths were handed through unresolved, which is exactly the shape
+    the old two-step construction made possible.
+    """
+    config = _write_config(tmp_path, _judging_config(tmp_path))
+    args = vera.build_parser().parse_args(["judge", "--config", str(config)])
+
+    judging = judge.resolve_configs(args)[0].judging
+    assert judging is not None
+    rubric = judging.rubrics[0]
+    assert [
+        rubric.rubric_file,
+        rubric.rubric_prompt_beginning_file,
+        rubric.question_prompt_file,
+    ] == [
+        str((cli_config.ROOT / "data/SI/rubric.tsv").resolve()),
+        str((cli_config.ROOT / "data/SI/rubric_prompt_beginning.txt").resolve()),
+        str((cli_config.ROOT / "data/SI/question_prompt.txt").resolve()),
+    ]
+
+
+def test_rubric_files_cannot_be_built_straight_from_a_config_entry() -> None:
+    """The resolved-by-construction invariant has no `from_dict` escape hatch.
+
+    If one is reintroduced, raw repo-relative config strings can reach
+    `RubricFiles` again and the type stops meaning what it says.
+    """
+    assert not hasattr(RubricFiles, "from_dict")
 
 
 def test_resolved_run_omits_the_generation_section(tmp_path: Path) -> None:
