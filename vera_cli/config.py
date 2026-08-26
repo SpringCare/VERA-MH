@@ -1,4 +1,15 @@
-"""Shared config input and rendering for the unified CLI."""
+"""Shared config input, path resolution, and rendering for the unified CLI.
+
+Three groups, in order: loading a config document and reading fields off it;
+turning config-supplied strings into verified absolute paths; and rendering a
+resolved run back out.
+
+The path-resolution group is here rather than in `targets.py` because it has
+nothing to do with target manifests -- `config_path` and friends apply one
+rule, that a config path is repo-relative and must exist, to whatever field a
+command hands them. `targets.py` is about turning a target *name* into a
+bundle, and it builds on these rather than owning them.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +21,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from utils.config_schema import InvocationConfig, ModelSpec, RunConfig
+from utils.config_schema import InvocationConfig, ModelSpec, RubricFiles, RunConfig
 
 ROOT = Path(__file__).resolve().parents[1]
 VERA_RUN_CONFIG_ENV = "VERA_RUN_CONFIG"
@@ -116,6 +127,82 @@ def models_from_config(value: Any, *, field: str) -> list[ModelSpec]:
     if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
         raise ConfigError(f"{field} must be a list of objects")
     return [ModelSpec.from_dict(item) for item in value]
+
+
+def config_path(value: object, *, field: str) -> str:
+    """Resolve one explicit config path against the repository root, verifying it.
+
+    Shared by every command's explicit-component branch, so "a config path is
+    repo-relative and must exist" is stated once.
+    """
+    if not isinstance(value, str) or not value:
+        raise ConfigError(f"{field} must be a path")
+    return existing_file(path_from_root(value), field=field)
+
+
+def config_paths(value: object, *, field: str) -> list[str]:
+    """Resolve a non-empty list of explicit config paths, verifying each."""
+    if (
+        not isinstance(value, list)
+        or not value
+        or not all(isinstance(item, str) and item for item in value)
+    ):
+        raise ConfigError(f"{field} must be a non-empty list of paths")
+    return [config_path(item, field=field) for item in value]
+
+
+def config_dir(value: object, *, field: str) -> str:
+    """Resolve one explicit config *directory* against the repository root.
+
+    Sibling of `config_path`/`config_paths`, which verify files. A conversations
+    folder is a directory, so it needs its own existence check — but it obeys the
+    same rule, so it lives beside them rather than in the one command that
+    happens to be the only caller today.
+    """
+    if not isinstance(value, str) or not value:
+        raise ConfigError(f"{field} must be a path")
+    resolved = Path(path_from_root(value))
+    if not resolved.is_dir():
+        raise ConfigError(f"{field} does not exist or is not a directory: {resolved}")
+    return str(resolved)
+
+
+def rubrics_from_config(value: object) -> list[RubricFiles]:
+    """Resolve explicit `judging.rubrics` config entries into resolved rubrics.
+
+    Lives here, not in the `judge` command, because the rule it applies is the
+    shared one every command's explicit-component branch uses: a config path is
+    repo-relative and must exist. That is the same rule as `config_path` beside
+    it. What stays with `judge` is the *decision* — target or explicit — not the
+    path handling; the command receives rubrics already resolved.
+
+    It also cannot live with `RubricFiles` in `utils/config_schema.py`, tidy as
+    that would be: resolution needs `path_from_root`, and `utils/` is the leaf
+    layer, so it must not import `vera_cli`.
+
+    `RubricFiles` is constructed exactly once per entry, already resolved. The
+    previous version built it twice — once from raw config strings, then again
+    from those resolved — which left the type transiently holding unresolved
+    paths despite its docstring defining it as the resolved form.
+    """
+    if not isinstance(value, list) or not value:
+        raise ConfigError("judging.rubrics must be a non-empty list of objects")
+    rubrics = []
+    for entry in value:
+        if not isinstance(entry, dict):
+            raise ConfigError("judging.rubrics entries must be objects")
+        # `from_dict` on the raw entry would give an unresolved `RubricFiles`,
+        # so borrow only its field validation and resolve before constructing.
+        RubricFiles.validate_dict(entry)
+        rubrics.append(
+            RubricFiles(
+                **{
+                    field: config_path(entry[field], field=f"judging.rubrics.{field}")
+                    for field in RubricFiles.field_names()
+                }
+            )
+        )
+    return rubrics
 
 
 def flag_value(args: Any, field: str, *, defaults: dict[str, Any]) -> Any:

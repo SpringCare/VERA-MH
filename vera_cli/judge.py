@@ -3,13 +3,18 @@
 Structured exactly like `vera_cli/generate.py`, which is the reference
 implementation of the command contract in `vera_cli/README.md`:
 
-1. `register` declares the flags and attaches `run` as the subparser's handler.
-2. `run` is the entry point `vera.py` dispatches to.
-3. `resolve_configs` picks one input form and produces canonical `RunConfig`s.
-4. `_execute` hands each resolved run to the judging domain.
+1. `run` is the entry point `vera.py` dispatches to.
+2. `resolve_configs` picks one input form and produces canonical `RunConfig`s.
+3. `_execute` hands each resolved run to the judging domain.
+4. `register` declares the flags and attaches `run` as the subparser's handler.
 
-Nothing below step 3 reads an `argparse.Namespace`, and nothing above it touches
-the judging domain.
+Steps 1-3 are the path one run takes, in the order it takes them. `register`
+comes last for the reason given in `generate.py`: it is a declaration rather
+than a step, and its ~95 lines of flag definitions sit between the reader and
+the logic if they come first.
+
+Nothing after `resolve_configs` reads an `argparse.Namespace`, and nothing
+before `_execute` touches the judging domain.
 
 One deliberate difference from legacy `judge.py`, recorded in
 docs/vera-cli-use-cases.md: no single-conversation mode. Judge a folder
@@ -37,6 +42,7 @@ from utils.utils import parse_key_value_list
 
 from .config import (
     ConfigError,
+    config_dir,
     flag_value,
     models_from_cli,
     models_from_config,
@@ -45,10 +51,9 @@ from .config import (
     render_invocation,
     required,
     resolve_input,
+    rubrics_from_config,
 )
 from .targets import (
-    config_dir,
-    config_path,
     load_target,
     resolve_target_manifest,
     targets_from_config,
@@ -75,6 +80,292 @@ INVOCATION_ONLY_FLAGS = frozenset({"config", "sample", "debug", "print_only"})
 # reason `generate` rejects `judging`: a key this command would ignore is worse
 # rejected than accepted. A later `pipeline` accepts both.
 ALLOWED_CONFIG_FIELDS = {"judging", "target"}
+
+
+def run(args: argparse.Namespace) -> int:
+    """Resolve the requested run(s) and execute them.
+
+    Resolution happens up front and completely, so an invalid target, missing
+    rubric file, or underivable output location fails before any model is called.
+    """
+    run_configs = resolve_configs(args)
+    if args.print_only:
+        for run_config in run_configs:
+            print(render_invocation(run_config, command="judge"))
+        return 0
+
+    if any(config.invocation.debug for config in run_configs):
+        set_debug(True)
+    for run_config in run_configs:
+        print_resolved_config(run_config)
+    asyncio.run(_execute(run_configs))
+    return 0
+
+
+def resolve_configs(args: argparse.Namespace) -> list[RunConfig]:
+    """Resolve either config JSON or CLI flags into canonical runs.
+
+    Always returns exactly one `RunConfig`. Unlike `generate`, `--target all` is
+    rejected rather than fanned out — see `_target_selection`.
+    """
+    try:
+        config, invocation = resolve_input(
+            args,
+            invocation_only_flags=INVOCATION_ONLY_FLAGS,
+            allowed_config_fields=ALLOWED_CONFIG_FIELDS,
+        )
+        return (
+            _from_config(config, invocation)
+            if config is not None
+            else _from_cli(args, invocation)
+        )
+    except ConfigError:
+        raise
+    except (TypeError, ValueError) as error:
+        raise ConfigError(f"invalid judging config: {error}") from error
+
+
+def _from_cli(
+    args: argparse.Namespace, invocation: InvocationConfig
+) -> list[RunConfig]:
+    """Resolve CLI flags into one canonical run, applying CLI defaults.
+
+    `--target` and `--rubric` differ only in intent, exactly as `--target` and
+    `--personas` do for `generate`: the first names a whole bundle, the second
+    names the rubric component explicitly. Both resolve through the same manifest
+    to the same three files.
+    """
+    models: list[str] | None = getattr(args, "judge", None)
+    conversations: list[str] | None = getattr(args, "conversations", None)
+    target: str | None = getattr(args, "target", None)
+    rubric: str | None = getattr(args, "rubric", None)
+
+    # The parser cannot enforce these: a config may supply the same values, and
+    # the flags use SUPPRESS so absence is indistinguishable from a default. The
+    # target/rubric group enforces "not both" but cannot require one.
+    if not models:
+        raise ConfigError("judge requires at least one -j/--judge model")
+    if not conversations:
+        raise ConfigError("judge requires --conversations")
+    if target:
+        rubric_files = _rubric_from_target(target)
+    elif rubric:
+        rubric_files = _rubric_from_target(rubric)
+    else:
+        raise ConfigError("judge requires --target or --rubric")
+
+    folders = [str(Path(folder).resolve()) for folder in conversations]
+    return [
+        _run_config(
+            invocation=invocation,
+            models=models_from_cli(models, getattr(args, "judge_params", None)),
+            conversations=folders,
+            rubrics=[rubric_files],
+            output=_output_root(
+                folders[0], flag_value(args, "output", defaults=DEFAULTS)
+            ),
+            max_concurrent=flag_value(args, "max_concurrent", defaults=DEFAULTS),
+            per_judge=flag_value(args, "per_judge", defaults=DEFAULTS),
+        )
+    ]
+
+
+def _from_config(
+    config: dict[str, Any], invocation: InvocationConfig
+) -> list[RunConfig]:
+    """Resolve a config object into one canonical run.
+
+    Every behavior field is required rather than defaulted, matching `generate`:
+    a stored config is a complete, reproducible description of a run, so a value
+    it does not state is an error rather than something this code fills in.
+    """
+    value = config.get("judging")
+    if not isinstance(value, dict):
+        raise ConfigError("judge requires a judging config object")
+    judging = dict(value)
+    models = models_from_config(
+        required(judging, "models", section="judging config"),
+        field="judging.models",
+    )
+    conversations = [
+        config_dir(folder, field="judging.conversations")
+        for folder in _string_list(
+            required(judging, "conversations", section="judging config"),
+            field="judging.conversations",
+        )
+    ]
+
+    targets = targets_from_config(
+        config=config,
+        section=judging,
+        explicit_fields=("rubrics",),
+        section_name="judging",
+    )
+    if targets is not None:
+        if len(targets) != 1:
+            raise ConfigError(
+                "judge does not support target 'all' yet: evaluations for "
+                "different rubrics would share one output folder"
+            )
+        rubrics = [
+            RubricFiles(
+                rubric_file=targets[0].rubric,
+                rubric_prompt_beginning_file=targets[0].rubric_prompt_beginning,
+                question_prompt_file=targets[0].question_prompt,
+            )
+        ]
+    else:
+        rubrics = rubrics_from_config(
+            required(judging, "rubrics", section="judging config")
+        )
+
+    output = required(judging, "output", section="judging config")
+    if not isinstance(output, str) or not output:
+        raise ConfigError("judging.output must be a path string")
+
+    return [
+        _run_config(
+            invocation=invocation,
+            models=models,
+            conversations=conversations,
+            rubrics=rubrics,
+            output=path_from_root(output),
+            max_concurrent=required(
+                judging, "max_concurrent", section="judging config"
+            ),
+            per_judge=required(judging, "per_judge", section="judging config"),
+        )
+    ]
+
+
+def _reject_target_all(selection: str) -> str:
+    """Reject `all` for judging, which cannot yet attribute its output.
+
+    Judging every target means evaluating the same conversations under N rubrics.
+    That resolves cleanly, but every run would land in the same
+    `<run>/evaluations/` distinguishable only by timestamp, because the judge run
+    folder name encodes the judge model and time, not the rubric. Erroring beats
+    writing output nobody can attribute. Lifted in Phase 4, which adds the
+    `evaluations/<target>/` segment (see docs/architecture.md).
+    """
+    if selection.casefold() == "all":
+        raise ConfigError(
+            "judge does not support --target all yet: evaluations for different "
+            "rubrics would share one output folder and could not be told apart. "
+            "Judge one target at a time."
+        )
+    return selection
+
+
+def _rubric_from_target(selection: str) -> RubricFiles:
+    """Resolve a target name or manifest path to its three rubric files."""
+    target = load_target(resolve_target_manifest(_reject_target_all(selection)))
+    return RubricFiles(
+        rubric_file=target.rubric,
+        rubric_prompt_beginning_file=target.rubric_prompt_beginning,
+        question_prompt_file=target.question_prompt,
+    )
+
+
+def _output_root(conversations: str, output: str | None) -> str:
+    """Decide where the evaluation run folder goes.
+
+    Defaults beside the transcripts being judged, at
+    `<conversation run>/evaluations/`, so the output records what produced it.
+
+    When the input is not a recognizable generation run — a legacy flat folder of
+    `.txt` files — there is nothing to derive from, and `-o` is required. Legacy
+    `judge.py` instead wrote to `evaluations/` relative to the working directory;
+    that silently detached results from their input and is not carried over. See
+    the breaking-change note in CHANGELOG.md.
+    """
+    if output is not None:
+        return str(Path(output).resolve())
+
+    _, generation_run, _ = resolve_conversation_input(conversations)
+    if generation_run is None:
+        raise ConfigError(
+            f"cannot derive an output location from {conversations}: it is not a "
+            "generation run folder. Pass -o/--output to say where evaluations "
+            "should go."
+        )
+    return str((Path(generation_run) / "evaluations").resolve())
+
+
+def _string_list(value: Any, *, field: str) -> list[str]:
+    """Validate a config value is a non-empty list of non-empty strings."""
+    if (
+        not isinstance(value, list)
+        or not value
+        or not all(isinstance(item, str) and item for item in value)
+    ):
+        raise ConfigError(f"{field} must be a non-empty list of paths")
+    return value
+
+
+def _run_config(
+    *,
+    invocation: InvocationConfig,
+    models: list[ModelSpec],
+    conversations: list[str],
+    rubrics: list[RubricFiles],
+    output: str,
+    max_concurrent: int | None,
+    per_judge: bool,
+) -> RunConfig:
+    """Assemble and validate one canonical `RunConfig` holding a judging section.
+
+    Fields are named rather than forwarded as opaque keywords so this signature
+    states what a judging run consists of. Type enforcement happens at runtime in
+    `JudgingConfig.__post_init__`.
+    """
+    return RunConfig(
+        invocation=invocation,
+        judging=JudgingConfig(
+            models=models,
+            conversations=conversations,
+            rubrics=rubrics,
+            output=output,
+            max_concurrent=max_concurrent,
+            per_judge=per_judge,
+        ),
+    )
+
+
+async def _execute(run_configs: list[RunConfig]) -> None:
+    """Hand each resolved run to the judging domain."""
+    for run_config in run_configs:
+        judging = run_config.judging
+        if judging is None:  # pragma: no cover - resolve_configs always sets it
+            raise ConfigError("judge produced a run with no judging section")
+        rubric = judging.rubrics[0]
+
+        # Discovery of the transcripts directory is idempotent, so deriving it
+        # here keeps the resolved config stating the folder the user named rather
+        # than an internal subdirectory.
+        transcripts_dir, _, folder_name = resolve_conversation_input(
+            judging.conversations[0]
+        )
+        await run_judging(
+            judge_models={model.name: model.repeats for model in judging.models},
+            rubric_file=rubric.rubric_file,
+            rubric_prompt_beginning_file=rubric.rubric_prompt_beginning_file,
+            question_prompt_file=rubric.question_prompt_file,
+            transcripts_dir=transcripts_dir,
+            conversation_folder_name=folder_name,
+            limit=run_config.invocation.sample,
+            output_dir=judging.output,
+            # Always a parent to mint a new `j_*` run under, never an existing
+            # run folder to land back in: that second mode exists only for
+            # legacy `judge.py --resume`, which `vera judge` does not offer.
+            is_existing_run=False,
+            judge_model_extra_params=dict(judging.models[0].extra_params),
+            max_concurrent=judging.max_concurrent,
+            per_judge=judging.per_judge,
+            verbose_workers=False,
+            verbose=True,
+            resume=False,
+        )
 
 
 def register(subparsers: argparse._SubParsersAction) -> None:
@@ -170,316 +461,6 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         help="Print the resolved invocation without executing it",
     )
 
+    # `run` is this module's handler, defined at the top of the module. `vera.py`
+    # dispatches to whatever a subparser records here.
     parser.set_defaults(handler=run)
-
-
-def run(args: argparse.Namespace) -> int:
-    """Resolve the requested run(s) and execute them.
-
-    Resolution happens up front and completely, so an invalid target, missing
-    rubric file, or underivable output location fails before any model is called.
-    """
-    run_configs = resolve_configs(args)
-    if args.print_only:
-        for run_config in run_configs:
-            print(render_invocation(run_config, command="judge"))
-        return 0
-
-    if any(config.invocation.debug for config in run_configs):
-        set_debug(True)
-    for run_config in run_configs:
-        print_resolved_config(run_config)
-    asyncio.run(_execute(run_configs))
-    return 0
-
-
-def resolve_configs(args: argparse.Namespace) -> list[RunConfig]:
-    """Resolve either config JSON or CLI flags into canonical runs.
-
-    Always returns exactly one `RunConfig`. Unlike `generate`, `--target all` is
-    rejected rather than fanned out — see `_target_selection`.
-    """
-    try:
-        config, invocation = resolve_input(
-            args,
-            invocation_only_flags=INVOCATION_ONLY_FLAGS,
-            allowed_config_fields=ALLOWED_CONFIG_FIELDS,
-        )
-        return (
-            _from_config(config, invocation)
-            if config is not None
-            else _from_cli(args, invocation)
-        )
-    except ConfigError:
-        raise
-    except (TypeError, ValueError) as error:
-        raise ConfigError(f"invalid judging config: {error}") from error
-
-
-def _reject_target_all(selection: str) -> str:
-    """Reject `all` for judging, which cannot yet attribute its output.
-
-    Judging every target means evaluating the same conversations under N rubrics.
-    That resolves cleanly, but every run would land in the same
-    `<run>/evaluations/` distinguishable only by timestamp, because the judge run
-    folder name encodes the judge model and time, not the rubric. Erroring beats
-    writing output nobody can attribute. Lifted in Phase 4, which adds the
-    `evaluations/<target>/` segment (see docs/architecture.md).
-    """
-    if selection.casefold() == "all":
-        raise ConfigError(
-            "judge does not support --target all yet: evaluations for different "
-            "rubrics would share one output folder and could not be told apart. "
-            "Judge one target at a time."
-        )
-    return selection
-
-
-def _rubric_from_target(selection: str) -> RubricFiles:
-    """Resolve a target name or manifest path to its three rubric files."""
-    target = load_target(resolve_target_manifest(_reject_target_all(selection)))
-    return RubricFiles(
-        rubric_file=target.rubric,
-        rubric_prompt_beginning_file=target.rubric_prompt_beginning,
-        question_prompt_file=target.question_prompt,
-    )
-
-
-def _output_root(conversations: str, output: str | None) -> str:
-    """Decide where the evaluation run folder goes.
-
-    Defaults beside the transcripts being judged, at
-    `<conversation run>/evaluations/`, so the output records what produced it.
-
-    When the input is not a recognizable generation run — a legacy flat folder of
-    `.txt` files — there is nothing to derive from, and `-o` is required. Legacy
-    `judge.py` instead wrote to `evaluations/` relative to the working directory;
-    that silently detached results from their input and is not carried over. See
-    the breaking-change note in CHANGELOG.md.
-    """
-    if output is not None:
-        return str(Path(output).resolve())
-
-    _, generation_run, _ = resolve_conversation_input(conversations)
-    if generation_run is None:
-        raise ConfigError(
-            f"cannot derive an output location from {conversations}: it is not a "
-            "generation run folder. Pass -o/--output to say where evaluations "
-            "should go."
-        )
-    return str((Path(generation_run) / "evaluations").resolve())
-
-
-def _from_cli(
-    args: argparse.Namespace, invocation: InvocationConfig
-) -> list[RunConfig]:
-    """Resolve CLI flags into one canonical run, applying CLI defaults.
-
-    `--target` and `--rubric` differ only in intent, exactly as `--target` and
-    `--personas` do for `generate`: the first names a whole bundle, the second
-    names the rubric component explicitly. Both resolve through the same manifest
-    to the same three files.
-    """
-    models: list[str] | None = getattr(args, "judge", None)
-    conversations: list[str] | None = getattr(args, "conversations", None)
-    target: str | None = getattr(args, "target", None)
-    rubric: str | None = getattr(args, "rubric", None)
-
-    # The parser cannot enforce these: a config may supply the same values, and
-    # the flags use SUPPRESS so absence is indistinguishable from a default. The
-    # target/rubric group enforces "not both" but cannot require one.
-    if not models:
-        raise ConfigError("judge requires at least one -j/--judge model")
-    if not conversations:
-        raise ConfigError("judge requires --conversations")
-    if target:
-        rubric_files = _rubric_from_target(target)
-    elif rubric:
-        rubric_files = _rubric_from_target(rubric)
-    else:
-        raise ConfigError("judge requires --target or --rubric")
-
-    folders = [str(Path(folder).resolve()) for folder in conversations]
-    return [
-        _run_config(
-            invocation=invocation,
-            models=models_from_cli(models, getattr(args, "judge_params", None)),
-            conversations=folders,
-            rubrics=[rubric_files],
-            output=_output_root(
-                folders[0], flag_value(args, "output", defaults=DEFAULTS)
-            ),
-            max_concurrent=flag_value(args, "max_concurrent", defaults=DEFAULTS),
-            per_judge=flag_value(args, "per_judge", defaults=DEFAULTS),
-        )
-    ]
-
-
-def _from_config(
-    config: dict[str, Any], invocation: InvocationConfig
-) -> list[RunConfig]:
-    """Resolve a config object into one canonical run.
-
-    Every behavior field is required rather than defaulted, matching `generate`:
-    a stored config is a complete, reproducible description of a run, so a value
-    it does not state is an error rather than something this code fills in.
-    """
-    value = config.get("judging")
-    if not isinstance(value, dict):
-        raise ConfigError("judge requires a judging config object")
-    judging = dict(value)
-    models = models_from_config(
-        required(judging, "models", section="judging config"),
-        field="judging.models",
-    )
-    conversations = [
-        config_dir(folder, field="judging.conversations")
-        for folder in _string_list(
-            required(judging, "conversations", section="judging config"),
-            field="judging.conversations",
-        )
-    ]
-
-    targets = targets_from_config(
-        config=config,
-        section=judging,
-        explicit_fields=("rubrics",),
-        section_name="judging",
-    )
-    if targets is not None:
-        if len(targets) != 1:
-            raise ConfigError(
-                "judge does not support target 'all' yet: evaluations for "
-                "different rubrics would share one output folder"
-            )
-        rubrics = [
-            RubricFiles(
-                rubric_file=targets[0].rubric,
-                rubric_prompt_beginning_file=targets[0].rubric_prompt_beginning,
-                question_prompt_file=targets[0].question_prompt,
-            )
-        ]
-    else:
-        rubrics = _rubrics_from_config(
-            required(judging, "rubrics", section="judging config")
-        )
-
-    output = required(judging, "output", section="judging config")
-    if not isinstance(output, str) or not output:
-        raise ConfigError("judging.output must be a path string")
-
-    return [
-        _run_config(
-            invocation=invocation,
-            models=models,
-            conversations=conversations,
-            rubrics=rubrics,
-            output=path_from_root(output),
-            max_concurrent=required(
-                judging, "max_concurrent", section="judging config"
-            ),
-            per_judge=required(judging, "per_judge", section="judging config"),
-        )
-    ]
-
-
-def _string_list(value: Any, *, field: str) -> list[str]:
-    """Validate a config value is a non-empty list of non-empty strings."""
-    if (
-        not isinstance(value, list)
-        or not value
-        or not all(isinstance(item, str) and item for item in value)
-    ):
-        raise ConfigError(f"{field} must be a non-empty list of paths")
-    return value
-
-
-def _rubrics_from_config(value: Any) -> list[RubricFiles]:
-    """Build `RubricFiles` from explicit config entries, resolving each path."""
-    if not isinstance(value, list) or not value:
-        raise ConfigError("judging.rubrics must be a non-empty list of objects")
-    rubrics = []
-    for entry in value:
-        if not isinstance(entry, dict):
-            raise ConfigError("judging.rubrics entries must be objects")
-        files = RubricFiles.from_dict(entry)
-        rubrics.append(
-            RubricFiles(
-                **{
-                    field: config_path(
-                        getattr(files, field), field=f"judging.rubrics.{field}"
-                    )
-                    for field in (
-                        "rubric_file",
-                        "rubric_prompt_beginning_file",
-                        "question_prompt_file",
-                    )
-                }
-            )
-        )
-    return rubrics
-
-
-def _run_config(
-    *,
-    invocation: InvocationConfig,
-    models: list[ModelSpec],
-    conversations: list[str],
-    rubrics: list[RubricFiles],
-    output: str,
-    max_concurrent: int | None,
-    per_judge: bool,
-) -> RunConfig:
-    """Assemble and validate one canonical `RunConfig` holding a judging section.
-
-    Fields are named rather than forwarded as opaque keywords so this signature
-    states what a judging run consists of. Type enforcement happens at runtime in
-    `JudgingConfig.__post_init__`.
-    """
-    return RunConfig(
-        invocation=invocation,
-        judging=JudgingConfig(
-            models=models,
-            conversations=conversations,
-            rubrics=rubrics,
-            output=output,
-            max_concurrent=max_concurrent,
-            per_judge=per_judge,
-        ),
-    )
-
-
-async def _execute(run_configs: list[RunConfig]) -> None:
-    """Hand each resolved run to the judging domain."""
-    for run_config in run_configs:
-        judging = run_config.judging
-        if judging is None:  # pragma: no cover - resolve_configs always sets it
-            raise ConfigError("judge produced a run with no judging section")
-        rubric = judging.rubrics[0]
-
-        # Discovery of the transcripts directory is idempotent, so deriving it
-        # here keeps the resolved config stating the folder the user named rather
-        # than an internal subdirectory.
-        transcripts_dir, _, folder_name = resolve_conversation_input(
-            judging.conversations[0]
-        )
-        await run_judging(
-            judge_models={model.name: model.repeats for model in judging.models},
-            rubric_file=rubric.rubric_file,
-            rubric_prompt_beginning_file=rubric.rubric_prompt_beginning_file,
-            question_prompt_file=rubric.question_prompt_file,
-            transcripts_dir=transcripts_dir,
-            conversation_folder_name=folder_name,
-            limit=run_config.invocation.sample,
-            output_dir=judging.output,
-            # Always a parent to mint a new `j_*` run under, never an existing
-            # run folder to land back in: that second mode exists only for
-            # legacy `judge.py --resume`, which `vera judge` does not offer.
-            is_existing_run=False,
-            judge_model_extra_params=dict(judging.models[0].extra_params),
-            max_concurrent=judging.max_concurrent,
-            per_judge=judging.per_judge,
-            verbose_workers=False,
-            verbose=True,
-            resume=False,
-        )

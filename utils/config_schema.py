@@ -85,6 +85,13 @@ class RubricFiles:
     They travel together because a rubric is not usable without all three, and
     they are named as files rather than as a manifest path because this is the
     resolved form — nothing downstream re-reads a manifest to find them.
+
+    "Resolved" is enforced by construction rather than by convention. There is
+    deliberately no `from_dict`: a config entry's paths are repo-relative and
+    unverified, so building an instance straight from one would put this type in
+    the state its own name rules out. Callers check the entry's shape with
+    `validate_dict`, resolve the paths, and only then instantiate — see
+    `vera_cli.targets.rubrics_from_config`, the one place that happens.
     """
 
     rubric_file: str
@@ -98,8 +105,19 @@ class RubricFiles:
                 raise ValueError(f"judging.rubrics {field.name} must be a path")
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "RubricFiles":
-        names = {field.name for field in dataclasses.fields(cls)}
+    def field_names(cls) -> tuple[str, ...]:
+        """The three field names, in declaration order."""
+        return tuple(field.name for field in dataclasses.fields(cls))
+
+    @classmethod
+    def validate_dict(cls, data: dict[str, Any]) -> None:
+        """Check a mapping has exactly this rubric's fields, nothing more.
+
+        A classmethod rather than free-standing validation in the caller so the
+        field list stays derived from the dataclass: adding a fourth rubric file
+        cannot leave a hand-written check behind.
+        """
+        names = set(cls.field_names())
         missing = sorted(names.difference(data))
         if missing:
             raise ValueError(
@@ -108,7 +126,6 @@ class RubricFiles:
         unknown = sorted(set(data).difference(names))
         if unknown:
             raise ValueError(f"rubric has unknown field(s): {', '.join(unknown)}")
-        return cls(**data)
 
     def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self)

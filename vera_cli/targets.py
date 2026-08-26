@@ -7,6 +7,11 @@ it; this module turns that name into those paths and fails if any are missing.
 
 `manifest.json` is the only manifest the unified CLI reads. The legacy scripts'
 `rubric_manifest.json` is not consulted here.
+
+Only target resolution lives here. Resolving a path a config states *directly*
+is a different concern and lives in `config.py` — this module builds on those
+helpers rather than owning them, so "turn a target name into a bundle" and
+"turn a config string into a verified path" stay separable.
 """
 
 from __future__ import annotations
@@ -15,7 +20,7 @@ import dataclasses
 import json
 from pathlib import Path
 
-from .config import ROOT, ConfigError, existing_file, path_from_root
+from .config import ROOT, ConfigError, existing_file
 
 # A manifest must describe a *complete* target: enough for both generation and
 # judging. Partial bundles are rejected at resolution time rather than failing
@@ -185,41 +190,3 @@ def targets_from_config(
             f"{', '.join(sorted(overlap))}"
         )
     return [load_target(manifest) for manifest in target_manifest_paths(target)]
-
-
-def config_dir(value: object, *, field: str) -> str:
-    """Resolve one explicit config *directory* against the repository root.
-
-    Sibling of `config_path`/`config_paths`, which verify files. A conversations
-    folder is a directory, so it needs its own existence check — but it obeys the
-    same rule, so it lives beside them rather than in the one command that
-    happens to be the only caller today.
-    """
-    if not isinstance(value, str) or not value:
-        raise ConfigError(f"{field} must be a path")
-    resolved = Path(path_from_root(value))
-    if not resolved.is_dir():
-        raise ConfigError(f"{field} does not exist or is not a directory: {resolved}")
-    return str(resolved)
-
-
-def config_path(value: object, *, field: str) -> str:
-    """Resolve one explicit config path against the repository root, verifying it.
-
-    Shared by every command's explicit-component branch, so "a config path is
-    repo-relative and must exist" is stated once.
-    """
-    if not isinstance(value, str) or not value:
-        raise ConfigError(f"{field} must be a path")
-    return existing_file(path_from_root(value), field=field)
-
-
-def config_paths(value: object, *, field: str) -> list[str]:
-    """Resolve a non-empty list of explicit config paths, verifying each."""
-    if (
-        not isinstance(value, list)
-        or not value
-        or not all(isinstance(item, str) and item for item in value)
-    ):
-        raise ConfigError(f"{field} must be a non-empty list of paths")
-    return [config_path(item, field=field) for item in value]
