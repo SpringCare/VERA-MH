@@ -360,8 +360,9 @@ def test_execution_forwards_resolved_values(tmp_path: Path) -> None:
     assert kwargs["judge_models"] == {"gpt-4o": 3}
     assert kwargs["max_concurrent"] == 4
     assert kwargs["per_judge"] is True
-    assert kwargs["output_root"] == str((run / "evaluations").resolve())
-    assert kwargs["output_folder"] is None
+    assert kwargs["output_dir"] == str((run / "evaluations").resolve())
+    # A parent to mint a new `j_*` run under, not an existing run to land in.
+    assert kwargs["is_existing_run"] is False
     assert kwargs["resume"] is False
     assert kwargs["transcripts_dir"] == str(run / "conversations")
     assert kwargs["rubric_file"] == str(

@@ -9,7 +9,7 @@ Design Philosophy:
 """
 
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from dotenv import load_dotenv
 
@@ -37,6 +37,36 @@ class Config:
     ENDPOINT_API_KEY = os.getenv("ENDPOINT_API_KEY", None)
     ENDPOINT_URL = os.getenv("ENDPOINT_URL", None)
     ENDPOINT_START_URL = os.getenv("ENDPOINT_START_URL", None)
+
+    # Optional base URL overrides. Set these to send Claude/OpenAI/Gemini traffic
+    # through a proxy or gateway (e.g. LiteLLM) instead of the provider's public
+    # API. API_BASE_URL applies to every provider; the per-provider vars win when
+    # both are set. Leave unset to call the providers directly.
+    API_BASE_URL = os.getenv("API_BASE_URL", None)
+    ANTHROPIC_BASE_URL = os.getenv("ANTHROPIC_BASE_URL", None)
+    OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", None)
+    GOOGLE_BASE_URL = os.getenv("GOOGLE_BASE_URL", None)
+
+    @classmethod
+    def get_base_url(cls, provider: str) -> Optional[str]:
+        """Get the optional base URL for ``provider``, or None to use its default.
+
+        ``provider`` is one of ``anthropic``, ``openai``, ``google``. Falls back to
+        ``API_BASE_URL`` when no provider-specific override is set. Trailing
+        slashes are stripped so callers can append paths safely.
+        """
+        provider_urls = {
+            "anthropic": cls.ANTHROPIC_BASE_URL,
+            "openai": cls.OPENAI_BASE_URL,
+            "google": cls.GOOGLE_BASE_URL,
+        }
+        if provider not in provider_urls:
+            raise ValueError(
+                f"Unknown provider {provider!r}; expected one of "
+                f"{', '.join(sorted(provider_urls))}"
+            )
+        url = provider_urls[provider] or cls.API_BASE_URL
+        return url.rstrip("/") if url else None
 
     @classmethod
     def get_claude_config(cls) -> Dict[str, Any]:

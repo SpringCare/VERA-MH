@@ -159,17 +159,22 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _resolve_output_target(
-    args, gen_run: Optional[str]
-) -> tuple[Optional[str], Optional[str]]:
-    """Decide where evaluations go, returning ``(output_root, output_folder)``.
+def _resolve_output_target(args, gen_run: Optional[str]) -> tuple[str, bool]:
+    """Decide where evaluations go, returning ``(output_dir, is_existing_run)``.
 
-    Exactly one is non-None. ``output_root`` is a parent to mint a new ``j_*``
-    run folder under; ``output_folder`` is an exact existing folder to write
-    into, which is how resuming lands back in the same place instead of
-    starting a new run.
+    ``is_existing_run`` is False for the normal case, where ``output_dir`` is a
+    parent to mint a new ``j_*`` run folder under, and True when resuming, where
+    it is the exact existing folder to land back in instead of starting a new
+    run.
 
-    This is CLI policy, which is why it lives here rather than in the domain.
+    This is CLI policy and it deliberately stays in this script rather than
+    moving to ``utils/``: every branch below is legacy. The
+    ``<gen_run>/evaluations`` default and the flat-folder note encode the
+    ``p_*``/``j_*`` layout that Phase 3 retires, and the resume check encodes a
+    ``j_*__*`` basename rule that ``vera resume`` will not use -- it reads
+    ``config.json``/``state.json``, which old-layout runs do not have (see
+    docs/architecture.md's phase table). Sharing any of it would outlive the
+    conventions it describes; ``vera judge`` resolves its own output instead.
     """
     if args.resume:
         if not args.output:
@@ -188,19 +193,19 @@ def _resolve_output_target(
                 "Resume mode requires --output to be a judge run folder "
                 f"(basename like j_*__*), got {base!r}"
             )
-        return None, args.output
+        return args.output, True
 
     if args.output is not None:
-        return args.output, None
+        return args.output, False
     if gen_run is not None:
-        return os.path.join(gen_run, "evaluations"), None
+        return os.path.join(gen_run, "evaluations"), False
 
     print(
         "Note: flat conversation folder; writing evaluations under "
         "evaluations/. New runs use output/p_*__/conversations/.",
         file=sys.stderr,
     )
-    return "evaluations", None
+    return "evaluations", False
 
 
 async def main(args) -> Optional[str]:
@@ -282,7 +287,7 @@ async def main(args) -> Optional[str]:
         return out_run
 
     transcripts_dir, gen_run, conv_basename = resolve_conversation_input(args.folder)
-    output_root, output_folder = _resolve_output_target(args, gen_run)
+    output_dir, is_existing_run = _resolve_output_target(args, gen_run)
 
     _, output_folder = await run_judging(
         judge_models=judge_models,
@@ -290,8 +295,8 @@ async def main(args) -> Optional[str]:
         transcripts_dir=transcripts_dir,
         conversation_folder_name=conv_basename,
         limit=args.limit,
-        output_root=output_root,
-        output_folder=output_folder,
+        output_dir=output_dir,
+        is_existing_run=is_existing_run,
         judge_model_extra_params=args.judge_model_extra_params,
         max_concurrent=args.max_concurrent,
         per_judge=args.per_judge,

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Legacy CLI compatibility entry point. Remove this file once `vera generate`
+# replaces direct `generate.py` usage; do not add new CLI behavior here.
+
 import argparse
 import asyncio
 import sys

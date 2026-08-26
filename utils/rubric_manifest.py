@@ -82,9 +82,23 @@ async def load_manifest_personas(manifest_path: str) -> list[str]:
 async def load_manifest_rubric_paths(manifest_path: str) -> dict[str, str]:
     """Resolve a manifest's three rubric files relative to the manifest.
 
-    Returns the paths keyed to match `RubricConfig.from_paths`, so a caller that
-    has a manifest can go straight from one to the other. `load_manifest` has
-    already validated that all three keys are present.
+    A manifest names its files by bare filename, and those names mean "beside
+    this manifest" -- never relative to `$ROOT` or the working directory. So
+    given `judge.py --rubrics data/SI/rubric_manifest.json` containing::
+
+        {"rubric_file": "rubric.tsv",
+         "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",
+         "question_prompt_file": "question_prompt.txt"}
+
+    this returns::
+
+        {"rubric_file": "data/SI/rubric.tsv",
+         "rubric_prompt_beginning_file": "data/SI/rubric_prompt_beginning.txt",
+         "question_prompt_file": "data/SI/question_prompt.txt"}
+
+    The keys match `RubricConfig.from_paths`' parameters, so a caller holding a
+    manifest can go straight from one to the other. `load_manifest` has already
+    validated that all three keys are present.
 
     This is the single place the manifest-relative rule is applied for rubric
     files, so `RubricConfig.load_bundle` and callers holding a bare manifest

@@ -21,7 +21,24 @@ not built yet.
 
 ## Adding a command
 
-**An operation does not exist until it is registered.** Two steps:
+**Registering** a command means binding its name in the root parser and attaching
+the function to call for it. A command's `register` function does both.
+
+`subparsers.add_parser("<name>")` binds the name: it maps the literal word the
+user types to a new, independent `ArgumentParser` that owns that command's flags.
+Flags belong to that sub-parser rather than the root one, which is why `-c` is
+free to mean something different under each command.
+`parser.set_defaults(handler=run)` attaches the handler by putting a `handler`
+attribute on the parsed namespace, so the namespace carries its own destination
+and `vera.py` dispatches with `args.handler(args)` instead of comparing command
+names. Those two dispatch-added attributes, `command` and `handler`, are what
+`config.DISPATCH_ATTRIBUTES` exists to filter out — see the flag-presence rule
+below, which infers user input from what is present on the namespace.
+
+**An operation does not exist until it is registered.** A command module can be
+complete and tested, and `vera <name>` will still fail with `invalid choice`
+until `build_parser` calls its `register` — the module is unreachable code. Two
+steps:
 
 1. In your command module, define `register(subparsers)`. It adds a subparser,
    declares that command's flags, and ends with
@@ -77,3 +94,12 @@ generations, and `_legacy_model_config`, which flattens a `ModelSpec` into the
 dict shape the old signature expects. Both disappear when the generation domain
 accepts `ModelSpec` directly. See
 [../docs/architecture.md](../docs/architecture.md) for the boundary contract.
+
+`data/SI/rubric_manifest.json` is a symlink to `manifest.json` for the same
+reason. `targets.py` reads only `manifest.json`, but `judge.py`,
+`run_pipeline.py`, and the root `generate.py` still default to the old name. A
+symlink rather than a copy because the two would otherwise describe the same
+bundle in two editable places, and a one-sided edit would silently point
+`vera generate` and the legacy scripts at different personas. **Delete the
+symlink when the last legacy script that reads it is removed** — it has no
+purpose beyond them, and nothing in `vera_cli` will notice it is gone.
