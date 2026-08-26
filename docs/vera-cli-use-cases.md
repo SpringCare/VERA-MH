@@ -21,6 +21,11 @@ points in the process of being removed: each is deleted once its replacement
 `vera.py` command ships, and they exist only to keep unmigrated workflows
 running in the meantime. Do not build on them.
 
+`judge.py` is the one that lingers. `vera judge` ships without `--resume` because
+the resume contract is deferred, so `judge.py` stays as the *only* way to resume
+an evaluation until `vera resume` exists — and for nothing else. It is deleted
+when `vera resume` lands.
+
 They already use `-c`/`-r` for unrelated things (`-c` is `--max-concurrent` in
 `generate.py` and `--conversation` in `judge.py`; `-r` is `--runs` in
 `generate.py` and `--rubrics` in `judge.py`). `vera.py` intentionally repurposes
@@ -41,7 +46,7 @@ may state the resulting concrete paths directly.
 | Subcommand | CLI shorthand — minimum required | Input `config.json` — minimum required fields |
 |---|---|---|
 | `generate` | `-c <chatbot>` + `-u <model:repeats...>` (≥1) + (`--target <name-or-path>` **or** explicit `--personas <name-or-manifest-path>`) | `generation.chatbot`, `generation.user` (≥1), and (top-level `target` **or** explicit `generation.personas` + `generation.persona_context_template`) |
-| `judge` | `-j <model:repeats...>` (≥1) + `--conversations <folder...>` + (`--target <name-or-path>` **or** explicit `--rubric <name-or-manifest-path>`) | `judging.models` (≥1), `judging.conversations` (≥1), and (top-level `target` **or** explicit `judging.rubrics` (≥1)) |
+| `judge` | `-j <model:repeats...>` (≥1) + `--conversations <folder>` (exactly 1 — see below) + (`--target <name-or-path>` **or** explicit `--rubric <name-or-manifest-path>`) | `judging.models` (≥1), `judging.conversations` (list, length 1), and (top-level `target` **or** explicit `judging.rubrics` (≥1)) |
 | `pipeline` | everything `generate` needs **and** everything `judge` needs — or just `-c`, `-u`, `-j`, `--target <name>` (`--target` covers persona+rubric in one shot) | both `generation` and `judging` blocks fully populated, or `-c`/`-u`/`-j`-equivalent fields plus a top-level `target`; `judging.conversations` is omitted because generation supplies it |
 | `score` | the results path (`-r <results.csv>`) — nothing else | n/a — `score` reads an existing `results.csv`, not a run config |
 | `pool` | `--evaluations <folder...>` (≥1) | n/a |
@@ -80,6 +85,30 @@ available when the caller deliberately wants different components.
 `--rubric`/`judging.rubrics` is given where judging is requested, the CLI errors.
 `--target all` deliberately resolves every discovered target manifest as a
 separate invocation. It never merges personas or prompts from different targets.
+
+**`--conversations` takes exactly one folder.** This preserves today's
+`judge.py --folder` behavior, which accepts a single conversation run folder
+(nested `p_*__/conversations/`, or a legacy flat folder). The flag name and the
+`judging.conversations` config field are nonetheless **list-shaped from day one**,
+following the same reasoning as [AD-20](./ARCHITECTURE-SPINE.md#ad-20--judgingrubrics-is-a-list-from-day-one)
+for `judging.rubrics`: only a length-1 list is accepted or validated, but locking
+a scalar shape now would force a breaking config change if multi-folder judging
+ever ships. More than one folder is a clear error, not a silent truncation. Note
+that judging several folders is already expressible today — judge each, then
+combine with `vera pool`.
+
+**`vera judge --target all` is deferred, not disallowed.** It errors for now and
+is scheduled for Phase 4; `--target all` keeps its full meaning for `generate`
+throughout.
+
+The blocker is output attribution, not semantics. Judging every target means
+evaluating the same conversations under N rubrics, which resolves cleanly to N
+separate length-1 runs — but until Phase 4 adds the `evaluations/<target>/`
+segment, all N land in `<gen_run>/evaluations/j_*` distinguishable only by
+timestamp, because the judge run folder encodes judge model and time, not the
+rubric that produced it. Erroring until the path can attribute the result is
+preferable to writing output nobody can later tell apart. Phase 4 lifts this
+alongside multi-rubric support, and the error message should say so.
 
 ## Use case 2 — Batch generate across personas
 
