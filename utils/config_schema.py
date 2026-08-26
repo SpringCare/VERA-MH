@@ -316,6 +316,19 @@ class RunConfig:
     `generation`, `judge` populates `judging`, and a later `pipeline` populates
     both; at least one is required.
 
+    `invocation` is a different kind of thing from those two, and the split is
+    about lifetime rather than which command owns it. `generation`/`judging`
+    describe **what run to perform** — the reproducible, identity-defining
+    values that get hashed into the run id. `invocation` describes **how this
+    particular execution behaved** (`debug`, `sample`). Two runs with identical
+    `generation` sections are the same run even if one was invoked with
+    `--debug`, which is why that flag cannot live in the section.
+
+    Both are still persisted into the run's `config.json`, because how a run
+    executed is part of its record (AD-17 in `docs/ARCHITECTURE-SPINE.md`).
+    `--sample` is the one flag that both alters behavior and is persisted, and
+    it is named there as a deliberate exception rather than a precedent.
+
     `--target all` resolves to one `RunConfig` per target; every other input
     resolves to exactly one.
     """

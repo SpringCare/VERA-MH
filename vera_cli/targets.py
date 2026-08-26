@@ -149,9 +149,9 @@ def load_target(manifest_path: Path) -> ResolvedTarget:
 
 
 def targets_from_config(
+    *,
     config: dict[str, object],
     section: dict[str, object],
-    *,
     explicit_fields: tuple[str, ...],
     section_name: str,
 ) -> list[ResolvedTarget] | None:
@@ -185,6 +185,22 @@ def targets_from_config(
             f"{', '.join(sorted(overlap))}"
         )
     return [load_target(manifest) for manifest in target_manifest_paths(target)]
+
+
+def config_dir(value: object, *, field: str) -> str:
+    """Resolve one explicit config *directory* against the repository root.
+
+    Sibling of `config_path`/`config_paths`, which verify files. A conversations
+    folder is a directory, so it needs its own existence check — but it obeys the
+    same rule, so it lives beside them rather than in the one command that
+    happens to be the only caller today.
+    """
+    if not isinstance(value, str) or not value:
+        raise ConfigError(f"{field} must be a path")
+    resolved = Path(path_from_root(value))
+    if not resolved.is_dir():
+        raise ConfigError(f"{field} does not exist or is not a directory: {resolved}")
+    return str(resolved)
 
 
 def config_path(value: object, *, field: str) -> str:

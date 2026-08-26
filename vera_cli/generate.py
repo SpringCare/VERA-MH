@@ -26,6 +26,7 @@ from utils.utils import parse_key_value_list
 
 from .config import (
     ConfigError,
+    flag_value,
     model_from_config,
     models_from_cli,
     models_from_config,
@@ -295,21 +296,23 @@ def _from_cli(
     resolved_targets = [load_target(manifest) for manifest in manifests]
     return [
         _run_config(
-            invocation,
+            invocation=invocation,
             chatbot=models_from_cli([chatbot], getattr(args, "chatbot_params", None))[
                 0
             ],
             users=models_from_cli(users, getattr(args, "user_params", None)),
             personas=resolved.personas,
             persona_context_template=resolved.persona_context_template,
-            turns=_value(args, "turns"),
+            turns=flag_value(args, "turns", defaults=DEFAULTS),
             # CLI paths resolve against the working directory, unlike config
             # paths, which resolve against the repository root.
-            output=str(Path(_value(args, "output")).resolve()),
-            max_concurrent=_value(args, "max_concurrent"),
-            max_total_words=_value(args, "max_total_words"),
-            persona_speaks_first=not _value(args, "provider_speaks_first"),
-            sessions=_sessions(_value(args, "sessions")),
+            output=str(Path(flag_value(args, "output", defaults=DEFAULTS)).resolve()),
+            max_concurrent=flag_value(args, "max_concurrent", defaults=DEFAULTS),
+            max_total_words=flag_value(args, "max_total_words", defaults=DEFAULTS),
+            persona_speaks_first=not flag_value(
+                args, "provider_speaks_first", defaults=DEFAULTS
+            ),
+            sessions=_sessions(flag_value(args, "sessions", defaults=DEFAULTS)),
         )
         for resolved in resolved_targets
     ]
@@ -352,8 +355,8 @@ def _from_config(
     behavior["output"] = path_from_root(behavior["output"])
 
     targets = targets_from_config(
-        config,
-        generation,
+        config=config,
+        section=generation,
         explicit_fields=("personas", "persona_context_template"),
         section_name="generation",
     )
@@ -381,7 +384,7 @@ def _from_config(
 
     return [
         _run_config(
-            invocation,
+            invocation=invocation,
             chatbot=chatbot,
             users=users,
             personas=personas,
@@ -390,15 +393,6 @@ def _from_config(
         )
         for personas, context in persona_sets
     ]
-
-
-def _value(args: argparse.Namespace, field: str) -> Any:
-    """Read a run-defining flag, falling back to its CLI default.
-
-    Necessary because `register` suppresses parser defaults so flag presence
-    stays detectable.
-    """
-    return getattr(args, field, DEFAULTS[field])
 
 
 def _sessions(value: str | None) -> list[str] | None:
@@ -412,8 +406,8 @@ def _sessions(value: str | None) -> list[str] | None:
 
 
 def _run_config(
-    invocation: InvocationConfig,
     *,
+    invocation: InvocationConfig,
     chatbot: ModelSpec,
     users: list[ModelSpec],
     personas: list[str],

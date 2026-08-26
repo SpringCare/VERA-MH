@@ -14,7 +14,7 @@ not built yet.
 |---|---|
 | `../vera.py` | Root parser and dispatcher. Registers each command, routes to its handler, turns `ConfigError` into a standard CLI error. |
 | `generate.py` | The `generate` command: flags, input resolution, and the call into the generation domain. The reference implementation for new commands. |
-| `judge.py` | The `judge` command, same five steps. Differs from legacy `judge.py` in three ways, all recorded in [../docs/vera-cli-use-cases.md](../docs/vera-cli-use-cases.md): no `--resume`, no single-conversation mode, and no implicit working-directory output. |
+| `judge.py` | The `judge` command, same five steps. Differs from legacy `judge.py` in two ways, both recorded in [../docs/vera-cli-use-cases.md](../docs/vera-cli-use-cases.md): no single-conversation mode, and no implicit working-directory output. |
 | `config.py` | Shared input handling: loading config JSON, the config-or-flags rule, path resolution, resolved-run rendering. |
 | `targets.py` | Target discovery and manifest validation — turning a target name into concrete, verified file paths. |
 | `../utils/config_schema.py` | *Not a CLI module.* Shared canonical types (`RunConfig` and friends) in the leaf `utils/` layer, so domain packages may consume them too. Validation and serialization only; no parsing, no defaults. |

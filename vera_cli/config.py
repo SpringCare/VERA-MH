@@ -118,6 +118,21 @@ def models_from_config(value: Any, *, field: str) -> list[ModelSpec]:
     return [ModelSpec.from_dict(item) for item in value]
 
 
+def flag_value(args: Any, field: str, *, defaults: dict[str, Any]) -> Any:
+    """Read a run-defining flag, falling back to the command's CLI default.
+
+    Needed because commands register run-defining flags with
+    `argparse.SUPPRESS` so that flag *presence* stays detectable (see
+    `vera_cli/generate.py:register`). Suppressed flags never reach the
+    namespace, so the default cannot come from the parser and is applied here.
+
+    `defaults` is a parameter rather than a module constant because each command
+    owns its own defaults, beside its own flag definitions. That is the only
+    thing that differed between the two identical copies this replaces.
+    """
+    return getattr(args, field, defaults[field])
+
+
 def resolve_input(
     args: Any,
     *,

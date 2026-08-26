@@ -11,12 +11,9 @@ implementation of the command contract in `vera_cli/README.md`:
 Nothing below step 3 reads an `argparse.Namespace`, and nothing above it touches
 the judging domain.
 
-Two deliberate differences from legacy `judge.py`, both recorded in
-docs/vera-cli-use-cases.md:
-
-- No `--resume`. The resume contract is deferred, so resuming stays available
-  only through legacy `judge.py` until `vera resume` exists.
-- No single-conversation mode. Judge a folder containing one conversation.
+One deliberate difference from legacy `judge.py`, recorded in
+docs/vera-cli-use-cases.md: no single-conversation mode. Judge a folder
+containing one conversation instead.
 """
 
 from __future__ import annotations
@@ -40,6 +37,7 @@ from utils.utils import parse_key_value_list
 
 from .config import (
     ConfigError,
+    flag_value,
     models_from_cli,
     models_from_config,
     path_from_root,
@@ -49,14 +47,15 @@ from .config import (
     resolve_input,
 )
 from .targets import (
+    config_dir,
     config_path,
     load_target,
     resolve_target_manifest,
     targets_from_config,
 )
 
-# CLI behavior defaults, applied during resolution by `_value` rather than by the
-# parser — see `vera_cli/generate.py` for why the parser cannot hold them.
+# CLI behavior defaults, applied during resolution by `flag_value` rather than by
+# the parser — see `vera_cli/generate.py` for why the parser cannot hold them.
 #
 # `output` has no static default: it is derived from the conversations folder,
 # landing beside the transcripts it evaluates. `-h` says so.
@@ -303,13 +302,15 @@ def _from_cli(
     folders = [str(Path(folder).resolve()) for folder in conversations]
     return [
         _run_config(
-            invocation,
+            invocation=invocation,
             models=models_from_cli(models, getattr(args, "judge_params", None)),
             conversations=folders,
             rubrics=[rubric_files],
-            output=_output_root(folders[0], _value(args, "output")),
-            max_concurrent=_value(args, "max_concurrent"),
-            per_judge=_value(args, "per_judge"),
+            output=_output_root(
+                folders[0], flag_value(args, "output", defaults=DEFAULTS)
+            ),
+            max_concurrent=flag_value(args, "max_concurrent", defaults=DEFAULTS),
+            per_judge=flag_value(args, "per_judge", defaults=DEFAULTS),
         )
     ]
 
@@ -340,8 +341,8 @@ def _from_config(
     ]
 
     targets = targets_from_config(
-        config,
-        judging,
+        config=config,
+        section=judging,
         explicit_fields=("rubrics",),
         section_name="judging",
     )
@@ -369,7 +370,7 @@ def _from_config(
 
     return [
         _run_config(
-            invocation,
+            invocation=invocation,
             models=models,
             conversations=conversations,
             rubrics=rubrics,
@@ -391,18 +392,6 @@ def _string_list(value: Any, *, field: str) -> list[str]:
     ):
         raise ConfigError(f"{field} must be a non-empty list of paths")
     return value
-
-
-def config_dir(value: str, *, field: str) -> str:
-    """Resolve a config-supplied directory against the repository root.
-
-    The path-list helpers in `targets` verify *files*; a conversations folder is
-    a directory, so it gets its own check.
-    """
-    resolved = Path(path_from_root(value))
-    if not resolved.is_dir():
-        raise ConfigError(f"{field} does not exist or is not a directory: {resolved}")
-    return str(resolved)
 
 
 def _rubrics_from_config(value: Any) -> list[RubricFiles]:
@@ -431,14 +420,9 @@ def _rubrics_from_config(value: Any) -> list[RubricFiles]:
     return rubrics
 
 
-def _value(args: argparse.Namespace, field: str) -> Any:
-    """Read a run-defining flag, falling back to its CLI default."""
-    return getattr(args, field, DEFAULTS[field])
-
-
 def _run_config(
-    invocation: InvocationConfig,
     *,
+    invocation: InvocationConfig,
     models: list[ModelSpec],
     conversations: list[str],
     rubrics: list[RubricFiles],
