@@ -232,34 +232,6 @@ def _from_config(
         raise ConfigError("generation.output must be a path string")
     behavior["output"] = path_from_root(behavior["output"])
 
-    targets = targets_from_config(
-        config=config,
-        section=generation,
-        explicit_fields=("personas", "persona_context_template"),
-        section_name="generation",
-    )
-    if targets is not None:
-        persona_sets = [
-            (target.personas, target.persona_context_template) for target in targets
-        ]
-    else:
-        persona_sets = [
-            (
-                config_paths(
-                    required(generation, "personas", section="generation config"),
-                    field="generation.personas",
-                ),
-                config_path(
-                    required(
-                        generation,
-                        "persona_context_template",
-                        section="generation config",
-                    ),
-                    field="generation.persona_context_template",
-                ),
-            )
-        ]
-
     return [
         _run_config(
             invocation=invocation,
@@ -269,7 +241,53 @@ def _from_config(
             persona_context_template=context,
             **behavior,
         )
-        for personas, context in persona_sets
+        for personas, context in _persona_sets(config, generation)
+    ]
+
+
+def _persona_sets(
+    config: dict[str, Any], generation: dict[str, Any]
+) -> list[tuple[list[str], str]]:
+    """Resolve a config's persona inputs to one `(persona files, context)` pair
+    per run.
+
+    Config states them one of two ways, collapsed here to the same output: a
+    top-level `target`, whose manifest supplies both, or explicit
+    `generation.personas` and `generation.persona_context_template` paths. Only
+    `target: "all"` yields more than one pair.
+
+    `targets_from_config` owns what is common to every command — the `all`
+    keyword and the target-vs-explicit exclusivity rule — so those cannot drift
+    between `generate` and `judge`. Projecting a `ResolvedTarget` down to the
+    fields one command needs is deliberately *not* shared: `generate` wants
+    personas and a context template where `judge` wants a rubric and its
+    prompts, so that half lives with the command that knows which half it wants.
+    """
+    targets = targets_from_config(
+        config=config,
+        section=generation,
+        explicit_fields=("personas", "persona_context_template"),
+        section_name="generation",
+    )
+    if targets is not None:
+        return [
+            (target.personas, target.persona_context_template) for target in targets
+        ]
+    return [
+        (
+            config_paths(
+                required(generation, "personas", section="generation config"),
+                field="generation.personas",
+            ),
+            config_path(
+                required(
+                    generation,
+                    "persona_context_template",
+                    section="generation config",
+                ),
+                field="generation.persona_context_template",
+            ),
+        )
     ]
 
 
