@@ -19,6 +19,17 @@ _spec.loader.exec_module(_judge_script)
 get_parser = _judge_script.get_parser
 main = _judge_script.main
 
+# main() resolves whichever manifest --rubrics names into three concrete paths.
+# Tests below drive that with a test manifest rather than the shipped
+# data/SI/rubric_manifest.json, so renaming a real rubric file can't break them;
+# that the default *is* data/SI/... is asserted once, in test_defaults.
+FIXTURE_MANIFEST = "tests/fixtures/rubric_manifest_simple.json"
+FIXTURE_RUBRIC_PATHS = {
+    "rubric_file": "tests/fixtures/rubric_simple.tsv",
+    "rubric_prompt_beginning_file": "tests/fixtures/rubric_prompt_beginning.txt",
+    "question_prompt_file": "tests/fixtures/question_prompt.txt",
+}
+
 
 @pytest.mark.unit
 class TestJudgeParser:
@@ -133,6 +144,8 @@ class TestJudgeMain:
                 "conv.txt",
                 "-j",
                 "gpt-4o",
+                "-r",
+                FIXTURE_MANIFEST,
             ]
         )
         with (
@@ -153,11 +166,7 @@ class TestJudgeMain:
 
             # main() resolves the manifest to concrete paths, then the rubric is
             # built from those paths rather than from the manifest itself.
-            RubricConfig.from_paths.assert_called_once_with(
-                rubric_file="data/SI/rubric.tsv",
-                rubric_prompt_beginning_file="data/SI/rubric_prompt_beginning.txt",
-                question_prompt_file="data/SI/question_prompt.txt",
-            )
+            RubricConfig.from_paths.assert_called_once_with(**FIXTURE_RUBRIC_PATHS)
             ConversationData.load.assert_called_once_with("conv.txt")
             LLMJudge.assert_called_once_with(
                 judge_model="gpt-4o",
@@ -192,6 +201,8 @@ class TestJudgeMain:
                 "4",
                 "-pj",
                 "-vw",
+                "-r",
+                FIXTURE_MANIFEST,
             ]
         )
         # Loading and dispatch now happen inside `judge.run.run_judging`, so the
@@ -215,11 +226,7 @@ class TestJudgeMain:
 
             result = await main(args)
 
-            RubricConfig.from_paths.assert_called_once_with(
-                rubric_file="data/SI/rubric.tsv",
-                rubric_prompt_beginning_file="data/SI/rubric_prompt_beginning.txt",
-                question_prompt_file="data/SI/question_prompt.txt",
-            )
+            RubricConfig.from_paths.assert_called_once_with(**FIXTURE_RUBRIC_PATHS)
             expected_dir, _, _ = resolve_conversation_input("conversations/run1")
             load_convos.assert_called_once_with(expected_dir, limit=10)
             judge_convos.assert_awaited_once()
@@ -252,6 +259,8 @@ class TestJudgeMain:
                 "gpt-4o:2",
                 "-o",
                 str(eval_folder),
+                "-r",
+                FIXTURE_MANIFEST,
                 "--resume",
             ]
         )

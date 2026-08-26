@@ -471,8 +471,11 @@ async def _execute(run_configs: list[RunConfig]) -> None:
             transcripts_dir=transcripts_dir,
             conversation_folder_name=folder_name,
             limit=run_config.invocation.sample,
-            output_root=judging.output,
-            output_folder=None,
+            output_dir=judging.output,
+            # Always a parent to mint a new `j_*` run under, never an existing
+            # run folder to land back in: that second mode exists only for
+            # legacy `judge.py --resume`, which `vera judge` does not offer.
+            is_existing_run=False,
             judge_model_extra_params=dict(judging.models[0].extra_params),
             max_concurrent=judging.max_concurrent,
             per_judge=judging.per_judge,

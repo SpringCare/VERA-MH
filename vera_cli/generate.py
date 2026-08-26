@@ -3,13 +3,19 @@
 Read this module top-down. It is the reference implementation of the command
 contract described in `vera_cli/README.md`:
 
-1. `register` declares the flags and attaches `run` as the subparser's handler.
-2. `run` is the entry point `vera.py` dispatches to.
-3. `resolve_configs` picks one input form and produces canonical `RunConfig`s.
-4. `_execute` hands each resolved run to the generation domain.
+1. `run` is the entry point `vera.py` dispatches to.
+2. `resolve_configs` picks one input form and produces canonical `RunConfig`s.
+3. `_execute` hands each resolved run to the generation domain.
+4. `register` declares the flags and attaches `run` as the subparser's handler.
 
-Nothing below step 3 reads an `argparse.Namespace`, and nothing above it touches
-the generation domain.
+Steps 1-3 are the path one run takes, in the order it takes them. `register`
+comes last because it is a declaration rather than a step: `vera.py` calls it
+once at startup, and its ~100 lines of flag definitions sit between the reader
+and the logic if they come first. See `vera_cli/README.md` for what registering
+a command means and why a command does not exist until it happens.
+
+Nothing after `resolve_configs` reads an `argparse.Namespace`, and nothing
+before `_execute` touches the generation domain.
 """
 
 from __future__ import annotations
@@ -88,116 +94,6 @@ INVOCATION_ONLY_FLAGS = frozenset({"config", "sample", "debug", "print_only"})
 # command would ignore is worse than rejecting it. A later `pipeline` accepts
 # both.
 ALLOWED_CONFIG_FIELDS = {"generation", "target"}
-
-
-def register(subparsers: argparse._SubParsersAction) -> None:
-    """Register ``generate`` with the root parser.
-
-    Every run-defining flag below sets ``default=argparse.SUPPRESS`` so the flag
-    is absent from the parsed namespace unless the user actually passed it.
-    That presence check is what lets `resolve_input` tell "the user chose this
-    value" from "nobody chose anything", which in turn is what makes the
-    config-or-flags rule enforceable and what keeps defaults out of the parser.
-    `None` cannot serve as that sentinel because `None` is a meaningful value
-    for `--max-concurrent`, `--max-total-words`, and `--sessions`.
-
-    The invocation-only flags in `INVOCATION_ONLY_FLAGS` are exempt from this
-    convention where the code reads them unconditionally: `--config` and
-    `--print` need a real default so `args.config` and `args.print_only` always
-    exist.
-    """
-    parser = subparsers.add_parser("generate", help="Simulate conversations")
-    parser.add_argument(
-        "-c",
-        "--chatbot",
-        default=argparse.SUPPRESS,
-        help="Chatbot model under test (required with CLI-defined runs)",
-    )
-    parser.add_argument(
-        "-u",
-        "--user",
-        nargs="+",
-        metavar="<model>[:<repeats>]",
-        default=argparse.SUPPRESS,
-        help="User-side model(s) and full persona-set repeats",
-    )
-    target = parser.add_mutually_exclusive_group()
-    target.add_argument(
-        "--target",
-        default=argparse.SUPPRESS,
-        help=(
-            "Complete target name or manifest path; use 'all' to run every "
-            "target, which is the only input that produces more than one run"
-        ),
-    )
-    target.add_argument(
-        "--personas",
-        default=argparse.SUPPRESS,
-        help="Target name or manifest path whose personas and prompt should be used",
-    )
-    parser.add_argument(
-        "-t",
-        "--turns",
-        type=int,
-        default=argparse.SUPPRESS,
-        help=f"Maximum conversation turns (default: {DEFAULTS['turns']})",
-    )
-    parser.add_argument(
-        "-o",
-        "--output",
-        default=argparse.SUPPRESS,
-        help=f"Parent directory for generation runs (default: {DEFAULTS['output']})",
-    )
-    parser.add_argument(
-        "--max-concurrent",
-        type=int,
-        default=argparse.SUPPRESS,
-        help="Maximum concurrent conversations (default: unlimited)",
-    )
-    parser.add_argument(
-        "--max-total-words",
-        type=int,
-        default=argparse.SUPPRESS,
-        help="Maximum response words per conversation (default: unlimited)",
-    )
-    parser.add_argument(
-        "--provider-speaks-first",
-        action="store_true",
-        default=argparse.SUPPRESS,
-        help="Have the chatbot speak first (default: persona speaks first)",
-    )
-    parser.add_argument(
-        "--sessions",
-        default=argparse.SUPPRESS,
-        help=(
-            "Comma-separated session types to run in order "
-            "(default: one session, using the chatbot's own session type)"
-        ),
-    )
-    parser.add_argument("--config", help="JSON path or '-' for stdin")
-    parser.add_argument(
-        "--sample",
-        type=int,
-        default=argparse.SUPPRESS,
-        help="Debug-only cap on personas loaded per file",
-    )
-    parser.add_argument(
-        "-d",
-        "--debug",
-        action="store_true",
-        default=argparse.SUPPRESS,
-        help="Enable debug logging",
-    )
-    parser.add_argument(
-        "--print",
-        action="store_true",
-        dest="print_only",
-        help="Print the resolved invocation without executing it",
-    )
-
-    # `run` is this module's handler, defined immediately below. `vera.py`
-    # dispatches to whatever a subparser records here.
-    parser.set_defaults(handler=run)
 
 
 def run(args: argparse.Namespace) -> int:
@@ -442,3 +338,113 @@ async def _execute(run_configs: list[RunConfig]) -> None:
         if generation is None:  # pragma: no cover - resolve_configs always sets it
             raise ConfigError("generate produced a run with no generation section")
         await run_for_user_models(generation, max_personas=run_config.invocation.sample)
+
+
+def register(subparsers: argparse._SubParsersAction) -> None:
+    """Register ``generate`` with the root parser.
+
+    Every run-defining flag below sets ``default=argparse.SUPPRESS`` so the flag
+    is absent from the parsed namespace unless the user actually passed it.
+    That presence check is what lets `resolve_input` tell "the user chose this
+    value" from "nobody chose anything", which in turn is what makes the
+    config-or-flags rule enforceable and what keeps defaults out of the parser.
+    `None` cannot serve as that sentinel because `None` is a meaningful value
+    for `--max-concurrent`, `--max-total-words`, and `--sessions`.
+
+    The invocation-only flags in `INVOCATION_ONLY_FLAGS` are exempt from this
+    convention where the code reads them unconditionally: `--config` and
+    `--print` need a real default so `args.config` and `args.print_only` always
+    exist.
+    """
+    parser = subparsers.add_parser("generate", help="Simulate conversations")
+    parser.add_argument(
+        "-c",
+        "--chatbot",
+        default=argparse.SUPPRESS,
+        help="Chatbot model under test (required with CLI-defined runs)",
+    )
+    parser.add_argument(
+        "-u",
+        "--user",
+        nargs="+",
+        metavar="<model>[:<repeats>]",
+        default=argparse.SUPPRESS,
+        help="User-side model(s) and full persona-set repeats",
+    )
+    target = parser.add_mutually_exclusive_group()
+    target.add_argument(
+        "--target",
+        default=argparse.SUPPRESS,
+        help=(
+            "Complete target name or manifest path; use 'all' to run every "
+            "target, which is the only input that produces more than one run"
+        ),
+    )
+    target.add_argument(
+        "--personas",
+        default=argparse.SUPPRESS,
+        help="Target name or manifest path whose personas and prompt should be used",
+    )
+    parser.add_argument(
+        "-t",
+        "--turns",
+        type=int,
+        default=argparse.SUPPRESS,
+        help=f"Maximum conversation turns (default: {DEFAULTS['turns']})",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        default=argparse.SUPPRESS,
+        help=f"Parent directory for generation runs (default: {DEFAULTS['output']})",
+    )
+    parser.add_argument(
+        "--max-concurrent",
+        type=int,
+        default=argparse.SUPPRESS,
+        help="Maximum concurrent conversations (default: unlimited)",
+    )
+    parser.add_argument(
+        "--max-total-words",
+        type=int,
+        default=argparse.SUPPRESS,
+        help="Maximum response words per conversation (default: unlimited)",
+    )
+    parser.add_argument(
+        "--provider-speaks-first",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Have the chatbot speak first (default: persona speaks first)",
+    )
+    parser.add_argument(
+        "--sessions",
+        default=argparse.SUPPRESS,
+        help=(
+            "Comma-separated session types to run in order "
+            "(default: one session, using the chatbot's own session type)"
+        ),
+    )
+    parser.add_argument("--config", help="JSON path or '-' for stdin")
+    parser.add_argument(
+        "--sample",
+        type=int,
+        default=argparse.SUPPRESS,
+        help="Debug-only cap on personas loaded per file",
+    )
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Enable debug logging",
+    )
+    parser.add_argument(
+        "--print",
+        action="store_true",
+        dest="print_only",
+        help="Print the resolved invocation without executing it",
+    )
+
+    # `run` is this module's handler, defined at the top of the module. `vera.py`
+    # dispatches to whatever a subparser records here.
+    parser.set_defaults(handler=run)

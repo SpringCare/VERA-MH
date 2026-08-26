@@ -32,8 +32,8 @@ async def run_judging(
     transcripts_dir: str,
     conversation_folder_name: Optional[str],
     limit: Optional[int],
-    output_root: Optional[str],
-    output_folder: Optional[str],
+    output_dir: str,
+    is_existing_run: bool,
     judge_model_extra_params: Dict[str, Any],
     max_concurrent: Optional[int],
     per_judge: bool,
@@ -54,11 +54,13 @@ async def run_judging(
             `conversations/` directory or a legacy flat folder.
         conversation_folder_name: Basename recorded in output paths, or None
         limit: Cap on conversations loaded, or None for all
-        output_root: Parent directory to mint a new `j_*` run folder under.
-            Mutually exclusive with `output_folder`.
-        output_folder: Exact existing run folder to write into, bypassing run
-            naming. Mutually exclusive with `output_root`; this is what resuming
-            uses to land back in the same folder.
+        output_dir: Where evaluations go. The caller has already decided this;
+            `is_existing_run` says which of the two things it is.
+        is_existing_run: False (the normal case, and the only one `vera judge`
+            uses) means `output_dir` is a parent to mint a new `j_*` run folder
+            under. True means it is an exact existing run folder to write into,
+            bypassing run naming -- how `judge.py --resume` lands back in the
+            same folder.
         judge_model_extra_params: Provider parameters for the judge model
         max_concurrent: Worker ceiling, or None for unlimited
         per_judge: Whether `max_concurrent` applies per judge model or in total
@@ -71,18 +73,9 @@ async def run_judging(
         evaluations were written.
 
     Raises:
-        ValueError: If the output target is not exactly one of `output_root`
-            or `output_folder`.
         FileNotFoundError: If a rubric file or the transcripts directory is
             missing.
     """
-    if (output_root is None) == (output_folder is None):
-        raise ValueError(
-            "run_judging requires exactly one output target: output_root to "
-            "create a new run folder, or output_folder to write into an "
-            "existing one"
-        )
-
     if verbose:
         models_str = ", ".join(
             f"{model}x{count}" for model, count in judge_models.items()
@@ -102,12 +95,12 @@ async def run_judging(
     if verbose:
         print(f"✅ Loaded {len(conversations)} conversations")
 
-    # `judge_conversations` distinguishes the two output modes by which keyword
-    # it receives, so pass only the one the caller resolved.
+    # `judge_conversations` still distinguishes the two output modes by which
+    # keyword it receives; translating the caller's flag is this layer's job.
     output_target: Dict[str, Any] = (
-        {"output_folder": output_folder}
-        if output_folder is not None
-        else {"output_root": output_root}
+        {"output_folder": output_dir}
+        if is_existing_run
+        else {"output_root": output_dir}
     )
 
     return await judge_conversations(

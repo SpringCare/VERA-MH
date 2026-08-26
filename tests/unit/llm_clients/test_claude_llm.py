@@ -106,6 +106,28 @@ class TestClaudeLLM(TestJudgeLLMBase):
             assert call_kwargs["max_tokens"] == 500
             assert call_kwargs["top_p"] == 0.9
 
+    def test_init_passes_base_url_when_configured(self):
+        """A configured base URL reaches ChatAnthropic."""
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_chat_anthropic.return_value = MagicMock()
+            with patch(
+                "llm_clients.claude_llm.Config.get_base_url",
+                return_value="https://gateway.example.com",
+            ):
+                ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+
+            call_kwargs = mock_chat_anthropic.call_args[1]
+            assert call_kwargs["base_url"] == "https://gateway.example.com"
+
+    def test_init_omits_base_url_when_not_configured(self):
+        """Without an override, base_url is left out so ChatAnthropic defaults."""
+        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+            mock_chat_anthropic.return_value = MagicMock()
+            with patch("llm_clients.claude_llm.Config.get_base_url", return_value=None):
+                ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+
+            assert "base_url" not in mock_chat_anthropic.call_args[1]
+
     def test_init_strips_sampling_params_for_opus_4_8(self, default_llm_kwargs):
         """Opus 4.8 rejects temperature/top_p/top_k; none may reach ChatAnthropic."""
         with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
@@ -218,23 +240,29 @@ class TestClaudeLLM(TestJudgeLLMBase):
     def test_is_adaptive_thinking_model(self, model_name, expected):
         assert ClaudeLLM._is_adaptive_thinking_model(model_name) is expected
 
-    def test_apply_thinking_kwargs_no_effort_sonnet_5_disables_thinking(self):
-        """Sonnet 5 runs adaptive thinking by default; no effort means disabled."""
+    def test_apply_thinking_kwargs_no_effort_sonnet_5_omits_thinking(self):
+        """No effort means `thinking` is omitted; the model's own default applies."""
         kwargs: dict = {}
         ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-sonnet-5", None)
-        assert kwargs == {"thinking": {"type": "disabled"}, "max_tokens": 8192}
+        assert kwargs == {"max_tokens": 8192}
 
     def test_apply_thinking_kwargs_no_effort_sonnet_5_keeps_explicit_thinking(self):
-        """A caller-supplied `thinking` kwarg must survive the disabled default."""
+        """A caller-supplied `thinking` kwarg must survive untouched."""
         kwargs: dict = {"thinking": {"type": "enabled", "budget_tokens": 5000}}
         ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-sonnet-5", None)
         assert kwargs["thinking"] == {"type": "enabled", "budget_tokens": 5000}
 
     def test_apply_thinking_kwargs_no_effort_opus_4_8_is_untouched(self):
-        """Unlike sonnet-5, opus-4-8 defaults to no thinking already."""
         kwargs: dict = {}
         ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-opus-4-8", None)
         assert kwargs == {}
+
+    def test_apply_thinking_kwargs_no_effort_opus_5_sets_max_tokens(self):
+        """opus-5 also lacks a langchain-anthropic model profile, like sonnet-5."""
+        assert ClaudeLLM._is_adaptive_thinking_model("claude-opus-5")
+        kwargs: dict = {}
+        ClaudeLLM._apply_thinking_kwargs(kwargs, "claude-opus-5", None)
+        assert kwargs == {"max_tokens": 8192}
 
     def test_apply_thinking_kwargs_no_effort_fable_5_is_untouched(self):
         """fable-5 can't disable thinking at all; omitting `thinking` already
@@ -338,6 +366,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert unsupported == {
             "opus-4-7": frozenset({"temperature", "top_p", "top_k"}),
             "opus-4-8": frozenset({"temperature", "top_p", "top_k"}),
+            "opus-5": frozenset({"temperature", "top_p", "top_k"}),
             "fable-5": frozenset({"temperature", "top_p", "top_k"}),
             "sonnet-5": frozenset({"temperature", "top_p", "top_k"}),
         }
