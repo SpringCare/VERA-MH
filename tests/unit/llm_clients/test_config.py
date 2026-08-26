@@ -104,3 +104,55 @@ class TestConfig:
         assert config.Config.GOOGLE_API_KEY == "test-google-key"
 
         importlib.reload(config)
+
+    def test_base_url_defaults_to_none(self):
+        """Test that get_base_url returns None when no override is set."""
+        with patch.multiple(
+            Config,
+            API_BASE_URL=None,
+            ANTHROPIC_BASE_URL=None,
+            OPENAI_BASE_URL=None,
+            GOOGLE_BASE_URL=None,
+        ):
+            assert Config.get_base_url("anthropic") is None
+            assert Config.get_base_url("openai") is None
+            assert Config.get_base_url("google") is None
+
+    def test_base_url_shared_fallback_applies_to_all_providers(self):
+        """Test that API_BASE_URL is used when no provider override is set."""
+        with patch.multiple(
+            Config,
+            API_BASE_URL="https://gateway.example.com",
+            ANTHROPIC_BASE_URL=None,
+            OPENAI_BASE_URL=None,
+            GOOGLE_BASE_URL=None,
+        ):
+            for provider in ("anthropic", "openai", "google"):
+                assert Config.get_base_url(provider) == "https://gateway.example.com"
+
+    def test_provider_base_url_overrides_shared_fallback(self):
+        """Test that a provider-specific base URL wins over API_BASE_URL."""
+        with patch.multiple(
+            Config,
+            API_BASE_URL="https://gateway.example.com",
+            ANTHROPIC_BASE_URL="https://anthropic-gateway.example.com",
+            OPENAI_BASE_URL=None,
+            GOOGLE_BASE_URL=None,
+        ):
+            assert (
+                Config.get_base_url("anthropic")
+                == "https://anthropic-gateway.example.com"
+            )
+            assert Config.get_base_url("openai") == "https://gateway.example.com"
+
+    def test_base_url_strips_trailing_slash(self):
+        """Test that get_base_url strips trailing slashes."""
+        with patch.multiple(
+            Config, API_BASE_URL="https://gateway.example.com/", ANTHROPIC_BASE_URL=None
+        ):
+            assert Config.get_base_url("anthropic") == "https://gateway.example.com"
+
+    def test_base_url_rejects_unknown_provider(self):
+        """Test that get_base_url raises on an unknown provider name."""
+        with pytest.raises(ValueError, match="Unknown provider"):
+            Config.get_base_url("mistral")
