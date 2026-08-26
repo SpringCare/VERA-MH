@@ -22,11 +22,13 @@ from typing import Any
 from generate import run_for_user_models
 from utils.config_schema import GenerationConfig, InvocationConfig, ModelSpec, RunConfig
 from utils.debug import set_debug
+from utils.utils import parse_key_value_list
 
 from .config import (
     ConfigError,
     flag_value,
     model_from_config,
+    models_from_cli,
     models_from_config,
     path_from_root,
     print_resolved_config,
@@ -174,6 +176,20 @@ def register(subparsers: argparse._SubParsersAction) -> None:
             "(default: one session, using the chatbot's own session type)"
         ),
     )
+    parser.add_argument(
+        "--user-params",
+        type=parse_key_value_list,
+        default=argparse.SUPPRESS,
+        metavar="k=v[,k=v...]",
+        help="Provider parameters applied to every -u model (default: none)",
+    )
+    parser.add_argument(
+        "--chatbot-params",
+        type=parse_key_value_list,
+        default=argparse.SUPPRESS,
+        metavar="k=v[,k=v...]",
+        help="Provider parameters applied to the -c model (default: none)",
+    )
     parser.add_argument("--config", help="JSON path or '-' for stdin")
     parser.add_argument(
         "--sample",
@@ -281,8 +297,10 @@ def _from_cli(
     return [
         _run_config(
             invocation=invocation,
-            chatbot=ModelSpec.from_shorthand(chatbot),
-            users=[ModelSpec.from_shorthand(user) for user in users],
+            chatbot=models_from_cli([chatbot], getattr(args, "chatbot_params", None))[
+                0
+            ],
+            users=models_from_cli(users, getattr(args, "user_params", None)),
             personas=resolved.personas,
             persona_context_template=resolved.persona_context_template,
             turns=flag_value(args, "turns", defaults=DEFAULTS),
