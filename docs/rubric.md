@@ -34,13 +34,31 @@ Risk-level scoring additionally assumes personas use the levels `None`, `Low`,
 A complete bundle used for both generation and judging has this shape:
 
 ```text
-data/NEW_RUBRIC/
-├── rubric_manifest.json
+data/NEW_TARGET/
+├── manifest.json
 ├── rubric.tsv
 ├── rubric_prompt_beginning.txt
 ├── question_prompt.txt
 ├── personas.tsv
 └── persona_context_template.txt
+```
+
+`manifest.json` is the target manifest, and the only manifest the unified CLI
+reads. It carries no compatibility fallback: the new CLI does not look for
+`rubric_manifest.json`.
+
+The legacy scripts listed under
+[Legacy entry points](#legacy-entry-points-being-removed) still read
+`rubric_manifest.json`. In `data/SI/` that name is a **symlink** to
+`manifest.json`, not a second file: the two describe the same bundle, so a copy
+could drift and let `vera generate` and `run_pipeline.py` run against different
+personas. The symlink exists only to keep those scripts working and is deleted
+with them.
+
+Add it to a new bundle only if you need to run the legacy scripts against it:
+
+```bash
+ln -s manifest.json data/NEW_TARGET/rubric_manifest.json
 ```
 
 `personas.tsv` and `persona_context_template.txt` are needed for conversation
@@ -100,13 +118,30 @@ For more detail about ordinary Yes/No navigation, see
 
 ## Running a compatible rubric
 
+Generate conversations with the unified CLI by naming the target directory:
+
+```bash
+uv run python vera.py generate \
+  -c <chatbot-model> \
+  -u <user-model>:1 \
+  --target NEW_TARGET
+```
+
+### Legacy entry points (being removed)
+
+Judging and pipeline runs have no `vera` command yet, so they still go through
+the legacy root scripts. These scripts are being deleted one at a time as each
+`vera` command replaces them, and they are the only reason a bundle needs a
+`rubric_manifest.json` symlink. When the last of them is gone, the symlink goes
+with it. Nothing below reflects the unified CLI's behavior.
+
 Judge existing conversations with the new bundle:
 
 ```bash
 uv run python judge.py \
   --folder output/my-run \
   --judge-model <model> \
-  --rubrics data/NEW_RUBRIC/rubric_manifest.json
+  --rubrics data/NEW_TARGET/rubric_manifest.json
 ```
 
 For a complete generation, judging, and scoring run, select the bundle for both
@@ -117,9 +152,9 @@ uv run python run_pipeline.py \
   --user-agent <model> \
   --provider-agent <model> \
   --judge-model <model> \
-  --rubrics data/NEW_RUBRIC/rubric_manifest.json \
-  --rubric-manifest data/NEW_RUBRIC/rubric_manifest.json \
-  --personas-tsv data/NEW_RUBRIC/personas.tsv
+  --rubrics data/NEW_TARGET/rubric_manifest.json \
+  --rubric-manifest data/NEW_TARGET/rubric_manifest.json \
+  --personas-tsv data/NEW_TARGET/personas.tsv
 ```
 
 `--rubrics` and `--rubric-manifest` are independent: the former selects the
@@ -133,7 +168,7 @@ IDs are joined to the correct question text:
 ```bash
 uv run python scripts/summarize_results.py \
   --results output/my-run/evaluations/my-evaluation/results.csv \
-  --rubric data/NEW_RUBRIC/rubric.tsv
+  --rubric data/NEW_TARGET/rubric.tsv
 ```
 
 ## Current limitation

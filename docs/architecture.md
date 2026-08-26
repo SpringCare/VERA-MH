@@ -110,7 +110,9 @@ The CLI layer has two levels of responsibility:
   CLI defaults, canonical resolution, and thin call to the domain function
   together. Shared config input and target-manifest mechanics stay in
   `vera_cli/config.py` and `vera_cli/targets.py`. Command adapters never invoke
-  another CLI parser or subprocess.
+  another CLI parser or subprocess. The contract a command must satisfy, and
+  what registering one means, are in
+  [../vera_cli/README.md](../vera_cli/README.md).
 
 `utils/config_schema.py` owns schema validation and canonical serialization. It
 does not parse CLI arguments, read config or manifest files, resolve paths, or
@@ -124,14 +126,22 @@ rather than to a script entry point.
 Legacy root scripts may remain temporarily while their replacement feature is
 migrated. During that transition, `vera_cli` may import the reusable function
 from a root script, but never its argument parser. For generation, the temporary
-flow is `vera_cli.generate` → `generate.main`. Removing `generate.py`
-and moving that function plus the existing `generate_conversations/` code into
-the permanent `generate/` package is one atomic later change, so a root
-`generate.py` module and a top-level `generate/` package never coexist.
+flow is `vera_cli.generate` → `generate.run_for_user_models` → `generate.main`.
+Removing `generate.py` and moving those functions plus the existing
+`generate_conversations/` code into the permanent `generate/` package is one
+atomic later change, so a root `generate.py` module and a top-level `generate/`
+package never coexist.
+
+`run_for_user_models` and its `_legacy_model_config` helper are explicit
+stopgaps. They put the expansion of a run's user models, and the flattening of
+`ModelSpec` into the legacy dict signature, on the domain side of the boundary
+rather than in the CLI. Both are deleted when the generation domain accepts
+`ModelSpec` directly, which is also what lets `generate` and `judge` describe
+models identically.
 
 | Subcommand | Delegates to | Purpose |
 |------------|--------------|---------|
-| `vera generate` | generation application function (temporarily `generate.main`) | Simulate conversations → `c_<chatbot>/<run>/conversations/` |
+| `vera generate` | generation application function (temporarily `generate.run_for_user_models`) | Simulate conversations → `c_<chatbot>/<run>/conversations/` |
 | `vera judge` | `judge.runner` | Evaluate transcripts → `evaluations/<rubric>/j_*` |
 | `vera score` | `score.score` | Aggregate `results.csv` → scores and visualizations |
 | `vera pool` | `score.pool` | Concatenate multiple evaluation folders into one pooled result |

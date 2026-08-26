@@ -3,6 +3,10 @@
 [![CI](https://github.com/SpringCare/VERA-MH/workflows/CI/badge.svg)](https://github.com/SpringCare/VERA-MH/actions/workflows/ci.yml)
 [![Docker](https://github.com/SpringCare/VERA-MH/workflows/Docker%20Build%20Validation/badge.svg)](https://github.com/SpringCare/VERA-MH/actions/workflows/docker.yml)
 
+**Project status:** VERA-MH 2.0 is under active development. It expands the framework's multi-target evaluation capabilities and introduces breaking changes, including a new unified CLI. The current README documents the existing version on `main`.
+
+See the [target architecture](https://github.com/SpringCare/VERA-MH/blob/a865fde39f1c7f29bf6efdaea15ed63ddff845b2/docs/architecture.md) for the planned design, and follow implementation progress in [PR #182](https://github.com/SpringCare/VERA-MH/pull/182). The design and implementation are still evolving.
+
 VERA-MH (Validation of Ethical and Responsible AI in Mental Health) is a framework for evaluating how AI systems respond in mental health scenarios that raise safety considerations. These evaluations help enable researchers, developers, and clinicians to systematically assess how AI systems handle sensitive mental health conversations across detecting potential risk, confirming risk, guiding to human support, communicating supportively, and holding safe boundaries. By simulating user-chatbot interactions using clinically-developed personas and rubrics, VERA-MH provides standardized evaluation metrics that can help determine whether AI mental health tools are safe for sensitive mental health conversations before, during, and after deployment. Please review the [License](https://github.com/SpringCare/VERA-MH/blob/main/LICENSE) documentation for additional information.
 
 This code should be considered a continuous work in progress (including this documentation), and the main avenue to offer feedback.
@@ -15,6 +19,7 @@ We value every interaction that follows the [Code of Conduct](https://www.contri
 - [Connecting your own LLM, Agent, or API](#connecting-your-own-llm-or-api)
 - [Recommended settings](#recommended-settings)
 - [Reliable VERA-MH score (automated)](#reliable-vera-mh-score-automated)
+- [Unified CLI: generation](#unified-cli-generation)
 - [Running VERA-MH step by step](#running-vera-mh-step-by-step)
 - [Using Extra Parameters](#using-extra-parameters)
 - [Data Files](#data-files)
@@ -32,7 +37,7 @@ We value every interaction that follows the [Code of Conduct](https://www.contri
 
 # Getting started
 
-This page covers [Environment setup](#environment-setup), optional [custom provider wiring](#connecting-your-own-llm-or-api), [Recommended settings](#recommended-settings) for comparable scores, the [automated pooled pipeline](#reliable-vera-mh-score-automated), and [Running VERA-MH step by step](#running-vera-mh-step-by-step) (`run_pipeline.py`, `generate.py`, `judge.py`, scoring, comparison, and improvement reports).
+This page covers [Environment setup](#environment-setup), optional [custom provider wiring](#connecting-your-own-llm-or-api), [Recommended settings](#recommended-settings) for comparable scores, the [automated pooled pipeline](#reliable-vera-mh-score-automated), the [unified generation CLI](#unified-cli-generation), and [Running VERA-MH step by step](#running-vera-mh-step-by-step) (`run_pipeline.py`, `generate.py`, `judge.py`, scoring, comparison, and improvement reports).
 
 ## Environment setup
 
@@ -52,6 +57,12 @@ This page covers [Environment setup](#environment-setup), optional [custom provi
    cp .env.example .env
    # Edit .env and add your API keys (e.g., ANTHROPIC_API_KEY, OPENAI_API_KEY, AZURE_API_KEY, AZURE_ENDPOINT)
    ```
+
+   To send Claude/OpenAI/Gemini calls through a proxy or gateway (e.g. LiteLLM)
+   instead of the providers' public APIs, set `API_BASE_URL` — or the
+   per-provider `ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL` / `GOOGLE_BASE_URL`,
+   which override it. The matching `*_API_KEY` must then be a key the gateway
+   accepts; sending a gateway key to a provider's public API returns HTTP 401.
 
 3. **(Optional) Install pre-commit hooks** for automatic code formatting/linting:
    ```bash
@@ -129,6 +140,44 @@ uv run python scripts/pool_vera_scores.py -o <pool_parent_dir> \
 ```
 
 Use `uv run python scripts/pool_vera_scores.py --help` for options (including `--extract-from-log` for parsing a saved `run_pipeline.py` log).
+
+## Unified CLI: generation
+
+`vera.py generate` is the first command available through the unified CLI. A
+target selects the complete reusable evaluation bundle; generation consumes its
+personas and persona prompt:
+
+```bash
+uv run python vera.py generate \
+  -c gpt-4o \
+  -u claude-sonnet-4-5-20250929:1 \
+  --target SI
+```
+
+Use `--personas SI` when you want only SI's persona component explicitly:
+
+```bash
+uv run python vera.py generate \
+  -c gpt-4o \
+  -u claude-sonnet-4-5-20250929:1 \
+  --personas SI
+```
+
+Both forms resolve `data/SI/manifest.json` before dispatch. CLI defaults are
+defined at the flag boundary (`--turns 30`, `--output output`, unlimited
+concurrency, persona first). Config-driven runs provide every generation
+behavior field explicitly:
+
+```bash
+uv run python vera.py generate --config run.json
+```
+
+Run-defining flags and `--config` cannot be mixed. `--sample`, `--debug`, and
+`--print` may accompany config input. Executed runs record `sample` and `debug`
+as invocation metadata in their resolved config; `--print` creates no run. The
+legacy `generate.py` remains temporarily as a compatibility adapter; judging
+and pipeline execution continue to use `judge.py` and `run_pipeline.py` until
+their unified commands are added.
 
 ## Running VERA-MH step by step
 

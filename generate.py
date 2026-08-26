@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from generate_conversations import run_generation
 from llm_clients.llm_interface import DEFAULT_START_PROMPT
+from utils.config_schema import GenerationConfig, ModelSpec
 from utils.debug import set_debug
 from utils.rubric_manifest import (
     load_manifest_persona_context_template,
@@ -60,6 +61,70 @@ async def main(
         resume=resume,
         persona_context_template_path=persona_context_template_path,
     )
+
+
+async def run_for_user_models(
+    generation: GenerationConfig, *, max_personas: Optional[int]
+) -> None:
+    """Run one generation per user-side model, sequentially.
+
+    STOPGAP. This exists so the CLI hands the generation domain a resolved
+    `GenerationConfig` and lets the domain decide how a multi-model request
+    expands into runs, instead of the CLI looping over models and flattening
+    each one into the legacy dict shape itself.
+
+    Deliberately thin: sequential, with no shared run identity across models.
+    Sequential is not incidental — `max_concurrent` is applied *within* one
+    generation, so running models concurrently would silently multiply the
+    caller's concurrency cap against the same provider.
+
+    Placed beside `main` so it moves into the permanent `generate/` package in
+    the same atomic change (see docs/architecture.md). The real fix is for the
+    generation domain to accept these types natively, at which point
+    `_legacy_model_config` below and this wrapper both disappear.
+    """
+    for user in generation.user:
+        await main(
+            persona_model_config=_legacy_model_config(user),
+            # Only the agent side may carry `name`; see `_legacy_model_config`.
+            agent_model_config=_legacy_model_config(generation.chatbot)
+            | {"name": generation.chatbot.name},
+            persona_files=list(generation.personas),
+            persona_extra_run_params=dict(user.extra_params),
+            agent_extra_run_params=dict(generation.chatbot.extra_params),
+            max_turns=generation.turns,
+            runs_per_prompt=user.repeats,
+            persona_names=None,
+            verbose=True,
+            output_folder=generation.output,
+            run_id=None,
+            max_concurrent=generation.max_concurrent,
+            max_total_words=generation.max_total_words,
+            max_personas=max_personas,
+            persona_speaks_first=generation.persona_speaks_first,
+            session_types=generation.sessions,
+            resume=False,
+            persona_context_template_path=generation.persona_context_template,
+        )
+
+
+def _legacy_model_config(model: ModelSpec) -> Dict[str, Any]:
+    """Flatten a `ModelSpec` into the dict shape `main` still expects.
+
+    STOPGAP translation shim, deleted once the generation domain takes
+    `ModelSpec` directly. `repeats` is dropped because it is passed separately
+    as `runs_per_prompt`.
+
+    Callers add `name` for the agent side only. That asymmetry is not this
+    function's to decide, and it is not about output naming — run folders are
+    built from `model` (`utils/naming.py:model_token_for_run_folder`). `name` is
+    the provider's display name, defaulted to `"Provider"` in
+    `generate_conversations/runner.py`. It is legal on the agent config only
+    because the runner filters reserved keys out of that one before splatting
+    it into `LLMFactory.create_llm`, while splatting the persona config raw —
+    so a `name` key there would collide. Fix belongs in the runner.
+    """
+    return {**model.extra_params, "model": model.name}
 
 
 async def resolve_persona_inputs(manifest: str) -> tuple[List[str], str]:
