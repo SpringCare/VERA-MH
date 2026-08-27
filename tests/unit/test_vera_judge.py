@@ -402,3 +402,35 @@ def test_execution_forwards_resolved_values(tmp_path: Path) -> None:
     assert kwargs["rubric_file"] == str(
         (cli_config.ROOT / "data/SI/rubric.tsv").resolve()
     )
+
+
+def test_into_continues_an_existing_evaluation_run(tmp_path: Path) -> None:
+    """Judge gets the same flag, mapping onto the same domain parameters.
+
+    `is_existing_run` flips with it: without `--into` the output is a parent to
+    mint a new `j_*` run under, with it the exact folder to land back in.
+    """
+    run = _generation_run(tmp_path)
+    evaluation = tmp_path / "j_gpt_4o__existing"
+    evaluation.mkdir()
+    with patch.object(judge, "run_judging", new_callable=AsyncMock) as run_judging:
+        run_judging.return_value = ([], str(evaluation))
+        result = vera.main(
+            [
+                "judge",
+                "-j",
+                "gpt-4o",
+                "--conversations",
+                str(run / "conversations"),
+                "--target",
+                "SI",
+                "--into",
+                str(evaluation),
+            ]
+        )
+
+    assert result == 0
+    kwargs = run_judging.await_args.kwargs
+    assert kwargs["output_dir"] == str(evaluation.resolve())
+    assert kwargs["is_existing_run"] is True
+    assert kwargs["resume"] is True

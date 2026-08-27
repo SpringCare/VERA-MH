@@ -205,6 +205,24 @@ def rubrics_from_config(value: object) -> list[RubricFiles]:
     return rubrics
 
 
+def _resolved_into(value: Any, *, from_config: bool) -> str | None:
+    """Resolve `--into`/`invocation.into` to an existing run folder, or `None`.
+
+    Follows the same split as every other path: a CLI value resolves against the
+    working directory, a config-stated one against the repository root. The
+    folder must already exist — continuing a run that was never started is a
+    typo, not a request to create one.
+    """
+    if not value:
+        return None
+    if not isinstance(value, str):
+        raise ConfigError("invocation.into must be null or a run folder path")
+    resolved = Path(path_from_root(value)) if from_config else Path(value).resolve()
+    if not resolved.is_dir():
+        raise ConfigError(f"--into is not an existing run folder: {resolved}")
+    return str(resolved)
+
+
 def flag_value(args: Any, field: str, *, defaults: dict[str, Any]) -> Any:
     """Read a run-defining flag, falling back to the command's CLI default.
 
@@ -266,7 +284,7 @@ def resolve_input(
         value = config.get("invocation", {})
         if not isinstance(value, dict):
             raise ConfigError("invocation must be an object")
-        unknown = set(value).difference({"debug", "sample"})
+        unknown = set(value).difference({"debug", "into", "sample"})
         if unknown:
             raise ConfigError(
                 f"unknown invocation field(s): {', '.join(sorted(unknown))}"
@@ -274,9 +292,13 @@ def resolve_input(
         persisted = value
 
     try:
+        into = getattr(args, "into", persisted.get("into"))
         invocation = InvocationConfig(
             debug=getattr(args, "debug", persisted.get("debug", False)),
             sample=getattr(args, "sample", persisted.get("sample")),
+            # A CLI path, so it resolves against the working directory like
+            # `-o` does; a config-stated one resolves against the repo root.
+            into=_resolved_into(into, from_config=config is not None),
         )
     except ValueError as error:
         raise ConfigError(str(error)) from error

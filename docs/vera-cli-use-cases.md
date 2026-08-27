@@ -207,13 +207,23 @@ vera pipeline --config run.json --sample 2
 list at run time. This avoids hand-maintaining a separate small-scale config
 just for smoke testing.
 
-**`--sample` is the sole behavior-altering exception to the CLI/`--config`
-either-or rule** (AD-17 in
-[ARCHITECTURE-SPINE.md](./ARCHITECTURE-SPINE.md)): it caps how much of the
-already-resolved lists get used rather than replacing those lists. The executed
-value is recorded in the run's persisted `config.json` invocation metadata, so
-`vera resume` retains the same sampled scope. `--debug` is recorded alongside
-it; `--print` creates no run and therefore has nothing to persist.
+**`--sample` and `--into` are the two behavior-altering exceptions to the
+CLI/`--config` either-or rule** (AD-17 in
+[ARCHITECTURE-SPINE.md](./ARCHITECTURE-SPINE.md)). `--sample` caps how much of
+the already-resolved lists get used rather than replacing those lists.
+`--into <run folder>` continues an existing run, skipping work already written,
+and supplies that folder as the destination instead of the run-defining
+`output` — so it is mutually exclusive with `-o` on the command line.
+
+Both are invocation-only because neither says *which* run this is. For `--into`
+that is the whole point: a run completed in one go and the same run finished
+across two invocations are the same run. It also means no stored config has to
+state the field, and a config naming a folder would otherwise be usable exactly
+once.
+
+The executed value is recorded in the run's persisted `config.json` invocation
+metadata, so `vera resume` retains the same sampled scope. `--debug` is recorded
+alongside it; `--print` creates no run and therefore has nothing to persist.
 
 ## Use case 5 — Pool
 
