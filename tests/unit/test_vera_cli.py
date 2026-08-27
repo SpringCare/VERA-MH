@@ -507,3 +507,111 @@ def test_sample_must_be_positive() -> None:
         )
 
     assert error.value.code == 2
+
+
+def test_into_continues_an_existing_run_folder(tmp_path: Path) -> None:
+    """`--into` selects the run *and* implies the skip, in one flag.
+
+    Legacy `generate.py` needed a pair -- `-o <run folder> --resume` -- because
+    the boolean said "skip" while an overloaded `-o` said "which run". Collapsing
+    both into `--into` keeps `-o` meaning exactly one thing.
+    """
+    run_folder = tmp_path / "p_user__a_bot__t5__r1"
+    run_folder.mkdir()
+    with patch.object(
+        generation_domain, "main", new_callable=AsyncMock
+    ) as generate_main:
+        generate_main.return_value = ([], "output/generated")
+        result = vera.main(
+            [
+                "generate",
+                "-c",
+                "gpt-5",
+                "-u",
+                "claude-sonnet-5",
+                "--target",
+                "SI",
+                "--into",
+                str(run_folder),
+            ]
+        )
+
+    assert result == 0
+    kwargs = generate_main.await_args.kwargs
+    assert kwargs["resume"] is True
+    assert kwargs["output_folder"] == str(run_folder.resolve())
+
+
+def test_into_and_output_are_mutually_exclusive(tmp_path: Path) -> None:
+    run_folder = tmp_path / "run"
+    run_folder.mkdir()
+    with pytest.raises(SystemExit) as error:
+        vera.main(
+            [
+                "generate",
+                "-c",
+                "gpt-5",
+                "-u",
+                "claude-sonnet-5",
+                "--target",
+                "SI",
+                "-o",
+                str(tmp_path),
+                "--into",
+                str(run_folder),
+            ]
+        )
+    assert error.value.code == 2
+
+
+def test_into_rejects_a_folder_that_does_not_exist(tmp_path: Path) -> None:
+    """Continuing a run that was never started is a typo, not a request."""
+    with pytest.raises(SystemExit) as error:
+        vera.main(
+            [
+                "generate",
+                "-c",
+                "gpt-5",
+                "-u",
+                "claude-sonnet-5",
+                "--target",
+                "SI",
+                "--into",
+                str(tmp_path / "never-started"),
+            ]
+        )
+    assert error.value.code == 2
+
+
+def test_into_is_invocation_only_so_it_may_accompany_config(tmp_path: Path) -> None:
+    """The whole point of the invocation-only classification.
+
+    `--into` describes this execution, not which run it is, so unlike every
+    run-defining flag it is allowed alongside `--config`. If it were
+    run-defining this would raise, and every stored config would have to state
+    the field.
+    """
+    run_folder = tmp_path / "p_user__a_bot__t5__r1"
+    run_folder.mkdir()
+    config = _write_config(tmp_path, _generation_config())
+    with patch.object(
+        generation_domain, "main", new_callable=AsyncMock
+    ) as generate_main:
+        generate_main.return_value = ([], "output/generated")
+        result = vera.main(
+            ["generate", "--config", str(config), "--into", str(run_folder)]
+        )
+
+    assert result == 0
+    assert generate_main.await_args.kwargs["resume"] is True
+
+
+def test_configs_without_into_still_resolve(tmp_path: Path) -> None:
+    """Adding `into` to the schema must not break stored configs.
+
+    It defaults to None rather than being required, which is what keeps this an
+    additive change instead of a breaking one for every existing `--config`.
+    """
+    config = _write_config(tmp_path, _generation_config())
+    args = vera.build_parser().parse_args(["generate", "--config", str(config)])
+    assert generate.resolve_configs(args)[0].invocation.into is None
