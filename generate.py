@@ -64,7 +64,10 @@ async def main(
 
 
 async def run_for_user_models(
-    generation: GenerationConfig, *, max_personas: Optional[int]
+    generation: GenerationConfig,
+    *,
+    max_personas: Optional[int],
+    into: Optional[str] = None,
 ) -> None:
     """Run one generation per user-side model, sequentially.
 
@@ -96,14 +99,16 @@ async def run_for_user_models(
             runs_per_prompt=user.repeats,
             persona_names=None,
             verbose=True,
-            output_folder=generation.output,
+            # `into` names an existing run folder to continue; without it,
+            # `output` is a parent to mint a new run under.
+            output_folder=into or generation.output,
             run_id=None,
             max_concurrent=generation.max_concurrent,
             max_total_words=generation.max_total_words,
             max_personas=max_personas,
             persona_speaks_first=generation.persona_speaks_first,
             session_types=generation.sessions,
-            resume=False,
+            resume=into is not None,
             persona_context_template_path=generation.persona_context_template,
         )
 

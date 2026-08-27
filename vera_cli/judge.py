@@ -74,7 +74,7 @@ DEFAULTS: dict[str, Any] = {
 # both commands: it caps personas per file for `generate` and conversations
 # loaded for `judge`, so `InvocationConfig` stays uniform across commands rather
 # than growing a second per-command cap.
-INVOCATION_ONLY_FLAGS = frozenset({"config", "sample", "debug", "print_only"})
+INVOCATION_ONLY_FLAGS = frozenset({"config", "sample", "debug", "print_only", "into"})
 
 # Top-level config keys `judge` accepts. `generation` is absent for the same
 # reason `generate` rejects `judging`: a key this command would ignore is worse
@@ -338,6 +338,7 @@ async def _execute(run_configs: list[RunConfig]) -> None:
         judging = run_config.judging
         if judging is None:  # pragma: no cover - resolve_configs always sets it
             raise ConfigError("judge produced a run with no judging section")
+        into = run_config.invocation.into
         rubric = judging.rubrics[0]
 
         # Discovery of the transcripts directory is idempotent, so deriving it
@@ -354,17 +355,16 @@ async def _execute(run_configs: list[RunConfig]) -> None:
             transcripts_dir=transcripts_dir,
             conversation_folder_name=folder_name,
             limit=run_config.invocation.sample,
-            output_dir=judging.output,
-            # Always a parent to mint a new `j_*` run under, never an existing
-            # run folder to land back in: that second mode exists only for
-            # legacy `judge.py --resume`, which `vera judge` does not offer.
-            is_existing_run=False,
+            # Without `--into`, a parent to mint a new `j_*` run under; with
+            # it, the exact existing run folder to land back in.
+            output_dir=into or judging.output,
+            is_existing_run=into is not None,
             judge_model_extra_params=dict(judging.models[0].extra_params),
             max_concurrent=judging.max_concurrent,
             per_judge=judging.per_judge,
             verbose_workers=False,
             verbose=True,
-            resume=False,
+            resume=into is not None,
         )
 
 
@@ -409,7 +409,11 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default=argparse.SUPPRESS,
         help="Target name or manifest path whose rubric and prompts should be used",
     )
-    parser.add_argument(
+    # See `generate.register`: `-o` is a parent to mint a new run under and is
+    # run-defining; `--into` names an existing run to continue and is
+    # invocation-only. Exactly one may be given.
+    destination = parser.add_mutually_exclusive_group()
+    destination.add_argument(
         "-o",
         "--output",
         default=argparse.SUPPRESS,
@@ -439,6 +443,15 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default=argparse.SUPPRESS,
         metavar="k=v[,k=v...]",
         help="Provider parameters applied to every -j model (default: none)",
+    )
+    destination.add_argument(
+        "--into",
+        default=argparse.SUPPRESS,
+        metavar="<run folder>",
+        help=(
+            "Continue an existing run folder, skipping work already on disk "
+            "(mutually exclusive with -o/--output)"
+        ),
     )
     parser.add_argument("--config", help="JSON path or '-' for stdin")
     parser.add_argument(

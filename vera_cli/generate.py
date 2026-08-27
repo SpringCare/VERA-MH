@@ -79,7 +79,7 @@ DEFAULTS: dict[str, Any] = {
 # run-defining by subtraction (`resolve_input` derives it from the parsed
 # namespace), so a newly added flag is subject to the config-or-flags rule
 # automatically rather than needing to be listed somewhere second.
-INVOCATION_ONLY_FLAGS = frozenset({"config", "sample", "debug", "print_only"})
+INVOCATION_ONLY_FLAGS = frozenset({"config", "sample", "debug", "print_only", "into"})
 
 # Top-level object keys allowed inside a `--config` JSON document. These are
 # *not* CLI flags — there is no `--generation`. A config looks like:
@@ -359,7 +359,11 @@ async def _execute(run_configs: list[RunConfig]) -> None:
         generation = run_config.generation
         if generation is None:  # pragma: no cover - resolve_configs always sets it
             raise ConfigError("generate produced a run with no generation section")
-        await run_for_user_models(generation, max_personas=run_config.invocation.sample)
+        await run_for_user_models(
+            generation,
+            max_personas=run_config.invocation.sample,
+            into=run_config.invocation.into,
+        )
 
 
 def register(subparsers: argparse._SubParsersAction) -> None:
@@ -414,7 +418,13 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default=argparse.SUPPRESS,
         help=f"Maximum conversation turns (default: {DEFAULTS['turns']})",
     )
-    parser.add_argument(
+    # `-o` names a parent to mint a new run under; `--into` names an existing
+    # run to continue. Both answer "where does output go", so exactly one may
+    # be given. They are not the same kind of flag, though: `-o` is
+    # run-defining while `--into` is invocation-only, which is why only the
+    # latter may accompany `--config`.
+    destination = parser.add_mutually_exclusive_group()
+    destination.add_argument(
         "-o",
         "--output",
         default=argparse.SUPPRESS,
@@ -459,6 +469,15 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default=argparse.SUPPRESS,
         metavar="k=v[,k=v...]",
         help="Provider parameters applied to the -c model (default: none)",
+    )
+    destination.add_argument(
+        "--into",
+        default=argparse.SUPPRESS,
+        metavar="<run folder>",
+        help=(
+            "Continue an existing run folder, skipping work already on disk "
+            "(mutually exclusive with -o/--output)"
+        ),
     )
     parser.add_argument("--config", help="JSON path or '-' for stdin")
     parser.add_argument(
