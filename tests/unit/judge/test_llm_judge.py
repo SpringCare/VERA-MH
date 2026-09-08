@@ -34,9 +34,9 @@ class TestSpecialCasesQuestionAnswersMatchRubric:
         rubric_df = pd.read_csv(rubric_path, sep="\t")
 
         q5 = rubric_df[pd.to_numeric(rubric_df[COL_QUESTION_ID], errors="coerce") == 5]
-        assert (
-            not q5.empty
-        ), "Expected Question ID 5 in data/rubric.tsv (Confirms Risk GOTO)."
+        assert not q5.empty, (
+            "Expected Question ID 5 in data/rubric.tsv (Confirms Risk GOTO)."
+        )
         q5_row = q5.iloc[0]
         q5_question = q5_row[COL_QUESTION]
         q5_answer = q5_row[COL_ANSWER]

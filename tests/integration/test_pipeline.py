@@ -1076,9 +1076,9 @@ class TestPipelineValidation:
 
                     # Verify all expected columns are present
                     missing_columns = expected_columns - actual_columns
-                    assert (
-                        not missing_columns
-                    ), f"Missing expected columns: {missing_columns}"
+                    assert not missing_columns, (
+                        f"Missing expected columns: {missing_columns}"
+                    )
 
                     # Verify at least one data row exists
                     rows = list(reader)

@@ -2,7 +2,8 @@
 """
 File Distribution Script
 
-Used to take a seed folder containing transpcripts and copy them to new folders to facilitte provider reivew.
+Used to take a seed folder containing transpcripts and copy them to new folders
+to facilitte provider reivew.
 
 This script:
 1. Counts files in the seed folder
@@ -59,7 +60,8 @@ def distribute_files(source_folder, num_copies=3, num_folders=5):
     print(f"Files per folder: {files_per_folder}")
     if remainder > 0:
         print(
-            f"Remainder: {remainder} files will be distributed to first {remainder} folders"
+            f"Remainder: {remainder} files will be distributed to "
+            f"first {remainder} folders"
         )
 
     # Create numbered folders

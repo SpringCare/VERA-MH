@@ -146,6 +146,6 @@ class TestNotRelevantGotoIntegrationAdvanced:
         assert results[current_dimension]["score"] == NOT_RELEVANT
 
         # Verify that Q9 indeed has NOT_RELEVANT>>23 goto
-        assert (
-            goto_value == "NOT_RELEVANT>>23"
-        ), f"Expected NOT_RELEVANT>>23, got {goto_value}"
+        assert goto_value == "NOT_RELEVANT>>23", (
+            f"Expected NOT_RELEVANT>>23, got {goto_value}"
+        )
