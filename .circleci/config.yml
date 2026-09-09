@@ -1,14 +1,3 @@
-# CircleCI configuration for VERA-MH
-#
-# Mirrors the intent of .github/workflows/ci.yml, which has never run on the
-# public repo (GitHub Actions is disabled for SpringCare/VERA-MH).
-#
-# Setup required in the CircleCI UI before this runs:
-#   1. Connect SpringCare/VERA-MH as a project (Projects -> Set Up Project).
-#   2. Optional, for the live-tests job: add an OPENAI_API_KEY project
-#      environment variable. Without it, live-tests skips itself instead of
-#      failing, so no configuration is needed to get a green build.
-
 version: 2.1
 
 executors:
@@ -117,10 +106,3 @@ workflows:
       - code-quality
       - test
       - docker-build
-
-      # Live tests hit paid third-party APIs, so they only run on main rather
-      # than on every pull request.
-      - live-tests:
-          filters:
-            branches:
-              only: main
