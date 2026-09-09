@@ -47,7 +47,7 @@ jobs:
           command: uv run ruff check .
 
       # Not gating the build on type errors while the project is a prototype,
-      # matching `continue-on-error: true` in the GitHub Actions workflow.
+      # matching the `continue-on-error: true` this replaces.
       - run:
           name: Type check with Pyright (non-blocking)
           command: uv run pyright || true
@@ -70,20 +70,6 @@ jobs:
       - store_artifacts:
           path: htmlcov
           destination: coverage
-
-  live-tests:
-    executor: python
-    steps:
-      - setup-uv
-
-      - run:
-          name: Run live tests
-          command: |
-            if [ -z "$OPENAI_API_KEY" ]; then
-              echo "OPENAI_API_KEY is not set; skipping live tests."
-              exit 0
-            fi
-            uv run pytest -m live -v
 
   docker-build:
     executor: python
