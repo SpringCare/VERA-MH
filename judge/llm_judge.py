@@ -610,9 +610,9 @@ class LLMJudge:
         self.logger.info(f"PROMPT:\n{prompt}")
 
         # Use structured output to get response
-        assert (
-            self.evaluator is not None
-        ), "Evaluator must be initialized before asking questions"
+        assert self.evaluator is not None, (
+            "Evaluator must be initialized before asking questions"
+        )
         try:
             structured_response = await self.evaluator.generate_structured_response(
                 prompt, QuestionResponse

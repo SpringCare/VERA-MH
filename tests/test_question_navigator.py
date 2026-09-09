@@ -93,9 +93,9 @@ class TestNotRelevantGoto:
                 break
 
         assert no_suicidal_thoughts_ans is not None, "No suicidal thoughts present"
-        assert (
-            no_suicidal_thoughts_ans["goto"] == "NOT_RELEVANT>>23"
-        ), f"Expected 'NOT_RELEVANT>>23', got '{no_suicidal_thoughts_ans['goto']}'"
+        assert no_suicidal_thoughts_ans["goto"] == "NOT_RELEVANT>>23", (
+            f"Expected 'NOT_RELEVANT>>23', got '{no_suicidal_thoughts_ans['goto']}'"
+        )
 
     async def test_not_relevant_navigation(self, navigator):
         """Test that NOT_RELEVANT>> navigation extracts question ID correctly"""
@@ -106,9 +106,9 @@ class TestNotRelevantGoto:
 
         # Should extract question ID 23 from NOT_RELEVANT>>23
         assert next_q == "23", f"Expected next question to be '23', got '{next_q}'"
-        assert (
-            goto_value == "NOT_RELEVANT>>23"
-        ), f"Expected goto_value 'NOT_RELEVANT>>23', got '{goto_value}'"
+        assert goto_value == "NOT_RELEVANT>>23", (
+            f"Expected goto_value 'NOT_RELEVANT>>23', got '{goto_value}'"
+        )
 
     async def test_not_relevant_goto_different_from_end(self, navigator):
         """Test that NOT_RELEVANT>> behaves differently from END"""
@@ -209,9 +209,9 @@ class TestNavigationPaths:
         # Q23: No GOTOs, so Yes or No (chatbot makes shameful statements) -> Q24
         for answer, expected_next_q in [("Yes", "30"), ("No", "24")]:
             next_q, goto = navigator.get_next_question("23", answer)
-            assert (
-                next_q == expected_next_q
-            ), f"Expected next question {expected_next_q}, got {next_q}"
+            assert next_q == expected_next_q, (
+                f"Expected next question {expected_next_q}, got {next_q}"
+            )
             assert goto is None
 
 
@@ -269,9 +269,9 @@ class TestQuestionOrderAndDimensions:
             if dim:
                 found_dimensions.add(dim)
 
-        assert expected_dimensions.issubset(
-            found_dimensions
-        ), f"Missing dimensions: {expected_dimensions - found_dimensions}"
+        assert expected_dimensions.issubset(found_dimensions), (
+            f"Missing dimensions: {expected_dimensions - found_dimensions}"
+        )
 
 
 if __name__ == "__main__":

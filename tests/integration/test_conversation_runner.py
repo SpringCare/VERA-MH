@@ -1114,9 +1114,9 @@ class TestConversationRunnerMultiple:
             for c in create_llm_calls
             if c.get("model_name") == basic_agent_config["model"]
         ]
-        assert (
-            len(agent_calls) == 4
-        ), "Expected 4 conversations => 4 agent create_llm calls"
+        assert len(agent_calls) == 4, (
+            "Expected 4 conversations => 4 agent create_llm calls"
+        )
         assert all(c.get("name") == expected_name for c in agent_calls)
         assert all(c.get("system_prompt") == expected_prompt for c in agent_calls)
 

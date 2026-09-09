@@ -1,6 +1,8 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+    # Keep in sync with the ruff version pinned in uv.lock, otherwise this hook
+    # and `uv run ruff format` disagree and fight over the same files.
+    rev: v0.16.4
     hooks:
       - id: ruff
         args: [--fix]

@@ -101,14 +101,14 @@ class TestRubricConfigConstants:
 
     def test_expected_dimension_names_structure(self):
         """Test that EXPECTED_DIMENSION_NAMES has valid structure."""
-        assert isinstance(
-            EXPECTED_DIMENSION_NAMES, set
-        ), "EXPECTED_DIMENSION_NAMES should be a set"
+        assert isinstance(EXPECTED_DIMENSION_NAMES, set), (
+            "EXPECTED_DIMENSION_NAMES should be a set"
+        )
 
         for name in EXPECTED_DIMENSION_NAMES:
-            assert isinstance(
-                name, str
-            ), f"Dimension name should be a string, got {type(name)}"
+            assert isinstance(name, str), (
+                f"Dimension name should be a string, got {type(name)}"
+            )
             assert name, "Dimension name should not be empty"
 
     def test_rubric_file_can_be_parsed_with_constants(self):
