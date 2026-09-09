@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.11'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v10
+      with:
+        enable-cache: true
+        cache-dependency-glob: uv.lock
+
+    - name: Install dependencies
+      run: uv sync --all-extras
+
+    - name: Check code formatting with Ruff
+      run: uv run ruff format --check .
+
+    - name: Lint with Ruff
+      run: uv run ruff check .
+
+    # Not gating the build on type errors while the project is a prototype.
+    - name: Type check with Pyright
+      run: uv run pyright
+      continue-on-error: true
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.11'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v10
+      with:
+        enable-cache: true
+        cache-dependency-glob: uv.lock
+
+    - name: Install dependencies
+      run: uv sync --all-extras
+
+    - name: Run tests (excluding live tests; no API keys required)
+      run: uv run pytest -m "not live" --junitxml=test-results/pytest/results.xml
+
+    # Coverage HTML comes from --cov-report=html in pyproject.toml addopts.
+    - name: Upload test results and coverage report
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: test-results
+        path: |
+          test-results/
+          htmlcov/
+        if-no-files-found: ignore
+
+  docker-build:
+    name: Docker Build Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
+
+    - name: Build Docker image
+      uses: docker/build-push-action@v7
+      with:
+        context: .
+        push: false
+        load: true
+        tags: vera-mh:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Smoke-test Docker image
+      run: docker run --rm vera-mh:test python3 --version
