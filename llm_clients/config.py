@@ -9,11 +9,17 @@ Design Philosophy:
 """
 
 import os
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load this repository's own .env, and only that file. A bare load_dotenv()
+# searches upward from this file until it finds a .env anywhere above it, so a
+# checkout without one (a git worktree, for example) silently picks up an
+# unrelated .env from an ancestor directory such as ~/.env. Naming the path
+# keeps the result the same no matter where the code is checked out or run from.
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 
 class Config:
