@@ -129,6 +129,7 @@ def expected_ratings_csv(conversations_dir: Path) -> Path:
 
 @pytest.mark.integration
 @pytest.mark.live
+@pytest.mark.enable_socket
 class TestJudgeAgainstClinicianRatings:
     """Test judge.py output against expected clinician ratings."""
 
