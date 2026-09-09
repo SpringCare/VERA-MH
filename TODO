@@ -2,3 +2,20 @@
 - better logging system
 - why async judges are not async?
 - printing at the beginning to confirm settings. LLM class should return the actual model used
+- move load_dotenv() out of import time in llm_clients/config.py, and read API
+  keys lazily instead of as class attributes.
+  Today importing llm_clients.config has the side effect of loading .env, and
+  Config.ANTHROPIC_API_KEY / OPENAI_API_KEY / GOOGLE_API_KEY etc. are evaluated
+  once at class-definition time, so the values freeze on first import. That is
+  why tests/unit/llm_clients/test_config.py has to call importlib.reload(config)
+  to observe a patched environment.
+  Fix: call load_dotenv() explicitly from the CLI entry points (generate.py,
+  judge.py, run_pipeline.py) rather than at import, and turn the Config key
+  attributes into properties or a classmethod so each read consults os.environ.
+  Scope: only 14 Config.<ATTR> uses in source (8 of them in
+  llm_clients/azure_llm.py), but ~92 in tests, plus unwinding the reload
+  pattern. Worth its own PR off main; it does not depend on the CircleCI work.
+  Two partial mitigations already landed, so this is a cleanup and not urgent:
+  the .env path is pinned to the repo so the search cannot escape into ~/.env,
+  and an autouse fixture in tests/conftest.py replaces real provider
+  credentials with dummies outside live tests.
