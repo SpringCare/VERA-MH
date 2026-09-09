@@ -20,9 +20,10 @@ jobs:
         python-version: '3.11'
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v7
+      uses: astral-sh/setup-uv@v10
       with:
         enable-cache: true
+        cache-dependency-glob: uv.lock
 
     - name: Install dependencies
       run: uv sync --all-extras
@@ -33,9 +34,10 @@ jobs:
     - name: Lint with Ruff
       run: uv run ruff check .
 
+    # Not gating the build on type errors while the project is a prototype.
     - name: Type check with Pyright
       run: uv run pyright
-      continue-on-error: true  # Don't fail build on type errors (prototype phase)
+      continue-on-error: true
 
   test:
     name: Run Tests
@@ -50,43 +52,29 @@ jobs:
         python-version: '3.11'
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v7
+      uses: astral-sh/setup-uv@v10
       with:
         enable-cache: true
+        cache-dependency-glob: uv.lock
 
     - name: Install dependencies
       run: uv sync --all-extras
 
-    - name: Run tests with pytest (excluding live tests; no API keys required)
-      run: uv run pytest -m "not live" --cov --cov-report=term-missing
+    - name: Run tests (excluding live tests; no API keys required)
+      run: uv run pytest -m "not live" --junitxml=test-results/pytest/results.xml
 
-  live-tests:
-    name: Live Tests (API keys required)
-    runs-on: ubuntu-latest
-    if: ${{ secrets.OPENAI_API_KEY != '' }}
-
-    steps:
-    - uses: actions/checkout@v7
-
-    - name: Set up Python
-      uses: actions/setup-python@v7
+    # Coverage HTML comes from --cov-report=html in pyproject.toml addopts.
+    - name: Upload test results and coverage report
+      if: always()
+      uses: actions/upload-artifact@v7
       with:
-        python-version: '3.11'
+        name: test-results
+        path: |
+          test-results/
+          htmlcov/
+        if-no-files-found: ignore
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: true
-
-    - name: Install dependencies
-      run: uv sync --all-extras
-
-    - name: Run live tests with pytest
-      env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      run: uv run pytest -m live -v
-
-  docker:
+  docker-build:
     name: Docker Build Check
     runs-on: ubuntu-latest
 
@@ -101,6 +89,10 @@ jobs:
       with:
         context: .
         push: false
+        load: true
         tags: vera-mh:test
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+    - name: Smoke-test Docker image
+      run: docker run --rm vera-mh:test python3 --version
