@@ -26,6 +26,7 @@ dev = [
     "pytest-cov>=4.1.0",
     "pytest-asyncio>=0.21.0",
     "pytest-mock>=3.12.0",
+    "pytest-socket>=0.7.0",
     "pytest-timeout>=2.2.0",
     "freezegun>=1.4.0",
     "pre-commit>=3.0.0",
@@ -39,6 +40,7 @@ dev = [
     "pytest-cov>=4.1.0",
     "pytest-asyncio>=0.21.0",
     "pytest-mock>=3.12.0",
+    "pytest-socket>=0.7.0",
     "pytest-timeout>=2.2.0",
     "freezegun>=1.4.0",
     "pre-commit>=3.0.0",
@@ -86,6 +88,13 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
+    # Fail any test that opens a network connection. Tests must mock their LLM
+    # calls; tests that legitimately need the network carry both the `live` and
+    # `enable_socket` markers. Without this, a test missing the `live` marker
+    # would silently pick up real API keys via load_dotenv() and make billable
+    # calls locally while failing in CI.
+    "--disable-socket",
+    "--allow-unix-socket",
     "--cov=.",
     "--cov-report=term-missing",
     "--cov-report=html",
