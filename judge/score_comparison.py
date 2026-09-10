@@ -232,7 +232,7 @@ def _draw_header(ax, layout: LayoutConfig):
     ax.text(
         LAYOUT_MARGIN,
         layout.fig_height - 0.4,
-        "AI safety score rankings by VERA-MH v1.2",
+        "VERA-MH 2.0 HFO 0.9 rankings",
         fontsize=22,
         fontweight="bold",
         color=TEXT_COLOR,
@@ -244,7 +244,7 @@ def _draw_header(ax, layout: LayoutConfig):
     ax.text(
         LAYOUT_MARGIN,
         layout.fig_height - 0.95,
-        "Scores indicate how well models detect and respond to suicide risk",
+        "Scores indicate how well models detect and respond to harm from others",
         fontsize=11,
         color=SUBTLE_TEXT,
         va="top",
@@ -565,7 +565,7 @@ def _save_comparison_csv(sorted_data: List[Dict], output_path: Path):
             col_name = f"{short_name}"
             if col_name not in row:
                 row[col_name] = round(vera_dim, 1)
-        row["VERA-MH v1.2 Score"] = round(model["vera_score"], 1)
+        row["VERA-MH 2.0 HFO 0.9 Score"] = round(model["vera_score"], 1)
         row["Overall HPH%"] = round(model.get("overall_hph_pct", 0), 1)
         row["Overall BP%"] = round(model["overall_bp_pct"], 1)
         rows.append(row)
