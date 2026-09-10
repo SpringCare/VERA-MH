@@ -167,6 +167,10 @@ def _from_cli(
     if not users:
         raise ConfigError("generate requires at least one -u/--user model")
 
+    # `-c` takes exactly one model, unlike `-u`; the unpack says so, and would
+    # raise rather than silently drop if that ever stopped being true.
+    (chatbot_spec,) = models_from_cli([chatbot], getattr(args, "chatbot_params", None))
+
     # Only `--target` honors the `all` keyword; `--personas` names one bundle.
     if target:
         manifests = target_manifest_paths(target)
@@ -179,9 +183,7 @@ def _from_cli(
     return [
         _run_config(
             invocation=invocation,
-            chatbot=models_from_cli([chatbot], getattr(args, "chatbot_params", None))[
-                0
-            ],
+            chatbot=chatbot_spec,
             users=models_from_cli(users, getattr(args, "user_params", None)),
             personas=resolved.personas,
             persona_context_template=resolved.persona_context_template,
