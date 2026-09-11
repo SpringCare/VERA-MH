@@ -207,19 +207,22 @@ vera pipeline --config run.json --sample 2
 list at run time. This avoids hand-maintaining a separate small-scale config
 just for smoke testing.
 
-**`--sample` and `--into` are the two behavior-altering exceptions to the
-CLI/`--config` either-or rule** (AD-17 in
-[ARCHITECTURE-SPINE.md](./ARCHITECTURE-SPINE.md)). `--sample` caps how much of
+**`--sample` and `--into` are the two behavior-altering members of the
+invocation-only category** (AD-17 in
+[ARCHITECTURE-SPINE.md](./ARCHITECTURE-SPINE.md)). They are not exceptions to
+the CLI/`--config` either-or rule: that rule governs information that defines
+*which run this is*, and neither flag supplies any. `--sample` caps how much of
 the already-resolved lists get used rather than replacing those lists.
 `--into <run folder>` continues an existing run, skipping work already written,
 and supplies that folder as the destination instead of the run-defining
-`output` — so it is mutually exclusive with `-o` on the command line.
+`output` — so it is mutually exclusive with `--output` on the command line.
 
-Both are invocation-only because neither says *which* run this is. For `--into`
-that is the whole point: a run completed in one go and the same run finished
-across two invocations are the same run. It also means no stored config has to
-state the field, and a config naming a folder would otherwise be usable exactly
-once.
+The category has one structural definition, the fields of `InvocationConfig`,
+which is what both the config-document key check and the CLI's
+`INVOCATION_ONLY_FLAGS` read. Membership is what makes `--into` work at all: a
+run completed in one go and the same run finished across two invocations are
+the same run, so no stored config has to state the field, and a config naming a
+folder would otherwise be usable exactly once.
 
 The executed value is recorded in the run's persisted `config.json` invocation
 metadata, so `vera resume` retains the same sampled scope. `--debug` is recorded

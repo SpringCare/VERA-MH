@@ -72,15 +72,6 @@ DEFAULTS: dict[str, Any] = {
     "sessions": None,
 }
 
-# Flags that do not define the run: they change how one invocation executes or
-# is presented, so they are the only ones allowed alongside `--config`.
-#
-# This is the only flag classification written down. Every other flag is
-# run-defining by subtraction (`resolve_input` derives it from the parsed
-# namespace), so a newly added flag is subject to the config-or-flags rule
-# automatically rather than needing to be listed somewhere second.
-INVOCATION_ONLY_FLAGS = frozenset({"config", "sample", "debug", "print_only", "into"})
-
 # Top-level object keys allowed inside a `--config` JSON document. These are
 # *not* CLI flags — there is no `--generation`. A config looks like:
 #
@@ -129,7 +120,6 @@ def resolve_configs(args: argparse.Namespace) -> list[RunConfig]:
     try:
         config, invocation = resolve_input(
             args,
-            invocation_only_flags=INVOCATION_ONLY_FLAGS,
             allowed_config_fields=ALLOWED_CONFIG_FIELDS,
         )
         return (
@@ -377,10 +367,10 @@ def register(subparsers: argparse._SubParsersAction) -> None:
     `None` cannot serve as that sentinel because `None` is a meaningful value
     for `--max-concurrent`, `--max-total-words`, and `--sessions`.
 
-    The invocation-only flags in `INVOCATION_ONLY_FLAGS` are exempt from this
-    convention where the code reads them unconditionally: `--config` and
-    `--print` need a real default so `args.config` and `args.print_only` always
-    exist.
+    The invocation-only flags (`vera_cli.config.INVOCATION_ONLY_FLAGS`) are
+    exempt from this convention where the code reads them unconditionally:
+    `--config` and `--print` need a real default so `args.config` and
+    `args.print_only` always exist.
     """
     parser = subparsers.add_parser("generate", help="Simulate conversations")
     parser.add_argument(
@@ -418,10 +408,10 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default=argparse.SUPPRESS,
         help=f"Maximum conversation turns (default: {DEFAULTS['turns']})",
     )
-    # `-o` names a parent to mint a new run under; `--into` names an existing
-    # run to continue. Both answer "where does output go", so exactly one may
-    # be given. They are not the same kind of flag, though: `-o` is
-    # run-defining while `--into` is invocation-only, which is why only the
+    # `--output` names a parent to mint a new run under; `--into` names an
+    # existing run to continue. Both answer "where does output go", so exactly
+    # one may be given. They are not the same kind of flag, though: `--output`
+    # is run-defining while `--into` is invocation-only, which is why only the
     # latter may accompany `--config`.
     destination = parser.add_mutually_exclusive_group()
     destination.add_argument(
@@ -476,7 +466,7 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         metavar="<run folder>",
         help=(
             "Continue an existing run folder, skipping work already on disk "
-            "(mutually exclusive with -o/--output)"
+            "(mutually exclusive with --output)"
         ),
     )
     parser.add_argument("--config", help="JSON path or '-' for stdin")

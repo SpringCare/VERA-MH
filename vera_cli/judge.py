@@ -70,12 +70,6 @@ DEFAULTS: dict[str, Any] = {
     "per_judge": False,
 }
 
-# Flags that do not define the run. Note `--sample` doubles as the debug cap for
-# both commands: it caps personas per file for `generate` and conversations
-# loaded for `judge`, so `InvocationConfig` stays uniform across commands rather
-# than growing a second per-command cap.
-INVOCATION_ONLY_FLAGS = frozenset({"config", "sample", "debug", "print_only", "into"})
-
 # Top-level config keys `judge` accepts. `generation` is absent for the same
 # reason `generate` rejects `judging`: a key this command would ignore is worse
 # rejected than accepted. A later `pipeline` accepts both.
@@ -111,7 +105,6 @@ def resolve_configs(args: argparse.Namespace) -> list[RunConfig]:
     try:
         config, invocation = resolve_input(
             args,
-            invocation_only_flags=INVOCATION_ONLY_FLAGS,
             allowed_config_fields=ALLOWED_CONFIG_FIELDS,
         )
         return (
@@ -274,7 +267,7 @@ def _output_root(conversations: str, output: str | None) -> str:
     `<conversation run>/evaluations/`, so the output records what produced it.
 
     When the input is not a recognizable generation run — a legacy flat folder of
-    `.txt` files — there is nothing to derive from, and `-o` is required. Legacy
+    `.txt` files — there is nothing to derive from, and `--output` is required. Legacy
     `judge.py` instead wrote to `evaluations/` relative to the working directory;
     that silently detached results from their input and is not carried over. See
     the breaking-change note in CHANGELOG.md.
@@ -286,7 +279,7 @@ def _output_root(conversations: str, output: str | None) -> str:
     if generation_run is None:
         raise ConfigError(
             f"cannot derive an output location from {conversations}: it is not a "
-            "generation run folder. Pass -o/--output to say where evaluations "
+            "generation run folder. Pass --output to say where evaluations "
             "should go."
         )
     return str((Path(generation_run) / "evaluations").resolve())
@@ -409,8 +402,8 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default=argparse.SUPPRESS,
         help="Target name or manifest path whose rubric and prompts should be used",
     )
-    # See `generate.register`: `-o` is a parent to mint a new run under and is
-    # run-defining; `--into` names an existing run to continue and is
+    # See `generate.register`: `--output` is a parent to mint a new run under
+    # and is run-defining; `--into` names an existing run to continue and is
     # invocation-only. Exactly one may be given.
     destination = parser.add_mutually_exclusive_group()
     destination.add_argument(
@@ -450,7 +443,7 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         metavar="<run folder>",
         help=(
             "Continue an existing run folder, skipping work already on disk "
-            "(mutually exclusive with -o/--output)"
+            "(mutually exclusive with --output)"
         ),
     )
     parser.add_argument("--config", help="JSON path or '-' for stdin")

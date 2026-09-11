@@ -258,6 +258,19 @@ class InvocationConfig:
         if self.into is not None and (not isinstance(self.into, str) or not self.into):
             raise ValueError("invocation.into must be null or a run folder path")
 
+    @classmethod
+    def field_names(cls) -> frozenset[str]:
+        """The invocation field names, derived rather than hand-listed.
+
+        This is the single definition of "which controls are invocation-only".
+        Both places that need the answer read it from here: the `invocation`
+        object's key check when loading a config document, and the CLI's
+        `INVOCATION_ONLY_FLAGS` (`vera_cli/config.py`), whose flag dests match
+        these names one-for-one. Adding a field to this dataclass therefore
+        cannot leave a stale copy of the list behind in either.
+        """
+        return frozenset(field.name for field in dataclasses.fields(cls))
+
     def to_dict(self) -> dict[str, Any]:
         return {"debug": self.debug, "into": self.into, "sample": self.sample}
 
