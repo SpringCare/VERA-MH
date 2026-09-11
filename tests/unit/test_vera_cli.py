@@ -10,7 +10,7 @@ import pytest
 
 import generate as generation_domain
 import vera
-from utils.config_schema import ModelSpec
+from utils.config_schema import InvocationConfig, ModelSpec
 from vera_cli import (
     config as cli_config,
 )
@@ -160,6 +160,20 @@ def test_role_params_are_run_defining_so_config_rejects_them(tmp_path: Path) -> 
         vera.main(
             ["generate", "--config", str(config), "--user-params", "temperature=0.7"]
         )
+
+
+def test_invocation_only_flags_are_derived_from_the_schema() -> None:
+    """The classification lives in one place, not in a list per command.
+
+    `InvocationConfig`'s fields *are* the definition of invocation-only, so a
+    field added there is covered without editing a set in `generate.py`, a
+    second one in `judge.py`, and a key check in `resolve_input`. The only
+    additions are the two flags that carry no invocation field at all.
+    """
+    assert cli_config.INVOCATION_ONLY_FLAGS == InvocationConfig.field_names() | {
+        "config",
+        "print_only",
+    }
 
 
 def test_target_and_personas_resolve_same_generation_inputs() -> None:
@@ -512,9 +526,10 @@ def test_sample_must_be_positive() -> None:
 def test_into_continues_an_existing_run_folder(tmp_path: Path) -> None:
     """`--into` selects the run *and* implies the skip, in one flag.
 
-    Legacy `generate.py` needed a pair -- `-o <run folder> --resume` -- because
-    the boolean said "skip" while an overloaded `-o` said "which run". Collapsing
-    both into `--into` keeps `-o` meaning exactly one thing.
+    Legacy `generate.py` needed a pair -- `--output <run folder> --resume` --
+    because the boolean said "skip" while an overloaded `--output` said "which
+    run". Collapsing both into `--into` keeps `--output` meaning exactly one
+    thing.
     """
     run_folder = tmp_path / "p_user__a_bot__t5__r1"
     run_folder.mkdir()
