@@ -226,11 +226,26 @@ class InvocationConfig:
     only fields that may accompany `--config` on the command line — you can
     replay a stored run with `--debug` without editing the config.
 
+    `into` belongs here for the same reason, though it is the least obvious of
+    the three. It names an existing run folder to continue, skipping work whose
+    output is already on disk. That is a statement about *this execution*, not
+    about which run it is: a run completed in one go and the same run finished
+    across two invocations are the same run, which is the whole point of being
+    able to continue one. Making it run-defining would also mean every stored
+    config had to state it, and a config naming a folder would be usable exactly
+    once — the second time, the folder is already complete.
+
+    `into` is *not* `vera resume`. It is the stateless per-stage skip the legacy
+    scripts spelled `--resume`, re-deriving progress from the files already
+    written. `vera resume` reads `state.json` after verifying `config.json`,
+    works across stages, and is deferred to a later phase (AD-18/23/24).
+
     Contrast `GenerationConfig`, which defines the run itself.
     """
 
     debug: bool
     sample: int | None
+    into: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.debug, bool):
@@ -240,9 +255,24 @@ class InvocationConfig:
                 raise ValueError("invocation.sample must be null or an integer")
             if self.sample < 1:
                 raise ValueError("--sample must be at least 1")
+        if self.into is not None and (not isinstance(self.into, str) or not self.into):
+            raise ValueError("invocation.into must be null or a run folder path")
+
+    @classmethod
+    def field_names(cls) -> frozenset[str]:
+        """The invocation field names, derived rather than hand-listed.
+
+        This is the single definition of "which controls are invocation-only".
+        Both places that need the answer read it from here: the `invocation`
+        object's key check when loading a config document, and the CLI's
+        `INVOCATION_ONLY_FLAGS` (`vera_cli/config.py`), whose flag dests match
+        these names one-for-one. Adding a field to this dataclass therefore
+        cannot leave a stale copy of the list behind in either.
+        """
+        return frozenset(field.name for field in dataclasses.fields(cls))
 
     def to_dict(self) -> dict[str, Any]:
-        return {"debug": self.debug, "sample": self.sample}
+        return {"debug": self.debug, "into": self.into, "sample": self.sample}
 
 
 @dataclasses.dataclass(frozen=True)

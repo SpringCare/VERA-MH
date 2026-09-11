@@ -35,6 +35,22 @@ VERA_RUN_CONFIG_ENV = "VERA_RUN_CONFIG"
 # would be counted as user input and make every run look CLI-defined.
 DISPATCH_ATTRIBUTES = frozenset({"command", "handler"})
 
+# Flags that do not define the run: they change how one invocation executes or
+# is presented, so they are the only ones that may accompany `--config`.
+#
+# Not a hand-written list, and not per-command. The behaviour half is exactly
+# the fields of `InvocationConfig` — that dataclass is what "invocation-only"
+# means, and each of its fields is the dest of the flag with the same name.
+# Added to it are the two flags that carry no invocation field at all:
+# `--config` names the input form itself, and `--print` exits before a run
+# exists to describe.
+#
+# This is the only flag classification written down. Every other flag is
+# run-defining by subtraction (`resolve_input` derives it from the parsed
+# namespace), so a newly added flag is subject to the config-or-flags rule
+# automatically rather than needing to be listed somewhere second.
+INVOCATION_ONLY_FLAGS = InvocationConfig.field_names() | {"config", "print_only"}
+
 
 class ConfigError(ValueError):
     """Raised when CLI/config input cannot produce a valid invocation."""
@@ -205,6 +221,40 @@ def rubrics_from_config(value: object) -> list[RubricFiles]:
     return rubrics
 
 
+def _resolved_into(*, value: object, from_config: bool) -> str | None:
+    """Resolve `--into`/`invocation.into` to an existing run folder, or `None`.
+
+    Follows the same split as every other path: a CLI value resolves against the
+    working directory, a config-stated one against the repository root. The
+    folder must already exist — continuing a run that was never started is a
+    typo, not a request to create one.
+
+    `value` is typed `object` because it arrives unvalidated from two different
+    places: `argparse` (always a `str` when present) and a parsed JSON document
+    (any JSON type at all). Narrowing it is this function's job, so it cannot
+    claim `str` on the way in.
+    """
+    # Three ways to mean "no folder to continue": the flag was omitted, so the
+    # namespace lookup fell through to `None`; the config states `"into": null`;
+    # or it states `""`, which names nothing. All resolve to no continuation
+    # rather than an error, so omitting the field behaves exactly as before it
+    # existed.
+    if not value:
+        return None
+    # Reachable only from a config document — argparse cannot produce a
+    # non-string here — so the message names the config field.
+    if not isinstance(value, str):
+        raise ConfigError("invocation.into must be null or a run folder path")
+    resolved = Path(path_from_root(value)) if from_config else Path(value).resolve()
+    # Checked at resolution time, before any model is called: a folder that is
+    # missing (or is a file) means the run being continued does not exist, and
+    # creating it would silently start a fresh run under a name the user
+    # expected to already hold results.
+    if not resolved.is_dir():
+        raise ConfigError(f"--into is not an existing run folder: {resolved}")
+    return str(resolved)
+
+
 def flag_value(args: Any, field: str, *, defaults: dict[str, Any]) -> Any:
     """Read a run-defining flag, falling back to the command's CLI default.
 
@@ -223,7 +273,6 @@ def flag_value(args: Any, field: str, *, defaults: dict[str, Any]) -> Any:
 def resolve_input(
     args: Any,
     *,
-    invocation_only_flags: frozenset[str],
     allowed_config_fields: set[str],
 ) -> tuple[dict[str, Any] | None, InvocationConfig]:
     """Pick the single input form for this run and resolve shared controls.
@@ -239,16 +288,18 @@ def resolve_input(
     use `argparse.SUPPRESS`, so a flag reaches the namespace only when the user
     actually passed it (see `vera_cli/generate.py:register`).
 
-    Both parameters are caller-supplied because the *rule* is shared but the
-    *fields* are per-command — `generate` and a future `judge` differ in both.
-    `allowed_config_fields` lists the top-level config keys this command
-    understands; anything else is rejected rather than ignored, so a typo or a
-    section belonging to another command fails loudly instead of silently doing
-    nothing.
+    `allowed_config_fields` is caller-supplied because the *rule* is shared but
+    the *sections* are per-command: it lists the top-level config keys this
+    command understands, and anything else is rejected rather than ignored, so
+    a typo or a section belonging to another command fails loudly instead of
+    silently doing nothing. The invocation-only set is deliberately *not* a
+    parameter — it is uniform across commands by construction (see
+    `INVOCATION_ONLY_FLAGS`), and passing it per command would invite the two
+    to drift apart.
     """
     config = load_config(getattr(args, "config", None))
     supplied = sorted(
-        set(vars(args)) - invocation_only_flags - DISPATCH_ATTRIBUTES,
+        set(vars(args)) - INVOCATION_ONLY_FLAGS - DISPATCH_ATTRIBUTES,
     )
     if config is not None and supplied:
         flags = ", ".join(f"--{field.replace('_', '-')}" for field in supplied)
@@ -266,7 +317,7 @@ def resolve_input(
         value = config.get("invocation", {})
         if not isinstance(value, dict):
             raise ConfigError("invocation must be an object")
-        unknown = set(value).difference({"debug", "sample"})
+        unknown = set(value).difference(InvocationConfig.field_names())
         if unknown:
             raise ConfigError(
                 f"unknown invocation field(s): {', '.join(sorted(unknown))}"
@@ -274,9 +325,18 @@ def resolve_input(
         persisted = value
 
     try:
+        # Each control is read from the namespace first and falls back to the
+        # stored `invocation` object. The two are never both populated: the
+        # config-or-flags check above has already rejected that combination for
+        # run-defining flags, and for these the namespace only carries what the
+        # user typed on *this* invocation, which is what should win.
+        into = getattr(args, "into", persisted.get("into"))
         invocation = InvocationConfig(
             debug=getattr(args, "debug", persisted.get("debug", False)),
             sample=getattr(args, "sample", persisted.get("sample")),
+            # A CLI path, so it resolves against the working directory like
+            # `--output` does; a config-stated one against the repository root.
+            into=_resolved_into(value=into, from_config=config is not None),
         )
     except ValueError as error:
         raise ConfigError(str(error)) from error
