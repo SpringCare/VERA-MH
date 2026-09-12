@@ -7,6 +7,11 @@ it; this module turns that name into those paths and fails if any are missing.
 
 `manifest.json` is the only manifest the unified CLI reads. The legacy scripts'
 `rubric_manifest.json` is not consulted here.
+
+Only target resolution lives here. Resolving a path a config states *directly*
+is a different concern and lives in `config.py` — this module builds on those
+helpers rather than owning them, so "turn a target name into a bundle" and
+"turn a config string into a verified path" stay separable.
 """
 
 from __future__ import annotations
@@ -15,7 +20,7 @@ import dataclasses
 import json
 from pathlib import Path
 
-from .config import ROOT, ConfigError, existing_file, path_from_root, required
+from .config import ROOT, ConfigError, existing_file
 
 # A manifest must describe a *complete* target: enough for both generation and
 # judging. Partial bundles are rejected at resolution time rather than failing
@@ -148,61 +153,40 @@ def load_target(manifest_path: Path) -> ResolvedTarget:
     )
 
 
-def generation_persona_sets(
-    config: dict[str, object], generation: dict[str, object]
-) -> list[tuple[list[str], str]]:
-    """Resolve a config's persona inputs into one `(persona files, context)` pair
-    per run.
+def targets_from_config(
+    *,
+    config: dict[str, object],
+    section: dict[str, object],
+    explicit_fields: tuple[str, ...],
+    section_name: str,
+) -> list[ResolvedTarget] | None:
+    """Resolve a config's top-level `target`, or report that it has none.
 
-    Config states persona inputs one of two ways, and this collapses both to the
-    same output:
+    Returns one `ResolvedTarget` per selected target, or `None` when the config
+    states its components explicitly instead, in which case the caller reads
+    those fields itself.
 
-    - a top-level `target` name, whose manifest supplies the persona files and
-      context template. `target: "all"` selects every target, which is the only
-      case that returns more than one pair.
-    - explicit `generation.personas` and `generation.persona_context_template`
-      paths, which always yield exactly one pair.
+    This owns the two rules every command shares, so they cannot drift:
 
-    The two are mutually exclusive: a target already determines these values, so
-    also naming them explicitly is a contradiction rather than an override.
+    - `target: "all"` selects every discovered target, and is the only input that
+      yields more than one. Anything else yields exactly one.
+    - A target and the explicit fields it would supply are mutually exclusive. A
+      target already determines those values, so naming them too is a
+      contradiction rather than an override.
+
+    Projecting a `ResolvedTarget` onto the fields a command needs is left to the
+    caller: `generate` takes personas and the context template, `judge` takes the
+    rubric and its prompts. Those differ per command; the rules above do not.
     """
     target = config.get("target")
-    if target is not None:
-        if not isinstance(target, str) or not target:
-            raise ConfigError("target must be a non-empty string")
-        overlap = {"personas", "persona_context_template"}.intersection(generation)
-        if overlap:
-            raise ConfigError(
-                "target is mutually exclusive with explicit generation fields: "
-                f"{', '.join(sorted(overlap))}"
-            )
-        return [
-            (resolved.personas, resolved.persona_context_template)
-            for resolved in (
-                load_target(manifest) for manifest in target_manifest_paths(target)
-            )
-        ]
-
-    personas = required(generation, "personas", section="generation config")
-    context = required(
-        generation, "persona_context_template", section="generation config"
-    )
-    if (
-        not isinstance(personas, list)
-        or not personas
-        or not all(isinstance(persona, str) and persona for persona in personas)
-    ):
-        raise ConfigError("generation.personas must be a non-empty list of paths")
-    if not isinstance(context, str) or not context:
-        raise ConfigError("generation.persona_context_template must be a path")
-    return [
-        (
-            [
-                existing_file(path_from_root(persona), field="generation.personas")
-                for persona in personas
-            ],
-            existing_file(
-                path_from_root(context), field="generation.persona_context_template"
-            ),
+    if target is None:
+        return None
+    if not isinstance(target, str) or not target:
+        raise ConfigError("target must be a non-empty string")
+    overlap = set(explicit_fields).intersection(section)
+    if overlap:
+        raise ConfigError(
+            f"target is mutually exclusive with explicit {section_name} fields: "
+            f"{', '.join(sorted(overlap))}"
         )
-    ]
+    return [load_target(manifest) for manifest in target_manifest_paths(target)]

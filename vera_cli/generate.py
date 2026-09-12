@@ -31,6 +31,9 @@ from utils.debug import set_debug
 
 from .config import (
     ConfigError,
+    config_path,
+    config_paths,
+    flag_value,
     model_from_config,
     models_from_config,
     path_from_root,
@@ -40,16 +43,16 @@ from .config import (
     resolve_input,
 )
 from .targets import (
-    generation_persona_sets,
     load_target,
     resolve_target_manifest,
     target_manifest_paths,
+    targets_from_config,
 )
 
 # CLI behavior defaults. They live here, beside the flag definitions, rather than
 # in the parser or the schema: the parser uses `argparse.SUPPRESS` so that flag
 # *presence* stays detectable (see `register`), which means defaults cannot be
-# parser defaults and are instead applied during resolution by `_value`.
+# parser defaults and are instead applied during resolution by `flag_value`.
 #
 # These defaults are CLI-only. A config-driven run states every behavior field
 # explicitly, so no run silently inherits a value that is not written down
@@ -87,8 +90,9 @@ INVOCATION_ONLY_FLAGS = frozenset({"config", "sample", "debug", "print_only"})
 # on the command line its contents are spelled as individual flags.
 #
 # `invocation` is always allowed and is added by `resolve_input`. `judging` is
-# deliberately absent: until `vera judge` exists there is nothing to do with it,
-# and accepting a key this command ignores is worse than rejecting it.
+# deliberately absent: `vera judge` owns that section, and accepting a key this
+# command would ignore is worse than rejecting it. A later `pipeline` accepts
+# both.
 ALLOWED_CONFIG_FIELDS = {"generation", "target"}
 
 
@@ -172,19 +176,21 @@ def _from_cli(
     resolved_targets = [load_target(manifest) for manifest in manifests]
     return [
         _run_config(
-            invocation,
+            invocation=invocation,
             chatbot=ModelSpec.from_shorthand(chatbot),
             users=[ModelSpec.from_shorthand(user) for user in users],
             personas=resolved.personas,
             persona_context_template=resolved.persona_context_template,
-            turns=_value(args, "turns"),
+            turns=flag_value(args, "turns", defaults=DEFAULTS),
             # CLI paths resolve against the working directory, unlike config
             # paths, which resolve against the repository root.
-            output=str(Path(_value(args, "output")).resolve()),
-            max_concurrent=_value(args, "max_concurrent"),
-            max_total_words=_value(args, "max_total_words"),
-            persona_speaks_first=not _value(args, "provider_speaks_first"),
-            sessions=_sessions(_value(args, "sessions")),
+            output=str(Path(flag_value(args, "output", defaults=DEFAULTS)).resolve()),
+            max_concurrent=flag_value(args, "max_concurrent", defaults=DEFAULTS),
+            max_total_words=flag_value(args, "max_total_words", defaults=DEFAULTS),
+            persona_speaks_first=not flag_value(
+                args, "provider_speaks_first", defaults=DEFAULTS
+            ),
+            sessions=_sessions(flag_value(args, "sessions", defaults=DEFAULTS)),
         )
         for resolved in resolved_targets
     ]
@@ -228,24 +234,61 @@ def _from_config(
 
     return [
         _run_config(
-            invocation,
+            invocation=invocation,
             chatbot=chatbot,
             users=users,
             personas=personas,
             persona_context_template=context,
             **behavior,
         )
-        for personas, context in generation_persona_sets(config, generation)
+        for personas, context in _persona_sets(config, generation)
     ]
 
 
-def _value(args: argparse.Namespace, field: str) -> Any:
-    """Read a run-defining flag, falling back to its CLI default.
+def _persona_sets(
+    config: dict[str, Any], generation: dict[str, Any]
+) -> list[tuple[list[str], str]]:
+    """Resolve a config's persona inputs to one `(persona files, context)` pair
+    per run.
 
-    Necessary because `register` suppresses parser defaults so flag presence
-    stays detectable.
+    Config states them one of two ways, collapsed here to the same output: a
+    top-level `target`, whose manifest supplies both, or explicit
+    `generation.personas` and `generation.persona_context_template` paths. Only
+    `target: "all"` yields more than one pair.
+
+    `targets_from_config` owns what is common to every command — the `all`
+    keyword and the target-vs-explicit exclusivity rule — so those cannot drift
+    between `generate` and `judge`. Projecting a `ResolvedTarget` down to the
+    fields one command needs is deliberately *not* shared: `generate` wants
+    personas and a context template where `judge` wants a rubric and its
+    prompts, so that half lives with the command that knows which half it wants.
     """
-    return getattr(args, field, DEFAULTS[field])
+    targets = targets_from_config(
+        config=config,
+        section=generation,
+        explicit_fields=("personas", "persona_context_template"),
+        section_name="generation",
+    )
+    if targets is not None:
+        return [
+            (target.personas, target.persona_context_template) for target in targets
+        ]
+    return [
+        (
+            config_paths(
+                required(generation, "personas", section="generation config"),
+                field="generation.personas",
+            ),
+            config_path(
+                required(
+                    generation,
+                    "persona_context_template",
+                    section="generation config",
+                ),
+                field="generation.persona_context_template",
+            ),
+        )
+    ]
 
 
 def _sessions(value: str | None) -> list[str] | None:
@@ -259,8 +302,8 @@ def _sessions(value: str | None) -> list[str] | None:
 
 
 def _run_config(
-    invocation: InvocationConfig,
     *,
+    invocation: InvocationConfig,
     chatbot: ModelSpec,
     users: list[ModelSpec],
     personas: list[str],
@@ -309,9 +352,10 @@ async def _execute(run_configs: list[RunConfig]) -> None:
     second-granularity timestamps, so concurrent starts would collide.
     """
     for run_config in run_configs:
-        await run_for_user_models(
-            run_config.generation, max_personas=run_config.invocation.sample
-        )
+        generation = run_config.generation
+        if generation is None:  # pragma: no cover - resolve_configs always sets it
+            raise ConfigError("generate produced a run with no generation section")
+        await run_for_user_models(generation, max_personas=run_config.invocation.sample)
 
 
 def register(subparsers: argparse._SubParsersAction) -> None:
