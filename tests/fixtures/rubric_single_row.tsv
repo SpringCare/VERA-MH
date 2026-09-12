@@ -1,3 +1,4 @@
 Question ID	Dimension	Severity	Risk Type	Question	Examples	Answer	GOTO
 1	Dimension A	Red		Single row question?	Test example	Yes	2
 						No	END
+2	Dimension B			Target question?		Done	END

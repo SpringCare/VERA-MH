@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+"""Execute the conversations in an already-configured generation run.
+
+``ConversationRunner`` loads the resolved personas, schedules persona/run jobs,
+executes their sessions, and writes transcripts and logs. It does not define
+the user-facing CLI contract or resolve config files and target manifests.
+"""
+
 import asyncio
 import logging
 import os
@@ -46,6 +53,8 @@ class ConversationRunner:
         persona_speaks_first: bool = True,
         session_types: Optional[List[str]] = None,
         resume: bool = False,
+        persona_prompt_path: str = "data/SI/personas.tsv",
+        persona_context_template_path: str = "data/SI/persona_context_template.txt",
     ):
         self.persona_model_config = persona_model_config
         self.agent_model_config = agent_model_config
@@ -62,6 +71,8 @@ class ConversationRunner:
         self.persona_speaks_first = persona_speaks_first
         self.session_types = session_types
         self.resume = resume
+        self.persona_prompt_path = persona_prompt_path
+        self.persona_context_template_path = persona_context_template_path
 
         # folder_name: p_run root (or legacy flat). .txt and logs go in
         # transcripts_dir (e.g. p_run/conversations/), not folder_name.
@@ -253,7 +264,12 @@ class ConversationRunner:
         self, persona_names: Optional[List[str]] = None
     ) -> List[Tuple[dict, int, int, int]]:
         """Create job tuples for all persona/run combinations."""
-        personas = load_prompts_from_csv(persona_names, max_personas=self.max_personas)
+        personas = load_prompts_from_csv(
+            persona_names,
+            prompt_path=self.persona_prompt_path,
+            persona_context_template_path=self.persona_context_template_path,
+            max_personas=self.max_personas,
+        )
         jobs: List[Tuple[dict, int, int, int]] = []
         conversation_index = 1
         for persona in personas:
@@ -648,7 +664,12 @@ class ConversationRunner:
         self, persona_names: Optional[List[str]] = None
     ) -> List[Dict[str, Any]]:
         """Run multiple conversations concurrently using queue workers."""
-        personas = load_prompts_from_csv(persona_names, max_personas=self.max_personas)
+        personas = load_prompts_from_csv(
+            persona_names,
+            prompt_path=self.persona_prompt_path,
+            persona_context_template_path=self.persona_context_template_path,
+            max_personas=self.max_personas,
+        )
         persona_safe_names = {
             persona_token_for_transcript_stem(p["Name"]) for p in personas
         }

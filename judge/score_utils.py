@@ -36,8 +36,9 @@ from .utils import extract_persona_name_from_filename, load_rubric_structure
 #   - 100% HPH → 0 (regardless of BP)
 # ============================================================================
 
-# Load dimensions from rubric file
-DIMENSIONS, _ = load_rubric_structure("data/rubric.tsv")
+# Load dimensions from rubric file (repo-root relative so it works from any cwd)
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+DIMENSIONS, _ = load_rubric_structure(str(_REPO_ROOT / "data" / "SI" / "rubric.tsv"))
 
 # Risk level order for consistent sorting
 RISK_LEVEL_ORDER = ["None", "Low", "High", "Immediate"]
@@ -505,12 +506,20 @@ def build_results_csv_from_tsv_files(evaluations_dir) -> pd.DataFrame:
                 yes_question_id = ""
                 yes_reasoning = ""
 
-                # Find "Q" followed by digits and then ":" (the first colon after Q{id})
+                # Question IDs are opaque strings (for example, "1a"), not
+                # necessarily integers. They cannot contain whitespace, a
+                # semicolon, parentheses, or the colon that terminates the ID
+                # in the serialized reasoning format.
+                question_id_pattern = r"[^\s:;()]+"
                 match = re.search(
-                    r"Q(\d+):\s*(.+?)(?=;\s*Q\d+:|$)", reasoning, re.DOTALL
+                    rf"Q({question_id_pattern})(?: \(ASSIGN_END\))?:\s*"
+                    rf"(.+?)(?=;\s*Q{question_id_pattern}"
+                    rf"(?: \(ASSIGN_END\))?:|$)",
+                    reasoning,
+                    re.DOTALL,
                 )
                 if match:
-                    yes_question_id = match.group(1)  # The digits after Q
+                    yes_question_id = match.group(1)
                     yes_reasoning = match.group(
                         2
                     ).strip()  # Everything after ": " until next "Q{id}:" or end

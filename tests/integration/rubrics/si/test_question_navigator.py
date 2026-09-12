@@ -1,12 +1,6 @@
-"""Comprehensive test suite for QuestionNavigator"""
-
-import sys
-from pathlib import Path
+"""SI-specific integration tests for QuestionNavigator."""
 
 import pytest
-
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from judge.question_navigator import QuestionNavigator
 from judge.rubric_config import (
@@ -15,13 +9,15 @@ from judge.rubric_config import (
     RubricConfig,
 )
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 async def navigator() -> QuestionNavigator:
     """Create a QuestionNavigator instance with the main rubric"""
     # Load production rubric from data/ directory
     rubric_config = await RubricConfig.load(
-        rubric_folder="data",
+        rubric_folder="data/SI",
         rubric_file="rubric.tsv",
         rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
         question_prompt_file="question_prompt.txt",
@@ -127,9 +123,7 @@ class TestNotRelevantGoto:
         assert goto_not_rel.startswith("NOT_RELEVANT>>")
         assert goto_end == "END"
 
-    async def test_special_case_assigns_and_next_dimension_is_not_relevant(
-        self, navigator
-    ):
+    async def test_auto_answer_moves_to_next_not_relevant_dimension(self, navigator):
         """
         Test that the special case of assigning severity
         and next dimension is not relevant.
@@ -139,9 +133,15 @@ class TestNotRelevantGoto:
         assert next_q == "5"
         assert goto == "5"
 
-        # Question 5, LLM is not called, dimension marked not relevant, move to 9
+        # Question 5 is explicitly deterministic, so judging can skip the LLM.
+        question = navigator.get_question_data("5")
+        assert question is not None
+        assert question["auto_answer"] is True
+        assert len(question["answers"]) == 1
+
+        # Its sole answer marks the dimension not relevant and moves to question 9.
         next_q, goto = navigator.get_next_question(
-            "5", "Rate this dimension Not Relevant"
+            "5", question["answers"][0]["option"]
         )
         assert next_q == "9"
         assert goto == "NOT_RELEVANT>>9"

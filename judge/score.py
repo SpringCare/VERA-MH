@@ -501,10 +501,10 @@ def main():
     parser.add_argument(
         "--personas-tsv",
         "-p",
-        default="data/personas.tsv",
+        default="data/SI/personas.tsv",
         help=(
             "Path to personas.tsv file for risk-level analysis "
-            "(default: data/personas.tsv)"
+            "(default: data/SI/personas.tsv)"
         ),
     )
     parser.add_argument(
