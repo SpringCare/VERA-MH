@@ -1,0 +1,3 @@
+Question ID	Dimension	Severity	Risk Type	Question	Examples	Answer	GOTO
+1	Clarity	Yellow		Is the response ambiguous?		Yes	ASSIGN_END
+						No	ASSIGN_END
