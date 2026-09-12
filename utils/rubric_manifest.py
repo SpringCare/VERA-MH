@@ -61,6 +61,37 @@ async def load_manifest(manifest_path: str) -> dict[str, Any]:
     return manifest
 
 
+def _resolve_manifest_file(
+    manifest_path: str, manifest: dict[str, Any], key: str
+) -> str:
+    """Resolve one manifest file field against the manifest's own folder.
+
+    Errors name the manifest, the field, and the value as written, because that
+    triple is the only thing that tells a reader where to go fix a typo. By the
+    time a path reaches `RubricConfig.from_paths` that provenance is gone -- it
+    holds three bare strings -- so this is the only layer that can say it.
+
+    Returns the path in the same relative-or-absolute shape the caller passed
+    in, deliberately: callers compare these against the paths they supplied.
+    """
+    value = manifest.get(key)
+    if not isinstance(value, str) or not value:
+        raise ValueError(
+            f"Rubric bundle manifest {manifest_path}: field {key!r} must be a "
+            f"non-empty path, got {value!r}"
+        )
+
+    resolved = Path(manifest_path).parent / value
+    # `is_file` rather than `exists` so an empty or directory-valued field is
+    # rejected here instead of surfacing later as a missing *folder*.
+    if not resolved.is_file():
+        raise FileNotFoundError(
+            f"Rubric bundle manifest {manifest_path}: field {key!r} names "
+            f"{value!r}, which is not a file beside the manifest: {resolved}"
+        )
+    return str(resolved)
+
+
 async def load_manifest_personas(manifest_path: str) -> list[str]:
     """Read a rubric bundle manifest's `personas` list.
 
@@ -77,6 +108,48 @@ async def load_manifest_personas(manifest_path: str) -> list[str]:
     manifest = await load_manifest(manifest_path)
     manifest_dir = Path(manifest_path).parent
     return [str(manifest_dir / p) for p in manifest.get("personas", [])]
+
+
+async def load_manifest_rubric_paths(manifest_path: str) -> dict[str, str]:
+    """Resolve a manifest's three rubric files relative to the manifest.
+
+    A manifest names its files by bare filename, and those names mean "beside
+    this manifest" -- never relative to `$ROOT` or the working directory. So
+    given `judge.py --rubrics data/SI/rubric_manifest.json` containing::
+
+        {"rubric_file": "rubric.tsv",
+         "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",
+         "question_prompt_file": "question_prompt.txt"}
+
+    this returns::
+
+        {"rubric_file": "data/SI/rubric.tsv",
+         "rubric_prompt_beginning_file": "data/SI/rubric_prompt_beginning.txt",
+         "question_prompt_file": "data/SI/question_prompt.txt"}
+
+    The keys match `RubricConfig.from_paths`' parameters, so a caller holding a
+    manifest can go straight from one to the other. Iterating `REQUIRED_KEYS`
+    rather than repeating the three names keeps the returned dict from drifting
+    from the set `load_manifest` validates, since it is `**`-unpacked into that
+    signature.
+
+    Validation is split by what each layer can see: `load_manifest` rejects a
+    *missing* key, `_resolve_manifest_file` rejects an unusable *value* and
+    names the manifest field it came from, and `RubricConfig.from_paths` keeps
+    its own existence checks for callers that arrive already holding resolved
+    paths.
+
+    This is the single place the manifest-relative rule is applied for rubric
+    files, so `RubricConfig.load_bundle` and callers holding a bare manifest
+    path (the legacy `judge.py --rubrics` form) cannot drift apart. Callers that
+    already hold resolved paths -- `vera`'s target resolution, which validates
+    them itself -- do not need this at all.
+    """
+    manifest = await load_manifest(manifest_path)
+    return {
+        key: _resolve_manifest_file(manifest_path, manifest, key)
+        for key in REQUIRED_KEYS
+    }
 
 
 async def load_manifest_persona_context_template(manifest_path: str) -> str:

@@ -12,9 +12,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from judge import judge_conversations, judge_single_conversation
+from judge import judge_single_conversation, run_judging
 from judge.llm_judge import LLMJudge
-from judge.rubric_config import ConversationData, RubricConfig, load_conversations
+from judge.rubric_config import ConversationData, RubricConfig
 from judge.utils import (
     build_judge_task_log_path,
     default_adhoc_parent,
@@ -25,6 +25,7 @@ from utils.naming import (
     build_single_conversation_run_folder_name,
     is_judge_run_folder_basename,
 )
+from utils.rubric_manifest import load_manifest_rubric_paths
 from utils.utils import parse_key_value_list
 
 
@@ -158,8 +159,67 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _resolve_output_target(args, gen_run: Optional[str]) -> tuple[str, bool]:
+    """Decide where evaluations go, returning ``(output_dir, is_existing_run)``.
+
+    ``is_existing_run`` is False for the normal case, where ``output_dir`` is a
+    parent to mint a new ``j_*`` run folder under, and True when resuming, where
+    it is the exact existing folder to land back in instead of starting a new
+    run.
+
+    This is CLI policy and it deliberately stays in this script rather than
+    moving to ``utils/``: every branch below is legacy. The
+    ``<gen_run>/evaluations`` default and the flat-folder note encode the
+    ``p_*``/``j_*`` layout that Phase 3 retires, and the resume check encodes a
+    ``j_*__*`` basename rule that ``vera resume`` will not use -- it reads
+    ``config.json``/``state.json``, which old-layout runs do not have (see
+    docs/architecture.md's phase table). Sharing any of it would outlive the
+    conventions it describes; ``vera judge`` resolves its own output instead.
+    """
+    if args.resume:
+        if not args.output:
+            raise ValueError(
+                "Resume mode requires --output to point to an existing evaluation "
+                "run folder (j_*__*)."
+            )
+        if not os.path.isdir(args.output):
+            raise ValueError(
+                "Resume mode requires --output to point to an existing "
+                "evaluation run folder."
+            )
+        base = os.path.basename(os.path.normpath(args.output))
+        if not is_judge_run_folder_basename(base):
+            raise ValueError(
+                "Resume mode requires --output to be a judge run folder "
+                f"(basename like j_*__*), got {base!r}"
+            )
+        return args.output, True
+
+    if args.output is not None:
+        return args.output, False
+    if gen_run is not None:
+        return os.path.join(gen_run, "evaluations"), False
+
+    print(
+        "Note: flat conversation folder; writing evaluations under "
+        "evaluations/. New runs use output/p_*__/conversations/.",
+        file=sys.stderr,
+    )
+    return "evaluations", False
+
+
 async def main(args) -> Optional[str]:
-    """Main async entrypoint for judging conversations."""
+    """Legacy CLI entry point: resolve ``args``, then call the judging domain.
+
+    This is CLI glue, not a domain entry point. It owns everything specific to
+    this script's argument conventions — model shorthand parsing, the
+    manifest-path input form, output-location policy, resume validation, and
+    debug setup — and hands fully resolved values to `judge.run_judging`.
+
+    `vera judge` does not call this. It calls `run_judging` directly and
+    resolves its own inputs, so nothing new belongs here: this script is
+    retained only until `vera resume` exists (see docs/architecture.md).
+    """
     if args.debug:
         from utils.debug import set_debug
 
@@ -167,9 +227,6 @@ async def main(args) -> Optional[str]:
 
     # Parse judge models from args (supports "model" or "model:count" format)
     judge_models = parse_judge_models(args.judge_model)
-
-    models_str = ", ".join(f"{model}x{count}" for model, count in judge_models.items())
-    print(f"🎯 LLM Judge | Models: {models_str}")
 
     if len(args.rubrics) > 1:
         print(
@@ -179,11 +236,18 @@ async def main(args) -> Optional[str]:
             file=sys.stderr,
         )
 
-    # Load rubric configuration once at startup
-    print("📚 Loading rubric configuration...")
-    rubric_config = await RubricConfig.load_bundle(args.rubrics[0])
+    rubric_paths = await load_manifest_rubric_paths(args.rubrics[0])
 
     if args.conversation:
+        # Single-conversation judging is legacy-only: `vera judge` drops this
+        # mode, so it is not part of the resolved-value domain entry point.
+        models_str = ", ".join(
+            f"{model}x{count}" for model, count in judge_models.items()
+        )
+        print(f"🎯 LLM Judge | Models: {models_str}")
+        print("📚 Loading rubric configuration...")
+        rubric_config = await RubricConfig.from_paths(**rubric_paths)
+
         # Single conversation with first judge model (single instance)
         first_model = next(iter(judge_models.keys()))
 
@@ -223,57 +287,23 @@ async def main(args) -> Optional[str]:
         return out_run
 
     transcripts_dir, gen_run, conv_basename = resolve_conversation_input(args.folder)
+    output_dir, is_existing_run = _resolve_output_target(args, gen_run)
 
-    print(f"📂 Loading conversations from {transcripts_dir}...")
-    conversations = await load_conversations(transcripts_dir, limit=args.limit)
-    print(f"✅ Loaded {len(conversations)} conversations")
-
-    judge_kwargs = dict(
+    _, output_folder = await run_judging(
         judge_models=judge_models,
-        conversations=conversations,
-        rubric_config=rubric_config,
-        max_concurrent=args.max_concurrent,
+        **rubric_paths,
+        transcripts_dir=transcripts_dir,
         conversation_folder_name=conv_basename,
-        verbose=True,
+        limit=args.limit,
+        output_dir=output_dir,
+        is_existing_run=is_existing_run,
         judge_model_extra_params=args.judge_model_extra_params,
+        max_concurrent=args.max_concurrent,
         per_judge=args.per_judge,
         verbose_workers=args.verbose_workers,
+        verbose=True,
         resume=args.resume,
     )
-    if args.resume:
-        if not args.output:
-            raise ValueError(
-                "Resume mode requires --output to point to an existing evaluation "
-                "run folder (j_*__*)."
-            )
-        if not os.path.isdir(args.output):
-            raise ValueError(
-                "Resume mode requires --output to point to an existing "
-                "evaluation run folder."
-            )
-        base = os.path.basename(os.path.normpath(args.output))
-        if not is_judge_run_folder_basename(base):
-            raise ValueError(
-                "Resume mode requires --output to be a judge run folder "
-                f"(basename like j_*__*), got {base!r}"
-            )
-        judge_kwargs["output_folder"] = args.output
-    else:
-        if args.output is None:
-            if gen_run is not None:
-                output_root = os.path.join(gen_run, "evaluations")
-            else:
-                output_root = "evaluations"
-                print(
-                    "Note: flat conversation folder; writing evaluations under "
-                    "evaluations/. New runs use output/p_*__/conversations/.",
-                    file=sys.stderr,
-                )
-        else:
-            output_root = args.output
-        judge_kwargs["output_root"] = output_root
-
-    _, output_folder = await judge_conversations(**judge_kwargs)
 
     print(f"Evaluation output: {output_folder}/")
     return output_folder
