@@ -16,6 +16,12 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
+from judge.answers import (
+    answer_column,
+    answers_tsv_path,
+    conversation_answers_dir,
+    explanation_column,
+)
 from judge.rubric_config import ConversationData, RubricConfig, load_conversations
 from judge.runner import (
     batch_evaluate_with_individual_judges,
@@ -480,6 +486,70 @@ class TestJudgeConversations:
         assert "run_id" in df.columns
         assert "judge_model" in df.columns
         assert "judge_instance" in df.columns
+
+    async def test_judge_conversations_writes_per_question_answers(
+        self,
+        tmp_path: Path,
+        mock_rubric_files: str,
+        mock_llm_factory_for_judge,
+    ):
+        """The run writes answers/answers.tsv beside results.csv.
+
+        Arrange: two conversations
+        Act: judge_conversations
+        Assert: one wide answers row per conversation, rubric-ordered question
+        columns, and nothing stray in the evaluation folder's own *.tsv glob
+        """
+        conv_folder = tmp_path / "conversations"
+        conv_folder.mkdir()
+        (conv_folder / "conv1.txt").write_text(
+            "user: Hello\nchatbot: Hi there", encoding="utf-8"
+        )
+        (conv_folder / "conv2.txt").write_text(
+            "user: How are you?\nchatbot: I'm well", encoding="utf-8"
+        )
+
+        output_root = str(tmp_path / "evaluation_output")
+        conversations = await load_conversations(str(conv_folder))
+        rubric_config = await RubricConfig.load(
+            rubric_folder=mock_rubric_files,
+            rubric_file="rubric.tsv",
+            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
+            question_prompt_file="question_prompt.txt",
+        )
+
+        await judge_conversations(
+            judge_models={"mock-judge": 1},
+            conversations=conversations,
+            rubric_config=rubric_config,
+            output_root=output_root,
+            conversation_folder_name="conversations",
+            verbose=False,
+            save_aggregated_results=True,
+        )
+
+        output_folder = next(Path(output_root).glob("j_mock-judgex1_*"))
+
+        answers_tsv = answers_tsv_path(output_folder)
+        assert answers_tsv.exists()
+
+        df = pd.read_csv(answers_tsv, sep="\t", keep_default_na=False)
+        assert len(df) == len(conversations)
+        for question_id in rubric_config.question_order:
+            assert answer_column(question_id) in df.columns
+            assert explanation_column(question_id) in df.columns
+
+        # Every conversation was asked the first rubric question.
+        first_question = answer_column(rubric_config.question_order[0])
+        assert all(answer != "" for answer in df[first_question])
+
+        # A per-conversation file exists for each evaluation TSV.
+        eval_tsvs = {p.name for p in output_folder.glob("*.tsv")}
+        per_conversation = {
+            p.name for p in conversation_answers_dir(output_folder).glob("*.tsv")
+        }
+        assert per_conversation == eval_tsvs
+        assert "answers.tsv" not in eval_tsvs
 
     async def test_results_csv_matches_tsv_reconstruction(
         self,
