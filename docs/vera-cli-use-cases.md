@@ -207,13 +207,28 @@ vera pipeline --config run.json --sample 2
 list at run time. This avoids hand-maintaining a separate small-scale config
 just for smoke testing.
 
-**`--sample` is the sole behavior-altering exception to the CLI/`--config`
-either-or rule** (AD-17 in
-[ARCHITECTURE-SPINE.md](./ARCHITECTURE-SPINE.md)): it caps how much of the
-already-resolved lists get used rather than replacing those lists. The executed
-value is recorded in the run's persisted `config.json` invocation metadata, so
-`vera resume` retains the same sampled scope. `--debug` is recorded alongside
-it; `--print` creates no run and therefore has nothing to persist.
+**The invocation-only category has one membership test** (AD-17 in
+[ARCHITECTURE-SPINE.md](./ARCHITECTURE-SPINE.md)): does the flag supply
+information that says *which run this is*? If not, it may accompany
+`--config`, because the CLI/`--config` either-or rule exists to protect run
+identity — not to keep flags inert. `--sample` and `--into` both pass that test
+while altering behavior, which is why the category is defined by the test
+rather than by a list of the flags that happen to be in it. `--sample` caps how
+much of the already-resolved lists get used rather than replacing those lists.
+`--into <run folder>` continues an existing run, skipping work already written,
+and supplies that folder as the destination instead of the run-defining
+`output` — so it is mutually exclusive with `--output` on the command line.
+
+The category has one structural definition, the fields of `InvocationConfig`,
+which is what both the config-document key check and the CLI's
+`INVOCATION_ONLY_FLAGS` read. Membership is what makes `--into` work at all: a
+run completed in one go and the same run finished across two invocations are
+the same run, so no stored config has to state the field, and a config naming a
+folder would otherwise be usable exactly once.
+
+The executed value is recorded in the run's persisted `config.json` invocation
+metadata, so `vera resume` retains the same sampled scope. `--debug` is recorded
+alongside it; `--print` creates no run and therefore has nothing to persist.
 
 ## Use case 5 — Pool
 
