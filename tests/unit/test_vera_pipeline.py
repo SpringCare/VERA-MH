@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
@@ -205,3 +206,78 @@ def test_pipeline_declares_no_stage_specific_knobs() -> None:
     for ambiguous in ["--output", "--max-concurrent", "--conversations"]:
         with pytest.raises(SystemExit):
             parser.parse_args(_cli(ambiguous, "x"))
+
+
+def test_shipped_recommended_config_resolves() -> None:
+    """The checked-in profile is an artifact that would otherwise rot silently.
+
+    It replaces `scripts/run_recommended_vera_pipeline.sh`, so a field going
+    stale has to fail here rather than at the start of an expensive run.
+    """
+    data = json.loads(
+        (Path(__file__).resolve().parents[2] / "configs/recommended.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    data["generation"]["chatbot"]["name"] = "claude-sonnet-5"
+
+    parser = vera.build_parser()
+    env = json.dumps(data)
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv(cli_config.VERA_RUN_CONFIG_ENV, env)
+        (resolved,) = pipeline.resolve_configs(parser.parse_args(["pipeline"]))
+
+    generation = resolved.generation.generation
+    assert generation is not None
+    # The two published user-side models, the published judge and its profile.
+    assert [model.name for model in generation.user] == [
+        "gpt-5.2",
+        "claude-opus-4-5-20251101",
+    ]
+    assert [model.name for model in resolved.judge_models] == ["gpt-5.4"]
+    assert resolved.judge_models[0].extra_params == {"reasoning_effort": "low"}
+    assert generation.turns == 30
+
+
+def test_pooling_runs_only_for_more_than_one_evaluation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """One user model has nothing to pool; two or more produce the headline score."""
+    pooled: list[list[str]] = []
+    monkeypatch.setattr(
+        pipeline, "_pool", lambda run, evaluations: pooled.append(list(evaluations))
+    )
+
+    async def fake_generate(run_configs):
+        generation = run_configs[0].generation
+        return [f"run_{index}" for index, _ in enumerate(generation.user)]
+
+    async def fake_judge_and_score(run, run_folder):
+        return f"{run_folder}/evaluations/j_x"
+
+    monkeypatch.setattr(pipeline.generate_command, "_execute", fake_generate)
+    monkeypatch.setattr(pipeline, "_judge_and_score", fake_judge_and_score)
+
+    parser = vera.build_parser()
+    single = pipeline.resolve_configs(parser.parse_args(_cli()))
+    asyncio.run(pipeline._execute(single))
+    assert pooled == []
+
+    both = pipeline.resolve_configs(
+        parser.parse_args(
+            [
+                "pipeline",
+                "-c",
+                "bot",
+                "-u",
+                "gpt-5.2:1",
+                "claude-opus-4-5-20251101:1",
+                "-j",
+                "gpt-5.4:1",
+                "--target",
+                "SI",
+            ]
+        )
+    )
+    asyncio.run(pipeline._execute(both))
+    assert pooled == [["run_0/evaluations/j_x", "run_1/evaluations/j_x"]]
