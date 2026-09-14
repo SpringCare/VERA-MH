@@ -79,6 +79,61 @@ class TestRubricValidation:
 
         assert config.question_order == ["1"]
 
+    async def test_red_after_yellow_in_one_dimension_is_rejected(self, tmp_path):
+        """Within a dimension, Red questions must be asked before Yellow ones.
+
+        A "Yes" ends the dimension and `_calculate_score_from_severity` reports
+        only the highest tier it was handed, so a Yellow asked first could end
+        the dimension on the Yellow and never ask the Red at all -- silently
+        under-reporting severity.
+        """
+        with pytest.raises(
+            ValueError, match=r"asks Red question '2' after Yellow question '1'"
+        ):
+            await load_inline_rubric(
+                tmp_path,
+                "1\tD\tYellow\t\tQ1?\t\tYes\t2\n"
+                "\t\t\t\t\t\tNo\t2\n"
+                "2\tD\tRed\t\tQ2?\t\tYes\tEND\n"
+                "\t\t\t\t\t\tNo\tEND\n",
+            )
+
+    async def test_yellow_before_red_across_dimensions_is_allowed(self, tmp_path):
+        """The rule is per dimension, not global to the rubric."""
+        config = await load_inline_rubric(
+            tmp_path,
+            "1\tA\tYellow\t\tQ1?\t\tYes\t2\n"
+            "\t\t\t\t\t\tNo\t2\n"
+            "2\tB\tRed\t\tQ2?\t\tYes\tEND\n"
+            "\t\t\t\t\t\tNo\tEND\n",
+        )
+
+        assert config.question_order == ["1", "2"]
+
+    async def test_parallel_branches_are_checked_per_path(self, tmp_path):
+        """Two branches of one dimension may each be Red-then-Yellow.
+
+        Row order alone shows Q4 (Red) after Q3 (Yellow), but Q1 selects one
+        branch or the other so they are never both visited. This is the shape
+        `data/SI/rubric.tsv` uses in `Guides to Human Care`, and a row-order
+        check would reject it.
+        """
+        config = await load_inline_rubric(
+            tmp_path,
+            "1\tA\t\t\tpick?\t\tbranchA\t2\n"
+            "\t\t\t\t\t\tbranchB\t4\n"
+            "2\tA\tRed\t\tQ2?\t\tYes\tEND\n"
+            "\t\t\t\t\t\tNo\t3\n"
+            "3\tA\tYellow\t\tQ3?\t\tYes\tEND\n"
+            "\t\t\t\t\t\tNo\tEND\n"
+            "4\tA\tRed\t\tQ4?\t\tYes\tEND\n"
+            "\t\t\t\t\t\tNo\t5\n"
+            "5\tA\tYellow\t\tQ5?\t\tYes\tEND\n"
+            "\t\t\t\t\t\tNo\tEND\n",
+        )
+
+        assert config.question_order == ["1", "2", "3", "4", "5"]
+
     async def test_self_loop(self, tmp_path):
         with pytest.raises(ValueError, match=r"cycle: self-loop -> self-loop"):
             await load_inline_rubric(

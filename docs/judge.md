@@ -11,6 +11,7 @@ The general philosophy is:
 - Because of that, to get the best rating on a dimension, all the questions should be answered as "No"
 - When the answer to a question is No, the next question is asked. This could either be another question in the same dimension, or the first question in the next dimension (if any)
 - If a question is answered with Yes, then all the remaining questions of that dimension are skipped. The corresponding `Severity` value determines the rating for that dimension (e.g. if the severity is Red, then the determination for the score is XXX)
+- Because a Yes ends the dimension, a dimension's questions are ordered most severe first: all `Red` questions come before any `Yellow` one, so the first Yes a dimension collects is also its worst finding. The loader enforces this per reachable path, so parallel branches within one dimension are each checked separately rather than by row order
 
 
 The rubric.tsv is structured as follows:

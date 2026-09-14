@@ -123,6 +123,7 @@ class RubricConfig:
         # Validate the complete in-memory navigation graph once; this does not
         # reread the rubric for each question.
         cls._validate_navigation(question_flow_data, question_order)
+        cls._validate_severity_ordering(question_flow_data, question_order)
         dimensions = cls._extract_dimensions(rubric_df)
 
         return cls(
@@ -439,6 +440,73 @@ class RubricConfig:
         for question_id in question_order:
             if state.get(question_id, 0) == 0:
                 visit(question_id)
+
+    @staticmethod
+    def _validate_severity_ordering(
+        questions: Dict[str, Dict[str, Any]], question_order: List[str]
+    ) -> None:
+        """Reject a dimension that asks a Red question after a Yellow one.
+
+        Within a dimension the more severe questions come first, so the first
+        "Yes" a dimension collects is also its worst finding. Scoring relies on
+        that: a "Yes" ends the dimension, and
+        `_calculate_score_from_severity` reports only the highest tier it was
+        given. A Yellow asked before a Red could therefore end the dimension on
+        the Yellow and never ask the Red at all, under-reporting the severity.
+
+        Checked per *reachable path*, not per row order, because a dimension may
+        legitimately hold parallel branches that are never both visited -- SI's
+        `Guides to Human Care` splits on Q9 into a not-immediate-risk branch
+        (Q10-Q15) and an immediate-risk branch (Q16-Q22), each internally
+        Red-then-Yellow. Row order alone shows Q16 (Red) after Q13 (Yellow) and
+        would reject a correct rubric.
+
+        State is (question, dimensions that have shown a Yellow so far) and is
+        memoized, so this is linear in questions times dimension subsets rather
+        than exponential in path count.
+        """
+        if not question_order:
+            return
+
+        navigator = QuestionNavigator(questions, question_order)
+        # Carries the Yellow question id per dimension so the error can name it.
+        start: tuple[str, frozenset] = (question_order[0], frozenset())
+        stack = [start]
+        seen: set[tuple[str, frozenset]] = set()
+        first_yellow: Dict[tuple[str, str], str] = {}
+
+        while stack:
+            question_id, yellow_dims = stack.pop()
+            if (question_id, yellow_dims) in seen:
+                continue
+            seen.add((question_id, yellow_dims))
+
+            data = questions[question_id]
+            dimension = data.get("dimension", "")
+            severity = (data.get("severity") or "").strip().lower()
+
+            if severity == "red" and dimension in yellow_dims:
+                earlier = first_yellow.get((question_id, dimension), "")
+                raise ValueError(
+                    f"Dimension {dimension!r} asks Red question "
+                    f"{question_id!r} after Yellow question {earlier!r} on the "
+                    f"same path; within a dimension Red questions must come "
+                    f"before Yellow ones"
+                )
+
+            next_yellow = yellow_dims
+            if severity == "yellow" and dimension not in yellow_dims:
+                next_yellow = yellow_dims | {dimension}
+
+            for answer in data.get("answers", []):
+                next_question_id, _ = navigator.get_next_question(
+                    question_id, answer["option"]
+                )
+                if next_question_id is None or next_question_id not in questions:
+                    continue
+                if next_yellow is not yellow_dims:
+                    first_yellow.setdefault((next_question_id, dimension), question_id)
+                stack.append((next_question_id, next_yellow))
 
 
 @dataclass
