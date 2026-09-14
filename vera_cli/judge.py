@@ -54,6 +54,7 @@ from .config import (
     rubrics_from_config,
 )
 from .targets import (
+    ResolvedTarget,
     load_target,
     resolve_target_manifest,
     targets_from_config,
@@ -207,13 +208,7 @@ def _from_config(
                 "judge does not support target 'all' yet: evaluations for "
                 "different rubrics would share one output folder"
             )
-        rubrics = [
-            RubricFiles(
-                rubric_file=targets[0].rubric,
-                rubric_prompt_beginning_file=targets[0].rubric_prompt_beginning,
-                question_prompt_file=targets[0].question_prompt,
-            )
-        ]
+        rubrics = [_rubric_files(targets[0])]
     else:
         rubrics = rubrics_from_config(
             required(judging, "rubrics", section="judging config")
@@ -257,13 +252,28 @@ def _reject_target_all(selection: str) -> str:
     return selection
 
 
-def _rubric_from_target(selection: str) -> RubricFiles:
-    """Resolve a target name or manifest path to its three rubric files."""
-    target = load_target(resolve_target_manifest(_reject_target_all(selection)))
+def _rubric_files(target: ResolvedTarget) -> RubricFiles:
+    """Project a resolved target onto the three rubric fields judging needs.
+
+    A target carries generation fields too, so judging takes a projection rather
+    than the whole bundle. Shared by both routes that start from a target — the
+    `--target`/`--rubric` flags and a config's `target` key — which otherwise
+    spell the same three-field rename twice.
+
+    `load_target` has already resolved and verified every path, so this only
+    renames; it is not a second validation step.
+    """
     return RubricFiles(
         rubric_file=target.rubric,
         rubric_prompt_beginning_file=target.rubric_prompt_beginning,
         question_prompt_file=target.question_prompt,
+    )
+
+
+def _rubric_from_target(selection: str) -> RubricFiles:
+    """Resolve a target name or manifest path to its three rubric files."""
+    return _rubric_files(
+        load_target(resolve_target_manifest(_reject_target_all(selection)))
     )
 
 

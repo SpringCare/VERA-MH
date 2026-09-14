@@ -402,3 +402,39 @@ def test_execution_forwards_resolved_values(tmp_path: Path) -> None:
     assert kwargs["rubric_file"] == str(
         (cli_config.ROOT / "data/SI/rubric.tsv").resolve()
     )
+
+
+def test_config_target_resolves_the_rubric_bundle(tmp_path: Path) -> None:
+    """A config naming a `target` resolves to that target's three rubric files.
+
+    This route had no happy-path test, so the projection from a resolved target
+    onto judging's three fields was unexercised — the branch a refactor of it
+    could break silently. Matches `test_target_and_rubric_resolve_the_same_rubric`,
+    which covers the flag route.
+    """
+    config_data = {
+        "target": "SI",
+        "judging": {
+            "models": [{"name": "gpt-4o", "repeats": 1}],
+            "conversations": [str(_generation_run(tmp_path))],
+            "output": "output",
+            "max_concurrent": None,
+            "per_judge": False,
+        },
+    }
+    args = vera.build_parser().parse_args(
+        ["judge", "--config", str(_write_config(tmp_path, config_data))]
+    )
+
+    judging = judge.resolve_configs(args)[0].judging
+    assert judging is not None
+    rubric = judging.rubrics[0]
+    assert [
+        rubric.rubric_file,
+        rubric.rubric_prompt_beginning_file,
+        rubric.question_prompt_file,
+    ] == [
+        str((cli_config.ROOT / "data/SI/rubric.tsv").resolve()),
+        str((cli_config.ROOT / "data/SI/rubric_prompt_beginning.txt").resolve()),
+        str((cli_config.ROOT / "data/SI/question_prompt.txt").resolve()),
+    ]
