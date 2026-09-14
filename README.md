@@ -1,7 +1,6 @@
 # VERA-MH
 
 [![CI](https://github.com/SpringCare/VERA-MH/workflows/CI/badge.svg)](https://github.com/SpringCare/VERA-MH/actions/workflows/ci.yml)
-[![Docker](https://github.com/SpringCare/VERA-MH/workflows/Docker%20Build%20Validation/badge.svg)](https://github.com/SpringCare/VERA-MH/actions/workflows/docker.yml)
 
 **Project status:** VERA-MH 2.0 is under active development. It expands the framework's multi-target evaluation capabilities and introduces breaking changes, including a new unified CLI. The current README documents the existing version on `main`.
 
