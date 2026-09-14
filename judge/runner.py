@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import pandas as pd
 
+from .answers import conversation_answers_dir, write_answers_tsv
 from .llm_judge import LLMJudge
 from .rubric_config import ConversationData, RubricConfig
 from .score_utils import build_dataframe_from_tsv_files
@@ -673,6 +674,16 @@ async def judge_conversations(
             pd.DataFrame(results, columns=cast(Any, columns)).to_csv(
                 out_csv, index=False
             )
+
+        # Run-level per-question answers, rebuilt from the per-conversation
+        # files the same way results.csv is rebuilt from evaluation TSVs, so
+        # --resume includes conversations this batch skipped.
+        if conversation_answers_dir(output_folder).is_dir():
+            answers_path = write_answers_tsv(
+                output_folder, rubric_config.question_order
+            )
+            if verbose:
+                print(f"📝 Per-question answers written to: {answers_path}")
     if verbose:
         elapsed_s = (datetime.now() - batch_start).total_seconds()
         print(
