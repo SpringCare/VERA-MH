@@ -5,6 +5,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from judge.answers import conversation_answers_dir, write_conversation_answers
 from judge.constants import BEST_PRACTICE, DAMAGING, NEUTRAL
 from judge.question_navigator import QuestionNavigator
 from judge.response_models import QuestionResponse
@@ -17,20 +18,6 @@ from judge.utils import (
 )
 from llm_clients import LLMFactory, Role
 from llm_clients.llm_interface import JudgeLLM, LLMGenerationFailed
-
-# There are special cases that can navigate the rubric without calling the LLM.
-# The keys must match the Question column in the loaded rubric (see data/rubric.tsv).
-# The answers must match the rubric Answer column exactly (whitespace, punctuation).
-# These cases are tested in:
-# - tests/unit/judge/test_llm_judge.py
-# - tests/integration/test_llm_judge_not_relevant_flow.py.
-SPECIAL_CASES_QUESTION_ANSWERS = {
-    'Select "Rate this dimension Not Relevant".': "Rate this dimension Not Relevant"
-}
-SPECIAL_CASES_QUESTION_ANSWERS_LOW = {
-    question.lower(): answer
-    for question, answer in SPECIAL_CASES_QUESTION_ANSWERS.items()
-}
 
 
 class LLMJudge:
@@ -240,11 +227,17 @@ class LLMJudge:
                     raise ValueError("No questions found in rubric")
                 start_question_id = self.question_order[0]
             dimension_answers = {}
+            # Append-only record of every question actually asked, in visit
+            # order. dimension_answers cannot serve this purpose: a
+            # NOT_RELEVANT>> goto replaces a dimension's list wholesale (see
+            # _handle_not_relevant_goto), discarding the answers it overwrites
+            # -- including the answer that triggered the goto.
+            question_log: List[Dict[str, Any]] = []
 
             # this function returns if one of the questions triggered
             # 'Not Relevant' for all the remaining dimensions
             not_relevant_question_id = await self._ask_all_questions(
-                start_question_id, dimension_answers, verbose
+                start_question_id, dimension_answers, verbose, question_log
             )
 
             # Step 2: Calculate final scores
@@ -256,7 +249,12 @@ class LLMJudge:
             self._log_final_results(results)
             if auto_save:
                 self._save_results(
-                    conversation, output_folder, results, verbose, judge_instance
+                    conversation,
+                    output_folder,
+                    results,
+                    verbose,
+                    judge_instance,
+                    question_log,
                 )
 
             return results
@@ -297,14 +295,14 @@ class LLMJudge:
         """Calculate final scores from collected answers."""
         # Handle early stopping: all dimensions become "Not Relevant"
         if not_relevant_question_id:
-            # Check if this was ASSIGN_END by looking for ASSIGN_END markers
-            # in dimension_answers. ASSIGN_END: other dimensions are marked
-            # with "ASSIGN_END" in question/reasoning. Regular END: no
-            # ASSIGN_END markers, all dimensions marked as Not Relevant
+            # Check the terminating answer against the rubric. Looking only for
+            # synthetic ASSIGN_END markers is insufficient when every dimension
+            # has already been visited, because there are no remaining dimensions
+            # for _handle_assign_end to mark (for example, the final question).
             is_assign_end = any(
                 any(
-                    "ASSIGN_END" in answer.get("question", "")
-                    or "ASSIGN_END" in answer.get("reasoning", "")
+                    answer.get("question_id") == not_relevant_question_id
+                    and self._answer_triggered_assign_end(answer)
                     for answer in answers
                 )
                 for answers in dimension_answers.values()
@@ -374,6 +372,7 @@ class LLMJudge:
         results: Dict[str, Dict[str, str]],
         verbose: bool,
         judge_instance: Optional[int] = None,
+        question_log: Optional[List[Dict[str, Any]]] = None,
     ):
         """Save evaluation results to file.
 
@@ -383,6 +382,9 @@ class LLMJudge:
             results: Evaluation results dictionary
             verbose: Whether to print progress
             judge_instance: Optional judge instance number for filename
+            question_log: Questions asked, in visit order. When given, the
+                per-question answers are written alongside the evaluation as
+                answers/conversations/<tsv stem>.tsv
         """
         filename = conversation.metadata.get("filename", "unknown.txt")
         tsv_name = judge_evaluation_tsv_filename(
@@ -394,11 +396,17 @@ class LLMJudge:
         self._save_iterative_evaluation(results, output_file)
         self.logger.info(f"Results saved to: {output_file}")
 
+        if question_log is not None:
+            answers_file = conversation_answers_dir(output_folder) / tsv_name
+            write_conversation_answers(answers_file, question_log)
+            self.logger.info(f"Per-question answers saved to: {answers_file}")
+
     async def _ask_all_questions(
         self,
         start_question_id: str,
         dimension_answers: Dict[str, List[Dict[str, Any]]],
         verbose: bool = False,
+        question_log: Optional[List[Dict[str, Any]]] = None,
     ) -> Optional[str]:
         """
         Navigate through all questions until END/ASSIGN_END or completion.
@@ -415,6 +423,10 @@ class LLMJudge:
             dimension_answers: Dictionary to track answers by dimension
                 (modified in place)
             verbose: Whether to print progress
+            question_log: Optional append-only list collecting every question
+                asked, in visit order (modified in place). Unlike
+                dimension_answers it is never rewritten, so it survives
+                NOT_RELEVANT>> and ASSIGN_END handling.
 
         Returns:
             Question ID that triggered "Not Relevant" for all dimensions, or None
@@ -425,8 +437,7 @@ class LLMJudge:
 
         while current_question_id:
             # Safety check: prevent infinite loops
-            # Note: should never happen
-            # TODO: consider adding tests when reading rubric?
+            # Rubrics are validated at load time; retain this as defense in depth.
             if current_question_id in visited_questions:
                 if verbose:
                     print(
@@ -442,12 +453,11 @@ class LLMJudge:
                     print(f"⚠ Question {current_question_id} not found in rubric")
                 break
 
-            # Step 1: Ask question and get answer
-            # check for special cases that don't require LLM
-            question_lower = question_data.get("question", "").lower().strip()
-            if question_lower in SPECIAL_CASES_QUESTION_ANSWERS_LOW:
-                answer_text = SPECIAL_CASES_QUESTION_ANSWERS_LOW[question_lower]
-                reasoning = "Special case"
+            # Step 1: Ask the question, unless the rubric explicitly declares
+            # its single answer deterministic.
+            if question_data.get("auto_answer"):
+                answer_text = question_data["answers"][0]["option"]
+                reasoning = "Automatically selected by rubric"
             else:
                 answer_text, reasoning = await self._ask_single_question(
                     current_question_id, question_data, verbose
@@ -467,6 +477,16 @@ class LLMJudge:
                 dimension or current_dimension,
                 reasoning,
             )
+            if question_log is not None:
+                question_log.append(
+                    {
+                        "question_id": current_question_id,
+                        "dimension": dimension or current_dimension,
+                        "answer": answer_text,
+                        "severity": question_data.get("severity"),
+                        "reasoning": reasoning,
+                    }
+                )
 
             # Step 3: Determine next question
             next_question_id, goto_value = self.navigator.get_next_question(

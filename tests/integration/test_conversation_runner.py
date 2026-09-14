@@ -661,6 +661,39 @@ class TestConversationRunnerMultiple:
         assert all(isinstance(r, dict) for r in results)
         assert all(r["sessions"] and r["sessions"][0]["conversation"] for r in results)
 
+    async def test_persona_prompt_path_forwarded_to_load_prompts_from_csv(
+        self,
+        tmp_path: Path,
+        basic_persona_config: Dict[str, Any],
+        basic_agent_config: Dict[str, Any],
+        mock_llm_factory,
+    ) -> None:
+        """A custom persona_prompt_path (e.g. from --rubric-manifest) should reach
+        load_prompts_from_csv, not the hardcoded data/SI/personas.tsv default."""
+        conv_folder = tmp_path / "conversations"
+        runner = create_test_runner(
+            basic_persona_config,
+            basic_agent_config,
+            "test_run",
+            max_turns=2,
+            runs_per_prompt=1,
+            folder_name=str(conv_folder),
+            persona_prompt_path="data/personas_custom.tsv",
+            persona_context_template_path="data/persona_context_custom.txt",
+        )
+
+        with patch("generate_conversations.runner.load_prompts_from_csv") as mock_load:
+            mock_load.return_value = [{"Name": "Persona1", "prompt": "Prompt 1"}]
+
+            with patch("generate_conversations.runner.setup_conversation_logger"):
+                await runner.run_conversations(persona_names=["Persona1"])
+
+        assert mock_load.call_args.kwargs["prompt_path"] == "data/personas_custom.tsv"
+        assert (
+            mock_load.call_args.kwargs["persona_context_template_path"]
+            == "data/persona_context_custom.txt"
+        )
+
     async def test_concurrent_execution_limit(
         self,
         tmp_path: Path,

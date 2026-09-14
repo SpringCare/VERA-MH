@@ -4,6 +4,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Breaking / migration
+
+- **`vera judge` requires an explicit output location for flat conversation folders** — Legacy [`judge.py`](judge.py) falls back to writing evaluations into `evaluations/` *relative to the working directory* when `--folder` points at a flat folder of `.txt` transcripts rather than a generation run. `vera judge` does not carry that fallback: it errors and asks for `-o/--output`. The default for a generation run is unchanged and still lands beside the transcripts, at `<conversation run>/evaluations/`. Reading old flat-layout conversations continues to work — pass `-o` to say where the results go. The fallback was dropped because it detached evaluations from the conversations that produced them, and because the same relative path means different directories depending on the input form (CLI paths resolve against the working directory, config paths against the repository root). Legacy `judge.py` keeps the old behavior until it is removed.
+
 ## [v1.2.0](https://github.com/SpringCare/VERA-MH/releases/tag/v1.2.0) \- 2026-07-16
 
 ### Breaking / migration
