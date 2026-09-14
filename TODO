@@ -1,2 +1,4 @@
-- Config files should also have the sha of the files they use (e.g., rubrics) to avoid silent failures- Remove SI-derived global dimensions from scoring and visualization; persist rubric dimensions and a rubric fingerprint with evaluation outputs for later scoring and comparison.
+- Config files should also have the sha of the files they use (e.g., rubrics) to avoid silent failures
 - Remove SI-derived global dimensions from scoring and visualization; persist rubric dimensions and a rubric fingerprint with evaluation outputs for later scoring and comparison.
+- Validate that `GenerationConfig`'s path fields (`personas`, `output`, `persona_context_template`) are resolved, as `RubricFiles` now does: a relative value is accepted today and means a different file depending on the reader. See #209.
+

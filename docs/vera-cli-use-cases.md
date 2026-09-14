@@ -21,10 +21,17 @@ points in the process of being removed: each is deleted once its replacement
 `vera.py` command ships, and they exist only to keep unmigrated workflows
 running in the meantime. Do not build on them.
 
-`judge.py` is the one that lingers. `vera judge` ships without `--resume` because
-the resume contract is deferred, so `judge.py` stays as the *only* way to resume
-an evaluation until `vera resume` exists — and for nothing else. It is deleted
-when `vera resume` lands.
+No legacy script is exempt, including `judge.py`. Neither `vera generate` nor
+`vera judge` exposes the legacy `--resume` yet, but that is a gap to close
+before the scripts are deleted, not a reason to keep one of them alive: both
+domains already accept the flag, so what is missing is CLI surface. Keeping a
+script as a sanctioned back door would make "each is deleted once its
+replacement ships" untrue for the one case that most needs it.
+
+Note this is a different feature from `vera resume` below. The legacy flag is a
+stateless per-stage skip that re-derives progress from the files already on
+disk; `vera resume` reads `state.json` after verifying `config.json`, works
+across stages, and is deferred to a later phase.
 
 They already use `-c`/`-r` for unrelated things (`-c` is `--max-concurrent` in
 `generate.py` and `--conversation` in `judge.py`; `-r` is `--runs` in
