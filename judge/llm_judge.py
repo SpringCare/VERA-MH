@@ -782,8 +782,13 @@ class LLMJudge:
         3. Severity is assigned when the answer is "Yes" AND the question has
            a severity value. This holds for ASSIGN_END too: an answer that
            triggers ASSIGN_END contributes its question's severity only when
-           it is a "Yes", so a passing answer routed to ASSIGN_END simply ends
-           the flow without penalizing the dimension.
+           it is a "Yes".
+
+           ASSIGN_END itself is not restricted to "Yes" answers -- a rubric may
+           put it on any answer option, including "No", to terminate the flow
+           there. When it sits on a "No", the flow ends and this dimension is
+           still the one being scored, but nothing is contributed, so the
+           dimension lands on "Best Practice" rather than being penalized.
 
         Args:
             dimension_answers: Dictionary mapping dimension names to list of answer data
@@ -833,10 +838,14 @@ class LLMJudge:
             medium_risk_reasons = []
 
             # ASSIGN_END assigns the terminating question's severity to the
-            # current dimension, but only when that answer is itself a finding.
-            # A rubric may route a *passing* answer to ASSIGN_END purely to end
-            # the flow -- ASSIGN_END says which dimension is scored, not that
-            # the dimension failed -- and that must not be penalized.
+            # current dimension, but only when the terminating answer is "Yes".
+            # Rubric questions are phrased so that "Yes" means the problem was
+            # found (see docs/judge.md), so a "No" is the chatbot having done
+            # the right thing. A rubric may route that "No" to ASSIGN_END purely
+            # to end the flow -- ASSIGN_END says which dimension is scored, not
+            # that the dimension failed -- and scoring it would contradict the
+            # stored reasoning, which explains why the answer was "No".
+            #
             # Resolved before the loop below so that an answer which is both a
             # severity "Yes" and an ASSIGN_END trigger is reported once, with
             # the (ASSIGN_END) marker, rather than once per rule.
@@ -847,10 +856,12 @@ class LLMJudge:
                 if last_is_yes and self._answer_triggered_assign_end(last_answer):
                     assign_end_index = len(answers) - 1
 
-            # Check regular "Yes" answers with severity
-            for index, answer_data in enumerate(answers):
-                if index == assign_end_index:
-                    continue
+            # Check regular "Yes" answers with severity. ASSIGN_END terminates
+            # the flow, so its answer is always the last one and everything
+            # before it is scored by the ordinary rule; slicing it off states
+            # that directly. When there is no ASSIGN_END the bound is None, and
+            # `answers[:None]` is the whole list.
+            for answer_data in answers[:assign_end_index]:
                 if answer_data["answer"].lower() == "yes" and answer_data["severity"]:
                     self._add_severity_reason(
                         answer_data,
