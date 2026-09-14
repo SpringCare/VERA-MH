@@ -23,6 +23,7 @@ The two halves of `RunConfig` split along one axis — whether a value defines
 from __future__ import annotations
 
 import dataclasses
+from pathlib import Path
 from typing import Any
 
 
@@ -86,12 +87,25 @@ class RubricFiles:
     they are named as files rather than as a manifest path because this is the
     resolved form — nothing downstream re-reads a manifest to find them.
 
-    "Resolved" is enforced by construction rather than by convention. There is
-    deliberately no `from_dict`: a config entry's paths are repo-relative and
-    unverified, so building an instance straight from one would put this type in
-    the state its own name rules out. Callers check the entry's shape with
-    `validate_dict`, resolve the paths, and only then instantiate — see
-    `vera_cli.targets.rubrics_from_config`, the one place that happens.
+    "Resolved" splits into two guarantees with two different owners.
+
+    *Absolute* is enforced here, by construction: it is what this module's
+    docstring means by resolved, and checking it costs nothing but string
+    inspection. There is deliberately no `from_dict`, for the same reason — a
+    config entry's paths are repo-relative, so building an instance straight
+    from one would put this type in the state its own name rules out. Callers
+    check the entry's shape with `validate_dict`, resolve the paths, and only
+    then instantiate.
+
+    *Exists* is owned by whichever boundary built the instance —
+    `vera_cli.config.rubrics_from_config` for explicit `judging.rubrics`
+    entries, `vera_cli.targets.load_target` for every target route — and is
+    deliberately not re-checked here. This module does not read files, and more
+    importantly it could not produce a useful message if it did: an instance
+    holds three bare paths with no memory of the manifest or config field that
+    named them, which is the triple a reader needs to go fix a typo. Same split
+    as `utils.rubric_manifest._resolve_manifest_file` versus
+    `judge.rubric_config.RubricConfig.from_paths`.
     """
 
     rubric_file: str
@@ -103,6 +117,16 @@ class RubricFiles:
             value = getattr(self, field.name)
             if not isinstance(value, str) or not value:
                 raise ValueError(f"judging.rubrics {field.name} must be a path")
+            # A relative path names three different files depending on who
+            # reads it: the repository root in a config, the manifest's own
+            # folder in a manifest, the working directory at `open()`. Rejecting
+            # it here is what makes "resolved" true by construction rather than
+            # by the caller remembering to resolve first.
+            if not Path(value).is_absolute():
+                raise ValueError(
+                    f"judging.rubrics {field.name} must already be resolved; "
+                    f"got a relative path: {value!r}"
+                )
 
     @classmethod
     def field_names(cls) -> tuple[str, ...]:

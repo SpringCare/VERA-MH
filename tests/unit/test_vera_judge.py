@@ -313,6 +313,101 @@ def test_rubric_files_cannot_be_built_straight_from_a_config_entry() -> None:
     assert not hasattr(RubricFiles, "from_dict")
 
 
+def test_rubric_files_reject_a_relative_path() -> None:
+    """A repo-relative path is rejected by the type, not just by the callers.
+
+    The three resolved routes cannot exercise this: each resolves before
+    constructing, so only a direct call can hand the type an unresolved path.
+    Without the check, `"data/SI/rubric.tsv"` would be accepted and later opened
+    relative to the working directory — a different file from the one a config
+    naming that same string means.
+    """
+    with pytest.raises(ValueError, match="rubric_prompt_beginning_file") as error:
+        RubricFiles(
+            rubric_file=str((cli_config.ROOT / "data/SI/rubric.tsv").resolve()),
+            rubric_prompt_beginning_file="data/SI/rubric_prompt_beginning.txt",
+            question_prompt_file=str(
+                (cli_config.ROOT / "data/SI/question_prompt.txt").resolve()
+            ),
+        )
+
+    # The value as written appears, so the message is actionable without
+    # reconstructing which of the three fields was passed through unresolved.
+    assert "data/SI/rubric_prompt_beginning.txt" in str(error.value)
+
+
+def test_missing_rubric_file_in_config_fails_before_dispatch(
+    tmp_path: Path, capsys: pytest.CaptureFixture
+) -> None:
+    """A typo'd rubric path fails at resolution, naming the field that named it.
+
+    Existence is `vera_cli.config.config_path`'s job rather than `RubricFiles`',
+    because only the boundary still knows which config field a bad path came
+    from. This is the first test of that failure branch.
+
+    Asserting the message, not just the exit code: every input error here exits
+    2, so a code-only assertion would keep passing if the existence check were
+    removed and something else rejected the config instead.
+    """
+    config_data = _judging_config(tmp_path)
+    config_data["judging"]["rubrics"][0]["rubric_file"] = "data/SI/rubirc.tsv"
+
+    with pytest.raises(SystemExit) as error:
+        vera.main(["judge", "--config", str(_write_config(tmp_path, config_data))])
+
+    assert error.value.code == 2
+    message = capsys.readouterr().err
+    assert "judging.rubrics.rubric_file" in message
+    assert "does not exist or is not a file" in message
+
+
+def test_missing_rubric_file_in_target_fails_before_dispatch(
+    tmp_path: Path, capsys: pytest.CaptureFixture
+) -> None:
+    """The target route's existence check is `load_target`'s, and it also holds.
+
+    Pins that the guarantee survives on both routes, so removing either check
+    cannot be masked by the other.
+    """
+    target_dir = tmp_path / "target"
+    target_dir.mkdir(parents=True)
+    for filename in ("rubric.tsv", "rubric_prompt.txt", "personas.tsv"):
+        (target_dir / filename).write_text("fixture", encoding="utf-8")
+    # Every field but `question_prompt_file` names a real file, so the manifest
+    # is well-formed and only the dangling entry can fail it.
+    manifest = target_dir / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "rubric_file": "rubric.tsv",
+                "rubric_prompt_beginning_file": "rubric_prompt.txt",
+                "question_prompt_file": "question_prompt.txt",
+                "personas": ["personas.tsv"],
+                "persona_context_template_file": "rubric_prompt.txt",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit) as error:
+        vera.main(
+            [
+                "judge",
+                "-j",
+                "gpt-4o",
+                "--conversations",
+                str(_generation_run(tmp_path)),
+                "--target",
+                str(manifest),
+            ]
+        )
+
+    assert error.value.code == 2
+    message = capsys.readouterr().err
+    assert "question_prompt_file" in message
+    assert "does not exist or is not a file" in message
+
+
 def test_resolved_run_omits_the_generation_section(tmp_path: Path) -> None:
     """A judging run must not emit `generation: null`.
 
