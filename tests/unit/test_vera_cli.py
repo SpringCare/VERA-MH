@@ -96,6 +96,72 @@ def test_model_shorthand_preserves_provider_colons() -> None:
     )
 
 
+def test_role_params_apply_to_every_model_of_that_role() -> None:
+    """`--user-params` covers all `-u` models; `--chatbot-params` only `-c`.
+
+    Provider parameters are supplied per *role* on the command line, matching
+    what the legacy scripts accepted, but the resolved form is per-model so a
+    printed config can then be edited one model at a time.
+    """
+    parser = vera.build_parser()
+    args = parser.parse_args(
+        [
+            "generate",
+            "-c",
+            "gpt-5",
+            "-u",
+            "claude-sonnet-5",
+            "gpt-5:2",
+            "--target",
+            "SI",
+            "--user-params",
+            "temperature=0.7,max_tokens=1000",
+            "--chatbot-params",
+            "temperature=0.1",
+        ]
+    )
+    generation = generate.resolve_configs(args)[0].generation
+    assert generation is not None
+
+    assert generation.chatbot.extra_params == {"temperature": 0.1}
+    assert [user.extra_params for user in generation.user] == [
+        {"temperature": 0.7, "max_tokens": 1000},
+        {"temperature": 0.7, "max_tokens": 1000},
+    ]
+    # Each model owns its own copy, so editing a printed config per model works.
+    assert generation.user[0].extra_params is not generation.user[1].extra_params
+    # Role params never leak across roles, and never overwrite the shorthand.
+    assert [(user.name, user.repeats) for user in generation.user] == [
+        ("claude-sonnet-5", 1),
+        ("gpt-5", 2),
+    ]
+
+
+def test_role_params_default_to_empty_when_flags_absent() -> None:
+    parser = vera.build_parser()
+    args = parser.parse_args(
+        ["generate", "-c", "gpt-5", "-u", "claude-sonnet-5", "--target", "SI"]
+    )
+    generation = generate.resolve_configs(args)[0].generation
+    assert generation is not None
+    assert generation.chatbot.extra_params == {}
+    assert generation.user[0].extra_params == {}
+
+
+def test_role_params_are_run_defining_so_config_rejects_them(tmp_path: Path) -> None:
+    """Confirms the params flags ride the config-or-flags rule automatically.
+
+    They are not listed in `INVOCATION_ONLY_FLAGS`, and the rule is derived by
+    subtraction, so no registration was needed for this to hold — this test is
+    what keeps that true if the classification ever changes.
+    """
+    config = _write_config(tmp_path, {"generation": _generation_config()})
+    with pytest.raises(SystemExit):
+        vera.main(
+            ["generate", "--config", str(config), "--user-params", "temperature=0.7"]
+        )
+
+
 def test_target_and_personas_resolve_same_generation_inputs() -> None:
     parser = vera.build_parser()
     target_args = parser.parse_args(
