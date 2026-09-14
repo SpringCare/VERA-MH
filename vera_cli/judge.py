@@ -208,6 +208,12 @@ def _from_config(
                 "judge does not support target 'all' yet: evaluations for "
                 "different rubrics would share one output folder"
             )
+        # The one-element list is AD-20's shape, not this branch's limitation:
+        # `rubrics` is list-shaped from day one while `JudgingConfig` accepts
+        # only length 1, which Phase 4 lifts. It is independent of the guard
+        # above — per AD-21 the `target all` lift produces one invocation *per
+        # target*, so this line stays a one-element list inside a comprehension
+        # rather than growing a second entry.
         rubrics = [_rubric_files(targets[0])]
     else:
         rubrics = rubrics_from_config(
