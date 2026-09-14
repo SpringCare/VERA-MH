@@ -35,12 +35,6 @@ _DEFAULT_ANTHROPIC_CACHE_CONTROL: Dict[str, Any] = {"type": "ephemeral"}
 #   `_unsupported_model_params`); Anthropic's guidance is to omit them and
 #   steer behavior via the system prompt instead.
 #   https://platform.claude.com/docs/en/about-claude/models/whats-new-sonnet-5
-# defaults_thinking_on: runs adaptive thinking by default when `thinking` is
-#   omitted (unlike other adaptive models, which default to no thinking); must
-#   be explicitly disabled so no thinking_effort means no thinking. Not used
-#   for fable-5: adaptive thinking is *always* on there and
-#   `thinking={"type": "disabled"}` is rejected outright, so there is nothing
-#   to force - omitting `thinking` already does the right thing.
 # sparse_max_tokens_profile: the installed langchain-anthropic has no
 #   model-profile entry for this model, so it silently falls back to
 #   max_tokens=4096 (vs 64k-128k auto-set for profiled models) - too tight for
@@ -49,10 +43,9 @@ _DEFAULT_ANTHROPIC_CACHE_CONTROL: Dict[str, Any] = {"type": "ephemeral"}
 _MODEL_QUIRKS: Dict[str, frozenset[str]] = {
     "opus-4-7": frozenset({"adaptive_thinking"}),
     "opus-4-8": frozenset({"adaptive_thinking"}),
+    "opus-5": frozenset({"adaptive_thinking", "sparse_max_tokens_profile"}),
     "fable-5": frozenset({"adaptive_thinking"}),
-    "sonnet-5": frozenset(
-        {"adaptive_thinking", "defaults_thinking_on", "sparse_max_tokens_profile"}
-    ),
+    "sonnet-5": frozenset({"adaptive_thinking", "sparse_max_tokens_profile"}),
 }
 
 # thinking_effort labels -> Anthropic's raw `budget_tokens`, for models that
@@ -125,8 +118,6 @@ class ClaudeLLM(JudgeLLM):
                 budget = _EFFORT_BUDGETS.get(effort_str, _EFFORT_BUDGETS["medium"])
                 kwargs["thinking"] = {"type": "enabled", "budget_tokens": budget}
                 kwargs.setdefault("max_tokens", budget + 1024)  # must exceed budget
-        elif "defaults_thinking_on" in quirks:
-            kwargs.setdefault("thinking", {"type": "disabled"})
 
         if "sparse_max_tokens_profile" in quirks:
             kwargs.setdefault("max_tokens", 8192)
@@ -187,6 +178,11 @@ class ClaudeLLM(JudgeLLM):
             "model": self.model_name,
         }
 
+        # Only set base_url when overridden, so ChatAnthropic keeps its own default
+        base_url = Config.get_base_url("anthropic")
+        if base_url:
+            llm_params["base_url"] = base_url
+
         # Override with any provided kwargs
         llm_params.update(kwargs)
 
@@ -205,6 +201,7 @@ class ClaudeLLM(JudgeLLM):
         print(f"  Model: {llm_params['model']}")
         print(f"  Temperature: {llm_params.get('temperature', 'default')}")
         print(f"  Max tokens: {llm_params.get('max_tokens', 'default')}")
+        print(f"  Thinking: {llm_params.get('thinking', 'omitted (model default)')}")
         if dropped_params:
             print(
                 f"  Dropped (unsupported for {self.model_name}): "
@@ -213,7 +210,7 @@ class ClaudeLLM(JudgeLLM):
         extra_params = {
             k: v
             for k, v in llm_params.items()
-            if k not in ["model", "anthropic_api_key"]
+            if k not in ["model", "anthropic_api_key", "thinking"]
         }
         if extra_params:
             print(f"  Extra parameters: {extra_params}")

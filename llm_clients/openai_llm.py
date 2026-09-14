@@ -113,6 +113,11 @@ class OpenAILLM(JudgeLLM):
             "model": self.model_name,
         }
 
+        # Only set base_url when overridden, so ChatOpenAI keeps its own default
+        base_url = Config.get_base_url("openai")
+        if base_url:
+            llm_params["base_url"] = base_url
+
         # Override with any provided kwargs
         llm_params.update(kwargs)
         filtered_params = self._filter_supported_params(self.model_name, llm_params)

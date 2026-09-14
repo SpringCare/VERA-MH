@@ -4,6 +4,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Breaking / migration
+
+- **`vera score` skips the risk-level breakdown when no personas file is given** — Legacy [`judge/score.py`](judge/score.py) defaults `--personas-tsv` to `data/SI/personas.tsv`. `vera score`'s `--personas` has no default: omit it and the risk-level breakdown is skipped with a message, so `scores_by_risk.json` is not written at all. The default was dropped because `load_personas_risk_levels` ([`judge/score_utils.py`](judge/score_utils.py)) joins on a column literally named `"Short Current Suicide Risk Level"`; against any other target's personas file every row silently became `"Unknown"` and the resulting `scores_by_risk.json` was empty — output that looked like a result but was not one. Pass `--personas data/SI/personas.tsv` for exactly the legacy behavior. Legacy [`judge/score.py`](judge/score.py) keeps its default until it is removed.
+- **`vera judge` requires an explicit output location for flat conversation folders** — Legacy [`judge.py`](judge.py) falls back to writing evaluations into `evaluations/` *relative to the working directory* when `--folder` points at a flat folder of `.txt` transcripts rather than a generation run. `vera judge` does not carry that fallback: it errors and asks for `--output`. The default for a generation run is unchanged and still lands beside the transcripts, at `<conversation run>/evaluations/`. Reading old flat-layout conversations continues to work — pass `--output` to say where the results go. The fallback was dropped because it detached evaluations from the conversations that produced them, and because the same relative path means different directories depending on the input form (CLI paths resolve against the working directory, config paths against the repository root). Legacy `judge.py` keeps the old behavior until it is removed.
+
+### Runtime, CLI, and pipeline
+
+- **`vera score`** — Added the scoring stage to the unified CLI: `uv run python vera.py score -r <results.csv>`. It accepts the same `--config`/`VERA_RUN_CONFIG`/`--print` input forms as `vera generate` and `vera judge`, and calls the same scoring code the legacy script does — `main()` in [`judge/score.py`](judge/score.py) is now a shim over a new `run_scoring` domain function that both entry points share.
+
 ## [v1.2.0](https://github.com/SpringCare/VERA-MH/releases/tag/v1.2.0) \- 2026-07-16
 
 ### Breaking / migration

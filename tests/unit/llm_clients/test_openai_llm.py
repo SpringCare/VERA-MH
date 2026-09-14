@@ -100,6 +100,27 @@ class TestOpenAILLM(TestJudgeLLMBase):
             assert call_kwargs["max_tokens"] == 500
             assert call_kwargs["top_p"] == 0.9
 
+    def test_init_passes_base_url_when_configured(self):
+        """A configured base URL reaches ChatOpenAI."""
+        with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+            with patch(
+                "llm_clients.openai_llm.Config.get_base_url",
+                return_value="https://gateway.example.com/v1",
+            ):
+                OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+
+            assert (
+                mock_chat.call_args[1]["base_url"] == "https://gateway.example.com/v1"
+            )
+
+    def test_init_omits_base_url_when_not_configured(self):
+        """Without an override, base_url is left out so ChatOpenAI defaults."""
+        with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+            with patch("llm_clients.openai_llm.Config.get_base_url", return_value=None):
+                OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+
+            assert "base_url" not in mock_chat.call_args[1]
+
     def test_init_strips_unsupported_sampling_params_for_gpt5(self, default_llm_kwargs):
         """gpt-5.x rejects temperature/top_p while reasoning; must not be sent."""
         with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:

@@ -159,6 +159,11 @@ class GeminiLLM(JudgeLLM):
             "model": self.model_name,
         }
 
+        # Only set base_url when overridden, so the Google client keeps its default
+        base_url = Config.get_base_url("google")
+        if base_url:
+            llm_params["base_url"] = base_url
+
         # Override with any provided kwargs
         llm_params.update(kwargs)
         filtered_params = self._filter_supported_params(self.model_name, llm_params)
