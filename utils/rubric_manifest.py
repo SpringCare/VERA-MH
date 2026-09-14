@@ -61,6 +61,37 @@ async def load_manifest(manifest_path: str) -> dict[str, Any]:
     return manifest
 
 
+def _resolve_manifest_file(
+    manifest_path: str, manifest: dict[str, Any], key: str
+) -> str:
+    """Resolve one manifest file field against the manifest's own folder.
+
+    Errors name the manifest, the field, and the value as written, because that
+    triple is the only thing that tells a reader where to go fix a typo. By the
+    time a path reaches `RubricConfig.from_paths` that provenance is gone -- it
+    holds three bare strings -- so this is the only layer that can say it.
+
+    Returns the path in the same relative-or-absolute shape the caller passed
+    in, deliberately: callers compare these against the paths they supplied.
+    """
+    value = manifest.get(key)
+    if not isinstance(value, str) or not value:
+        raise ValueError(
+            f"Rubric bundle manifest {manifest_path}: field {key!r} must be a "
+            f"non-empty path, got {value!r}"
+        )
+
+    resolved = Path(manifest_path).parent / value
+    # `is_file` rather than `exists` so an empty or directory-valued field is
+    # rejected here instead of surfacing later as a missing *folder*.
+    if not resolved.is_file():
+        raise FileNotFoundError(
+            f"Rubric bundle manifest {manifest_path}: field {key!r} names "
+            f"{value!r}, which is not a file beside the manifest: {resolved}"
+        )
+    return str(resolved)
+
+
 async def load_manifest_personas(manifest_path: str) -> list[str]:
     """Read a rubric bundle manifest's `personas` list.
 
@@ -97,8 +128,16 @@ async def load_manifest_rubric_paths(manifest_path: str) -> dict[str, str]:
          "question_prompt_file": "data/SI/question_prompt.txt"}
 
     The keys match `RubricConfig.from_paths`' parameters, so a caller holding a
-    manifest can go straight from one to the other. `load_manifest` has already
-    validated that all three keys are present.
+    manifest can go straight from one to the other. Iterating `REQUIRED_KEYS`
+    rather than repeating the three names keeps the returned dict from drifting
+    from the set `load_manifest` validates, since it is `**`-unpacked into that
+    signature.
+
+    Validation is split by what each layer can see: `load_manifest` rejects a
+    *missing* key, `_resolve_manifest_file` rejects an unusable *value* and
+    names the manifest field it came from, and `RubricConfig.from_paths` keeps
+    its own existence checks for callers that arrive already holding resolved
+    paths.
 
     This is the single place the manifest-relative rule is applied for rubric
     files, so `RubricConfig.load_bundle` and callers holding a bare manifest
@@ -107,13 +146,9 @@ async def load_manifest_rubric_paths(manifest_path: str) -> dict[str, str]:
     them itself -- do not need this at all.
     """
     manifest = await load_manifest(manifest_path)
-    manifest_dir = Path(manifest_path).parent
     return {
-        "rubric_file": str(manifest_dir / manifest["rubric_file"]),
-        "rubric_prompt_beginning_file": str(
-            manifest_dir / manifest["rubric_prompt_beginning_file"]
-        ),
-        "question_prompt_file": str(manifest_dir / manifest["question_prompt_file"]),
+        key: _resolve_manifest_file(manifest_path, manifest, key)
+        for key in REQUIRED_KEYS
     }
 
 
