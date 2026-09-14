@@ -212,12 +212,14 @@ vera pipeline --config run.json --sample 2
 list at run time. This avoids hand-maintaining a separate small-scale config
 just for smoke testing.
 
-**`--sample` and `--into` are the two behavior-altering members of the
-invocation-only category** (AD-17 in
-[ARCHITECTURE-SPINE.md](./ARCHITECTURE-SPINE.md)). They are not exceptions to
-the CLI/`--config` either-or rule: that rule governs information that defines
-*which run this is*, and neither flag supplies any. `--sample` caps how much of
-the already-resolved lists get used rather than replacing those lists.
+**The invocation-only category has one membership test** (AD-17 in
+[ARCHITECTURE-SPINE.md](./ARCHITECTURE-SPINE.md)): does the flag supply
+information that says *which run this is*? If not, it may accompany
+`--config`, because the CLI/`--config` either-or rule exists to protect run
+identity — not to keep flags inert. `--sample` and `--into` both pass that test
+while altering behavior, which is why the category is defined by the test
+rather than by a list of the flags that happen to be in it. `--sample` caps how
+much of the already-resolved lists get used rather than replacing those lists.
 `--into <run folder>` continues an existing run, skipping work already written,
 and supplies that folder as the destination instead of the run-defining
 `output` — so it is mutually exclusive with `--output` on the command line.
