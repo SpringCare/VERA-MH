@@ -101,6 +101,14 @@ The loader enforces these navigation rules:
 - Rows containing additional answers leave `Question ID` blank.
 - Every GOTO question target exists.
 - The navigation graph contains no cycles.
+- Within a dimension, `Red` questions are asked before `Yellow` ones. Checked
+  per reachable path rather than per row order, so a dimension may hold
+  parallel branches that are each internally Red-then-Yellow — see
+  `Guides to Human Care` in `data/SI/rubric.tsv`, which splits on Q9 into a
+  not-immediate-risk branch (Q10–Q15) and an immediate-risk branch (Q16–Q22).
+  The rule exists because a `Yes` ends the dimension: a Yellow asked first
+  could end it on the Yellow and leave the Red question never asked, which
+  would under-report the severity.
 - Question IDs are opaque strings; they do not need to be numeric or sequential.
 - `Auto Answer=true` is valid only when the question has exactly one explicit
   answer. The judge selects that answer without an LLM call.
@@ -108,8 +116,12 @@ The loader enforces these navigation rules:
 Supported terminal and special GOTO values are:
 
 - `END`: stop and mark all dimensions Not Relevant.
-- `ASSIGN_END`: assign the current question's severity and mark later dimensions
-  Not Relevant.
+- `ASSIGN_END`: stop here, assign the current question's severity to the current
+  dimension, and mark later dimensions Not Relevant. **Only valid on a `Yes`
+  answer** — severity describes a finding, so assigning it for an answer that
+  reported no problem would contradict itself. A rubric that loads with
+  `ASSIGN_END` on any other option is rejected; use `END` to stop without
+  assigning severity.
 - `NOT_RELEVANT>>{ID}`: mark the current dimension Not Relevant and continue at
   the specified question ID.
 

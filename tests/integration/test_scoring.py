@@ -460,12 +460,12 @@ class TestVERAMHPipeline:
         worst_band = aggregates["worst_band"]
         vera_score = aggregates["vera_score"]
 
-        assert (
-            0 <= best_practice_pct <= 100
-        ), f"Best practice % should be 0-100, got {best_practice_pct}"
-        assert (
-            0 <= damaging_pct <= 100
-        ), f"Damaging % should be 0-100, got {damaging_pct}"
+        assert 0 <= best_practice_pct <= 100, (
+            f"Best practice % should be 0-100, got {best_practice_pct}"
+        )
+        assert 0 <= damaging_pct <= 100, (
+            f"Damaging % should be 0-100, got {damaging_pct}"
+        )
         assert worst_band is not None, "Worst band should not be None"
         assert isinstance(vera_score, (int, float)), "VERA score should be numeric"
         assert vera_score >= 0, f"VERA score should be >= 0, got {vera_score}"
@@ -542,9 +542,9 @@ class TestVERAMHPipeline:
 
         # Verify that scoring produces valid output structure
         assert isinstance(score_result, dict), "Score result should be a dictionary"
-        assert (
-            "aggregates" in score_result
-        ), "Score result should contain 'aggregates' key"
+        assert "aggregates" in score_result, (
+            "Score result should contain 'aggregates' key"
+        )
 
         aggregates = score_result["aggregates"]
 
@@ -568,9 +568,9 @@ class TestVERAMHPipeline:
         with open(scores_file, "r") as f:
             file_content = json.load(f)
 
-        assert (
-            "aggregates" in file_content
-        ), "scores.json should contain 'aggregates' key"
+        assert "aggregates" in file_content, (
+            "scores.json should contain 'aggregates' key"
+        )
         for metric in required_metrics:
             assert metric in file_content["aggregates"], f"scores.json missing {metric}"
 
@@ -630,9 +630,9 @@ class TestVERAMHPipeline:
                 readable_file = file_path
                 break
 
-        assert (
-            readable_file is not None
-        ), "Should have at least one readable conversation file"
+        assert readable_file is not None, (
+            "Should have at least one readable conversation file"
+        )
 
         # Validate file content - fail explicitly for JSON issues
         if readable_file.suffix == ".json":
@@ -667,18 +667,18 @@ class TestVERAMHPipeline:
                 )
             elif isinstance(conv_data, list):
                 # If it's a list, it should not be empty and contain conversation data
-                assert (
-                    len(conv_data) > 0
-                ), f"JSON conversation file {readable_file.name} contains empty list"
+                assert len(conv_data) > 0, (
+                    f"JSON conversation file {readable_file.name} contains empty list"
+                )
 
         else:
             # Non-JSON files just need to be readable and non-empty
             try:
                 with open(readable_file, "r") as f:
                     content = f.read()
-                    assert (
-                        len(content) > 0
-                    ), f"Conversation file {readable_file.name} should not be empty"
+                    assert len(content) > 0, (
+                        f"Conversation file {readable_file.name} should not be empty"
+                    )
             except Exception as e:
                 raise AssertionError(
                     f"Failed to read conversation file {readable_file.name}: {e}"
@@ -788,9 +788,9 @@ class TestVERAMHPipeline:
                         ) > os.path.getctime(evaluations_dir):
                             evaluations_dir = subitem_path
 
-                assert (
-                    evaluations_dir is not None
-                ), f"run_pipeline should create j_* under {eval_parent}"
+                assert evaluations_dir is not None, (
+                    f"run_pipeline should create j_* under {eval_parent}"
+                )
 
                 # validate conversations folder contents
                 tx_dir = os.path.join(conversations_dir, "conversations")
@@ -809,16 +809,16 @@ class TestVERAMHPipeline:
                 # Validate evaluations folder contents
                 eval_files = os.listdir(evaluations_dir)
                 scores_dir = os.path.join(evaluations_dir, "scores")
-                assert (
-                    "results.csv" in eval_files
-                ), f"Evaluations should contain results.csv, found: {eval_files}"
-                assert os.path.isdir(
-                    scores_dir
-                ), f"Missing scores/ in {evaluations_dir}"
+                assert "results.csv" in eval_files, (
+                    f"Evaluations should contain results.csv, found: {eval_files}"
+                )
+                assert os.path.isdir(scores_dir), (
+                    f"Missing scores/ in {evaluations_dir}"
+                )
                 scores_sub = os.listdir(scores_dir)
-                assert (
-                    "scores.json" in scores_sub
-                ), f"scores/ should contain scores.json, found: {scores_sub}"
+                assert "scores.json" in scores_sub, (
+                    f"scores/ should contain scores.json, found: {scores_sub}"
+                )
 
                 # Validate scores.json structure
                 scores_path = os.path.join(evaluations_dir, "scores", "scores.json")
@@ -826,9 +826,9 @@ class TestVERAMHPipeline:
                     scores_data = json.load(f)
 
                 # Check that scores have expected structure
-                assert (
-                    "aggregates" in scores_data
-                ), "scores.json should contain 'aggregates' key"
+                assert "aggregates" in scores_data, (
+                    "scores.json should contain 'aggregates' key"
+                )
 
                 aggregates = scores_data["aggregates"]
                 required_keys = [
@@ -837,18 +837,18 @@ class TestVERAMHPipeline:
                     "worst_band",
                 ]
                 for key in required_keys:
-                    assert (
-                        key in aggregates
-                    ), f"scores.json aggregates should contain {key}"
+                    assert key in aggregates, (
+                        f"scores.json aggregates should contain {key}"
+                    )
 
                 # Validate score ranges
                 bp_pct = aggregates["overall_best_practice_pct"]
                 dmg_pct = aggregates["overall_damaging_pct"]
                 worst_band = aggregates["worst_band"]
 
-                assert (
-                    0 <= bp_pct <= 100
-                ), f"Best practice % should be 0-100, got {bp_pct}"
+                assert 0 <= bp_pct <= 100, (
+                    f"Best practice % should be 0-100, got {bp_pct}"
+                )
                 assert 0 <= dmg_pct <= 100, f"Damaging % should be 0-100, got {dmg_pct}"
                 assert worst_band is not None, "Worst band should not be None"
 
@@ -947,9 +947,9 @@ class TestVERAMHPipeline:
                         ):
                             gen_run = ip
                             break
-                assert (
-                    gen_run is not None
-                ), f"Expected p_* under {out_base}, found {os.listdir('.')}"
+                assert gen_run is not None, (
+                    f"Expected p_* under {out_base}, found {os.listdir('.')}"
+                )
                 eval_parent = os.path.join(gen_run, "evaluations")
                 evaluations_dir = None
                 for subitem in os.listdir(eval_parent):
@@ -1002,12 +1002,12 @@ class TestVERAMHPipeline:
             (individual_scores, "individual"),
             (pipeline_scores, "run_pipeline"),
         ]:
-            assert (
-                0 <= scores["overall_best_practice_pct"] <= 100
-            ), f"{method} BP% out of range"
-            assert (
-                0 <= scores["overall_damaging_pct"] <= 100
-            ), f"{method} damaging% out of range"
+            assert 0 <= scores["overall_best_practice_pct"] <= 100, (
+                f"{method} BP% out of range"
+            )
+            assert 0 <= scores["overall_damaging_pct"] <= 100, (
+                f"{method} damaging% out of range"
+            )
             assert scores["worst_band"] is not None, f"{method} worst_band is None"
 
         # Note: We don't assert exact equality because:

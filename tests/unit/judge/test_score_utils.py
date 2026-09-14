@@ -344,9 +344,9 @@ def test_extract_conversation_filename_structured_format_various_models():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert (
-            result == expected
-        ), f"Failed for {input_filename}: got {result}, expected {expected}"
+        assert result == expected, (
+            f"Failed for {input_filename}: got {result}, expected {expected}"
+        )
 
 
 @pytest.mark.unit
@@ -365,9 +365,9 @@ def test_extract_conversation_filename_fallback_regex_pattern():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert (
-            result == expected
-        ), f"Failed for {input_filename}: got {result}, expected {expected}"
+        assert result == expected, (
+            f"Failed for {input_filename}: got {result}, expected {expected}"
+        )
 
 
 @pytest.mark.unit
@@ -385,9 +385,9 @@ def test_extract_conversation_filename_alternative_regex_pattern():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert (
-            result == expected
-        ), f"Failed for {input_filename}: got {result}, expected {expected}"
+        assert result == expected, (
+            f"Failed for {input_filename}: got {result}, expected {expected}"
+        )
 
 
 @pytest.mark.unit
@@ -411,9 +411,9 @@ def test_extract_conversation_filename_edge_cases():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert (
-            result == expected
-        ), f"Failed for {input_filename}: got {result}, expected {expected}"
+        assert result == expected, (
+            f"Failed for {input_filename}: got {result}, expected {expected}"
+        )
 
 
 @pytest.mark.unit
@@ -431,9 +431,9 @@ def test_extract_conversation_filename_no_tsv_extension():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert (
-            result == expected
-        ), f"Failed for {input_filename}: got {result}, expected {expected}"
+        assert result == expected, (
+            f"Failed for {input_filename}: got {result}, expected {expected}"
+        )
 
 
 @pytest.mark.unit
@@ -454,9 +454,9 @@ def test_extract_conversation_filename_complex_model_names():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert (
-            result == expected
-        ), f"Failed for {input_filename}: got {result}, expected {expected}"
+        assert result == expected, (
+            f"Failed for {input_filename}: got {result}, expected {expected}"
+        )
 
 
 @pytest.mark.unit
@@ -476,9 +476,9 @@ def test_extract_conversation_filename_regex_boundaries():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert (
-            result == expected
-        ), f"Failed for {input_filename}: got {result}, expected {expected}"
+        assert result == expected, (
+            f"Failed for {input_filename}: got {result}, expected {expected}"
+        )
 
 
 # ============================================================================
