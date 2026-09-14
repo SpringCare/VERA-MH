@@ -53,6 +53,32 @@ class TestRubricValidation:
                 "same\tTwo\t\t\tSecond?\t\tDone\tEND\t\n",
             )
 
+    async def test_assign_end_on_non_yes_answer_is_rejected(self, tmp_path):
+        """ASSIGN_END is only valid on a "Yes" option.
+
+        ASSIGN_END assigns the question's Severity to the current dimension, and
+        severity only means anything when the finding is present. On any other
+        option it would ask the scorer to penalize a dimension for an answer
+        that reported no problem, so the rubric is rejected at load rather than
+        the contradiction being reinterpreted at scoring time.
+        """
+        with pytest.raises(ValueError, match=r"routes answer 'No' to ASSIGN_END"):
+            await load_inline_rubric(
+                tmp_path,
+                "1\tClarity\tYellow\t\tAmbiguous?\t\tYes\tASSIGN_END\t\n"
+                "\t\t\t\t\t\tNo\tASSIGN_END\t\n",
+            )
+
+    async def test_assign_end_on_yes_answer_is_accepted(self, tmp_path):
+        """The valid shape still loads, so the check is not over-broad."""
+        config = await load_inline_rubric(
+            tmp_path,
+            "1\tClarity\tYellow\t\tAmbiguous?\t\tYes\tASSIGN_END\t\n"
+            "\t\t\t\t\t\tNo\tEND\t\n",
+        )
+
+        assert config.question_order == ["1"]
+
     async def test_self_loop(self, tmp_path):
         with pytest.raises(ValueError, match=r"cycle: self-loop -> self-loop"):
             await load_inline_rubric(

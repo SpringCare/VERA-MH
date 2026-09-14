@@ -108,12 +108,12 @@ The loader enforces these navigation rules:
 Supported terminal and special GOTO values are:
 
 - `END`: stop and mark all dimensions Not Relevant.
-- `ASSIGN_END`: stop here, score the current dimension, and mark later
-  dimensions Not Relevant. The current question's severity is assigned only when
-  the answer is `Yes`. `ASSIGN_END` is not restricted to `Yes` — a rubric may put
-  it on any answer option, including `No`, to terminate the flow there; the
-  dimension is still the one being scored, but nothing is contributed, so it
-  lands on `Best Practice` rather than being penalized.
+- `ASSIGN_END`: stop here, assign the current question's severity to the current
+  dimension, and mark later dimensions Not Relevant. **Only valid on a `Yes`
+  answer** — severity describes a finding, so assigning it for an answer that
+  reported no problem would contradict itself. A rubric that loads with
+  `ASSIGN_END` on any other option is rejected; use `END` to stop without
+  assigning severity.
 - `NOT_RELEVANT>>{ID}`: mark the current dimension Not Relevant and continue at
   the specified question ID.
 

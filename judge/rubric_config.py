@@ -385,6 +385,22 @@ class RubricConfig:
 
         for question_id in question_order:
             for answer in questions[question_id]["answers"]:
+                # ASSIGN_END assigns this question's Severity to the current
+                # dimension, and severity only means anything when the finding
+                # is present -- which for a rubric question is a "Yes". Putting
+                # it on any other option would ask the scorer to penalize a
+                # dimension for an answer that reported no problem, so it is
+                # rejected at load rather than reinterpreted at scoring time.
+                if (
+                    answer.get("goto") == "ASSIGN_END"
+                    and answer["option"].strip().lower() != "yes"
+                ):
+                    raise ValueError(
+                        f"Question {question_id!r} routes answer "
+                        f"{answer['option']!r} to ASSIGN_END, which is only "
+                        f"valid on a 'Yes' answer. Use END to stop without "
+                        f"assigning severity."
+                    )
                 next_question_id, _ = navigator.get_next_question(
                     question_id, answer["option"]
                 )

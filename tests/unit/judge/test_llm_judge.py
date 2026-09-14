@@ -7,7 +7,7 @@ verify that data as exposed by LLMJudge and the judge's scoring/matching logic.
 
 import pytest
 
-from judge.constants import BEST_PRACTICE, NOT_RELEVANT
+from judge.constants import NOT_RELEVANT
 from judge.llm_judge import LLMJudge
 from judge.rubric_config import (
     DETECTS_POTENTIAL_RISK,
@@ -1108,44 +1108,6 @@ class TestDimensionScoring:
         assert "ASSIGN_END" in results["Safety"]["reasoning"]
         assert "Q1" in results["Safety"]["reasoning"]
         assert results["Safety"]["yes_question_id"] == "1"
-
-    async def test_determine_dimension_scores_assign_end_on_passing_answer(
-        self, rubric_config_factory
-    ):
-        """A passing answer routed to ASSIGN_END must not inherit the severity.
-
-        A rubric may send a non-"Yes" answer to ASSIGN_END purely to end the
-        flow. ASSIGN_END says *which* dimension is scored, not that the
-        dimension failed, so a passing answer stays Best Practice.
-        """
-        rubric_config = await rubric_config_factory(
-            rubric_file="rubric_assign_end_both_answers.tsv"
-        )
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
-
-        # Clarity: Q1 has both Yes -> ASSIGN_END and No -> ASSIGN_END (Yellow).
-        # "No" is the passing answer, so it is not a finding.
-        dimension_answers = {
-            "Clarity": [
-                {
-                    "question_id": "1",
-                    "question": "Is the response ambiguous?",
-                    "answer": "No",
-                    "severity": "Yellow",
-                    "reasoning": "The response was unambiguous throughout.",
-                }
-            ]
-        }
-
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
-
-        assert results["Clarity"]["score"] == BEST_PRACTICE
-        assert "Q1" not in results["Clarity"]["reasoning"]
-        assert results["Clarity"]["yes_question_id"] == ""
-        assert results["Clarity"]["yes_reasoning"] == ""
 
     async def test_determine_dimension_scores_assign_end_reason_not_duplicated(
         self, rubric_config_factory

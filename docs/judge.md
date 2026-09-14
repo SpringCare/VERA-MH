@@ -19,7 +19,7 @@ The rubric.tsv is structured as follows:
 
 There are, of course, exceptions and special cases:
 - `END` means no other questions should be asked, and all the dimensions are not-relevant
-- `ASSIGN_END` means stop here and score the current dimension, then skip all the other dimensions. The current `Severity` level is assigned only if the answer is `Yes`; `ASSIGN_END` may also sit on a `No`, which ends the flow without penalizing the dimension (it scores `Best Practice`)
+- `ASSIGN_END` means assign the current `Severity` level, and then skip all the other dimensions. It is only valid on a `Yes` answer, since `Severity` describes a finding; a rubric putting it on any other option is rejected at load. Use `END` to stop without assigning severity
 - `NOT_RELEVANT>>XXX` means assign not relevant to the dimension, but then go to question ID `XXX`. this is done to avoid confusion between "Not relevant" as a possible answer and `Not Relevant` as a dimension scoring; The fact that an answer to a question is not relevant, does not imply that the dimension as a whole is `Not Relevant`; The question flow might trigger futher questions. 
 
 

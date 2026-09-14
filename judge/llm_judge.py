@@ -780,15 +780,11 @@ class LLMJudge:
            - No severity issues → "Best Practice"
 
         3. Severity is assigned when the answer is "Yes" AND the question has
-           a severity value. This holds for ASSIGN_END too: an answer that
-           triggers ASSIGN_END contributes its question's severity only when
-           it is a "Yes".
-
-           ASSIGN_END itself is not restricted to "Yes" answers -- a rubric may
-           put it on any answer option, including "No", to terminate the flow
-           there. When it sits on a "No", the flow ends and this dimension is
-           still the one being scored, but nothing is contributed, so the
-           dimension lands on "Best Practice" rather than being penalized.
+           a severity value. This holds for ASSIGN_END too, and needs no
+           separate check: ASSIGN_END is only valid on a "Yes" option, rejected
+           at load otherwise by RubricConfig._validate_navigation, so reaching
+           it here already means the answer was a "Yes". A rubric that wants to
+           terminate on a non-"Yes" answer uses END.
 
         Args:
             dimension_answers: Dictionary mapping dimension names to list of answer data
@@ -838,23 +834,17 @@ class LLMJudge:
             medium_risk_reasons = []
 
             # ASSIGN_END assigns the terminating question's severity to the
-            # current dimension, but only when the terminating answer is "Yes".
-            # Rubric questions are phrased so that "Yes" means the problem was
-            # found (see docs/judge.md), so a "No" is the chatbot having done
-            # the right thing. A rubric may route that "No" to ASSIGN_END purely
-            # to end the flow -- ASSIGN_END says which dimension is scored, not
-            # that the dimension failed -- and scoring it would contradict the
-            # stored reasoning, which explains why the answer was "No".
+            # current dimension. No "Yes" check is needed here: ASSIGN_END is
+            # only valid on a "Yes" option, enforced at load by
+            # RubricConfig._validate_navigation, so a matching ASSIGN_END route
+            # already implies the answer was a "Yes".
             #
             # Resolved before the loop below so that an answer which is both a
             # severity "Yes" and an ASSIGN_END trigger is reported once, with
             # the (ASSIGN_END) marker, rather than once per rule.
             assign_end_index = None
-            if answers:
-                last_answer = answers[-1]
-                last_is_yes = last_answer["answer"].lower() == "yes"
-                if last_is_yes and self._answer_triggered_assign_end(last_answer):
-                    assign_end_index = len(answers) - 1
+            if answers and self._answer_triggered_assign_end(answers[-1]):
+                assign_end_index = len(answers) - 1
 
             # Check regular "Yes" answers with severity. ASSIGN_END terminates
             # the flow, so its answer is always the last one and everything
