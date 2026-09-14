@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Runtime, CLI, and pipeline
 
+- **`vera pipeline`** — Added the chained stage to the unified CLI: `uv run python vera.py pipeline -c <chatbot> -u <model>:1 -j <model>:1 --target <name>` runs generation, judging, and scoring in one invocation, passing each stage's resolved output paths to the next instead of requiring the caller to copy them between commands. The CLI shorthand covers only the three model roles and the target; stage-specific knobs such as `--output` and `--max-concurrent` mean different things to generation and judging, so they come from `--config` rather than from a prefixed second spelling. A pipeline config omits `judging.conversations` — generation supplies it — and stating it is an error. `generate.run_for_user_models` now returns the run folders it wrote, which `vera generate` ignores and `vera pipeline` needs.
 - **`vera score`** — Added the scoring stage to the unified CLI: `uv run python vera.py score -r <results.csv>`. It accepts the same `--config`/`VERA_RUN_CONFIG`/`--print` input forms as `vera generate` and `vera judge`, and calls the same scoring code the legacy script does — `main()` in [`judge/score.py`](judge/score.py) is now a shim over a new `run_scoring` domain function that both entry points share.
 
 ## [v1.2.0](https://github.com/SpringCare/VERA-MH/releases/tag/v1.2.0) \- 2026-07-16
