@@ -108,25 +108,39 @@ To run this profile in one scripted flow after [Environment setup](#environment-
 For the [recommended settings](#recommended-settings) (dual user agents, 30 turns, GPT 5.4 judge, pooled headline score), run from the repository root after [Environment setup](#environment-setup) (steps **0–2**: `uv sync`, activate `.venv`, configure `.env`) and, if you use a custom provider, the steps in [Connecting your own LLM, Agent, or API](#connecting-your-own-llm-or-api):
 
 ```bash
-./scripts/run_recommended_vera_pipeline.sh <provider-agent-model>
+uv run python vera.py pipeline \
+  -c <model-under-test> \
+  -u gpt-5.2:1 claude-opus-4-5-20251101:1 \
+  -j gpt-5.4:1 --judge-params reasoning_effort=low \
+  --target SI
 ```
 
-Use the same **provider** model id you would pass to `run_pipeline.py` as `--provider-agent` (the system under evaluation). The script:
+`-c` is the system under evaluation. One invocation runs the whole profile:
 
-- Runs `run_pipeline.py` **twice**: once with **GPT 5.2** as the user agent (`gpt-5.2`) and once with **Claude Opus 4.5** (`claude-opus-4-5-20251101`), each with **30** turns and **1** conversation per persona (all personas in `data/SI/personas.tsv` unless you cap the count).
-- Judges each batch with **GPT 5.4** (`gpt-5.4`).
-- Merges both evaluation runs via `scripts/pool_vera_scores.py` into a **single pooled** folder `j_<judge>__p_.../` (e.g. `j_gpt-5.4x1__p_gpt_5_2+claude_opus_4_5__a_.../`, next to your `p_*` runs by default) containing merged `results.csv`, `pool_metadata.json`, `scores/scores.json`, and the usual score / risk visualizations. Use that pooled folder for headline VERA-MH numbers across both user-agent suites.
+- **Generates** against each user-side model in turn — **GPT 5.2** (`gpt-5.2`) and **Claude Opus 4.5** (`claude-opus-4-5-20251101`) — at **30** turns (the default) and **1** conversation per persona, over every persona in the `SI` target unless you cap it with `--sample`.
+- **Judges** each batch with **GPT 5.4** (`gpt-5.4`).
+- **Scores** each batch, then **pools** both evaluation runs into a **single merged** folder `j_<judge>__p_.../` (e.g. `j_gpt-5.4x1__p_gpt_5_2+claude_opus_4_5__a_.../`, next to your run folders) containing merged `results.csv`, `pool_metadata.json`, `scores/scores.json`, and the usual score / risk visualizations. Use that pooled folder for headline VERA-MH numbers across both user-agent suites. Pooling happens automatically whenever a run uses more than one `-u` model.
 
-By default, generation folders go under `output/`; the pooled merged `j_*` folder is created in that same parent unless you override it. See environment variables in `scripts/run_recommended_vera_pipeline.sh`, for example:
+To run the profile exactly as published — including the concurrency caps and the risk-level breakdown — use the checked-in config instead, filling in the model under test:
 
-| Variable | Purpose |
+```bash
+jq '.generation.chatbot.name = "<model-under-test>"' configs/recommended.json \
+  | uv run python vera.py pipeline --config -
+```
+
+Run-defining flags and `--config` are strictly either/or, which is why the model is injected into the document rather than passed as `-c` alongside it. `--sample N` may accompany either form for a smoke test, since it is invocation-only.
+
+By default, generation folders go under `output/`, and the pooled merged `j_*` folder is created in that same parent. Every knob the retired `scripts/run_recommended_vera_pipeline.sh` exposed as an environment variable is now a field in [`configs/recommended.json`](configs/recommended.json):
+
+| Retired variable | Config field |
 |----------|---------|
-| `VERA_OUTPUT_PARENT` | Parent for new `p_*` runs (default: `output`) |
-| `VERA_MAX_CONCURRENT` | Passed through as `--max-concurrent` |
-| `VERA_MAX_PERSONAS` | Passed through as `--max-personas` (smoke tests) |
-| `VERA_POOL_OUTPUT` | Parent directory for the new merged `j_<judge>__p_...` folder (default: same as `VERA_OUTPUT_PARENT`) |
-| `VERA_POOL_SKIP_RISK` | If set, skip pooled risk-level analysis |
-| `VERA_USER_A`, `VERA_USER_B`, `VERA_JUDGE` | Override default model ids (first/second user-agent suite and judge) |
+| `VERA_OUTPUT_PARENT` | `generation.output` — also the parent the pooled `j_<judge>__p_...` folder is created in |
+| `VERA_MAX_CONCURRENT` | `generation.max_concurrent` and `judging.max_concurrent`, now settable per stage |
+| `VERA_MAX_PERSONAS` | `--sample N` on the command line (invocation-only, so it may accompany `--config`) |
+| `VERA_POOL_OUTPUT` | no longer separate — pooled output lands beside the runs, under `generation.output` |
+| `VERA_POOL_SKIP_RISK` | `scoring.skip_risk_analysis`, which applies to the per-run scores and the pooled one alike |
+| `VERA_USER_A`, `VERA_USER_B` | entries in `generation.user`, which is a list and is no longer limited to two |
+| `VERA_JUDGE`, `VERA_JUDGE_EXTRA_PARAMS` | `judging.models` |
 
 Arguments after `<provider-agent-model>` are forwarded to `run_pipeline.py` (for example `--max-concurrent 10`).
 
