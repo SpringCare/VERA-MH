@@ -332,7 +332,7 @@ def pool_evaluation_directories(
         output_parent: Directory under which the new merged ``j_*`` folder is
             created (e.g. repo ``output/``).
         personas_tsv: Personas file for risk-level analysis; defaults to
-            ``data/personas.tsv`` under the repo when None.
+            ``data/SI/personas.tsv`` under the repo when None.
         skip_risk_analysis: When True, skip ``score_results_by_risk`` and risk charts.
         judge_slug: Optional override for the judge name (e.g. ``gpt-4ox1+sonnet45x1``).
 
@@ -420,7 +420,7 @@ def pool_evaluation_directories(
     except Exception as e:
         print(f"Warning: could not create standard visualizations: {e}")
 
-    personas_tsv = personas_tsv or (REPO_ROOT / "data" / "personas.tsv")
+    personas_tsv = personas_tsv or (REPO_ROOT / "data" / "SI" / "personas.tsv")
     if not skip_risk_analysis and personas_tsv.is_file():
         try:
             risk_results = score_results_by_risk(
@@ -547,8 +547,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--personas-tsv",
-        default=str(REPO_ROOT / "data" / "personas.tsv"),
-        help="Personas file for risk-level scoring (default: data/personas.tsv)",
+        default=str(REPO_ROOT / "data" / "SI" / "personas.tsv"),
+        help="Personas file for risk-level scoring (default: data/SI/personas.tsv)",
     )
     parser.add_argument(
         "--skip-risk-analysis",

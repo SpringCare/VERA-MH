@@ -172,18 +172,18 @@ class TestJudgeExtraParams:
             assert isinstance(result, dict)
 
             # Verify create_llm was called with extra params
-            assert (
-                "temperature" in captured_kwargs
-            ), f"Expected temperature in {captured_kwargs}"
-            assert (
-                captured_kwargs["temperature"] == 0.7
-            ), f"Expected temperature=0.7, got {captured_kwargs.get('temperature')}"
-            assert (
-                "max_tokens" in captured_kwargs
-            ), f"Expected max_tokens in {captured_kwargs}"
-            assert (
-                captured_kwargs["max_tokens"] == 1000
-            ), f"Expected max_tokens=1000, got {captured_kwargs.get('max_tokens')}"
+            assert "temperature" in captured_kwargs, (
+                f"Expected temperature in {captured_kwargs}"
+            )
+            assert captured_kwargs["temperature"] == 0.7, (
+                f"Expected temperature=0.7, got {captured_kwargs.get('temperature')}"
+            )
+            assert "max_tokens" in captured_kwargs, (
+                f"Expected max_tokens in {captured_kwargs}"
+            )
+            assert captured_kwargs["max_tokens"] == 1000, (
+                f"Expected max_tokens=1000, got {captured_kwargs.get('max_tokens')}"
+            )
             assert captured_kwargs["model_name"] == "claude-sonnet-4-5"
 
     async def test_llm_judge_extra_params_with_none(self, rubric_config_factory):
