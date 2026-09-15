@@ -670,16 +670,6 @@ class ConversationRunner:
             persona_context_template_path=self.persona_context_template_path,
             max_personas=self.max_personas,
         )
-        print("loaded personas:", personas)
-        print("persona_names:", persona_names)
-        print("persona_prompt_path:", self.persona_prompt_path)
-        print("persona_context_template_path:", self.persona_context_template_path)
-        print("max_personas:", self.max_personas)
-        print("resume:", self.resume)
-        print("runs_per_prompt:", self.runs_per_prompt)
-        print("folder_name:", self.folder_name)
-        print("max_concurrent:", self.max_concurrent)
-        print("max_total_words:", self.max_total_words)
         persona_safe_names = {
             persona_token_for_transcript_stem(p["Name"]) for p in personas
         }
