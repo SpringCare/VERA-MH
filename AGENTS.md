@@ -115,7 +115,9 @@ uv run python generate.py -u claude-sonnet-4-5-20250929 -p gpt-4o -t 6 -r 1
 uv run python judge.py -f output/{YOUR_P_RUN}/ -j claude-sonnet-4-5-20250929
 
 # Recommended published-score profile (scripted; legacy)
-./scripts/run_recommended_vera_pipeline.sh <provider-agent-model>
+uv run python vera.py pipeline -c <model-under-test> \
+  -u gpt-5.2:1 claude-opus-4-5-20251101:1 \
+  -j gpt-5.4:1 --judge-params reasoning_effort=low --target SI
 
 # Development
 uv sync

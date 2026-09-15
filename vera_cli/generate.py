@@ -337,7 +337,7 @@ def _run_config(
     )
 
 
-async def _execute(run_configs: list[RunConfig]) -> None:
+async def _execute(run_configs: list[RunConfig]) -> list[str]:
     """Hand each resolved run to the generation domain, one target at a time.
 
     Expanding a run's user models into individual generations belongs to the
@@ -346,16 +346,24 @@ async def _execute(run_configs: list[RunConfig]) -> None:
     docstring. Targets stay sequential here: `--target all` runs share chatbot,
     user models, turns, and repeats, and run folder names carry only
     second-granularity timestamps, so concurrent starts would collide.
+
+    Returns every run folder written, across all targets and user models.
+    `run` discards it; `vera pipeline` reuses this function and needs to know
+    where the transcripts landed in order to judge them.
     """
+    run_folders: list[str] = []
     for run_config in run_configs:
         generation = run_config.generation
         if generation is None:  # pragma: no cover - resolve_configs always sets it
             raise ConfigError("generate produced a run with no generation section")
-        await run_for_user_models(
-            generation,
-            max_personas=run_config.invocation.sample,
-            into=run_config.invocation.into,
+        run_folders.extend(
+            await run_for_user_models(
+                generation,
+                max_personas=run_config.invocation.sample,
+                into=run_config.invocation.into,
+            )
         )
+    return run_folders
 
 
 def register(subparsers: argparse._SubParsersAction) -> None:

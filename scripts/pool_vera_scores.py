@@ -5,8 +5,9 @@ one ``results.csv``, then recompute VERA-MH scores and visualizations.
 
 Inputs may differ by user agent, judge model, or both—the merged dataframe is a
 straight concatenation of every source's rows. Common uses include combining the
-two user-agent suites from ``run_recommended_vera_pipeline.sh`` (each judged with
-``gpt-5.4`` by default) or merging separate judge runs (e.g. GPT-4o and Sonnet)
+two user-agent suites of the recommended profile (each judged with ``gpt-5.4``
+by default), which ``vera pipeline`` now does for you whenever a run uses more
+than one ``-u`` model or merging separate judge runs (e.g. GPT-4o and Sonnet)
 over the same conversations.
 
 Typical layout for each input path:

@@ -61,16 +61,16 @@ def assert_metadata_structure(
     assert "timestamp" in metadata, "Metadata missing 'timestamp' field"
 
     # Check provider matches
-    assert (
-        metadata["provider"] == expected_provider
-    ), f"Expected provider '{expected_provider}', got '{metadata['provider']}'"
+    assert metadata["provider"] == expected_provider, (
+        f"Expected provider '{expected_provider}', got '{metadata['provider']}'"
+    )
 
     # Check role if provided
     if expected_role is not None:
         assert "role" in metadata, "Metadata missing 'role' field"
-        assert (
-            metadata["role"] == expected_role.value
-        ), f"Expected role '{expected_role.value}', got '{metadata['role']}'"
+        assert metadata["role"] == expected_role.value, (
+            f"Expected role '{expected_role.value}', got '{metadata['role']}'"
+        )
 
     # Check response_id if required
     if require_response_id:
@@ -127,18 +127,18 @@ def assert_metadata_copy_behavior(llm: LLMInterface) -> None:
 
     # Modifying returned copy shouldn't affect internal state
     metadata1["modified"] = True
-    assert (
-        "modified" not in llm.last_response_metadata
-    ), "Modification leaked to internal state"
+    assert "modified" not in llm.last_response_metadata, (
+        "Modification leaked to internal state"
+    )
 
     # Nested mutation must not affect internal state (deep copy)
     llm.last_response_metadata = {"usage": {"input_tokens": 10, "output_tokens": 5}}
     meta = llm.last_response_metadata
     meta["usage"]["input_tokens"] = 999
     fresh = llm.last_response_metadata
-    assert (
-        fresh["usage"]["input_tokens"] == 10
-    ), "Nested mutation leaked to internal state (expected deep copy)"
+    assert fresh["usage"]["input_tokens"] == 10, (
+        "Nested mutation leaked to internal state (expected deep copy)"
+    )
 
 
 def assert_response_timing(metadata: Dict[str, Any]) -> None:
@@ -152,12 +152,12 @@ def assert_response_timing(metadata: Dict[str, Any]) -> None:
     """
     assert "response_time_seconds" in metadata, "Missing response_time_seconds"
     response_time = metadata["response_time_seconds"]
-    assert isinstance(
-        response_time, (int, float)
-    ), f"response_time_seconds should be numeric, got {type(response_time)}"
-    assert (
-        response_time >= 0
-    ), f"response_time_seconds should be >= 0, got {response_time}"
+    assert isinstance(response_time, (int, float)), (
+        f"response_time_seconds should be numeric, got {type(response_time)}"
+    )
+    assert response_time >= 0, (
+        f"response_time_seconds should be >= 0, got {response_time}"
+    )
 
 
 def assert_error_metadata(
@@ -206,12 +206,12 @@ def assert_error_response(response: str, expected_error_substring: str) -> None:
     Raises:
         AssertionError: If response doesn't match error pattern
     """
-    assert (
-        "Error generating response" in response
-    ), "Response should start with error prefix"
-    assert (
-        expected_error_substring in response
-    ), f"Expected error to contain '{expected_error_substring}', got: {response}"
+    assert "Error generating response" in response, (
+        "Response should start with error prefix"
+    )
+    assert expected_error_substring in response, (
+        f"Expected error to contain '{expected_error_substring}', got: {response}"
+    )
 
 
 def expected_retry_call_count(max_retries: int = 3) -> int:
@@ -227,9 +227,9 @@ def assert_llm_generation_failed(
     expected_calls: int | None = None,
 ) -> None:
     """Assert LLMGenerationFailed wraps the underlying error; optional ainvoke count."""
-    assert isinstance(
-        exc, LLMGenerationFailed
-    ), f"Expected LLMGenerationFailed, got {type(exc)}"
+    assert isinstance(exc, LLMGenerationFailed), (
+        f"Expected LLMGenerationFailed, got {type(exc)}"
+    )
     assert expected_substring in str(exc), str(exc)
     assert exc.__cause__ is not None
     assert expected_substring in str(exc.__cause__), str(exc.__cause__)
@@ -239,9 +239,9 @@ def assert_llm_generation_failed(
             if expected_calls is not None
             else expected_retry_call_count()
         )
-        assert (
-            mock_ainvoke.call_count == want
-        ), f"Expected {want} ainvoke calls, got {mock_ainvoke.call_count}"
+        assert mock_ainvoke.call_count == want, (
+            f"Expected {want} ainvoke calls, got {mock_ainvoke.call_count}"
+        )
 
 
 # ============================================================================
@@ -372,9 +372,9 @@ def verify_no_system_message_in_call(mock_llm) -> None:
     # Check that first message is NOT a SystemMessage
     if len(call_args) > 0:
         first_msg = call_args[0]
-        assert not isinstance(
-            first_msg, SystemMessage
-        ), "First message should not be SystemMessage when no system prompt"
+        assert not isinstance(first_msg, SystemMessage), (
+            "First message should not be SystemMessage when no system prompt"
+        )
 
 
 def verify_message_types_for_persona(mock_llm, expected_message_count: int) -> None:
@@ -396,24 +396,24 @@ def verify_message_types_for_persona(mock_llm, expected_message_count: int) -> N
     assert mock_llm.ainvoke.called, "ainvoke should have been called"
     messages = mock_llm.ainvoke.call_args[0][0]
 
-    assert (
-        len(messages) == expected_message_count
-    ), f"Expected {expected_message_count} messages, got {len(messages)}"
+    assert len(messages) == expected_message_count, (
+        f"Expected {expected_message_count} messages, got {len(messages)}"
+    )
 
     # First message should be SystemMessage
-    assert isinstance(
-        messages[0], SystemMessage
-    ), "First message should be SystemMessage"
+    assert isinstance(messages[0], SystemMessage), (
+        "First message should be SystemMessage"
+    )
 
     # Verify subsequent messages are correctly flipped
     # (This assumes a 3-turn conversation: persona, provider, persona)
     if len(messages) >= 4:
-        assert isinstance(
-            messages[1], AIMessage
-        ), "Turn 1 (persona) should be AIMessage for persona role"
-        assert isinstance(
-            messages[2], HumanMessage
-        ), "Turn 2 (provider) should be HumanMessage for persona role"
-        assert isinstance(
-            messages[3], AIMessage
-        ), "Turn 3 (persona) should be AIMessage for persona role"
+        assert isinstance(messages[1], AIMessage), (
+            "Turn 1 (persona) should be AIMessage for persona role"
+        )
+        assert isinstance(messages[2], HumanMessage), (
+            "Turn 2 (provider) should be HumanMessage for persona role"
+        )
+        assert isinstance(messages[3], AIMessage), (
+            "Turn 3 (persona) should be AIMessage for persona role"
+        )

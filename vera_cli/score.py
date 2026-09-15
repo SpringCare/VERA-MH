@@ -127,10 +127,11 @@ def _from_cli(
     return [
         _run_config(
             invocation=invocation,
-            # A CLI path resolves against the working directory, like every
-            # other command-line tool; a config-stated one against the
-            # repository root. Both are verified here so a typo fails before
-            # any file is written.
+            # Resolved against the working directory, like every other
+            # command-line tool, and verified so a typo fails before any file
+            # is written. The config form of this same field resolves against
+            # the repository root instead -- see `_from_config`, which is the
+            # only place a config is read.
             results=existing_file(str(Path(results).resolve()), field="--results"),
             output=str(Path(output).resolve()) if output is not None else None,
             personas=(
@@ -258,7 +259,11 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         "--results",
         metavar="<results.csv>",
         default=argparse.SUPPRESS,
-        help="Results CSV written by judging",
+        help=(
+            "Per-question evaluation CSV written by a judge run, found at "
+            "<evaluation run>/results.csv. Scoring aggregates it; it is the "
+            "one required input"
+        ),
     )
     parser.add_argument(
         "-o",
