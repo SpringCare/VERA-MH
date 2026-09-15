@@ -239,14 +239,16 @@ def test_shipped_recommended_config_resolves() -> None:
     assert generation.turns == 30
 
 
-def test_pooling_runs_only_for_more_than_one_evaluation(
-    monkeypatch: pytest.MonkeyPatch,
+def test_pipeline_runs_three_stages_and_never_pools(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
 ) -> None:
-    """One user model has nothing to pool; two or more produce the headline score."""
-    pooled: list[list[str]] = []
-    monkeypatch.setattr(
-        pipeline, "_pool", lambda run, evaluations: pooled.append(list(evaluations))
-    )
+    """Pooling is a separate command; pipeline names the folders instead.
+
+    `docs/architecture.md` defines this command as three stages and lists
+    `vera pool` separately, so a multi-user-model run must not quietly produce a
+    fourth artifact. It reports the evaluation folders so pooling needs no
+    log-scraping.
+    """
 
     async def fake_generate(run_configs):
         generation = run_configs[0].generation
@@ -257,11 +259,13 @@ def test_pooling_runs_only_for_more_than_one_evaluation(
 
     monkeypatch.setattr(pipeline.generate_command, "_execute", fake_generate)
     monkeypatch.setattr(pipeline, "_judge_and_score", fake_judge_and_score)
+    assert not hasattr(pipeline, "_pool")
 
     parser = vera.build_parser()
-    single = pipeline.resolve_configs(parser.parse_args(_cli()))
-    asyncio.run(pipeline._execute(single))
-    assert pooled == []
+    asyncio.run(pipeline._execute(pipeline.resolve_configs(parser.parse_args(_cli()))))
+    single = capsys.readouterr().out
+    # One evaluation has nothing to pool, so nothing is reported.
+    assert "folders to pool" not in single
 
     both = pipeline.resolve_configs(
         parser.parse_args(
@@ -280,4 +284,7 @@ def test_pooling_runs_only_for_more_than_one_evaluation(
         )
     )
     asyncio.run(pipeline._execute(both))
-    assert pooled == [["run_0/evaluations/j_x", "run_1/evaluations/j_x"]]
+    reported = capsys.readouterr().out
+    assert "folders to pool" in reported
+    assert "run_0/evaluations/j_x" in reported
+    assert "run_1/evaluations/j_x" in reported
