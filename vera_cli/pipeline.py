@@ -1,11 +1,21 @@
 """The ``vera pipeline`` command: generate, then judge, then score.
 
-A **shim**, deliberately. It owns no generation, judging, scoring, or pooling
-logic and no defaults of its own: it resolves input with the same helpers the
+A **shim**, deliberately. It owns no generation, judging, or scoring logic and
+no defaults of its own: it resolves input with the same helpers the three
 single-stage commands use, then calls `vera_cli.generate._execute`,
-`judge.run.run_judging`, `judge.score.run_scoring`, and — when a run used more
-than one user model — `pool_vera_scores.pool_evaluation_directories`, passing
-each stage's output to the next.
+`judge.run.run_judging`, and `judge.score.run_scoring` in order, passing each
+stage's output to the next.
+
+It is exactly those three stages and no more. `docs/architecture.md` defines
+this command as "Full workflow for one chatbot; passes paths between steps", and
+lists `vera pool` as its own subcommand owned by `score.pool` — the same doc
+states the principle directly: "Judge never auto-scores — `vera score`/`vera
+pool` are separate subcommands." An earlier revision of this module pooled
+implicitly whenever a run used more than one `-u` model, which contradicted
+that and quietly produced an artifact the naming scheme had no home for.
+Pooling the per-user-model evaluations into the headline score is therefore a
+second, explicit command; `_execute` prints the evaluation folders so it needs
+no log-scraping.
 
 That chaining is the entire reason the command exists. Running the three
 commands by hand works, but the caller has to copy the generation run folder
@@ -315,23 +325,18 @@ def _rubric_from_config(
 
 
 async def _execute(runs: list[PipelineRun]) -> None:
-    """Run each pipeline's stages in order, feeding each into the next.
+    """Run each pipeline's three stages in order, feeding each into the next.
 
     Sequential for the same reason `generate._execute` is: concurrency caps
     apply within a stage, so overlapping stages would silently multiply a
     caller's cap against the same provider.
 
     A run with more than one `-u` model produces one generation run, one
-    evaluation, and one score *per user model*, and those per-model scores are
-    not the headline number — the pooled score across them is. So a
-    multi-user-model pipeline pools at the end, which is what makes it a
-    complete replacement for the recommended-profile shell script rather than
-    the first two thirds of one.
-
-    Pooling stays inside one `PipelineRun`, never across them. Separate runs
-    come from `--target all`, and each target has its own rubric, so their
-    scores are not comparable and merging them would produce a number that
-    means nothing.
+    evaluation and one score *per user model*, and the per-model scores are not
+    the headline number — the pooled score across them is. Pooling is a
+    separate command by design (see the module docstring), so this ends by
+    naming the evaluation folders it produced, which is what that command needs
+    as input.
     """
     for pipeline_run in runs:
         run_folders = await generate_command._execute([pipeline_run.generation])
@@ -340,40 +345,12 @@ async def _execute(runs: list[PipelineRun]) -> None:
             for run_folder in run_folders
         ]
         if len(evaluations) > 1:
-            _pool(pipeline_run, evaluations)
-
-
-def _pool(pipeline_run: PipelineRun, evaluations: list[str]) -> None:
-    """Merge one pipeline's per-user-model evaluations into the headline score.
-
-    Delegates to `scripts/pool_vera_scores.py`, which already owns concatenating
-    evaluations and recomputing VERA artifacts over the merged frame.
-    `docs/architecture.md` Phase 5 folds that script into `score/pool.py`; until
-    then this imports it rather than growing a second implementation.
-
-    The personas argument is passed through rather than defaulted. Left as
-    `None`, `pool_evaluation_directories` falls back to `data/SI/personas.tsv`
-    — the same silent-SI trap `vera score` dropped — so with no personas file
-    this asks it to skip risk analysis outright instead.
-    """
-    from scripts.pool_vera_scores import pool_evaluation_directories
-
-    generation = pipeline_run.generation.generation
-    assert generation is not None  # resolve_configs always sets it
-
-    pooled = pool_evaluation_directories(
-        list(evaluations),
-        Path(generation.output),
-        personas_tsv=(
-            Path(pipeline_run.scoring_personas)
-            if pipeline_run.scoring_personas
-            else None
-        ),
-        skip_risk_analysis=(
-            pipeline_run.skip_risk_analysis or pipeline_run.scoring_personas is None
-        ),
-    )
-    print(f"\n✅ Pooled score across {len(evaluations)} user models: {pooled}")
+            print(
+                f"\n{len(evaluations)} evaluations written. The headline score "
+                "pools them; these are the folders to pool:"
+            )
+            for evaluation in evaluations:
+                print(f"  {evaluation}")
 
 
 async def _judge_and_score(pipeline_run: PipelineRun, run_folder: str) -> str:
