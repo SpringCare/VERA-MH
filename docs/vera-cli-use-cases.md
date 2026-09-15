@@ -255,12 +255,37 @@ Reads the immutable `config.json` (verifying its `.sha256` sidecar first) plus t
 
 `vera resume` works identically regardless of which stage was interrupted — `generate`, `judge`, or a full `pipeline` — since it reads whichever `state.json` the target run directory has, not stage-specific logic.
 
+### Not built yet — use `--into` today
+
+`vera resume` is deferred (AD-18/23/24): it depends on the persisted
+`config.json`/`state.json` artifacts, which no command writes yet. What exists
+today is `--into <run folder>` on `vera generate` and `vera judge`:
+
+```
+vera generate -c gpt-4o -u sonnet:1 --target SI --into output/c_gpt-4o/<run>
+```
+
+It solves the expensive half of the problem — finished work is not redone — but
+it is a smaller thing than `vera resume`, in three specific ways:
+
+| | `--into` (today) | `vera resume` (planned) |
+|---|---|---|
+| How it finds remaining work | re-derives it from files already on disk, statelessly | reads `state.json` after verifying `config.json` against its `.sha256` |
+| Scope | one stage per invocation; continue generation and judging separately | any stage, or a whole `pipeline`, from one command |
+| What you type | the original command with `--output` swapped for `--into <path>` | the config path; the run folder is implied |
+
+The third row is the one users notice: `--into` requires the run folder, so
+continuing a run still means retrieving that path. Auto-discovering "the run
+this command last produced" is a property of `vera resume`, not a missing
+feature of `--into` — which is also why the flag is not called `--resume`, so
+the name stays free for the command that earns it.
+
 ## Config mechanism
 
 - `--config <path>` — JSON file, for local use.
 - `--config -` — read JSON from stdin.
 - `VERA_RUN_CONFIG` env var — inline JSON content, for remote/CI dispatch where uploading or mounting a file isn't convenient.
-- **Run-defining CLI flags and `--config` are strictly either/or, never combined for the same run.** A given piece of information (model selection/repeats, sampling knobs, persona/rubric lists) is supplied via one or the other, never both — the implementation rejects the combination rather than silently merging. Invocation controls `--sample`, `--debug`, and `--print` MAY accompany config input. Executed runs persist `sample` and `debug` under `invocation` in their immutable `config.json`; `--print` exits without creating a run.
+- **Run-defining CLI flags and `--config` are strictly either/or, never combined for the same run.** A given piece of information (model selection/repeats, sampling knobs, persona/rubric lists) is supplied via one or the other, never both — the implementation rejects the combination rather than silently merging. Invocation controls `--sample`, `--debug`, `--into`, and `--print` MAY accompany config input. Executed runs persist `sample` and `debug` under `invocation` in their immutable `config.json`; `--print` exits without creating a run.
 - Internally, `--config` always resolves to the same canonical flag-set the CLI would produce, so there is exactly one resolved form regardless of input path. The tool prints this resolved form at run start for terminal/CI-log visibility (it does not write to the shell's own history — an opt-in `--print` flag emits the resolved flag-string with no execution, for a caller who wants to `eval` it into their own shell explicitly).
 - JSON, not YAML — robust when passed as a one-line env var or stdin payload with no escaping ambiguity.
 - **Path fields inside `config.json` (`generation.personas`, etc.) resolve relative to `$ROOT`** — the directory containing `vera.py` — never relative to the current working directory or the config file. A [target manifest](./architecture.md#target-manifest) deliberately resolves its fields relative to its own directory so the complete target remains portable.
