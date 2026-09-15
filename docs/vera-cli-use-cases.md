@@ -374,7 +374,17 @@ output/
 
   **The timestamp goes last, uniformly.** Everything sharing a prefix still sorts chronologically, and one ordering rule is easier to hold than one-per-artifact-kind.
 
-  **There is no generated nickname.** An earlier draft used a human-memorable tag (`prophetic-bullfrog`) so a person could refer to a run without quoting a sha. The model name does that job better, because it is also the thing a reader wants to know, so the default *is* the model name and the arbitrary tag is retired. An explicit human label may still be supplied per run; it replaces the model segment rather than being added to it.
+  **There is no *generated* nickname.** An earlier draft minted a human-memorable tag (`prophetic-bullfrog`) so a person could refer to a run without quoting a sha. The model name does that job better, because it is also the thing a reader wants to know, so the arbitrary tag is retired.
+
+  **An optional human label may be supplied per run**, and it is *added* to the run-id rather than replacing anything:
+
+  ```text
+  u_<user-model>[_<label>]_<sha>_<timestamp>
+  ```
+
+  It **defaults to none**, in which case the run-id is exactly the form above without that segment — the model name alone. Additive rather than substitutive because the model is the one thing a reader always wants: a label like `smoke-test` or `pre-launch-check` says why a run exists, and would be strictly worse if the price were no longer being able to see what it ran against. The model stays first so that listing a directory still groups by model.
+
+  The label is run-defining, so it lives in the run's `config.json` and participates in the config sha like every other field — two otherwise-identical runs with different labels are different runs, which is what labelling them separately asserts. It is deliberately not spelled `--run-id`: it is a decorative handle, never an identifier, and the sha remains the identity.
 
 - **Pooled results** live under `c_<chatbot>/pooled/`, a persistent container in the same role as `c_sonnet/` itself — not a run-root. The run-root created and collision-checked is the `u_<a>+<b>_<sha>_<timestamp>/` folder inside it, so re-pooling the same combination accumulates runs alongside prior ones rather than erroring or overwriting.
 
