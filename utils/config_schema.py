@@ -244,17 +244,35 @@ class GenerationConfig:
 class InvocationConfig:
     """How this one invocation is executed — the non-run-defining half.
 
-    These controls change what you observe while a run executes, not which run
-    it is: `debug` adds logging, `sample` caps personas loaded per file for
-    quick smoke checks. Because they are not part of run identity, they are the
-    only fields that may accompany `--config` on the command line — you can
-    replay a stored run with `--debug` without editing the config.
+    Membership has one test: does this control supply information that says
+    *which run this is*? These do not. `debug` adds logging, `sample` caps
+    personas loaded per file for quick smoke checks, `into` continues a run
+    already on disk. Two of the three therefore alter behavior rather than only
+    observability, which is expected — the test is about run identity, not
+    about whether a flag is inert. Because they are not part of run identity,
+    they are the only fields that may accompany `--config` on the command
+    line — you can replay a stored run with `--debug` without editing it.
+
+    `into` belongs here for the same reason, though it is the least obvious of
+    the three. It names an existing run folder to continue, skipping work whose
+    output is already on disk. That is a statement about *this execution*, not
+    about which run it is: a run completed in one go and the same run finished
+    across two invocations are the same run, which is the whole point of being
+    able to continue one. Making it run-defining would also mean every stored
+    config had to state it, and a config naming a folder would be usable exactly
+    once — the second time, the folder is already complete.
+
+    `into` is *not* `vera resume`. It is the stateless per-stage skip the legacy
+    scripts spelled `--resume`, re-deriving progress from the files already
+    written. `vera resume` reads `state.json` after verifying `config.json`,
+    works across stages, and is deferred to a later phase (AD-18/23/24).
 
     Contrast `GenerationConfig`, which defines the run itself.
     """
 
     debug: bool
     sample: int | None
+    into: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.debug, bool):
@@ -264,9 +282,24 @@ class InvocationConfig:
                 raise ValueError("invocation.sample must be null or an integer")
             if self.sample < 1:
                 raise ValueError("--sample must be at least 1")
+        if self.into is not None and (not isinstance(self.into, str) or not self.into):
+            raise ValueError("invocation.into must be null or a run folder path")
+
+    @classmethod
+    def field_names(cls) -> frozenset[str]:
+        """The invocation field names, derived rather than hand-listed.
+
+        This is the single definition of "which controls are invocation-only".
+        Both places that need the answer read it from here: the `invocation`
+        object's key check when loading a config document, and the CLI's
+        `INVOCATION_ONLY_FLAGS` (`vera_cli/config.py`), whose flag dests match
+        these names one-for-one. Adding a field to this dataclass therefore
+        cannot leave a stale copy of the list behind in either.
+        """
+        return frozenset(field.name for field in dataclasses.fields(cls))
 
     def to_dict(self) -> dict[str, Any]:
-        return {"debug": self.debug, "sample": self.sample}
+        return {"debug": self.debug, "into": self.into, "sample": self.sample}
 
 
 @dataclasses.dataclass(frozen=True)
@@ -361,14 +394,27 @@ class RunConfig:
     about lifetime rather than which command owns it. `generation`/`judging`
     describe **what run to perform** — the reproducible, identity-defining
     values that get hashed into the run id. `invocation` describes **how this
-    particular execution behaved** (`debug`, `sample`). Two runs with identical
-    `generation` sections are the same run even if one was invoked with
-    `--debug`, which is why that flag cannot live in the section.
+    particular execution behaved** (`debug`, `sample`, `into`). Two runs with
+    identical `generation` sections are the same run even if one was invoked
+    with `--debug`, which is why that flag cannot live in the section.
 
     Both are still persisted into the run's `config.json`, because how a run
-    executed is part of its record (AD-17 in `docs/ARCHITECTURE-SPINE.md`).
-    `--sample` is the one flag that both alters behavior and is persisted, and
-    it is named there as a deliberate exception rather than a precedent.
+    executed is part of its record (AD-17 in `docs/ARCHITECTURE-SPINE.md`) —
+    with one field excepted, and the exception is about persistence rather than
+    about the either-or rule. `debug` and `sample` belong in that record.
+    `into` cannot: AD-18 fixes `config.json` as written once at run start and
+    never modified, and a continuation happens strictly after run start, so the
+    continuing invocation's `into` has nowhere to be written. Hashing it would
+    also contradict the reason it is invocation-only in the first place, by
+    giving a continued run a different id from the same run done in one go.
+
+    `to_dict` nonetheless includes `into`, because it has a second consumer:
+    `render_invocation` serializes through it into `VERA_RUN_CONFIG` so
+    `--print` emits a command that still continues the right folder. That is
+    the one field where the round-trip form and the persisted record diverge.
+    Whoever implements `config.json` writing (AD-18) needs to split the two
+    rather than reuse `to_dict` for both; nothing writes it yet, so today the
+    divergence is latent.
 
     `--target all` resolves to one `RunConfig` per target; every other input
     resolves to exactly one.
