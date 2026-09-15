@@ -221,13 +221,13 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 - **Binds:** `generate/`, `judge/`, `score/`, `utils/naming.py`
 - **Prevents:** stage code depending on a flat-layout path shape that no longer exists; resume logic re-deriving state from scratch instead of reading it.
-- **Rule:** [ADOPTED] The flat output layout is removed for *new writes*; only the nested layout (`output/c_<chatbot>/<run>/conversations/`, `.../evaluations/<target>/j_<run>/...`) is valid for a run created going forward. This does not remove the ability to *read* existing flat-layout data: `vera judge --conversations <folder>` and `vera score -r <results.csv>` take an explicit path and read files by their own format, never by re-deriving meaning from the parent folder's naming pattern, so both keep working against old-layout output. `vera resume` is the one path that genuinely can't operate on an old run, since `config.json`/`.sha256`/`state.json` didn't exist under the old layout — there is nothing for it to read, independent of naming scheme. Stage handoffs are path-first contracts, recording models/personas/artifact paths/timestamps, usable as input for resume or a new run.
+- **Rule:** [ADOPTED] The flat output layout is removed for *new writes*; only the nested layout (`output/<target>/c_<chatbot>/u_<run>/conversations/`, `.../evaluations/j_<run>/...`) is valid for a run created going forward. This does not remove the ability to *read* existing flat-layout data: `vera judge --conversations <folder>` and `vera score -r <results.csv>` take an explicit path and read files by their own format, never by re-deriving meaning from the parent folder's naming pattern, so both keep working against old-layout output. `vera resume` is the one path that genuinely can't operate on an old run, since `config.json`/`.sha256`/`state.json` didn't exist under the old layout — there is nothing for it to read, independent of naming scheme. Stage handoffs are path-first contracts, recording models/personas/artifact paths/timestamps, usable as input for resume or a new run.
 
 ### AD-24 — Existing run-output collisions error out
 
 - **Binds:** `generate/`, `judge/`, all subcommands that create a run folder
 - **Prevents:** silent overwrite of a prior run's artifacts, or an auto-suffix scheme that hides the collision from the caller; a per-file re-check that wrongly fails a run's own legitimate second write into an already-validated run folder; a resume path that either bypasses this check by accident or gets routed through the generic run-creation path and trips it, making `vera resume` permanently non-functional.
-- **Rule:** [ADOPTED] The collision check runs exactly once per run, against the run-root key, at run-folder creation time in the domain-package runner (`generate/runner.py` / `judge/runner.py`) — never per-file on every subsequent write within that run. If the run-root already exists at that single check, the run errors out; no overwrite, no auto-suffix. Individual file writes within an already-validated run root never re-check existence. The check goes through `StorageBackend.exists()` (AD-10) — never a raw filesystem call — so the rule keeps working unchanged once a non-local `StorageBackend` (e.g. `S3Storage`) ships. `vera resume` is explicitly exempt from this check: resume operates by design on an existing run folder, validates via `config.json` + its `.sha256` sidecar (AD-18) instead, and never invokes the run-creation collision check. **Persistent grouping directories are not run-roots and are never checked:** `c_<chatbot>/` and standalone judging's `evaluations/<config-sha256>/<rubric_name>/` both accumulate multiple runs by design — the check applies only to the freshly-generated `<nickname>_<timestamp>_<sha>`/`j_<judge>_<nickname>_<timestamp>_<sha>` folder created inside them, never to the grouping directory itself. Re-invoking `vera judge` standalone with an identical config therefore errors only in the vanishingly unlikely event of a nickname/timestamp collision, not because the config (and thus the `<config-sha256>` container) repeats — that repetition is expected and is exactly what the container groups by design.
+- **Rule:** [ADOPTED] The collision check runs exactly once per run, against the run-root key, at run-folder creation time in the domain-package runner (`generate/runner.py` / `judge/runner.py`) — never per-file on every subsequent write within that run. If the run-root already exists at that single check, the run errors out; no overwrite, no auto-suffix. Individual file writes within an already-validated run root never re-check existence. The check goes through `StorageBackend.exists()` (AD-10) — never a raw filesystem call — so the rule keeps working unchanged once a non-local `StorageBackend` (e.g. `S3Storage`) ships. `vera resume` is explicitly exempt from this check: resume operates by design on an existing run folder, validates via `config.json` + its `.sha256` sidecar (AD-18) instead, and never invokes the run-creation collision check. **Persistent grouping directories are not run-roots and are never checked:** `<target>/`, `c_<chatbot>/`, `c_<chatbot>/pooled/` and standalone judging's `evaluations/<config-sha256>/` all accumulate multiple runs by design — the check applies only to the freshly-generated `u_<model>_<sha>_<timestamp>`/`j_<judge>_<sha>_<timestamp>`/`u_<a>+<b>_<sha>_<timestamp>` folder created inside them, never to the grouping directory itself. Re-invoking `vera judge` standalone with an identical config therefore errors only in the vanishingly unlikely event of a timestamp collision, not because the config (and thus the `<config-sha256>` container) repeats — that repetition is expected and is exactly what the container groups by design.
 
 ### AD-25 — Rubric/persona content lives outside code proper, never requiring a code change
 
@@ -257,7 +257,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 | Concern | Convention |
 | --- | --- |
-| Naming (entities, files, folders) | Three-entity vocabulary `u`/`c`/`j` (user/persona LLM, chatbot under test, judge) applies at both folder and file level. Run-id = `<nickname>_<timestamp>_<sha256-of-config.json>` when nested under a per-model parent (model already given by the parent folder), or `<model>_<nickname>_<timestamp>_<sha>` when flat (nothing else names the model). `<nickname>` is a generated human-memorable tag (e.g. a word-pair generator) purely so a person can recognize a run without quoting a sha — it carries no identity of its own, is never a substitute for the sha, and never needs to encode which model was used since the surrounding path already does that job. Conversation filename = `u_<persona-file>_<persona-name>_c_<chatbot-model>.json`. Generation groups persistently per chatbot (`c_<model>/` accumulates every run against that model); judging stays flat per run (`j_<model>_<nickname>_<timestamp>_<sha>/`, no persistent per-judge-model parent) — an intentional asymmetry, not an inconsistency. Standalone judging (no parent pipeline run to nest under) groups under `evaluations/<config-sha256>/<rubric_name>/`, sibling to the `c_*` directories — a persistent, per-config container, exactly mirroring how `c_<chatbot>/` accumulates every run against that model rather than being itself a run-root. The actual run-root inside it is still a freshly-generated `j_<judge>_<nickname>_<timestamp>_<sha>/` folder, so re-invoking with an identical config never collides — AD-24 needs no exemption for it, the same as it needs none for `c_<chatbot>/`. The sha in the container name is for discoverability (grouping every run of one exact config together for a human or tool to find), never for deduplication or idempotency — re-running the same config is a new, distinct run, same as generation. |
+| Naming (entities, files, folders) | Three-entity vocabulary `u`/`c`/`j` (user/persona LLM, chatbot under test, judge) applies at both folder and file level, under a per-target root. **`<target>/` is the outermost segment**, because scores from different targets are never comparable — so the layout makes mixing them structurally impossible, and the per-rubric `evaluations/<rubric_name>/` segment earlier drafts carried is unnecessary and removed. A target is personas, prompts *and* a rubric, and generation already consumes the persona half, so conversations belong to the target that produced them; what stays true is that a run's conversations live together regardless of which rubrics later judge them. Run-id = `<model>_<sha256-of-config.json>_<timestamp>`, where `<model>` is whichever model the surrounding path does not already name: the user model for a generation run (`c_<chatbot>/` gives the chatbot), the judge model for a judging run, the `+`-joined user-model set for a pooled result. **The timestamp is last, uniformly** — one ordering rule rather than one per artifact kind. **There is no generated nickname**; the default label *is* the model name, which is both memorable and informative, and an explicit human label replaces that segment rather than adding to it. Conversation filename = `u_<persona-file>_<persona-name>_c_<chatbot-model>.json`. Generation groups persistently per chatbot (`c_<model>/`); judging stays flat per run — an intentional asymmetry. Pooled results group under `c_<chatbot>/pooled/`, naming the user-model combination in the path so listing one directory says which pools exist without opening a metadata file (at most three names, then `+Nmore`; `pool_metadata.json` remains authoritative). Pooling writes only merged `results.csv`, `pool_metadata.json` and `scores/` — never copies transcripts or per-question TSVs. Standalone judging, and pooling across chatbots, have no parent to nest under and group under `evaluations/<config-sha256>/` and `pooled/<config-sha256>/` respectively — persistent per-config containers, never run-roots. The sha in a container name is for discoverability, never deduplication: re-running the same config is a new, distinct run, same as generation. **Known gap:** `--personas A --rubric B` puts the run under `output/A/` with nothing in the path recording B; accepted, since the rubric is in the run's `config.json` and mixing components is an expert path. |
 | Data & formats (config shape, hashing, model identifiers) | `config.json` is JSON only, never YAML (robust for stdin/env-var transport with no escaping ambiguity). `generation.user` and `judging.models` are each a **list** of `{name, repeats, <knobs>}` objects, not an object keyed by model name — so the same model can appear twice with different knobs in one run; `generation` names its two LLM-list fields by entity (`chatbot`, `user`) rather than a shared `models`, since `judging` has only one LLM role and keeps the generic name unambiguously. Every list entry's `name` is always a specific model identifier in the provider's own naming (e.g. `claude-sonnet-2026xxxx`), never a bare provider name. Bespoke sampling knobs (temperature, top_p, max_tokens) are config-only, never expressible via `-u`/`-j` shorthand. Provider connection details (endpoint, API version, region) stay env-sourced only. `config.json.sha256` lives as a sidecar file, never as a field inside `config.json` itself. |
 | State & cross-cutting (config/CLI exclusivity, logging, resume) | `--config` and run-defining CLI flags are strictly either/or (AD-17). `--debug`, `--sample`, and `--print` MAY accompany config input; executed runs persist `debug` and `sample` as invocation metadata, while `--print` creates no run. The resolved form is printed at run start for traceability. `vera resume` is the only path that writes to `state.json`, and it first verifies `config.json` against its `.sha256` sidecar before reading either file. Logging is wrapper/context-owned only (AD-13) — never inline in a pure core. Folder-already-exists on run start errors out, no overwrite (AD-24). |
 
@@ -288,27 +288,34 @@ Output layout (AD-23, naming per Consistency Conventions):
 
 ```text
 output/
-  c_<chatbot>/                                    # persistent per-chatbot directory
-    <nickname>_<timestamp>_<sha>/
-      conversations/
-        u_<persona-file>_<persona-name>_c_<chatbot>.json
-      evaluations/
-        <rubric_name>/
-          j_<judge>_<nickname>_<timestamp>_<sha>/  # judge stays flat, no persistent parent
+  <target>/                                       # target root -- scores never cross this boundary
+    c_<chatbot>/                                  # persistent per-chatbot directory
+      u_<user-model>_<sha>_<timestamp>/           # the model the parent does not name
+        conversations/
+          u_<persona-file>_<persona-name>_c_<chatbot>.json
+        evaluations/
+          j_<judge>_<sha>_<timestamp>/            # judge stays flat, no persistent parent
             config.json
             config.json.sha256
             state.json
             results.csv
-            scores/                                # created by `vera score`
-  evaluations/
-    <config-sha256>/                                # persistent per-config directory, same role as c_<chatbot>/
-      <rubric_name>/                                # standalone judging (vera judge run on its own)
-        j_<judge>_<nickname>_<timestamp>_<sha>/     # same run-root shape as the nested case -- re-runs don't collide
+            scores/                               # created by `vera score`
+      pooled/                                     # persistent container, same role as c_<chatbot>/
+        u_<a>+<b>_<sha>_<timestamp>/              # created by `vera pool`
+          results.csv
+          pool_metadata.json
+          scores/
+    evaluations/
+      <config-sha256>/                            # persistent per-config directory, same role as c_<chatbot>/
+        j_<judge>_<sha>_<timestamp>/              # standalone judging; re-runs don't collide
           config.json
           config.json.sha256
           state.json
           results.csv
           scores/
+  pooled/
+    <config-sha256>/                              # pooling sources spanning more than one chatbot
+      u_<a>+<b>_<sha>_<timestamp>/
 ```
 
 Package tree:

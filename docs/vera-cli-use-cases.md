@@ -1,6 +1,6 @@
 ---
 status: resolved
-updated: 2026-07-16
+updated: 2026-09-15
 ---
 
 # `vera.py` — Use Cases and CLI/Config Design
@@ -110,12 +110,17 @@ throughout.
 
 The blocker is output attribution, not semantics. Judging every target means
 evaluating the same conversations under N rubrics, which resolves cleanly to N
-separate length-1 runs — but until Phase 4 adds the `evaluations/<target>/`
-segment, all N land in `<gen_run>/evaluations/j_*` distinguishable only by
-timestamp, because the judge run folder encodes judge model and time, not the
-rubric that produced it. Erroring until the path can attribute the result is
-preferable to writing output nobody can later tell apart. Phase 4 lifts this
-alongside multi-rubric support, and the error message should say so.
+separate length-1 runs — but under today's layout all N land in
+`<gen_run>/evaluations/j_*` distinguishable only by timestamp, because the judge
+run folder encodes judge model and time, not the rubric that produced it.
+Erroring until the path can attribute the result is preferable to writing output
+nobody can later tell apart.
+
+The per-target `output/<target>/` root in [Naming](#naming) is what lifts this:
+each rubric's results land under their own target root, so attribution comes
+from the path with no extra segment. That makes the restriction removable as
+soon as the layout lands — migration Phase 3 rather than Phase 4 — and the
+error message should say so.
 
 ## Use case 2 — Batch generate across personas
 
@@ -333,28 +338,54 @@ Each list entry's `name` is always a **specific model identifier** (e.g. `claude
 
 ## Naming
 
-`p_` is retired — too generic. The u/c/j vocabulary applies at both the run-folder and individual-file level:
+`p_` is retired — too generic. The u/c/j vocabulary applies at both the run-folder and individual-file level, under a per-target root:
 
 ```
 output/
-  c_sonnet/                                                 <- persistent per-chatbot directory
-    <nickname>_<timestamp>_<sha>/                            <- e.g. prophetic-bullfrog_20260713-1530_a1b2c3
-      conversations/
-        u_<persona-file>_<persona-name>_c_sonnet.json
-      evaluations/
-        <rubric_name>/
-          j_claude_<nickname>_<timestamp>_<sha>/            <- judge stays flat, no persistent per-judge-model parent
+  <target>/                                       <- SI, HFO, ... scores never cross this boundary
+    c_sonnet/                                     <- persistent per-chatbot directory
+      u_gpt-5.2_<sha>_<timestamp>/                <- generation run: the user model the parent does not name
+        conversations/
+          u_<persona-file>_<persona-name>_c_sonnet.json
+        evaluations/
+          j_claude_<sha>_<timestamp>/             <- judge stays flat, no persistent per-judge-model parent
             results.csv
+      pooled/                                     <- persistent container, same role as c_sonnet/
+        u_gpt-5.2+claude-opus-4-5_<sha>_<timestamp>/
+          results.csv
+          pool_metadata.json
+          scores/
 
-  evaluations/<config-sha256>/                                <- persistent per-config directory, same role as c_sonnet/
-    <rubric_name>/                                             <- standalone judging (vera judge run on its own)
-      j_claude_<nickname>_<timestamp>_<sha>/                   <- same run-root shape as the nested case -- re-runs don't collide
+  <target>/
+    evaluations/<config-sha256>/                  <- standalone judging (vera judge run on its own)
+      j_claude_<sha>_<timestamp>/                 <- same run-root shape as the nested case -- re-runs don't collide
         results.csv
 ```
 
-- **Generation** groups persistently by chatbot model (`c_sonnet/` accumulates every run against that model).
-- **Judging** stays flat per-run — intentionally asymmetric, not an inconsistency.
-- Every run-id is `<nickname>_<timestamp>_<sha>` when nested under a per-model parent (model already given by `c_sonnet/`), or `<model>_<nickname>_<timestamp>_<sha>` when flat (`j_claude_...`, nothing else names the model): readable (which model, where applicable), recognizable (`<nickname>` — a generated human-memorable tag, purely so a person can refer to a run without quoting a sha; carries no identity of its own and is never a substitute for it), ordered (when), integrity-checked (sha256 of `config.json`). The nickname never needs to encode which model was used — the surrounding path already does that.
-- Standalone judging (against one or many existing folders, not chained from a pipeline run) has no single parent run to nest under, so it groups under its own top-level directory — `evaluations/<config-sha256>/` — sibling to the `c_*` directories. **This container is not a run-root**, exactly like `c_sonnet/` isn't one for generation: it exists purely so every run of one exact config is discoverable in one place, and it accumulates runs rather than being collision-checked itself. The run-root actually created and checked for collisions is still the `j_claude_<nickname>_<timestamp>_<sha>/` folder inside it — so re-invoking `vera judge` standalone with an identical config produces a new run alongside prior ones, never an error and never a silent overwrite, for the same reason re-running generation against the same chatbot never collides.
+- **`<target>` is the outermost segment.** Scores produced under different targets are never comparable, so the layout makes mixing them structurally impossible rather than merely discouraged, and `ls output/SI/` answers "which chatbots have been evaluated against SI".
+
+  This does not contradict "generation has no knowledge of rubrics" (use case 3). A target is not a rubric — it is personas, prompts, *and* a rubric — and generation already consumes the persona files and persona context template from it. Conversations therefore genuinely belong to the target that produced them. What stays true is that generation is not organized by *rubric*: all of a run's conversations live together under one target root regardless of which rubrics later judge them.
+
+  **Consequence:** the `evaluations/<rubric_name>/` segment this scheme previously carried is gone, because the path already names the target. That segment was the stated blocker for `vera judge --target all` (use case 3), so that restriction can lift as soon as this layout lands rather than waiting for migration Phase 4.
+
+- **Generation** groups persistently by chatbot model (`c_sonnet/` accumulates every run against that model). **Judging** stays flat per-run — intentionally asymmetric, not an inconsistency.
+
+- **Every run-id is `<model>_<sha>_<timestamp>`**, where `<model>` is whichever model the surrounding path does not already name: the *user* model for a generation run (the chatbot is given by `c_sonnet/`), the *judge* model for a judging run, and the `+`-joined set of user models for a pooled result. Readable (which model), integrity-checked (sha256 of `config.json`), ordered (when).
+
+  **The timestamp goes last, uniformly.** Everything sharing a prefix still sorts chronologically, and one ordering rule is easier to hold than one-per-artifact-kind.
+
+  **There is no generated nickname.** An earlier draft used a human-memorable tag (`prophetic-bullfrog`) so a person could refer to a run without quoting a sha. The model name does that job better, because it is also the thing a reader wants to know, so the default *is* the model name and the arbitrary tag is retired. An explicit human label may still be supplied per run; it replaces the model segment rather than being added to it.
+
+- **Pooled results** live under `c_<chatbot>/pooled/`, a persistent container in the same role as `c_sonnet/` itself — not a run-root. The run-root created and collision-checked is the `u_<a>+<b>_<sha>_<timestamp>/` folder inside it, so re-pooling the same combination accumulates runs alongside prior ones rather than erroring or overwriting.
+
+  The combination is named in the path deliberately, so that listing one directory says which pools already exist without opening a metadata file. Two user models is the expected case; the segment renders at most three model names and then appends `+Nmore`, so it stays bounded if that ever changes. `pool_metadata.json` remains the authoritative record of the exact source evaluation folders and their row counts.
+
+  **Pooling writes only the merged artifacts** — `results.csv`, `pool_metadata.json`, and `scores/`. Per-question TSVs and transcripts are never copied; they stay in the source runs, which `pool_metadata.json` points back to.
+
+  Sources that do not all share one chatbot have no `c_<chatbot>/` to nest under, so they group under a top-level `pooled/<config-sha256>/` — the same nested-versus-standalone split judging already makes, for the same reason.
+
+- **Standalone judging** (against one or many existing folders, not chained from a pipeline run) has no single parent run to nest under, so it groups under `evaluations/<config-sha256>/` within its target root. **This container is not a run-root**, exactly like `c_sonnet/` isn't one for generation: it exists purely so every run of one exact config is discoverable in one place, and it accumulates runs rather than being collision-checked itself. The run-root actually created and checked for collisions is still the `j_claude_<sha>_<timestamp>/` folder inside it — so re-invoking `vera judge` standalone with an identical config produces a new run alongside prior ones, never an error and never a silent overwrite.
+
+- **Known gap — component-level selection loses path attribution.** `--personas A --rubric B` generates from A's personas and judges with B's rubric, so the run lives under `output/A/` while nothing in the path records that the rubric came from B. Accepted rather than adding a conditional segment: the rubric is recorded in the judge run's own `config.json`, whose sha is in the folder name, and mixing components is a deliberate expert path. Whole-target runs — the common case — stay fully glanceable.
 
 All naming/layout construction logic MUST live in a single `utils/` module (extending `utils/conversation_layout.py`), never duplicated across `generate/`, `judge/`, or `score/` handlers — this scheme has already changed multiple times during design and is expected to keep evolving.
