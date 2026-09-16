@@ -4,7 +4,7 @@ This package is the argument-and-config layer behind `vera.py`. It resolves user
 input into canonical values and then calls domain functions. It contains no
 generation, judging, or scoring logic.
 
-Currently implemented: `generate` and `judge`. `score`, `pool`, `pipeline`, and
+Currently implemented: `generate`, `judge`, and `score`. `pool`, `pipeline`, and
 `resume` are specified in [../docs/architecture.md](../docs/architecture.md) but
 not built yet.
 
@@ -15,6 +15,7 @@ not built yet.
 | `../vera.py` | Root parser and dispatcher. Registers each command, routes to its handler, turns `ConfigError` into a standard CLI error. |
 | `generate.py` | The `generate` command: flags, input resolution, and the call into the generation domain. The reference implementation for new commands. |
 | `judge.py` | The `judge` command, same five steps. Differs from legacy `judge.py` in two ways, both recorded in [../docs/vera-cli-use-cases.md](../docs/vera-cli-use-cases.md): no single-conversation mode, and no implicit working-directory output. |
+| `score.py` | The `score` command, same five steps. Two structural differences, both following from scoring calling no model: no `--target` (it reads a `results.csv` judging already wrote), and a synchronous `_execute`. Differs from legacy [`judge/score.py`](../judge/score.py) in one way, recorded in [../CHANGELOG.md](../CHANGELOG.md): omitting `--personas` skips the risk-level breakdown instead of defaulting to an SI personas file. |
 | `config.py` | Shared input handling: loading config JSON, the config-or-flags rule, turning config-stated strings into verified absolute paths, resolved-run rendering. |
 | `targets.py` | Target discovery and manifest validation — turning a target *name* into concrete, verified file paths. Builds on `config.py`'s path helpers rather than owning them. |
 | `../utils/config_schema.py` | *Not a CLI module.* Shared canonical types (`RunConfig` and friends) in the leaf `utils/` layer, so domain packages may consume them too. Validation and serialization only; no parsing, no defaults. |
