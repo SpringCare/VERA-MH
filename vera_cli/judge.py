@@ -43,6 +43,7 @@ from utils.utils import parse_key_value_list
 from .config import (
     ConfigError,
     config_dir,
+    config_path,
     flag_value,
     models_from_cli,
     models_from_config,
@@ -141,12 +142,17 @@ def _from_cli(
         raise ConfigError("judge requires at least one -j/--judge model")
     if not conversations:
         raise ConfigError("judge requires --conversations")
-    if target:
-        rubric_files = _rubric_from_target(target)
-    elif rubric:
-        rubric_files = _rubric_from_target(rubric)
-    else:
+    # Both routes resolve through the same manifest to the same run, which
+    # `test_target_and_rubric_resolve_the_same_rubric` pins: they differ in
+    # intent, not in result. Persona annotation therefore comes from whichever
+    # was named rather than being a privilege of `--target`.
+    selection = target or rubric
+    if not selection:
         raise ConfigError("judge requires --target or --rubric")
+    resolved = _target_from_selection(selection)
+    rubric_files = _rubric_files(resolved)
+    personas = list(resolved.personas)
+    annotation_columns = list(resolved.persona_annotation_columns)
 
     folders = [str(Path(folder).resolve()) for folder in conversations]
     return [
@@ -160,6 +166,8 @@ def _from_cli(
             ),
             max_concurrent=flag_value(args, "max_concurrent", defaults=DEFAULTS),
             per_judge=flag_value(args, "per_judge", defaults=DEFAULTS),
+            personas=personas,
+            persona_annotation_columns=annotation_columns,
         )
     ]
 
@@ -208,9 +216,33 @@ def _from_config(
         # target*, so this line stays a one-element list inside a comprehension
         # rather than growing a second entry.
         rubrics = [_rubric_files(targets[0])]
+        personas = list(targets[0].personas)
+        annotation_columns = list(targets[0].persona_annotation_columns)
     else:
         rubrics = rubrics_from_config(
             required(judging, "rubrics", section="judging config")
+        )
+        # Unlike the behavior fields, these two are optional rather than
+        # `required`: they annotate output rather than defining the run, and a
+        # stored config that predates them still describes its run completely.
+        # Reading them back is what makes `--print` round-trip.
+        # `_string_list` rejects an empty list, but empty is the meaningful
+        # "annotate nothing" value here, so absent and empty are both accepted
+        # and only a non-empty value is shape-checked.
+        raw_personas = judging.get("personas") or []
+        personas = (
+            [
+                config_path(path, field="judging.personas")
+                for path in _string_list(raw_personas, field="judging.personas")
+            ]
+            if raw_personas
+            else []
+        )
+        raw_columns = judging.get("persona_annotation_columns") or []
+        annotation_columns = (
+            _string_list(raw_columns, field="judging.persona_annotation_columns")
+            if raw_columns
+            else []
         )
 
     output = required(judging, "output", section="judging config")
@@ -228,6 +260,8 @@ def _from_config(
                 judging, "max_concurrent", section="judging config"
             ),
             per_judge=required(judging, "per_judge", section="judging config"),
+            personas=personas,
+            persona_annotation_columns=annotation_columns,
         )
     ]
 
@@ -269,11 +303,9 @@ def _rubric_files(target: ResolvedTarget) -> RubricFiles:
     )
 
 
-def _rubric_from_target(selection: str) -> RubricFiles:
-    """Resolve a target name or manifest path to its three rubric files."""
-    return _rubric_files(
-        load_target(resolve_target_manifest(_reject_target_all(selection)))
-    )
+def _target_from_selection(selection: str) -> ResolvedTarget:
+    """Resolve a target name or manifest path to its validated target."""
+    return load_target(resolve_target_manifest(_reject_target_all(selection)))
 
 
 def _output_root(conversations: str, output: str | None) -> str:
@@ -321,6 +353,8 @@ def _run_config(
     output: str,
     max_concurrent: int | None,
     per_judge: bool,
+    personas: list[str],
+    persona_annotation_columns: list[str],
 ) -> RunConfig:
     """Assemble and validate one canonical `RunConfig` holding a judging section.
 
@@ -337,6 +371,8 @@ def _run_config(
             output=output,
             max_concurrent=max_concurrent,
             per_judge=per_judge,
+            personas=personas,
+            persona_annotation_columns=persona_annotation_columns,
         ),
     )
 
@@ -374,6 +410,8 @@ async def _execute(run_configs: list[RunConfig]) -> None:
             verbose_workers=False,
             verbose=True,
             resume=into is not None,
+            personas=list(judging.personas),
+            persona_annotation_columns=list(judging.persona_annotation_columns),
         )
 
 

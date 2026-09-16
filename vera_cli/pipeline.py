@@ -353,9 +353,30 @@ async def _execute(runs: list[PipelineRun]) -> None:
                 print(f"  {evaluation}")
 
 
+def _persona_annotation(generation_run: RunConfig) -> tuple[list[str], list[str]]:
+    """Find the personas file this run used and the columns to annotate with.
+
+    Derived from the run's own persona file rather than from a shared target
+    resolution, for the same reason `_rubric_for` does it that way: under
+    `--target all` each run must consult the target that produced it.
+
+    A run whose personas sit outside a target bundle has no manifest to read, so
+    it annotates nothing -- the personas are still known, but which columns are
+    worth comparing is the manifest's statement to make.
+    """
+    generation = generation_run.generation
+    assert generation is not None  # generate.resolve_configs always sets it
+    personas = list(generation.personas)
+    manifest = Path(personas[0]).parent / "manifest.json"
+    if not manifest.is_file():
+        return personas, []
+    return personas, list(load_target(manifest).persona_annotation_columns)
+
+
 async def _judge_and_score(pipeline_run: PipelineRun, run_folder: str) -> str:
     """Judge one generated run folder, score it, and say where it landed."""
     conversations = str(Path(run_folder) / "conversations")
+    personas, annotation_columns = _persona_annotation(pipeline_run.generation)
     judging = JudgingConfig(
         models=pipeline_run.judge_models,
         conversations=[conversations],
@@ -365,6 +386,8 @@ async def _judge_and_score(pipeline_run: PipelineRun, run_folder: str) -> str:
         output=str(Path(run_folder) / "evaluations"),
         max_concurrent=pipeline_run.judge_max_concurrent,
         per_judge=pipeline_run.per_judge,
+        personas=personas,
+        persona_annotation_columns=annotation_columns,
     )
     transcripts_dir, _, folder_name = resolve_conversation_input(
         judging.conversations[0]
@@ -385,6 +408,8 @@ async def _judge_and_score(pipeline_run: PipelineRun, run_folder: str) -> str:
         verbose_workers=False,
         verbose=True,
         resume=False,
+        personas=list(judging.personas),
+        persona_annotation_columns=list(judging.persona_annotation_columns),
     )
 
     run_scoring(

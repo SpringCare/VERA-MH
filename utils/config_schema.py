@@ -323,6 +323,11 @@ class JudgingConfig:
     output: str
     max_concurrent: int | None
     per_judge: bool
+    # Persona annotation is output shaping, not run identity: it copies persona
+    # columns into results.csv so rows can be compared by persona attribute. It
+    # therefore defaults to empty, and a run that omits it judges identically.
+    personas: list[str] = dataclasses.field(default_factory=list)
+    persona_annotation_columns: list[str] = dataclasses.field(default_factory=list)
 
     def __post_init__(self) -> None:
         if not self.models:
@@ -370,6 +375,21 @@ class JudgingConfig:
                 )
         if not isinstance(self.per_judge, bool):
             raise ValueError("judging.per_judge must be a boolean")
+        if not all(isinstance(path, str) and path for path in self.personas):
+            raise ValueError("judging.personas entries must be non-empty paths")
+        if not all(
+            isinstance(column, str) and column
+            for column in self.persona_annotation_columns
+        ):
+            raise ValueError(
+                "judging.persona_annotation_columns entries must be non-empty "
+                "persona column names"
+            )
+        if self.persona_annotation_columns and not self.personas:
+            raise ValueError(
+                "judging.persona_annotation_columns requires judging.personas to "
+                "name the personas file the columns are read from"
+            )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -379,6 +399,8 @@ class JudgingConfig:
             "output": self.output,
             "max_concurrent": self.max_concurrent,
             "per_judge": self.per_judge,
+            "personas": list(self.personas),
+            "persona_annotation_columns": list(self.persona_annotation_columns),
         }
 
 
