@@ -9,13 +9,16 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import pytest
+from dotenv import load_dotenv
 
 # Import additional modules to increase test coverage
 
 # Test configuration constants
 TEST_CONFIG = {
     "USER_MODEL": "gpt-4o",
-    "PROVIDER_MODEL": "claude-opus-4-1-20250805",
+    # claude-opus-4-1-20250805 retired 2026-08-05; claude-opus-5 is the
+    # like-for-like Opus-tier replacement (the ID takes no date suffix).
+    "PROVIDER_MODEL": "claude-opus-5",
     "JUDGE_MODEL": "gpt-4o",
     "JUDGE_INSTANCES": 1,  # Single instance for fastest test execution
     "TURNS": 6,  # Smaller for faster tests
@@ -26,9 +29,29 @@ TEST_CONFIG = {
 }
 
 
+def cli_failure(label: str, result: subprocess.CompletedProcess) -> RuntimeError:
+    """Build a CLI-failure error that actually says what went wrong.
+
+    The generation runner reports per-conversation failures on stdout and
+    generate.py can exit non-zero with nothing on stderr at all (every
+    conversation skipped), so reporting stderr alone yields a bare label.
+    """
+    return RuntimeError(
+        f"{label} failed (exit {result.returncode})\n"
+        f"--- stdout ---\n{result.stdout}\n"
+        f"--- stderr ---\n{result.stderr}"
+    )
+
+
 @pytest.fixture(scope="session", autouse=True)
 def validate_test_environment():
     """Ensure test environment is properly configured before running any tests."""
+    # Keys normally live in .env and only reach os.environ when something imports
+    # llm_clients.config (which calls load_dotenv at import time). Load them here
+    # so this guard skips on a keyless machine instead of depending on the order
+    # pytest happens to collect and import modules in.
+    load_dotenv()
+
     required_env_vars = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"]
     missing = [var for var in required_env_vars if not os.getenv(var)]
     if missing:
@@ -114,7 +137,7 @@ class TestVERAMHPipeline:
         )
 
         if result.returncode != 0:
-            raise RuntimeError(f"Generate CLI failed: {result.stderr}")
+            raise cli_failure("Generate CLI", result)
 
         # Parse output to find the generated folder path
         # generate.py outputs: "✅ Generated N conversations → folder_path/"
@@ -327,7 +350,7 @@ class TestVERAMHPipeline:
             )
 
             if result.returncode != 0:
-                raise RuntimeError(f"Pipeline CLI failed: {result.stderr}")
+                raise cli_failure("Pipeline CLI", result)
 
             # Layout: repo_root/<output_dir>/p_*__/evaluations/j_*__/scores/scores.json
             out_base = repo_root / output_dir
@@ -691,9 +714,11 @@ class TestVERAMHPipeline:
         """Test pipeline handles errors gracefully."""
         conversations_root = test_workspace / "conversations"
 
-        # Test with invalid model - should fail during CLI execution
-        # The CLI should return non-zero exit code for unsupported model names
-        with pytest.raises(RuntimeError, match="Generate CLI failed"):
+        # Test with invalid model - should fail during CLI execution.
+        # Match the unsupported-model error itself, not the generic "Generate CLI
+        # failed" prefix: every failure carries that prefix, so matching on it lets
+        # an unrelated breakage (a retired model, a missing key) pass this test.
+        with pytest.raises(RuntimeError, match="Unsupported model: invalid-model-name"):
             await self.run_generate_cli(
                 persona_names=["Ray"],
                 user_model="invalid-model-name",
