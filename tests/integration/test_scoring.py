@@ -29,18 +29,26 @@ TEST_CONFIG = {
 }
 
 
-def cli_failure(label: str, result: subprocess.CompletedProcess) -> RuntimeError:
-    """Build a CLI-failure error that actually says what went wrong.
+class CliFailure(RuntimeError):
+    """A VERA CLI subprocess exited non-zero, reported with enough to debug it.
 
     The generation runner reports per-conversation failures on stdout and
     generate.py can exit non-zero with nothing on stderr at all (every
     conversation skipped), so reporting stderr alone yields a bare label.
+
+    Subclasses RuntimeError so existing ``pytest.raises(RuntimeError)`` callers
+    keep working; ``result`` is kept so tests can assert on the streams rather
+    than regex the rendered message.
     """
-    return RuntimeError(
-        f"{label} failed (exit {result.returncode})\n"
-        f"--- stdout ---\n{result.stdout}\n"
-        f"--- stderr ---\n{result.stderr}"
-    )
+
+    def __init__(self, label: str, result: subprocess.CompletedProcess) -> None:
+        self.label = label
+        self.result = result
+        super().__init__(
+            f"{label} failed (exit {result.returncode})\n"
+            f"--- stdout ---\n{result.stdout}\n"
+            f"--- stderr ---\n{result.stderr}"
+        )
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -137,7 +145,7 @@ class TestVERAMHPipeline:
         )
 
         if result.returncode != 0:
-            raise cli_failure("Generate CLI", result)
+            raise CliFailure("Generate CLI", result)
 
         # Parse output to find the generated folder path
         # generate.py outputs: "✅ Generated N conversations → folder_path/"
@@ -350,7 +358,7 @@ class TestVERAMHPipeline:
             )
 
             if result.returncode != 0:
-                raise cli_failure("Pipeline CLI", result)
+                raise CliFailure("Pipeline CLI", result)
 
             # Layout: repo_root/<output_dir>/p_*__/evaluations/j_*__/scores/scores.json
             out_base = repo_root / output_dir
