@@ -222,12 +222,12 @@ class TestJudgeCLIExtraParams:
         )
 
         # Both should produce the same result structure
-        assert generate_args.user_agent_extra_params == {
-            "temperature": 0.7
-        }, "generate.py pattern"
-        assert judge_args.judge_model_extra_params == {
-            "temperature": 0.7
-        }, "judge.py pattern"
+        assert generate_args.user_agent_extra_params == {"temperature": 0.7}, (
+            "generate.py pattern"
+        )
+        assert judge_args.judge_model_extra_params == {"temperature": 0.7}, (
+            "judge.py pattern"
+        )
         assert (
             generate_args.user_agent_extra_params == judge_args.judge_model_extra_params
         )
