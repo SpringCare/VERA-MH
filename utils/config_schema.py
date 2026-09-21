@@ -383,12 +383,52 @@ class JudgingConfig:
 
 
 @dataclasses.dataclass(frozen=True)
+class ScoringConfig:
+    """What scoring run to perform — the run-defining half for `vera score`.
+
+    The smallest of the three sections, because scoring reads an artifact that
+    already exists rather than calling any model: `results` names the CSV, and
+    the other three fields say what to do with it.
+
+    `personas` is optional and has no default. Legacy `judge/score.py` defaulted
+    it to `data/SI/personas.tsv`, which silently produced an empty
+    `scores_by_risk.json` for any rubric whose personas file lacks the column
+    that lookup joins on. Null here means "skip risk-level analysis", which is
+    the honest form of the same outcome. `skip_risk_analysis` remains separate:
+    it suppresses the step even when a personas file *is* available.
+    """
+
+    results: str
+    output: str | None
+    personas: str | None
+    skip_risk_analysis: bool
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.results, str) or not self.results:
+            raise ValueError("scoring.results must be a path")
+        for field_name in ("output", "personas"):
+            value = getattr(self, field_name)
+            if value is not None and (not isinstance(value, str) or not value):
+                raise ValueError(f"scoring.{field_name} must be null or a path")
+        if not isinstance(self.skip_risk_analysis, bool):
+            raise ValueError("scoring.skip_risk_analysis must be a boolean")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "results": self.results,
+            "output": self.output,
+            "personas": self.personas,
+            "skip_risk_analysis": self.skip_risk_analysis,
+        }
+
+
+@dataclasses.dataclass(frozen=True)
 class RunConfig:
     """One fully resolved `vera` run, ready to execute.
 
     Holds one section per command taking part in the run. `generate` populates
-    `generation`, `judge` populates `judging`, and a later `pipeline` populates
-    both; at least one is required.
+    `generation`, `judge` populates `judging`, `score` populates `scoring`, and
+    a later `pipeline` populates all three; at least one is required.
 
     `invocation` is a different kind of thing from those two, and the split is
     about lifetime rather than which command owns it. `generation`/`judging`
@@ -423,10 +463,13 @@ class RunConfig:
     invocation: InvocationConfig
     generation: GenerationConfig | None = None
     judging: JudgingConfig | None = None
+    scoring: ScoringConfig | None = None
 
     def __post_init__(self) -> None:
-        if self.generation is None and self.judging is None:
-            raise ValueError("a run must define generation, judging, or both")
+        if self.generation is None and self.judging is None and self.scoring is None:
+            raise ValueError(
+                "a run must define generation, judging, scoring, or a combination"
+            )
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize, omitting sections this run does not define.
@@ -441,4 +484,6 @@ class RunConfig:
             config["generation"] = self.generation.to_dict()
         if self.judging is not None:
             config["judging"] = self.judging.to_dict()
+        if self.scoring is not None:
+            config["scoring"] = self.scoring.to_dict()
         return config

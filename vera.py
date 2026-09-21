@@ -9,6 +9,7 @@ from typing import Optional
 from vera_cli.config import ConfigError
 from vera_cli.generate import register as register_generate
 from vera_cli.judge import register as register_judge
+from vera_cli.score import register as register_score
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -18,6 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
     # Each command owns its flags and attaches its handler to its subparser.
     register_generate(subparsers)
     register_judge(subparsers)
+    register_score(subparsers)
     return parser
 
 
