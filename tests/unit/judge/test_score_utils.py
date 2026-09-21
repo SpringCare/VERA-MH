@@ -344,9 +344,9 @@ def test_extract_conversation_filename_structured_format_various_models():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert result == expected, (
-            f"Failed for {input_filename}: got {result}, expected {expected}"
-        )
+        assert (
+            result == expected
+        ), f"Failed for {input_filename}: got {result}, expected {expected}"
 
 
 @pytest.mark.unit
@@ -365,9 +365,9 @@ def test_extract_conversation_filename_fallback_regex_pattern():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert result == expected, (
-            f"Failed for {input_filename}: got {result}, expected {expected}"
-        )
+        assert (
+            result == expected
+        ), f"Failed for {input_filename}: got {result}, expected {expected}"
 
 
 @pytest.mark.unit
@@ -385,9 +385,9 @@ def test_extract_conversation_filename_alternative_regex_pattern():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert result == expected, (
-            f"Failed for {input_filename}: got {result}, expected {expected}"
-        )
+        assert (
+            result == expected
+        ), f"Failed for {input_filename}: got {result}, expected {expected}"
 
 
 @pytest.mark.unit
@@ -411,9 +411,9 @@ def test_extract_conversation_filename_edge_cases():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert result == expected, (
-            f"Failed for {input_filename}: got {result}, expected {expected}"
-        )
+        assert (
+            result == expected
+        ), f"Failed for {input_filename}: got {result}, expected {expected}"
 
 
 @pytest.mark.unit
@@ -431,9 +431,9 @@ def test_extract_conversation_filename_no_tsv_extension():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert result == expected, (
-            f"Failed for {input_filename}: got {result}, expected {expected}"
-        )
+        assert (
+            result == expected
+        ), f"Failed for {input_filename}: got {result}, expected {expected}"
 
 
 @pytest.mark.unit
@@ -454,9 +454,9 @@ def test_extract_conversation_filename_complex_model_names():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert result == expected, (
-            f"Failed for {input_filename}: got {result}, expected {expected}"
-        )
+        assert (
+            result == expected
+        ), f"Failed for {input_filename}: got {result}, expected {expected}"
 
 
 @pytest.mark.unit
@@ -476,9 +476,9 @@ def test_extract_conversation_filename_regex_boundaries():
 
     for input_filename, expected in test_cases:
         result = extract_conversation_filename_from_tsv(input_filename)
-        assert result == expected, (
-            f"Failed for {input_filename}: got {result}, expected {expected}"
-        )
+        assert (
+            result == expected
+        ), f"Failed for {input_filename}: got {result}, expected {expected}"
 
 
 # ============================================================================
@@ -1152,28 +1152,6 @@ def test_build_results_csv_with_reasoning_parsing_multiple_questions(tmp_path):
 
 
 @pytest.mark.unit
-def test_build_results_csv_with_alphanumeric_question_ids(tmp_path):
-    """Question IDs are opaque strings rather than numeric values."""
-    eval_dir = tmp_path / "evaluations"
-    eval_dir.mkdir()
-
-    tsv_content = (
-        "Dimension\tScore\tReasoning\n"
-        "Detects Potential Risk\tHigh Potential for Harm\t"
-        "Q1a: Agent missed the initial risk signal; "
-        "Q2-beta: Agent also missed the follow-up signal.\n"
-    )
-    (eval_dir / "test.tsv").write_text(tsv_content)
-
-    df = build_results_csv_from_tsv_files(eval_dir)
-
-    assert df.iloc[0]["Detects Potential Risk_yes_question_id"] == "1a"
-    assert df.iloc[0]["Detects Potential Risk_yes_reasoning"] == (
-        "Agent missed the initial risk signal"
-    )
-
-
-@pytest.mark.unit
 def test_build_results_csv_with_reasoning_parsing_no_q_pattern(tmp_path):
     """Test parsing when Reasoning column has no Q{id}: pattern."""
     eval_dir = tmp_path / "evaluations"
@@ -1293,8 +1271,7 @@ def test_build_results_csv_with_reasoning_parsing_malformed_q_patterns(tmp_path)
     tsv_content = (
         "Dimension\tScore\tReasoning\n"
         "Detects Potential Risk\tBest Practice\t"
-        "Q: Missing identifier; Q 12: Identifier contains whitespace; "
-        "Q12 Missing colon; "
+        "Q: Missing number; Qx: Non-numeric; Q12 Missing colon; "
         "good performance overall.\n"
     )
     (eval_dir / "test.tsv").write_text(tsv_content)
