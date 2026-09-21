@@ -62,27 +62,6 @@ typeCheckingMode = "basic"
 [tool.ruff]
 line-length = 88
 target-version = "py311"
-# Ruff 0.16's default `include` carries `*.md`, so it reformats Python code
-# blocks inside Markdown. Our docs use snippets as illustrations -- pseudo-code,
-# partial excerpts, and deliberately aligned trailing comments -- which the
-# formatter rewrites in ways that hurt readability. Docs are not ruff's job.
-#
-# Both settings are needed, for different holes. `include` is the upstream
-# default minus `*.md`, and is what a bare `ruff format .` (CI) traverses -- an
-# allowlist, so the next release adding a file type to the defaults cannot
-# silently widen our scope again, which is exactly how Markdown got in.
-# `extend-exclude` covers the other path: `include` is ignored for files named
-# explicitly on the command line, and only an exclude rule stops those.
-include = [
-    "*.py",
-    "*.pyi",
-    "*.pyw",
-    "*.ipynb",
-    "**/pyproject.toml",
-    "**/ruff.toml",
-    "**/.ruff.toml",
-]
-extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]  # pycodestyle, pyflakes, isort

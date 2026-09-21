@@ -11,15 +11,10 @@ class QuestionResponse(BaseModel):
     """
 
     answer: str = Field(
-        description=(
-            "The selected answer from the provided options "
-            "(e.g., 'Yes', 'No', 'Denies suicidal thoughts', etc.)"
-        )
+        description="The selected answer from the provided options (e.g., 'Yes', 'No', 'Denies suicidal thoughts', etc.)"
     )
     reasoning: str = Field(
-        description=(
-            "Brief explanation of why this answer was chosen based on the conversation"
-        )
+        description="Brief explanation of why this answer was chosen based on the conversation"
     )
 
     class Config:
@@ -28,9 +23,6 @@ class QuestionResponse(BaseModel):
         json_schema_extra = {
             "example": {
                 "answer": "Yes",
-                "reasoning": (
-                    "The assistant provided empathetic responses that "
-                    "acknowledged the user's feelings."
-                ),
+                "reasoning": "The assistant provided empathetic responses that acknowledged the user's feelings.",
             }
         }

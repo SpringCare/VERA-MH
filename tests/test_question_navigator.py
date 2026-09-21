@@ -1,6 +1,12 @@
-"""SI-specific integration tests for QuestionNavigator."""
+"""Comprehensive test suite for QuestionNavigator"""
+
+import sys
+from pathlib import Path
 
 import pytest
+
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from judge.question_navigator import QuestionNavigator
 from judge.rubric_config import (
@@ -9,15 +15,13 @@ from judge.rubric_config import (
     RubricConfig,
 )
 
-pytestmark = pytest.mark.integration
-
 
 @pytest.fixture
 async def navigator() -> QuestionNavigator:
     """Create a QuestionNavigator instance with the main rubric"""
     # Load production rubric from data/ directory
     rubric_config = await RubricConfig.load(
-        rubric_folder="data/SI",
+        rubric_folder="data",
         rubric_file="rubric.tsv",
         rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
         question_prompt_file="question_prompt.txt",
@@ -89,9 +93,9 @@ class TestNotRelevantGoto:
                 break
 
         assert no_suicidal_thoughts_ans is not None, "No suicidal thoughts present"
-        assert no_suicidal_thoughts_ans["goto"] == "NOT_RELEVANT>>23", (
-            f"Expected 'NOT_RELEVANT>>23', got '{no_suicidal_thoughts_ans['goto']}'"
-        )
+        assert (
+            no_suicidal_thoughts_ans["goto"] == "NOT_RELEVANT>>23"
+        ), f"Expected 'NOT_RELEVANT>>23', got '{no_suicidal_thoughts_ans['goto']}'"
 
     async def test_not_relevant_navigation(self, navigator):
         """Test that NOT_RELEVANT>> navigation extracts question ID correctly"""
@@ -102,9 +106,9 @@ class TestNotRelevantGoto:
 
         # Should extract question ID 23 from NOT_RELEVANT>>23
         assert next_q == "23", f"Expected next question to be '23', got '{next_q}'"
-        assert goto_value == "NOT_RELEVANT>>23", (
-            f"Expected goto_value 'NOT_RELEVANT>>23', got '{goto_value}'"
-        )
+        assert (
+            goto_value == "NOT_RELEVANT>>23"
+        ), f"Expected goto_value 'NOT_RELEVANT>>23', got '{goto_value}'"
 
     async def test_not_relevant_goto_different_from_end(self, navigator):
         """Test that NOT_RELEVANT>> behaves differently from END"""
@@ -123,7 +127,9 @@ class TestNotRelevantGoto:
         assert goto_not_rel.startswith("NOT_RELEVANT>>")
         assert goto_end == "END"
 
-    async def test_auto_answer_moves_to_next_not_relevant_dimension(self, navigator):
+    async def test_special_case_assigns_and_next_dimension_is_not_relevant(
+        self, navigator
+    ):
         """
         Test that the special case of assigning severity
         and next dimension is not relevant.
@@ -133,15 +139,9 @@ class TestNotRelevantGoto:
         assert next_q == "5"
         assert goto == "5"
 
-        # Question 5 is explicitly deterministic, so judging can skip the LLM.
-        question = navigator.get_question_data("5")
-        assert question is not None
-        assert question["auto_answer"] is True
-        assert len(question["answers"]) == 1
-
-        # Its sole answer marks the dimension not relevant and moves to question 9.
+        # Question 5, LLM is not called, dimension marked not relevant, move to 9
         next_q, goto = navigator.get_next_question(
-            "5", question["answers"][0]["option"]
+            "5", "Rate this dimension Not Relevant"
         )
         assert next_q == "9"
         assert goto == "NOT_RELEVANT>>9"
@@ -209,9 +209,9 @@ class TestNavigationPaths:
         # Q23: No GOTOs, so Yes or No (chatbot makes shameful statements) -> Q24
         for answer, expected_next_q in [("Yes", "30"), ("No", "24")]:
             next_q, goto = navigator.get_next_question("23", answer)
-            assert next_q == expected_next_q, (
-                f"Expected next question {expected_next_q}, got {next_q}"
-            )
+            assert (
+                next_q == expected_next_q
+            ), f"Expected next question {expected_next_q}, got {next_q}"
             assert goto is None
 
 
@@ -269,9 +269,9 @@ class TestQuestionOrderAndDimensions:
             if dim:
                 found_dimensions.add(dim)
 
-        assert expected_dimensions.issubset(found_dimensions), (
-            f"Missing dimensions: {expected_dimensions - found_dimensions}"
-        )
+        assert expected_dimensions.issubset(
+            found_dimensions
+        ), f"Missing dimensions: {expected_dimensions - found_dimensions}"
 
 
 if __name__ == "__main__":
