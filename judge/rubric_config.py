@@ -13,9 +13,6 @@ from typing import Any, Dict, List, Optional
 import aiofiles
 import pandas as pd
 
-from judge.question_navigator import QuestionNavigator
-from utils.rubric_manifest import load_manifest_rubric_paths
-
 # Rubric TSV column names - single source of truth for rubric structure
 COL_QUESTION_ID = "Question ID"
 COL_DIMENSION = "Dimension"
@@ -25,7 +22,6 @@ COL_QUESTION = "Question"
 COL_EXAMPLES = "Examples"
 COL_ANSWER = "Answer"
 COL_GOTO = "GOTO"
-COL_AUTO_ANSWER = "Auto Answer"
 
 # Rubric TSV columns to ignore
 IGNORE_COLUMNS = {"Human notes", "Notes for Interpretability of GOTO logic"}
@@ -85,46 +81,11 @@ class RubricConfig:
         Raises:
             FileNotFoundError: If any required file doesn't exist
         """
-        return await cls.from_paths(
-            rubric_file=str(Path(rubric_folder) / rubric_file),
-            rubric_prompt_beginning_file=str(
-                Path(rubric_folder) / rubric_prompt_beginning_file
-            ),
-            question_prompt_file=str(Path(rubric_folder) / question_prompt_file),
-            sep=sep,
+        rubric_path = Path(rubric_folder) / rubric_file
+        rubric_prompt_beginning_path = (
+            Path(rubric_folder) / rubric_prompt_beginning_file
         )
-
-    @classmethod
-    async def from_paths(
-        cls,
-        *,
-        rubric_file: str,
-        rubric_prompt_beginning_file: str,
-        question_prompt_file: str,
-        sep: str = "\t",
-    ) -> "RubricConfig":
-        """Load rubric data from three already-resolved file paths.
-
-        This is the resolved-value entry point: callers pass complete paths and
-        this does no joining, defaulting, or manifest reading. `load` and
-        `load_bundle` are the convenience wrappers that resolve their inputs
-        down to these three paths.
-
-        Args:
-            rubric_file: Path to the rubric TSV
-            rubric_prompt_beginning_file: Path to the system prompt template
-            question_prompt_file: Path to the question prompt template
-            sep: Separator for the rubric TSV (default: tab)
-
-        Returns:
-            Loaded RubricConfig with all data
-
-        Raises:
-            FileNotFoundError: If any required file doesn't exist
-        """
-        rubric_path = Path(rubric_file)
-        rubric_prompt_beginning_path = Path(rubric_prompt_beginning_file)
-        question_prompt_path = Path(question_prompt_file)
+        question_prompt_path = Path(rubric_folder) / question_prompt_file
 
         # Validate files exist
         if not rubric_path.exists():
@@ -139,9 +100,7 @@ class RubricConfig:
             )
 
         # Load all files in parallel
-        rubric_df_task = asyncio.to_thread(
-            pd.read_csv, str(rubric_path), sep=sep, dtype=str
-        )
+        rubric_df_task = asyncio.to_thread(pd.read_csv, str(rubric_path), sep=sep)
         rubric_prompt_task = cls._read_file(rubric_prompt_beginning_path)
         question_prompt_task = cls._read_file(question_prompt_path)
 
@@ -155,10 +114,6 @@ class RubricConfig:
 
         # Parse rubric structure
         question_flow_data, question_order = cls._parse_rubric(rubric_df)
-        # Validate the complete in-memory navigation graph once; this does not
-        # reread the rubric for each question.
-        cls._validate_navigation(question_flow_data, question_order)
-        cls._validate_severity_ordering(question_flow_data, question_order)
         dimensions = cls._extract_dimensions(rubric_df)
 
         return cls(
@@ -168,40 +123,6 @@ class RubricConfig:
             rubric_prompt_beginning=rubric_prompt_beginning,
             question_prompt_template=question_prompt_template,
         )
-
-    @classmethod
-    async def load_bundle(cls, manifest_path: str) -> "RubricConfig":
-        """Load a rubric's configuration and metadata
-        from a rubric bundle manifest.
-
-        A rubric bundle manifest is a JSON file describing what a rubric
-        *is* -- its files and (informational only) intended personas -- as
-        opposed to how to run it, which belongs in a run config, not here.
-
-        Manifest shape:
-            {
-              "rubric_file": "rubric.tsv",
-              "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",
-              "question_prompt_file": "question_prompt.txt",
-              "personas": ["personas.tsv"]
-            }
-
-        `personas` is informational only -- it documents which personas this
-        rubric is intended/validated for; it is not read by this loader.
-        File paths in the manifest are relative to the manifest's own folder.
-
-        Args:
-            manifest_path: Path to the rubric bundle manifest JSON file
-
-        Returns:
-            Loaded RubricConfig with all data
-
-        Raises:
-            FileNotFoundError: If the manifest or any file it references
-                doesn't exist
-            ValueError: If the manifest is missing a required key
-        """
-        return await cls.from_paths(**await load_manifest_rubric_paths(manifest_path))
 
     @staticmethod
     async def _read_file(file_path: Path) -> str:
@@ -256,40 +177,25 @@ class RubricConfig:
         current_question_id = None
         current_question_data = None
 
-        for _, row in rubric_df.iterrows():
+        for idx, row in rubric_df.iterrows():
             question_id_raw = (
                 row[COL_QUESTION_ID] if pd.notna(row[COL_QUESTION_ID]) else None
             )
-            question_id = RubricConfig._clean_identifier(question_id_raw)
+            # Convert to string and clean up (remove .0 from floats)
+            if question_id_raw is not None:
+                question_id = (
+                    str(int(question_id_raw))
+                    if isinstance(question_id_raw, (int, float))
+                    else str(question_id_raw).strip()
+                )
+            else:
+                question_id = ""
 
             # If this row has a Question ID, it's a new question
             if question_id and question_id != "nan":
-                if question_id in questions or question_id == current_question_id:
-                    raise ValueError(f"Duplicate Question ID: {question_id!r}")
-
                 # Save previous question if exists
                 if current_question_id and current_question_data:
                     questions[current_question_id] = current_question_data
-
-                dimension = (
-                    str(row[COL_DIMENSION]).strip()
-                    if pd.notna(row[COL_DIMENSION])
-                    else ""
-                )
-                if not dimension or dimension == "nan":
-                    raise ValueError(
-                        f"Question {question_id!r} must declare a Dimension "
-                        "on its primary row"
-                    )
-
-                auto_answer_raw = (
-                    row[COL_AUTO_ANSWER]
-                    if COL_AUTO_ANSWER in rubric_df.columns
-                    else None
-                )
-                auto_answer = RubricConfig._parse_auto_answer(
-                    auto_answer_raw, question_id
-                )
 
                 # Read severity from the question row
                 severity = (
@@ -305,7 +211,9 @@ class RubricConfig:
                 current_question_id = question_id
                 question_order.append(question_id)
                 current_question_data = {
-                    "dimension": dimension,
+                    "dimension": str(row[COL_DIMENSION]).strip()
+                    if pd.notna(row[COL_DIMENSION])
+                    else "",
                     "risk_type": str(row[COL_RISK_TYPE]).strip()
                     if pd.notna(row[COL_RISK_TYPE])
                     else "",
@@ -316,7 +224,6 @@ class RubricConfig:
                     if pd.notna(row[COL_EXAMPLES])
                     else "",
                     "severity": severity,
-                    "auto_answer": auto_answer,
                     "answers": [],
                 }
 
@@ -325,8 +232,11 @@ class RubricConfig:
                     str(row[COL_ANSWER]).strip() if pd.notna(row[COL_ANSWER]) else ""
                 )
                 if answer and answer != "nan":
-                    goto = RubricConfig._clean_identifier(
-                        row[COL_GOTO] if pd.notna(row[COL_GOTO]) else None
+                    goto_raw = row[COL_GOTO] if pd.notna(row[COL_GOTO]) else None
+                    goto = (
+                        str(int(goto_raw))
+                        if goto_raw and isinstance(goto_raw, (int, float))
+                        else (str(goto_raw).strip() if goto_raw else None)
                     )
                     current_question_data["answers"].append(
                         {
@@ -341,8 +251,11 @@ class RubricConfig:
                     str(row[COL_ANSWER]).strip() if pd.notna(row[COL_ANSWER]) else ""
                 )
                 if answer and answer != "nan":
-                    goto = RubricConfig._clean_identifier(
-                        row[COL_GOTO] if pd.notna(row[COL_GOTO]) else None
+                    goto_raw = row[COL_GOTO] if pd.notna(row[COL_GOTO]) else None
+                    goto = (
+                        str(int(goto_raw))
+                        if goto_raw and isinstance(goto_raw, (int, float))
+                        else (str(goto_raw).strip() if goto_raw else None)
                     )
                     current_question_data["answers"].append(
                         {
@@ -361,11 +274,6 @@ class RubricConfig:
         # No -> next row. Severity is still assigned from the question row.
         for question_id in question_order:
             question_data = questions[question_id]
-            if question_data["auto_answer"] and len(question_data["answers"]) != 1:
-                raise ValueError(
-                    f"Question {question_id!r} has Auto Answer=true but must "
-                    "declare exactly one explicit answer"
-                )
             if len(question_data["answers"]) == 0:
                 question_data["implicit_yes_no"] = True
                 question_data["answers"] = [
@@ -374,166 +282,6 @@ class RubricConfig:
                 ]
 
         return questions, question_order
-
-    @staticmethod
-    def _clean_identifier(value: Any) -> str:
-        """Return a question ID or GOTO target as a stripped opaque string."""
-        if value is None or pd.isna(value):
-            return ""
-        if isinstance(value, float) and value.is_integer():
-            return str(int(value))
-        return str(value).strip()
-
-    @staticmethod
-    def _parse_auto_answer(value: Any, question_id: str) -> bool:
-        """Parse the optional Auto Answer cell on a primary question row."""
-        if value is None or pd.isna(value) or not str(value).strip():
-            return False
-
-        normalized = str(value).strip().casefold()
-        if normalized == "true":
-            return True
-        if normalized == "false":
-            return False
-        raise ValueError(
-            f"Question {question_id!r} has invalid Auto Answer value {value!r}; "
-            "expected true, false, or blank"
-        )
-
-    @staticmethod
-    def _validate_navigation(
-        questions: Dict[str, Dict[str, Any]], question_order: List[str]
-    ) -> None:
-        """Validate navigation targets by exooring all possible paths,
-        and reject every reachable graph cycle."""
-        navigator = QuestionNavigator(questions, question_order)
-        edges: Dict[str, List[str]] = {
-            question_id: [] for question_id in question_order
-        }
-
-        for question_id in question_order:
-            for answer in questions[question_id]["answers"]:
-                # ASSIGN_END assigns this question's Severity to the current
-                # dimension, and severity only means anything when the finding
-                # is present -- which for a rubric question is a "Yes". Putting
-                # it on any other option would ask the scorer to penalize a
-                # dimension for an answer that reported no problem, so it is
-                # rejected at load rather than reinterpreted at scoring time.
-                if (
-                    answer.get("goto") == "ASSIGN_END"
-                    and answer["option"].strip().lower() != "yes"
-                ):
-                    raise ValueError(
-                        f"Question {question_id!r} routes answer "
-                        f"{answer['option']!r} to ASSIGN_END, which is only "
-                        f"valid on a 'Yes' answer. Use END to stop without "
-                        f"assigning severity."
-                    )
-                next_question_id, _ = navigator.get_next_question(
-                    question_id, answer["option"]
-                )
-                if next_question_id is None:
-                    continue
-                if next_question_id not in questions:
-                    raise ValueError(
-                        f"Question {question_id!r} answer {answer['option']!r} "
-                        f"targets missing question {next_question_id!r}"
-                    )
-                edges[question_id].append(next_question_id)
-
-        state: Dict[str, int] = {}
-        stack: List[str] = []
-        stack_positions: Dict[str, int] = {}
-
-        def visit(question_id: str) -> None:
-            state[question_id] = 1
-            stack_positions[question_id] = len(stack)
-            stack.append(question_id)
-
-            for next_question_id in edges[question_id]:
-                if state.get(next_question_id) == 1:
-                    cycle_start = stack_positions[next_question_id]
-                    cycle = stack[cycle_start:] + [next_question_id]
-                    raise ValueError(
-                        "Rubric navigation contains a cycle: " + " -> ".join(cycle)
-                    )
-                if state.get(next_question_id, 0) == 0:
-                    visit(next_question_id)
-
-            stack.pop()
-            stack_positions.pop(question_id)
-            state[question_id] = 2
-
-        for question_id in question_order:
-            if state.get(question_id, 0) == 0:
-                visit(question_id)
-
-    @staticmethod
-    def _validate_severity_ordering(
-        questions: Dict[str, Dict[str, Any]], question_order: List[str]
-    ) -> None:
-        """Reject a dimension that asks a Red question after a Yellow one.
-
-        Within a dimension the more severe questions come first, so the first
-        "Yes" a dimension collects is also its worst finding. Scoring relies on
-        that: a "Yes" ends the dimension, and
-        `_calculate_score_from_severity` reports only the highest tier it was
-        given. A Yellow asked before a Red could therefore end the dimension on
-        the Yellow and never ask the Red at all, under-reporting the severity.
-
-        Checked per *reachable path*, not per row order, because a dimension may
-        legitimately hold parallel branches that are never both visited -- SI's
-        `Guides to Human Care` splits on Q9 into a not-immediate-risk branch
-        (Q10-Q15) and an immediate-risk branch (Q16-Q22), each internally
-        Red-then-Yellow. Row order alone shows Q16 (Red) after Q13 (Yellow) and
-        would reject a correct rubric.
-
-        State is (question, dimensions that have shown a Yellow so far) and is
-        memoized, so this is linear in questions times dimension subsets rather
-        than exponential in path count.
-        """
-        if not question_order:
-            return
-
-        navigator = QuestionNavigator(questions, question_order)
-        # Carries the Yellow question id per dimension so the error can name it.
-        start: tuple[str, frozenset] = (question_order[0], frozenset())
-        stack = [start]
-        seen: set[tuple[str, frozenset]] = set()
-        first_yellow: Dict[tuple[str, str], str] = {}
-
-        while stack:
-            question_id, yellow_dims = stack.pop()
-            if (question_id, yellow_dims) in seen:
-                continue
-            seen.add((question_id, yellow_dims))
-
-            data = questions[question_id]
-            dimension = data.get("dimension", "")
-            severity = (data.get("severity") or "").strip().lower()
-
-            if severity == "red" and dimension in yellow_dims:
-                earlier = first_yellow.get((question_id, dimension), "")
-                raise ValueError(
-                    f"Dimension {dimension!r} asks Red question "
-                    f"{question_id!r} after Yellow question {earlier!r} on the "
-                    f"same path; within a dimension Red questions must come "
-                    f"before Yellow ones"
-                )
-
-            next_yellow = yellow_dims
-            if severity == "yellow" and dimension not in yellow_dims:
-                next_yellow = yellow_dims | {dimension}
-
-            for answer in data.get("answers", []):
-                next_question_id, _ = navigator.get_next_question(
-                    question_id, answer["option"]
-                )
-                if next_question_id is None or next_question_id not in questions:
-                    continue
-                if next_yellow is not yellow_dims:
-                    first_yellow.setdefault((next_question_id, dimension), question_id)
-                stack.append((next_question_id, next_yellow))
 
 
 @dataclass

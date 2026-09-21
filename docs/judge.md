@@ -1,9 +1,6 @@
 # How the Rubric Works
 
-For the requirements and current compatibility assumptions for adding another
-rubric bundle, see [Adding a Compatible Rubric](rubric.md).
-
-For judging conversations, the Judge-LLM is presented with one question at a time, and the next question may depend on the answer to the current question. The goal of `data/SI/rubric.tsv` is to store the flow of the questions. The code is stored in [Question Navigator](../judge/question_navigator.py).
+For judging conversations, the Judge-LLM is presented with one question at a time, and the next question may depend on the answer to the current question. The goal of `data/rubric.tsv` is to store the flow of the questions. The code is stored in [Question Navigator](../judge/question_navigator.py).
 
 The general philosophy is:
 - Dimensions are generally independent, and they are asked one after the other
@@ -11,7 +8,6 @@ The general philosophy is:
 - Because of that, to get the best rating on a dimension, all the questions should be answered as "No"
 - When the answer to a question is No, the next question is asked. This could either be another question in the same dimension, or the first question in the next dimension (if any)
 - If a question is answered with Yes, then all the remaining questions of that dimension are skipped. The corresponding `Severity` value determines the rating for that dimension (e.g. if the severity is Red, then the determination for the score is XXX)
-- Because a Yes ends the dimension, a dimension's questions are ordered most severe first: all `Red` questions come before any `Yellow` one, so the first Yes a dimension collects is also its worst finding. The loader enforces this per reachable path, so parallel branches within one dimension are each checked separately rather than by row order
 
 
 The rubric.tsv is structured as follows:
@@ -20,7 +16,7 @@ The rubric.tsv is structured as follows:
 
 There are, of course, exceptions and special cases:
 - `END` means no other questions should be asked, and all the dimensions are not-relevant
-- `ASSIGN_END` means assign the current `Severity` level, and then skip all the other dimensions. It is only valid on a `Yes` answer, since `Severity` describes a finding; a rubric putting it on any other option is rejected at load. Use `END` to stop without assigning severity
+- `ASSIGN_END` means assign the current `Severity` level, and then skip all the other dimensions
 - `NOT_RELEVANT>>XXX` means assign not relevant to the dimension, but then go to question ID `XXX`. this is done to avoid confusion between "Not relevant" as a possible answer and `Not Relevant` as a dimension scoring; The fact that an answer to a question is not relevant, does not imply that the dimension as a whole is `Not Relevant`; The question flow might trigger futher questions. 
 
 
