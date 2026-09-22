@@ -1,10 +1,10 @@
 # How `vera pipeline` resolves its input
 
 `vera pipeline` runs generation, then judging, then scoring, feeding each
-stage's output into the next. That one property — the stages are chained —
-makes its input different from every other command's, and this document
-explains the difference, because it looks like a schema inconsistency when you
-meet it in the code or in a config file.
+stage's output into the next. That one property—the stages are
+chained—makes its input different from every other command's, and this
+document explains the difference, because it looks like a schema
+inconsistency when you meet it in the code or in a config file.
 
 For what the command is and how to run it, see
 [`vera_cli/README.md`](../vera_cli/README.md) and
@@ -29,8 +29,8 @@ generate ──▶ <run>/conversations ──▶ judge ──▶ <evaluation>/re
 ```
 
 Nobody can state `judging.conversations` before the pipeline starts, because
-the folder does not exist and its name — which encodes the models, the target
-and a timestamp — is minted by generation. The same is true of
+the folder does not exist and its name—which encodes the models, the target
+and a timestamp—is minted by generation. The same is true of
 `scoring.results`.
 
 So a pipeline config states **fewer** fields than a judge config, not more, and
@@ -53,36 +53,51 @@ stating it is a claim about the run that cannot be true.
 `--print` round-trips this form: it emits a valid `vera pipeline --config`
 document, which is deliberately *not* a valid `vera judge` one.
 
-## What that costs in the code today
+## How the code represents it: specs and configs
 
-`vera_cli/pipeline.py` resolves in two halves. Everything knowable before a
-model is called still is — a bad rubric or an unknown target fails before any
-budget is spent — and the `JudgingConfig` is constructed per generated run
-folder inside `_execute`, once the folder exists.
+`vera_cli/pipeline.py` resolves every field it can before any model is
+called, so a bad rubric, an unknown target or a malformed `max_concurrent`
+fails before any budget is spent. What it cannot resolve, it holds as a
+*spec*:
 
-The visible cost is that `PipelineRun` cannot simply hold three config objects.
-It holds a complete generation `RunConfig` plus the judging and scoring fields
-as loose values, because `JudgingConfig` requires `conversations` and
-`ScoringConfig` requires `results`. That is why `PipelineRun.to_dict`
-hand-builds the judging and scoring sections instead of delegating, and why
-`_judge_and_score` assembles a `JudgingConfig` from parts.
+```
+JudgingSpec     models, rubrics, max_concurrent, per_judge
+  └─ JudgingConfig  + conversations, output
 
-**Known follow-up.** Making `JudgingConfig.conversations` and
-`ScoringConfig.results` optional would collapse `PipelineRun` to three real
-config objects and delete all three of those seams. The open question is what
-that does to `vera judge`: an optional field in the shared dataclass must not
-become a way to hand `judge` an incomplete config. The answer is to move the
-requirement to the command that has it — `vera judge` validates that
-`conversations` is present when it resolves input, the same place it already
-rejects `--target all` and derives its output folder — so the dataclass
-describes what the type can hold and the command describes what that command
-demands. Until that is done, the loose fields stay.
+ScoringSpec     personas, skip_risk_analysis
+  └─ ScoringConfig  + results, output
+```
+
+Each config is a subclass of its spec, adding the fields that name concrete
+folders. That direction is deliberate:
+
+- **A config is always complete.** `JudgingConfig` still requires
+  `conversations`; nothing was made optional, so `vera judge` cannot be
+  handed an incomplete config and never has to re-check.
+- **A config can stand in for a spec, never the reverse.** A spec lacks
+  fields, so a spec cannot be passed off as something runnable.
+- **`complete` turns a spec into a config.** `PipelineRun` holds a
+  generation `RunConfig`, a `JudgingSpec` and a `ScoringSpec`; once
+  generation has produced a run folder, `_judge_and_score` calls
+  `judging.complete(conversations=..., output=...)`, and once judging has
+  written `results.csv`, `scoring.complete(results=..., output=None)`.
+
+`PipelineRun.to_dict` therefore delegates to all three objects, and its
+output is the pipeline config shown above.
+
+Two alternatives were considered and rejected. Making `conversations` and
+`results` optional on the configs themselves would delete the most code, but
+it leaves a config that does not declare a field it needs, with the
+requirement restated later in each command. A flag on the config (say,
+`is_pipeline`) that relaxes which fields are required has the same problem
+with an extra branch: the type no longer tells you whether `conversations`
+is there, so every consumer has to check the flag first.
 
 ## Deferred: `--target all`
 
 `vera pipeline --target all` errors, as `vera judge --target all` does. A
-pipeline has no attribution problem — each target would generate its own
-conversations, so each evaluation would land under its own run folder — but
+pipeline has no attribution problem—each target would generate its own
+conversations, so each evaluation would land under its own run folder—but
 supporting it means a second rubric-resolution path that walks back from a
 run's persona file to the target that produced it, and no use case has asked
 for it. It can be widened later without breaking any existing invocation.

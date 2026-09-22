@@ -43,19 +43,19 @@ pipeline — the three model roles and the target — and anything stage-specifi
 comes from `--config`. A caller who needs per-stage knobs is already writing a
 config; a caller who does not gets a four-flag command line.
 
-## Why judging is resolved in two halves
+## Why judging and scoring are resolved as specs
 
 `JudgingConfig` requires `conversations`, and at resolve time a pipeline has
 none — generation has not run yet. This is not a gap in the schema but a
 property of the input format: per `docs/vera-cli-use-cases.md`, a pipeline
 config *omits* `judging.conversations` precisely because the generation stage
-supplies it.
+supplies it. `ScoringConfig.results` is the same, one stage later.
 
-So `PipelineRun` below holds the generation `RunConfig` plus the judging and
-scoring inputs that are knowable up front, and the `JudgingConfig` is built
-per generated run folder inside `_execute`, once the folder exists. Everything
-resolvable before any model is called still is, so a bad rubric or an unknown
-target fails before spending the budget.
+So `PipelineRun` below holds a `JudgingSpec` and a `ScoringSpec` — the
+base classes of those configs, holding everything but the folders — and
+`_judge_and_score` calls `complete` on each once the folder exists. Every
+field is validated at resolve time, so a bad rubric, an unknown target or a
+malformed `max_concurrent` fails before spending the budget.
 """
 
 from __future__ import annotations
@@ -72,10 +72,10 @@ from judge import run_judging
 from judge.score import run_scoring
 from utils.config_schema import (
     InvocationConfig,
-    JudgingConfig,
-    ModelSpec,
+    JudgingSpec,
     RubricFiles,
     RunConfig,
+    ScoringSpec,
 )
 from utils.conversation_layout import resolve_conversation_input
 from utils.debug import set_debug
@@ -109,17 +109,13 @@ class PipelineRun:
 
     `generation` is a complete `RunConfig` because that stage can be fully
     described up front and is handed straight to `generate`'s own executor.
-    The judging fields are loose rather than a `JudgingConfig` for the reason
-    in the module docstring — the conversations folder does not exist yet.
+    `judging` and `scoring` are specs rather than configs for the reason in the
+    module docstring — the folders they would name do not exist yet.
     """
 
     generation: RunConfig
-    judge_models: list[ModelSpec]
-    rubric: RubricFiles
-    judge_max_concurrent: int | None
-    per_judge: bool
-    scoring_personas: str | None
-    skip_risk_analysis: bool
+    judging: JudgingSpec
+    scoring: ScoringSpec
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize back into the pipeline config input format.
@@ -127,24 +123,12 @@ class PipelineRun:
         `judging.conversations` is absent by design, so this round-trips: the
         output is a valid `vera pipeline --config` document, not a valid
         `vera judge` one.
-
-        The generation half delegates; the judging and scoring halves are
-        hand-built because there is no `JudgingConfig`/`ScoringConfig` to ask —
-        see `docs/pipeline.md`, which also records the follow-up that would let
-        all three delegate.
         """
-        config = self.generation.to_dict()
-        config["judging"] = {
-            "models": [model.to_dict() for model in self.judge_models],
-            "rubrics": [self.rubric.to_dict()],
-            "max_concurrent": self.judge_max_concurrent,
-            "per_judge": self.per_judge,
+        return {
+            **self.generation.to_dict(),
+            "judging": self.judging.to_dict(),
+            "scoring": self.scoring.to_dict(),
         }
-        config["scoring"] = {
-            "personas": self.scoring_personas,
-            "skip_risk_analysis": self.skip_risk_analysis,
-        }
-        return config
 
 
 def run(args: argparse.Namespace) -> int:
@@ -158,11 +142,7 @@ def run(args: argparse.Namespace) -> int:
     # Debug is per invocation, not per stage: `set_debug` flips a process
     # global (`utils/debug.py`) and `debug` lives on `InvocationConfig`, which
     # is one per run.
-    # TODO: decide later whether per-stage debug is worth having — a
-    # `--debug-stage generate|judge|score` flag toggling this global around
-    # each stage would cost ~10 lines and no schema change, but nothing needs
-    # it yet. Revisit once someone has had to debug one stage of a long
-    # pipeline; drop this TODO if that never happens.
+    # Whether per-stage debug is worth having is an open item in `TODO`.
     if any(run.generation.invocation.debug for run in runs):
         set_debug(True)
     for pipeline_run in runs:
@@ -240,17 +220,17 @@ def _from_cli(
 
     # Resolved once and shared: `--target` names one bundle per run, and for a
     # pipeline the rubric always comes from the same target the personas did.
+    judging = JudgingSpec(
+        models=models_from_cli(judge_models, getattr(args, "judge_params", None)),
+        rubrics=[_rubric_for(target)],
+        max_concurrent=judge_command.DEFAULTS["max_concurrent"],
+        per_judge=judge_command.DEFAULTS["per_judge"],
+    )
     return [
         PipelineRun(
             generation=generation_run,
-            judge_models=models_from_cli(
-                judge_models, getattr(args, "judge_params", None)
-            ),
-            rubric=_rubric_for(target),
-            judge_max_concurrent=judge_command.DEFAULTS["max_concurrent"],
-            per_judge=judge_command.DEFAULTS["per_judge"],
-            scoring_personas=None,
-            skip_risk_analysis=False,
+            judging=judging,
+            scoring=ScoringSpec(personas=None, skip_risk_analysis=False),
         )
         for generation_run in generation_runs
     ]
@@ -284,34 +264,36 @@ def _from_config(
     # straight to generate's config resolver, never back through `resolve_input`.
     generation_runs = generate_command._from_config(config, invocation)
 
-    models = models_from_config(
-        required(judging, "models", section="judging config"),
-        field="judging.models",
+    judging_spec = JudgingSpec(
+        models=models_from_config(
+            required(judging, "models", section="judging config"),
+            field="judging.models",
+        ),
+        rubrics=[_rubric_from_config(judging, target)],
+        max_concurrent=required(judging, "max_concurrent", section="judging config"),
+        per_judge=required(judging, "per_judge", section="judging config"),
     )
-    max_concurrent = required(judging, "max_concurrent", section="judging config")
-    per_judge = required(judging, "per_judge", section="judging config")
 
     scoring = config.get("scoring") or {}
     if not isinstance(scoring, dict):
         raise ConfigError("scoring must be an object")
     personas = scoring.get("personas")
-    skip_risk = scoring.get("skip_risk_analysis", False)
-    if not isinstance(skip_risk, bool):
-        raise ConfigError("scoring.skip_risk_analysis must be a boolean")
+    # `ScoringSpec` validates the type; a `TypeError`/`ValueError` from it is
+    # normalized to a `ConfigError` by `resolve_configs`.
+    scoring_spec = ScoringSpec(
+        personas=(
+            config_path(personas, field="scoring.personas")
+            if personas is not None
+            else None
+        ),
+        skip_risk_analysis=scoring.get("skip_risk_analysis", False),
+    )
 
     return [
         PipelineRun(
             generation=generation_run,
-            judge_models=models,
-            rubric=_rubric_from_config(judging, target),
-            judge_max_concurrent=max_concurrent,
-            per_judge=per_judge,
-            scoring_personas=(
-                config_path(personas, field="scoring.personas")
-                if personas is not None
-                else None
-            ),
-            skip_risk_analysis=skip_risk,
+            judging=judging_spec,
+            scoring=scoring_spec,
         )
         for generation_run in generation_runs
     ]
@@ -398,16 +380,11 @@ async def _execute(runs: list[PipelineRun]) -> None:
 
 async def _judge_and_score(pipeline_run: PipelineRun, run_folder: str) -> str:
     """Judge one generated run folder, score it, and say where it landed."""
-    conversations = str(Path(run_folder) / "conversations")
-    judging = JudgingConfig(
-        models=pipeline_run.judge_models,
-        conversations=[conversations],
-        rubrics=[pipeline_run.rubric],
+    judging = pipeline_run.judging.complete(
+        conversations=[str(Path(run_folder) / "conversations")],
         # Evaluations land beside the transcripts that produced them, the same
         # default `vera judge` applies when `--output` is omitted.
         output=str(Path(run_folder) / "evaluations"),
-        max_concurrent=pipeline_run.judge_max_concurrent,
-        per_judge=pipeline_run.per_judge,
     )
     transcripts_dir, _, folder_name = resolve_conversation_input(
         judging.conversations[0]
@@ -430,11 +407,14 @@ async def _judge_and_score(pipeline_run: PipelineRun, run_folder: str) -> str:
         resume=False,
     )
 
+    scoring = pipeline_run.scoring.complete(
+        results=str(Path(evaluation_folder) / "results.csv"), output=None
+    )
     run_scoring(
-        results_csv=str(Path(evaluation_folder) / "results.csv"),
-        output_json=None,
-        personas_tsv=pipeline_run.scoring_personas,
-        skip_risk_analysis=pipeline_run.skip_risk_analysis,
+        results_csv=scoring.results,
+        output_json=scoring.output,
+        personas_tsv=scoring.personas,
+        skip_risk_analysis=scoring.skip_risk_analysis,
     )
     return evaluation_folder
 

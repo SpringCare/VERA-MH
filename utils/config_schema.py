@@ -303,24 +303,25 @@ class InvocationConfig:
 
 
 @dataclasses.dataclass(frozen=True)
-class JudgingConfig:
-    """What judging run to perform — the run-defining half for `vera judge`.
+class JudgingSpec:
+    """How to judge, without yet naming what to judge.
 
-    The counterpart of `GenerationConfig`, and subject to the same rule: every
-    field here is part of the run's identity, so all of them must come from one
-    input form.
+    The part of a judging run that can be stated before the conversations
+    exist. `vera judge` never holds one on its own — its caller already has the
+    conversations, so it builds a `JudgingConfig` directly. `vera pipeline`
+    does: at resolve time generation has not run, so the folder that
+    `conversations` and `output` would name has not been created yet (see
+    `docs/pipeline.md`). `complete` turns a spec into a config, and takes
+    exactly the two fields a spec lacks.
 
     `rubrics` is list-shaped from day one per AD-20 while only length 1 is
     accepted, so lifting the multi-rubric restriction later is not a schema
     break. Each entry holds the three resolved rubric files rather than a
     manifest path, because the resolved form names concrete files.
-    `conversations` is list-shaped for the same reason and likewise length 1.
     """
 
     models: list[ModelSpec]
-    conversations: list[str]
     rubrics: list[RubricFiles]
-    output: str
     max_concurrent: int | None
     per_judge: bool
 
@@ -345,20 +346,11 @@ class JudgingConfig:
                 "judging.models must all use the same provider parameters; "
                 "per-model judge parameters are not supported yet"
             )
-        if len(self.conversations) != 1:
-            raise ValueError(
-                "judging.conversations must contain exactly one folder; judge "
-                "each folder separately and combine the results with vera pool"
-            )
-        if not all(isinstance(folder, str) and folder for folder in self.conversations):
-            raise ValueError("judging.conversations entries must be non-empty paths")
         if len(self.rubrics) != 1:
             raise ValueError(
                 "judging.rubrics must contain exactly one rubric; multi-rubric "
                 "support is not implemented yet"
             )
-        if not self.output:
-            raise ValueError("judging.output cannot be empty")
         if self.max_concurrent is not None:
             if isinstance(self.max_concurrent, bool) or not isinstance(
                 self.max_concurrent, int
@@ -371,24 +363,74 @@ class JudgingConfig:
         if not isinstance(self.per_judge, bool):
             raise ValueError("judging.per_judge must be a boolean")
 
+    def complete(self, *, conversations: list[str], output: str) -> JudgingConfig:
+        """Name what to judge and where to write it, yielding a full config."""
+        return JudgingConfig(
+            models=self.models,
+            rubrics=self.rubrics,
+            max_concurrent=self.max_concurrent,
+            per_judge=self.per_judge,
+            conversations=conversations,
+            output=output,
+        )
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "models": [model.to_dict() for model in self.models],
-            "conversations": list(self.conversations),
             "rubrics": [rubric.to_dict() for rubric in self.rubrics],
-            "output": self.output,
             "max_concurrent": self.max_concurrent,
             "per_judge": self.per_judge,
         }
 
 
 @dataclasses.dataclass(frozen=True)
-class ScoringConfig:
-    """What scoring run to perform — the run-defining half for `vera score`.
+class JudgingConfig(JudgingSpec):
+    """What judging run to perform — the run-defining half for `vera judge`.
 
-    The smallest of the three sections, because scoring reads an artifact that
-    already exists rather than calling any model: `results` names the CSV, and
-    the other three fields say what to do with it.
+    The counterpart of `GenerationConfig`, and subject to the same rule: every
+    field here is part of the run's identity, so all of them must come from one
+    input form.
+
+    A `JudgingSpec` plus the two fields that name concrete folders, and every
+    one of them required: a `JudgingConfig` is always complete, so anything
+    holding one can run it. The subclass direction is the point — a config can
+    stand in wherever a spec is expected, while a spec can never be passed off
+    as a runnable config.
+
+    `conversations` is list-shaped for the same reason as `rubrics` and
+    likewise length 1.
+    """
+
+    conversations: list[str]
+    output: str
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if len(self.conversations) != 1:
+            raise ValueError(
+                "judging.conversations must contain exactly one folder; judge "
+                "each folder separately and combine the results with vera pool"
+            )
+        if not all(isinstance(folder, str) and folder for folder in self.conversations):
+            raise ValueError("judging.conversations entries must be non-empty paths")
+        if not self.output:
+            raise ValueError("judging.output cannot be empty")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            **super().to_dict(),
+            "conversations": list(self.conversations),
+            "output": self.output,
+        }
+
+
+@dataclasses.dataclass(frozen=True)
+class ScoringSpec:
+    """How to score, without yet naming the results to score.
+
+    Exists for the same reason as `JudgingSpec`: a pipeline knows these two
+    fields up front, but the `results.csv` they apply to is written by its own
+    judging stage. `complete` supplies it.
 
     `personas` is optional and has no default. Legacy `judge/score.py` defaulted
     it to `data/SI/personas.tsv`, which silently produced an empty
@@ -398,27 +440,61 @@ class ScoringConfig:
     it suppresses the step even when a personas file *is* available.
     """
 
-    results: str
-    output: str | None
     personas: str | None
     skip_risk_analysis: bool
 
     def __post_init__(self) -> None:
-        if not isinstance(self.results, str) or not self.results:
-            raise ValueError("scoring.results must be a path")
-        for field_name in ("output", "personas"):
-            value = getattr(self, field_name)
-            if value is not None and (not isinstance(value, str) or not value):
-                raise ValueError(f"scoring.{field_name} must be null or a path")
+        if self.personas is not None and (
+            not isinstance(self.personas, str) or not self.personas
+        ):
+            raise ValueError("scoring.personas must be null or a path")
         if not isinstance(self.skip_risk_analysis, bool):
             raise ValueError("scoring.skip_risk_analysis must be a boolean")
+
+    def complete(self, *, results: str, output: str | None) -> ScoringConfig:
+        """Name the results to score and where to write them."""
+        return ScoringConfig(
+            personas=self.personas,
+            skip_risk_analysis=self.skip_risk_analysis,
+            results=results,
+            output=output,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "personas": self.personas,
+            "skip_risk_analysis": self.skip_risk_analysis,
+        }
+
+
+@dataclasses.dataclass(frozen=True)
+class ScoringConfig(ScoringSpec):
+    """What scoring run to perform — the run-defining half for `vera score`.
+
+    The smallest of the three sections, because scoring reads an artifact that
+    already exists rather than calling any model: `results` names the CSV, and
+    the other three fields say what to do with it. Always complete, like
+    `JudgingConfig`; `output` is `None`-able because "write beside the input" is
+    a real destination, not a missing one.
+    """
+
+    results: str
+    output: str | None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.results, str) or not self.results:
+            raise ValueError("scoring.results must be a path")
+        if self.output is not None and (
+            not isinstance(self.output, str) or not self.output
+        ):
+            raise ValueError("scoring.output must be null or a path")
+        super().__post_init__()
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "results": self.results,
             "output": self.output,
-            "personas": self.personas,
-            "skip_risk_analysis": self.skip_risk_analysis,
+            **super().to_dict(),
         }
 
 
