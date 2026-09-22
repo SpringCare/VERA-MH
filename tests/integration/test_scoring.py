@@ -11,15 +11,18 @@ from typing import Any, Dict, List
 import pytest
 from dotenv import load_dotenv
 
+from llm_clients.config import Config
+
 # Import additional modules to increase test coverage
 
 # Test configuration constants
 TEST_CONFIG = {
-    "USER_MODEL": "gpt-4o",
-    # claude-opus-4-1-20250805 retired 2026-08-05; claude-opus-5 is the
-    # like-for-like Opus-tier replacement (the ID takes no date suffix).
-    "PROVIDER_MODEL": "claude-opus-5",
-    "JUDGE_MODEL": "gpt-4o",
+    # Read from Config rather than pinned here: these are live calls, so a
+    # provider retirement breaks them, and a pin means hunting per test file.
+    # test_model_availability.py checks these IDs still resolve.
+    "USER_MODEL": Config.DEFAULT_OPENAI_MODEL,
+    "PROVIDER_MODEL": Config.DEFAULT_CLAUDE_MODEL,
+    "JUDGE_MODEL": Config.DEFAULT_OPENAI_MODEL,
     "JUDGE_INSTANCES": 1,  # Single instance for fastest test execution
     "TURNS": 6,  # Smaller for faster tests
     "RUNS_PER_PERSONA": 1,  # Reduced for faster tests

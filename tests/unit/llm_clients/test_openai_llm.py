@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from llm_clients import Role
+from llm_clients.config import Config
 from llm_clients.llm_interface import LLMGenerationFailed
 from llm_clients.openai_llm import OpenAILLM
 
@@ -75,7 +76,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
         assert llm.name == "TestOpenAI"
         assert llm.system_prompt == "Test prompt"
-        assert llm.model_name == "gpt-5.2"
+        assert llm.model_name == Config.DEFAULT_OPENAI_MODEL
         assert llm.last_response_metadata == {}
 
     def test_init_with_custom_model(self):
@@ -331,7 +332,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
         assert response == "Response"
         metadata = llm.last_response_metadata
-        assert metadata["model"] == "gpt-5.2"
+        # No model in the response, so this is the configured default.
+        assert metadata["model"] == Config.DEFAULT_OPENAI_MODEL
         assert metadata["usage"] == {}
         assert metadata["finish_reason"] is None
 
@@ -810,7 +812,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
             metadata = assert_metadata_structure(
                 llm, expected_provider="openai", expected_role=Role.JUDGE
             )
-            assert metadata["model"] == "gpt-5.2"
+            # No model in the response, so this is the configured default.
+            assert metadata["model"] == Config.DEFAULT_OPENAI_MODEL
             assert metadata["structured_output"] is True
             assert_response_timing(metadata)
 

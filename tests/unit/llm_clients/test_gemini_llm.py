@@ -7,6 +7,7 @@ import pytest
 from langchain_core.messages import AIMessage
 
 from llm_clients import Role
+from llm_clients.config import Config
 from llm_clients.gemini_llm import (
     _STRUCTURED_OUTPUT_MAX_LOG_CHARS,
     GeminiLLM,
@@ -93,7 +94,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
         assert llm.name == "TestGemini"
         assert llm.system_prompt == "Test prompt"
-        assert llm.model_name == "gemini-1.5-pro"
+        assert llm.model_name == Config.DEFAULT_GEMINI_MODEL
         assert llm.last_response_metadata == {}
 
     def test_init_with_custom_model(self):
@@ -105,11 +106,18 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert llm.model_name == "gemini-1.5-flash"
 
     def test_init_with_kwargs(self, default_llm_kwargs):
-        """Test initialization with additional kwargs."""
+        """Test initialization with additional kwargs.
+
+        Pinned to a pre-3 model on purpose: Gemini 3+ drops
+        temperature/top_p/top_k (see _REASONING_ONLY_GEMINI_MAJOR), so running
+        this against the configured default would assert nothing about kwargs
+        passthrough. Dropping is covered separately by the param-filter tests.
+        """
         with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
             GeminiLLM(
                 name="TestGemini",
                 role=Role.PERSONA,
+                model_name="gemini-1.5-pro",
                 **default_llm_kwargs,
             )
 
@@ -380,7 +388,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
         assert response == "Response"
         metadata = llm.last_response_metadata
-        assert metadata["model"] == "gemini-1.5-pro"
+        # No model in the response, so this is the configured default.
+        assert metadata["model"] == Config.DEFAULT_GEMINI_MODEL
         assert metadata["usage"] == {}
         assert metadata["finish_reason"] is None
 
@@ -777,7 +786,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
             metadata = assert_metadata_structure(
                 llm, expected_provider="gemini", expected_role=Role.JUDGE
             )
-            assert metadata["model"] == "gemini-1.5-pro"
+            # No model in the response, so this is the configured default.
+            assert metadata["model"] == Config.DEFAULT_GEMINI_MODEL
             assert metadata["structured_output"] is True
             assert metadata["structured_output_method"] == "json_schema"
             assert_response_timing(metadata)

@@ -15,6 +15,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from llm_clients import Role
+from llm_clients.config import Config
 
 # ============================================================================
 # Mock Response Factories
@@ -377,7 +378,10 @@ def mock_azure_config():
         ),
         patch(
             "llm_clients.azure_llm.Config.get_azure_config",
-            return_value={"model": "gpt-5.2"},
+            # The real configured default, so this stub tests that AzureLLM
+            # reads get_azure_config rather than pinning a second model ID
+            # that has to be updated alongside the first.
+            return_value={"model": Config.DEFAULT_AZURE_MODEL},
         ),
     ):
         yield

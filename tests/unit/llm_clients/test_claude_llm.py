@@ -7,6 +7,7 @@ import pytest
 
 from llm_clients import Role
 from llm_clients.claude_llm import ClaudeLLM
+from llm_clients.config import Config
 from llm_clients.llm_interface import LLMGenerationFailed
 
 from .test_base_llm import TestJudgeLLMBase
@@ -76,7 +77,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
         assert llm.name == "TestClaude"
         assert llm.system_prompt == "Test prompt"
-        assert llm.model_name == "claude-sonnet-4-5-20250929"
+        assert llm.model_name == Config.DEFAULT_CLAUDE_MODEL
         assert llm.last_response_metadata == {}
 
     def test_init_with_custom_model(self):
@@ -88,15 +89,22 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert llm.model_name == "claude-3-opus-20240229"
 
     def test_init_with_kwargs(self, default_llm_kwargs):
-        """Test initialization with additional kwargs."""
+        """Test initialization with additional kwargs.
+
+        Pinned to a non-adaptive-thinking model on purpose: the adaptive
+        models in _MODEL_QUIRKS reject temperature/top_p/top_k, so running
+        this against the configured default would assert nothing about kwargs
+        passthrough. Dropping is covered separately by the param-filter tests.
+        """
         with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
             mock_llm = MagicMock()
-            mock_llm.model = "claude-sonnet-4-5-20250929"
+            mock_llm.model = "claude-haiku-4-5-20251001"
             mock_chat_anthropic.return_value = mock_llm
 
             ClaudeLLM(
                 name="TestClaude",
                 role=Role.PERSONA,
+                model_name="claude-haiku-4-5-20251001",
                 **default_llm_kwargs,
             )
 
@@ -603,7 +611,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
         assert response == "Response"
         metadata = llm.last_response_metadata
-        assert metadata["model"] == "claude-sonnet-4-5-20250929"
+        # No model in the response, so this is the configured default.
+        assert metadata["model"] == Config.DEFAULT_CLAUDE_MODEL
         assert metadata["usage"] == {}
         assert metadata["stop_reason"] is None
 
@@ -997,7 +1006,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
             metadata = assert_metadata_structure(
                 llm, expected_provider="claude", expected_role=Role.JUDGE
             )
-            assert metadata["model"] == "claude-sonnet-4-5-20250929"
+            # No model in the response, so this is the configured default.
+            assert metadata["model"] == Config.DEFAULT_CLAUDE_MODEL
             assert metadata["structured_output"] is True
             assert_response_timing(metadata)
 

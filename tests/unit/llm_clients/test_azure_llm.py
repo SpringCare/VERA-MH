@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from llm_clients import Role
 from llm_clients.azure_llm import AzureLLM
+from llm_clients.config import Config
 from llm_clients.llm_interface import LLMGenerationFailed
 
 from .test_base_llm import TestJudgeLLMBase
@@ -19,6 +20,11 @@ from .test_helpers import (
     assert_response_timing,
     verify_message_types_for_persona,
 )
+
+# What AzureLLM ends up with when no model_name is passed: the configured
+# default minus the azure- routing prefix, which the client strips before the
+# deployment name reaches the API.
+_DEFAULT_DEPLOYMENT = Config.DEFAULT_AZURE_MODEL.removeprefix("azure-")
 
 
 # Helper class for mocking response_metadata that supports both dict and
@@ -124,7 +130,7 @@ class TestAzureLLM(TestJudgeLLMBase):
 
         assert llm.name == "TestAzure"
         assert llm.system_prompt == "Test prompt"
-        assert llm.model_name == "gpt-5.2"
+        assert llm.model_name == _DEFAULT_DEPLOYMENT
         assert llm.last_response_metadata == {}
 
     def test_init_with_custom_model(self):
@@ -398,7 +404,8 @@ class TestAzureLLM(TestJudgeLLMBase):
 
         assert response == "Response"
         metadata = llm.last_response_metadata
-        assert metadata["model"] == "gpt-5.2"
+        # No model in the response, so this is the configured default.
+        assert metadata["model"] == _DEFAULT_DEPLOYMENT
         assert metadata["usage"] == {}
         assert metadata["finish_reason"] is None
 
@@ -549,7 +556,8 @@ class TestAzureLLM(TestJudgeLLMBase):
             metadata = assert_metadata_structure(
                 llm, expected_provider="azure", expected_role=Role.PERSONA
             )
-            assert metadata["model"] == "gpt-5.2"
+            # No model in the response, so this is the configured default.
+            assert metadata["model"] == _DEFAULT_DEPLOYMENT
             assert metadata["structured_output"] is True
             assert_response_timing(metadata)
 

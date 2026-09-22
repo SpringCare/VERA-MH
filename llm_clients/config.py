@@ -74,6 +74,29 @@ class Config:
         url = provider_urls[provider] or cls.API_BASE_URL
         return url.rstrip("/") if url else None
 
+    # Default model IDs. These are the single source of truth for the repo's
+    # model pins: the client constructors fall back to them when no model_name
+    # is passed, and tests read them instead of hardcoding IDs, so a provider
+    # retirement is one edit here rather than a hunt across test files.
+    #
+    # A retirement is silent until something actually calls the retired ID, and
+    # then it surfaces as a generic transport error several layers down (see
+    # PR #218). tests/integration/test_model_availability.py resolves each of
+    # these against the provider's models endpoint under ``-m live`` so the
+    # failure names the dead model instead.
+    DEFAULT_CLAUDE_MODEL = "claude-sonnet-5"
+    # gpt-5.4 rather than the newest available: a human-validated IRR
+    # iteration picked it as the judge (see CHANGELOG), so it is the one
+    # choice here backed by evidence rather than recency.
+    DEFAULT_OPENAI_MODEL = "gpt-5.4"
+    # The only pro-tier Gemini currently served; the rest of the 3.x line is
+    # flash. Still a preview, so expect this to need a bump when it graduates
+    # -- which the availability test will catch.
+    DEFAULT_GEMINI_MODEL = "gemini-3.1-pro-preview"
+    # The ``azure-`` prefix selects the Azure client in LLMFactory and is
+    # stripped before the deployment name reaches the API.
+    DEFAULT_AZURE_MODEL = "azure-gpt-5.4"
+
     @classmethod
     def get_claude_config(cls) -> Dict[str, Any]:
         """Get default Claude model name.
@@ -81,7 +104,7 @@ class Config:
         Returns only the model name. Runtime parameters (temperature, max_tokens)
         should be passed explicitly via CLI arguments.
         """
-        return {"model": "claude-sonnet-4-5-20250929"}
+        return {"model": cls.DEFAULT_CLAUDE_MODEL}
 
     @classmethod
     def get_openai_config(cls) -> Dict[str, Any]:
@@ -90,7 +113,7 @@ class Config:
         Returns only the model name. Runtime parameters (temperature, max_tokens)
         should be passed explicitly via CLI arguments.
         """
-        return {"model": "gpt-5.2"}
+        return {"model": cls.DEFAULT_OPENAI_MODEL}
 
     @classmethod
     def get_gemini_config(cls) -> Dict[str, Any]:
@@ -99,7 +122,7 @@ class Config:
         Returns only the model name. Runtime parameters (temperature, max_tokens)
         should be passed explicitly via CLI arguments.
         """
-        return {"model": "gemini-1.5-pro"}
+        return {"model": cls.DEFAULT_GEMINI_MODEL}
 
     @classmethod
     def get_azure_config(cls) -> Dict[str, Any]:
@@ -109,7 +132,7 @@ class Config:
         should be passed explicitly via CLI arguments. The endpoint and API key
         are loaded from environment variables.
         """
-        return {"model": "azure-gpt-5.2"}
+        return {"model": cls.DEFAULT_AZURE_MODEL}
 
     @classmethod
     def get_ollama_config(cls) -> Dict[str, Any]:
