@@ -35,7 +35,7 @@ def validate_test_environment():
         pytest.skip(f"Missing required environment variables: {missing}")
 
     # Validate repo structure
-    required_files = ["generate.py", "judge.py", "data/personas.tsv"]
+    required_files = ["generate.py", "judge.py", "data/SI/personas.tsv"]
     repo_root = Path.cwd()
     missing_files = [f for f in required_files if not (repo_root / f).exists()]
     if missing_files:
