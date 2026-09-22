@@ -20,8 +20,13 @@ no log-scraping.
 That chaining is the entire reason the command exists. Running the three
 commands by hand works, but the caller has to copy the generation run folder
 into the judge invocation and the `results.csv` path into the score
-invocation — which is what `scripts/run_recommended_vera_pipeline.sh` used to
-do by scraping them out of a log.
+invocation — which is what `scripts/run_recommended_vera_pipeline.sh` does by
+scraping them out of a log.
+
+`docs/pipeline.md` covers what makes this command's input different from the
+single-stage ones: the paths that chain the stages together cannot be known
+before the run starts, so a pipeline config states fewer fields than a judge or
+score config, not more.
 
 ## Why the CLI shorthand is only `-c`, `-u`, `-j`, `--target`
 
@@ -122,6 +127,11 @@ class PipelineRun:
         `judging.conversations` is absent by design, so this round-trips: the
         output is a valid `vera pipeline --config` document, not a valid
         `vera judge` one.
+
+        The generation half delegates; the judging and scoring halves are
+        hand-built because there is no `JudgingConfig`/`ScoringConfig` to ask —
+        see `docs/pipeline.md`, which also records the follow-up that would let
+        all three delegate.
         """
         config = self.generation.to_dict()
         config["judging"] = {
@@ -145,6 +155,14 @@ def run(args: argparse.Namespace) -> int:
             print(_render(pipeline_run))
         return 0
 
+    # Debug is per invocation, not per stage: `set_debug` flips a process
+    # global (`utils/debug.py`) and `debug` lives on `InvocationConfig`, which
+    # is one per run.
+    # TODO: decide later whether per-stage debug is worth having — a
+    # `--debug-stage generate|judge|score` flag toggling this global around
+    # each stage would cost ~10 lines and no schema change, but nothing needs
+    # it yet. Revisit once someone has had to debug one stage of a long
+    # pipeline; drop this TODO if that never happens.
     if any(run.generation.invocation.debug for run in runs):
         set_debug(True)
     for pipeline_run in runs:
@@ -156,10 +174,9 @@ def run(args: argparse.Namespace) -> int:
 def resolve_configs(args: argparse.Namespace) -> list[PipelineRun]:
     """Resolve either config JSON or CLI flags into canonical pipelines.
 
-    `--target all` fans out here exactly as it does for `generate`, producing
-    one pipeline per target. That is safe in a way `vera judge --target all` is
-    not: each target gets its own generation run, so its evaluations land under
-    that run rather than sharing one folder with nothing to tell them apart.
+    Returns a list because `generate`'s resolver does; `--target all` is
+    rejected for now (see `_reject_target_all`), so today it always holds
+    exactly one pipeline.
     """
     try:
         config, invocation = resolve_input(
@@ -171,8 +188,18 @@ def resolve_configs(args: argparse.Namespace) -> list[PipelineRun]:
             if config is not None
             else _from_cli(args, invocation)
         )
+    # Not dead code, and the order matters: `ConfigError` *is* a `ValueError`
+    # (`vera_cli/config.py`), so without this arm the broad one below would
+    # catch every error the resolvers already diagnosed and wrap its message a
+    # second time — "judging config is missing required field: models" would
+    # reach the user as "invalid pipeline config: judging config is missing
+    # required field: models".
     except ConfigError:
         raise
+    # Raw TypeError/ValueError come from the dataclass constructors underneath,
+    # which have no idea they are behind a CLI — `ModelSpec.from_dict` on a
+    # wrong-typed field is the common one. Normalized so the user sees a config
+    # error rather than a traceback.
     except (TypeError, ValueError) as error:
         raise ConfigError(f"invalid pipeline config: {error}") from error
 
@@ -183,10 +210,17 @@ def _from_cli(
     """Resolve CLI flags into canonical pipelines.
 
     The generation half delegates to `generate`'s own resolver rather than
-    re-deriving it, so the two commands cannot drift on defaults, path
-    resolution, or `--target all` expansion. Only the judging half is read
-    here, and only the three values the shorthand carries.
+    re-deriving it, so the two commands cannot drift on defaults or path
+    resolution. Only the judging half is read here, and only the three values
+    the shorthand carries.
     """
+    # Both checks run before `generate._from_cli`, deliberately: that call
+    # resolves a whole generation config — target resolution, manifest I/O —
+    # and would report its own missing flags first, so a `vera pipeline -c X
+    # -u Y` with no `-j` would do all that work and then complain about
+    # something else. Checking here also has no "below" that could replace it:
+    # `generate` has no concept of judge models, so if this does not check
+    # `-j`, nothing does.
     judge_models: list[str] | None = getattr(args, "judge", None)
     if not judge_models:
         raise ConfigError("pipeline requires at least one -j/--judge model")
@@ -194,13 +228,14 @@ def _from_cli(
     target: str | None = getattr(args, "target", None)
     if not target:
         raise ConfigError("pipeline requires --target")
+    _reject_target_all(target)
 
     # `generate._from_cli`, not its `resolve_configs`: the latter re-enters
     # `resolve_input`, which would reject pipeline's extra sections and, with
     # `--config -`, try to read stdin a second time. The generation flags are
-    # spelled identically here, so the namespace is the one it expects. It also
-    # owns `--target all` fan-out, which is why this returns one `RunConfig`
-    # per target rather than exactly one.
+    # spelled identically here, so the namespace is the one it expects. It
+    # returns a list because it owns `--target all` fan-out; with `all`
+    # rejected above, that list always has exactly one element.
     generation_runs = generate_command._from_cli(args, invocation)
 
     # Resolved once and shared: `--target` names one bundle per run, and for a
@@ -211,7 +246,7 @@ def _from_cli(
             judge_models=models_from_cli(
                 judge_models, getattr(args, "judge_params", None)
             ),
-            rubric=_rubric_for(generation_run, target),
+            rubric=_rubric_for(target),
             judge_max_concurrent=judge_command.DEFAULTS["max_concurrent"],
             per_judge=judge_command.DEFAULTS["per_judge"],
             scoring_personas=None,
@@ -241,6 +276,10 @@ def _from_config(
             "stage supplies the conversations this run judges"
         )
 
+    target = config.get("target")
+    if isinstance(target, str):
+        _reject_target_all(target)
+
     # Same reasoning as the CLI path: the already-loaded config document goes
     # straight to generate's config resolver, never back through `resolve_input`.
     generation_runs = generate_command._from_config(config, invocation)
@@ -260,12 +299,11 @@ def _from_config(
     if not isinstance(skip_risk, bool):
         raise ConfigError("scoring.skip_risk_analysis must be a boolean")
 
-    target = config.get("target")
     return [
         PipelineRun(
             generation=generation_run,
             judge_models=models,
-            rubric=_rubric_from_config(judging, target, generation_run),
+            rubric=_rubric_from_config(judging, target),
             judge_max_concurrent=max_concurrent,
             per_judge=per_judge,
             scoring_personas=(
@@ -279,31 +317,35 @@ def _from_config(
     ]
 
 
-def _rubric_for(generation_run: RunConfig, target: str) -> RubricFiles:
-    """Resolve the rubric for one generated run from its own target.
+def _reject_target_all(selection: str) -> None:
+    """Refuse `--target all` until there is a concrete use for it.
 
-    With `--target all`, each run must take the rubric from *its* target, not
-    from a single shared resolution — otherwise every target's conversations
-    would be judged against whichever manifest happened to resolve first. The
-    run's persona file identifies which target produced it.
+    `vera judge` rejects it too (`judge._reject_target_all`), and a pipeline
+    could in principle support it — each target would generate its own
+    conversations, so each evaluation would land under its own run folder
+    rather than sharing one. But nobody has asked to run every target in one
+    invocation, and supporting it means carrying a second rubric-resolution
+    path that walks back from a run's persona file to find which target
+    produced it. Deferred rather than built on spec; the flag can be widened
+    later without breaking anyone.
     """
-    if target.casefold() != "all":
-        resolved = load_target(resolve_target_manifest(target))
-    else:
-        generation = generation_run.generation
-        assert generation is not None  # generate.resolve_configs always sets it
-        manifest = Path(generation.personas[0]).parent / "manifest.json"
-        resolved = load_target(manifest)
-    return RubricFiles(
-        rubric_file=resolved.rubric,
-        rubric_prompt_beginning_file=resolved.rubric_prompt_beginning,
-        question_prompt_file=resolved.question_prompt,
-    )
+    if selection.casefold() == "all":
+        raise ConfigError(
+            "pipeline does not support --target all: run one target at a time."
+        )
 
 
-def _rubric_from_config(
-    judging: dict[str, Any], target: object, generation_run: RunConfig
-) -> RubricFiles:
+def _rubric_for(target: str) -> RubricFiles:
+    """Resolve a target name or manifest path to the three rubric files.
+
+    The projection is `judge`'s (`judge._rubric_files`) rather than a second
+    copy of it — a target carries generation fields too, so judging takes the
+    three it needs.
+    """
+    return judge_command._rubric_files(load_target(resolve_target_manifest(target)))
+
+
+def _rubric_from_config(judging: dict[str, Any], target: object) -> RubricFiles:
     """Take the rubric from an explicit `judging.rubrics` entry, or the target.
 
     Mirrors `vera judge`: a top-level `target` and an explicit `rubrics` list
@@ -321,7 +363,8 @@ def _rubric_from_config(
         return rubrics[0]
     if not isinstance(target, str) or not target:
         raise ConfigError("pipeline requires a target or explicit judging.rubrics")
-    return _rubric_for(generation_run, target)
+    _reject_target_all(target)
+    return _rubric_for(target)
 
 
 async def _execute(runs: list[PipelineRun]) -> None:
@@ -443,7 +486,7 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default=argparse.SUPPRESS,
         help=(
             "Complete target name or manifest path supplying both personas and "
-            "rubric; use 'all' to run every target"
+            "rubric ('all' is not supported: run one target at a time)"
         ),
     )
     parser.add_argument(

@@ -176,22 +176,23 @@ def test_scoring_section_is_optional_and_defaults_to_skipping_risk(
     assert resolved.skip_risk_analysis is False
 
 
-def test_target_all_gives_each_run_its_own_rubric() -> None:
-    """Each target's conversations must be judged against that target's rubric.
-
-    With a single target checked in this is a one-element case, but it pins the
-    invariant that the rubric is resolved per run rather than once and shared.
-    """
+def test_target_all_is_rejected(tmp_path: Path) -> None:
+    """Deferred until a use case asks for it, as `vera judge` defers it."""
     parser = vera.build_parser()
     argv = ["pipeline", "-c", "bot", "-u", "user:1", "-j", "judge:1", "--target", "all"]
 
-    resolved = pipeline.resolve_configs(parser.parse_args(argv))
+    with pytest.raises(cli_config.ConfigError, match="does not support --target all"):
+        pipeline.resolve_configs(parser.parse_args(argv))
 
-    for run in resolved:
-        generation = run.generation.generation
-        assert generation is not None
-        assert (
-            Path(run.rubric.rubric_file).parent == Path(generation.personas[0]).parent
+    # And through a config, where `generate` would otherwise fan it out.
+    data = _resolved_config()
+    data["target"] = "all"
+    for field in ("personas", "persona_context_template"):
+        data["generation"].pop(field)
+    config = _write_config(tmp_path, data)
+    with pytest.raises(cli_config.ConfigError, match="does not support --target all"):
+        pipeline.resolve_configs(
+            parser.parse_args(["pipeline", "--config", str(config)])
         )
 
 
@@ -211,11 +212,12 @@ def test_pipeline_declares_no_stage_specific_knobs() -> None:
 def test_shipped_recommended_config_resolves() -> None:
     """The checked-in profile is an artifact that would otherwise rot silently.
 
-    It replaces `scripts/run_recommended_vera_pipeline.sh`, so a field going
-    stale has to fail here rather than at the start of an expensive run.
+    It publishes the same profile `scripts/run_recommended_vera_pipeline.sh`
+    runs, so a field going stale has to fail here rather than at the start of
+    an expensive run.
     """
     data = json.loads(
-        (Path(__file__).resolve().parents[2] / "configs/recommended.json").read_text(
+        (Path(__file__).resolve().parents[2] / "configs/recommended-SI.json").read_text(
             encoding="utf-8"
         )
     )
