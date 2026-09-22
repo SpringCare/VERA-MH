@@ -107,50 +107,54 @@ To run this profile in one scripted flow after [Environment setup](#environment-
 
 For the [recommended settings](#recommended-settings) (dual user agents, 30 turns, GPT 5.4 judge, pooled headline score), run from the repository root after [Environment setup](#environment-setup) (steps **0–2**: `uv sync`, activate `.venv`, configure `.env`) and, if you use a custom provider, the steps in [Connecting your own LLM, Agent, or API](#connecting-your-own-llm-or-api):
 
+Two entry points run this profile, and both are supported. The scripted flow is the long-standing one:
+
 ```bash
-uv run python vera.py pipeline \
-  -c <model-under-test> \
-  -u gpt-5.2:1 claude-opus-4-5-20251101:1 \
-  -j gpt-5.4:1 --judge-params reasoning_effort=low \
-  --target SI
+./scripts/run_recommended_vera_pipeline.sh <provider-agent-model>
 ```
 
-`-c` is the system under evaluation. One invocation runs the whole profile:
+Use the same **provider** model id you would pass to `run_pipeline.py` as `--provider-agent` (the system under evaluation). The script runs `run_pipeline.py` once per user-side model, then merges both evaluation runs via `scripts/pool_vera_scores.py` into a **single pooled** folder `j_<judge>__p_.../` (e.g. `j_gpt-5.4x1__p_gpt_5_2+claude_opus_4_5__a_.../`, next to your `p_*` runs by default) containing merged `results.csv`, `pool_metadata.json`, `scores/scores.json`, and the usual score / risk visualizations. Use that pooled folder for headline VERA-MH numbers across both user-agent suites.
 
-- **Generates** against each user-side model in turn — **GPT 5.2** (`gpt-5.2`) and **Claude Opus 4.5** (`claude-opus-4-5-20251101`) — at **30** turns (the default) and **1** conversation per persona, over every persona in the `SI` target unless you cap it with `--sample`.
-- **Judges** each batch with **GPT 5.4** (`gpt-5.4`).
-- **Scores** each batch, and prints the evaluation folders it produced.
+Arguments after `<provider-agent-model>` are forwarded to `run_pipeline.py` (for example `--max-concurrent 10`). The models, turn count and caps it defaults to, and the `VERA_*` environment variables that override them, are documented in the script itself.
 
-The headline VERA-MH number is the **pooled** score across both user-agent suites, not either batch on its own. Pooling is a separate step — `vera pipeline` names the folders to pass it, so nothing has to be dug out of the run log:
+The unified CLI runs the same profile through `vera pipeline`. The checked-in [`configs/recommended-SI.json`](configs/recommended-SI.json) holds the published settings — read that file rather than a copy of it here — so running it means filling in the model under test:
 
 ```bash
-uv run python scripts/pool_vera_scores.py <evaluation-folder-A> <evaluation-folder-B>
-```
-
-That writes a merged folder containing `results.csv`, `pool_metadata.json`, `scores/scores.json`, and the usual score / risk visualizations. Use it for headline numbers across both suites. (A first-class `vera pool` subcommand is specified in [docs/architecture.md](docs/architecture.md) and will replace this script invocation.)
-
-To run the profile exactly as published — including the concurrency caps and the risk-level breakdown — use the checked-in config instead, filling in the model under test:
-
-```bash
-jq '.generation.chatbot.name = "<model-under-test>"' configs/recommended.json \
+jq '.generation.chatbot.name = "<model-under-test>"' configs/recommended-SI.json \
   | uv run python vera.py pipeline --config -
 ```
 
 Run-defining flags and `--config` are strictly either/or, which is why the model is injected into the document rather than passed as `-c` alongside it. `--sample N` may accompany either form for a smoke test, since it is invocation-only.
 
-By default, generation folders go under `output/`. Every knob the retired `scripts/run_recommended_vera_pipeline.sh` exposed as an environment variable is now either a field in [`configs/recommended.json`](configs/recommended.json) or a flag on the pooling step:
+For an ad-hoc run, the same three stages take the shorthand form — `-c` is the system under evaluation, `-u` the user-side model(s), `-j` the judge(s):
 
-| Retired variable | Replacement |
+```bash
+uv run python vera.py pipeline \
+  -c <model-under-test> \
+  -u <user-model>:1 \
+  -j <judge-model>:1 \
+  --target SI
+```
+
+Either form generates, judges and scores each user-side suite in turn, then prints the evaluation folders it produced. The headline VERA-MH number is the **pooled** score across both user-agent suites, not either batch on its own — the script pools for you; `vera pipeline` names the folders to pass to the pooling step, so nothing has to be dug out of the run log:
+
+```bash
+uv run python scripts/pool_vera_scores.py <evaluation-folder-A> <evaluation-folder-B>
+```
+
+(A first-class `vera pool` subcommand is specified in [docs/architecture.md](docs/architecture.md) and will replace this script invocation.)
+
+By default, generation folders go under `output/`. Each `VERA_*` variable the script exposes has a config equivalent for the `vera pipeline` form:
+
+| Script variable | `vera pipeline` equivalent |
 |----------|---------|
 | `VERA_OUTPUT_PARENT` | `generation.output` |
-| `VERA_MAX_CONCURRENT` | `generation.max_concurrent` and `judging.max_concurrent`, now settable per stage |
+| `VERA_MAX_CONCURRENT` | `generation.max_concurrent` and `judging.max_concurrent`, settable per stage |
 | `VERA_MAX_PERSONAS` | `--sample N` on the command line (invocation-only, so it may accompany `--config`) |
 | `VERA_POOL_OUTPUT` | `-o` on `scripts/pool_vera_scores.py` |
 | `VERA_POOL_SKIP_RISK` | `--skip-risk-analysis` on `scripts/pool_vera_scores.py`; `scoring.skip_risk_analysis` covers the per-run scores |
-| `VERA_USER_A`, `VERA_USER_B` | entries in `generation.user`, which is a list and is no longer limited to two |
+| `VERA_USER_A`, `VERA_USER_B` | entries in `generation.user`, which is a list and is not limited to two |
 | `VERA_JUDGE`, `VERA_JUDGE_EXTRA_PARAMS` | `judging.models` |
-
-Arguments after `<provider-agent-model>` are forwarded to `run_pipeline.py` (for example `--max-concurrent 10`).
 
 **Pooling only:** If you already have two evaluation directories (`.../evaluations/j_*`), merge them with:
 

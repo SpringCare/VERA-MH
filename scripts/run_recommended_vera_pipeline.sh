@@ -15,6 +15,13 @@
 # pool_vera_scores.py --extract-from-log so the final pooling step knows which
 # folders to merge.
 #
+# Second source of truth, on purpose and temporarily: the same published
+# profile is also checked in as ../configs/recommended-SI.json, which
+# `uv run python vera.py pipeline --config configs/recommended-SI.json` runs.
+# Nothing keeps the two in sync — the VERA_* defaults below and that file both
+# spell out the user models, judge, turns and concurrency caps. Change one and
+# change the other, until this script is retired in favor of `vera pipeline`.
+#
 # Usage:
 #   ./scripts/run_recommended_vera_pipeline.sh <provider-agent-model> [extra run_pipeline.py args...]
 #
