@@ -34,6 +34,40 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     _adhoc_temp = None
 
 
+_CREDENTIAL_ENV_VARS = (
+    "ANTHROPIC_API_KEY",
+    "OPENAI_API_KEY",
+    "GOOGLE_API_KEY",
+    "GEMINI_API_KEY",
+    "AZURE_API_KEY",
+    "AZURE_OPENAI_API_KEY",
+    "ENDPOINT_API_KEY",
+)
+
+_DUMMY_CREDENTIAL = "test-dummy-not-a-real-key"
+
+
+@pytest.fixture(autouse=True)
+def no_real_credentials(request: pytest.FixtureRequest, monkeypatch) -> None:
+    """Replace real provider credentials with dummies outside live tests.
+
+    llm_clients.config calls load_dotenv() at import time, so a developer's real
+    keys are present in os.environ during the suite. A test missing the `live`
+    marker would therefore make real, billable API calls locally and only fail in
+    CI, where no keys exist. This also covers the gap in --disable-socket, which
+    cannot see into the subprocesses the live tests spawn, since children inherit
+    this environment.
+
+    The values are overwritten rather than deleted on purpose: importlib.reload
+    on the config module re-runs load_dotenv(), which would repopulate a deleted
+    variable from .env but leaves an existing one alone.
+    """
+    if "live" in request.keywords:
+        return
+    for var in _CREDENTIAL_ENV_VARS:
+        monkeypatch.setenv(var, _DUMMY_CREDENTIAL)
+
+
 @pytest.fixture
 def fixtures_dir() -> Path:
     """Path to test fixtures directory."""
