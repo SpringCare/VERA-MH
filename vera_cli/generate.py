@@ -475,8 +475,8 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default=argparse.SUPPRESS,
         metavar="<run folder>",
         help=(
-            "Continue an existing run folder, skipping work already on disk "
-            "(mutually exclusive with --output)"
+            "Resume: continue an existing run folder, skipping work already on "
+            "disk (replaces --output, which mints a new run instead)"
         ),
     )
     parser.add_argument("--config", help="JSON path or '-' for stdin")

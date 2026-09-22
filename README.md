@@ -197,12 +197,67 @@ behavior field explicitly:
 uv run python vera.py generate --config run.json
 ```
 
-Run-defining flags and `--config` cannot be mixed. `--sample`, `--debug`, and
-`--print` may accompany config input. Executed runs record `sample` and `debug`
-as invocation metadata in their resolved config; `--print` creates no run. The
-legacy `generate.py` remains temporarily as a compatibility adapter; judging
-and pipeline execution continue to use `judge.py` and `run_pipeline.py` until
-their unified commands are added.
+Run-defining flags and `--config` cannot be mixed. `--sample`, `--debug`,
+`--into`, and `--print` may accompany config input. Executed runs record
+`sample` and `debug` as invocation metadata in their resolved config; `--print`
+creates no run. The legacy `generate.py` remains temporarily as a compatibility
+adapter; pipeline execution continues to use `run_pipeline.py` until its
+unified command is added.
+
+### Continuing an interrupted run: `--into`
+
+Generation and judging both spend real LLM calls, so a run that dies partway
+should not start from scratch. `--into <run folder>` points a fresh invocation
+at an existing run folder and skips whatever is already written there:
+
+```bash
+# The original run. Mints a new folder under output/ and prints its path.
+uv run python vera.py generate \
+  -c gpt-4o \
+  -u claude-sonnet-4-5-20250929:1 \
+  --target SI
+
+# It died partway. Same command, with --into naming the folder it created:
+uv run python vera.py generate \
+  -c gpt-4o \
+  -u claude-sonnet-4-5-20250929:1 \
+  --target SI \
+  --into output/c_gpt-4o/prophetic-bullfrog_20260713-1530_a1b2c3
+```
+
+`vera.py judge` takes the same flag, pointed at the run it is writing
+evaluations into:
+
+```bash
+uv run python vera.py judge \
+  -j claude-sonnet-4-5-20250929 \
+  --conversations output/c_gpt-4o/<run>/conversations \
+  --target SI \
+  --into output/c_gpt-4o/<run>
+```
+
+Three things to know before using it:
+
+- **`--into` replaces `--output`; it is not added alongside it.** The two are
+  mutually exclusive, because they answer the same question differently:
+  `--output` names a *parent* to mint a new run under, `--into` names the
+  *existing run* to continue. Everything else in the original command stays
+  as it was.
+- **You supply the folder path.** Nothing auto-discovers your last run yet, so
+  copy the path from the original run's output. `--into` fails if the path is
+  not an existing folder rather than quietly creating one, so a typo cannot
+  start a silent fresh run under the name you expected to hold results.
+- **It works with `--config` too**, since it says nothing about *which* run
+  this is. For the same reason it is not recorded in the run's `config.json` —
+  a run finished across two invocations is the same run as one finished in a
+  single pass.
+
+This is a per-stage, stateless skip: it re-derives what is left to do from the
+files already on disk, and each stage is continued by its own command. It is
+deliberately **not** spelled `--resume`, because that name is reserved for the
+planned `vera resume`, which will read a run's `state.json`, work across stages,
+and not need to be handed a path. Under the legacy scripts the equivalent of
+`--into <folder>` was `generate.py --output <folder> --resume`.
 
 ## Running VERA-MH step by step
 

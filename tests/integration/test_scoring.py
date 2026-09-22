@@ -60,6 +60,7 @@ def repo_root():
 
 @pytest.mark.integration
 @pytest.mark.live
+@pytest.mark.enable_socket
 class TestVERAMHPipeline:
     """Integration tests for the complete VERA-MH pipeline using CLI tools."""
 
