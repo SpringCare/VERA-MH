@@ -85,13 +85,8 @@ folders. That direction is deliberate:
 `PipelineRun.to_dict` therefore delegates to all three objects, and its
 output is the pipeline config shown above.
 
-Two alternatives were considered and rejected. Making `conversations` and
-`results` optional on the configs themselves would delete the most code, but
-it leaves a config that does not declare a field it needs, with the
-requirement restated later in each command. A flag on the config (say,
-`is_pipeline`) that relaxes which fields are required has the same problem
-with an extra branch: the type no longer tells you whether `conversations`
-is there, so every consumer has to check the flag first.
+Why specs, and the alternatives that were rejected, are recorded in
+[design/judging-and-scoring-specs.md](./design/judging-and-scoring-specs.md).
 
 ## Deferred: `--target all`
 

@@ -310,9 +310,10 @@ class JudgingSpec:
     exist. `vera judge` never holds one on its own — its caller already has the
     conversations, so it builds a `JudgingConfig` directly. `vera pipeline`
     does: at resolve time generation has not run, so the folder that
-    `conversations` and `output` would name has not been created yet (see
-    `docs/pipeline.md`). `complete` turns a spec into a config, and takes
-    exactly the two fields a spec lacks.
+    `conversations` and `output` would name has not been created yet.
+    `complete` turns a spec into a config, and takes exactly the two fields a
+    spec lacks. Rationale and rejected alternatives:
+    `docs/design/judging-and-scoring-specs.md`.
 
     `rubrics` is list-shaped from day one per AD-20 while only length 1 is
     accepted, so lifting the multi-rubric restriction later is not a schema
