@@ -10,8 +10,11 @@ paths are absolute, target manifests are expanded into concrete persona files,
 and defaults are already applied. Nothing downstream re-interprets a field.
 
 This module validates and serializes that form and does nothing else. It does
-not parse arguments, read files, resolve paths, or define defaults — CLI
-behavior defaults live beside the flags in `vera_cli/generate.py`, and
+not parse arguments, read files, resolve paths, or define defaults. So a path
+field is checked here only for being a non-empty string; whether the file
+exists is checked by the command that resolved it (`vera_cli.config.config_path`
+/ `existing_file`), the same split `RubricFiles` describes. CLI behavior
+defaults live beside the flags in `vera_cli/generate.py`, and
 config-driven runs must state every behavior field explicitly. `to_dict` is the
 inverse of the config input format, which is what makes a resolved run
 round-trippable: `--print` emits a config that reproduces the same run.
@@ -116,7 +119,9 @@ class RubricFiles:
         for field in dataclasses.fields(self):
             value = getattr(self, field.name)
             if not isinstance(value, str) or not value:
-                raise ValueError(f"judging.rubrics {field.name} must be a path")
+                raise ValueError(
+                    f"judging.rubrics {field.name} must be a non-empty path string"
+                )
             # A relative path names three different files depending on who
             # reads it: the repository root in a config, the manifest's own
             # folder in a manifest, the working directory at `open()`. Rejecting
@@ -413,7 +418,9 @@ class JudgingConfig(JudgingSpec):
                 "each folder separately and combine the results with vera pool"
             )
         if not all(isinstance(folder, str) and folder for folder in self.conversations):
-            raise ValueError("judging.conversations entries must be non-empty paths")
+            raise ValueError(
+                "judging.conversations entries must be non-empty path strings"
+            )
         if not self.output:
             raise ValueError("judging.output cannot be empty")
 
@@ -448,7 +455,7 @@ class ScoringSpec:
         if self.personas is not None and (
             not isinstance(self.personas, str) or not self.personas
         ):
-            raise ValueError("scoring.personas must be null or a path")
+            raise ValueError("scoring.personas must be null or a non-empty path string")
         if not isinstance(self.skip_risk_analysis, bool):
             raise ValueError("scoring.skip_risk_analysis must be a boolean")
 
@@ -484,11 +491,11 @@ class ScoringConfig(ScoringSpec):
 
     def __post_init__(self) -> None:
         if not isinstance(self.results, str) or not self.results:
-            raise ValueError("scoring.results must be a path")
+            raise ValueError("scoring.results must be a non-empty path string")
         if self.output is not None and (
             not isinstance(self.output, str) or not self.output
         ):
-            raise ValueError("scoring.output must be null or a path")
+            raise ValueError("scoring.output must be null or a non-empty path string")
         super().__post_init__()
 
     def to_dict(self) -> dict[str, Any]:

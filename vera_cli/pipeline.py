@@ -386,19 +386,23 @@ async def _judge_and_score(pipeline_run: PipelineRun, run_folder: str) -> str:
         # default `vera judge` applies when `--output` is omitted.
         output=str(Path(run_folder) / "evaluations"),
     )
-    transcripts_dir, _, folder_name = resolve_conversation_input(
-        judging.conversations[0]
-    )
+    # Exactly one of each, enforced by `JudgingConfig.__post_init__`; the
+    # unpacking fails loudly rather than judging only the first if that changes.
+    (conversations,) = judging.conversations
+    (rubric,) = judging.rubrics
+    transcripts_dir, _, folder_name = resolve_conversation_input(conversations)
     _, evaluation_folder = await run_judging(
         judge_models={model.name: model.repeats for model in judging.models},
-        rubric_file=judging.rubrics[0].rubric_file,
-        rubric_prompt_beginning_file=judging.rubrics[0].rubric_prompt_beginning_file,
-        question_prompt_file=judging.rubrics[0].question_prompt_file,
+        rubric_file=rubric.rubric_file,
+        rubric_prompt_beginning_file=rubric.rubric_prompt_beginning_file,
+        question_prompt_file=rubric.question_prompt_file,
         transcripts_dir=transcripts_dir,
         conversation_folder_name=folder_name,
         limit=pipeline_run.generation.invocation.sample,
         output_dir=judging.output,
         is_existing_run=False,
+        # Every judge model shares one parameter dict (`JudgingSpec.__post_init__`
+        # rejects anything else), so the first model's stands for all of them.
         judge_model_extra_params=dict(judging.models[0].extra_params),
         max_concurrent=judging.max_concurrent,
         per_judge=judging.per_judge,
