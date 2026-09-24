@@ -23,7 +23,7 @@ class TestConfig:
 
         assert isinstance(config, dict)
         assert "model" in config
-        assert config["model"] == "claude-sonnet-4-5-20250929"
+        assert config["model"] == Config.DEFAULT_CLAUDE_MODEL
         # Temperature and max_tokens should NOT be in config
         assert "temperature" not in config
         assert "max_tokens" not in config
@@ -34,7 +34,7 @@ class TestConfig:
 
         assert isinstance(config, dict)
         assert "model" in config
-        assert config["model"] == "gpt-5.2"
+        assert config["model"] == Config.DEFAULT_OPENAI_MODEL
         # Temperature and max_tokens should NOT be in config
         assert "temperature" not in config
         assert "max_tokens" not in config
@@ -45,7 +45,7 @@ class TestConfig:
 
         assert isinstance(config, dict)
         assert "model" in config
-        assert config["model"] == "gemini-1.5-pro"
+        assert config["model"] == Config.DEFAULT_GEMINI_MODEL
         # Temperature and max_tokens should NOT be in config
         assert "temperature" not in config
         assert "max_tokens" not in config
