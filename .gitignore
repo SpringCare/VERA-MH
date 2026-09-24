@@ -38,6 +38,11 @@ htmlcov/
 .claude/commands/local/
 .claude/logs/
 
+#MPC
+.serena
+
 # scoring artifacts
 publication_evaluations/vera_mh_v1_scores/
 publication_conversations/vera_mh_v1_scores_conversations/
+score_comparisons/
+score_comparisons/**
