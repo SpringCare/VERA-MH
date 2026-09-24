@@ -42,7 +42,7 @@ class TestWriteConversationAnswers:
     """Test the per-conversation long-format file."""
 
     def test_writes_header_and_one_row_per_visited_question(self, tmp_path: Path):
-        out = tmp_path / "answers" / "conversations" / EVAL_TSV_NAME
+        out = tmp_path / "answers" / "by_question" / EVAL_TSV_NAME
         write_conversation_answers(out, _log(("1", "Yes"), ("9", "Immediate risk")))
 
         lines = out.read_text(encoding="utf-8").splitlines()

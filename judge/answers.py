@@ -8,7 +8,7 @@ only recoverable by grepping the run log.
 This module persists those answers as data, in two artifacts under an
 ``answers/`` subfolder of the evaluation folder:
 
-``answers/conversations/<evaluation tsv stem>.tsv``
+``answers/by_question/<evaluation tsv stem>.tsv``
     One file per judged conversation, long format -- one row per question the
     flow actually visited, in visit order.
 
@@ -35,7 +35,10 @@ from .score_utils import (
 from .utils import extract_persona_name_from_filename
 
 ANSWERS_DIR_NAME = "answers"
-CONVERSATIONS_DIR_NAME = "conversations"
+# Named for the rows it holds rather than the files: both artifacts are per
+# conversation, and each filename already carries the conversation. The old
+# name also collided with the transcript folder called "conversations".
+CONVERSATIONS_DIR_NAME = "by_question"
 ANSWERS_TSV_NAME = "answers.tsv"
 
 COL_QUESTION_ID = "Question ID"
