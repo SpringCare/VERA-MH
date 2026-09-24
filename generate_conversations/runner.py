@@ -331,7 +331,6 @@ class ConversationRunner:
                     sessions=[],
                     duration=0.0,
                     skipped=True,
-                    skip_reason="error",
                     error=str(exc),
                 )
                 print(f"[Worker {worker_id}] Failed job: {result['error']}")
@@ -565,7 +564,6 @@ class ConversationRunner:
                         sessions=sessions,
                         duration=conversation_time,
                         skipped=True,
-                        skip_reason="error",
                         error=str(e),
                     )
                     break

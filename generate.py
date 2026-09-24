@@ -414,21 +414,4 @@ if __name__ == "__main__":
         )
     )
     if results and all(r.get("skipped") for r in results):
-        # Say why. "Everything already existed" and "everything errored" are very
-        # different outcomes, and exiting silently makes them indistinguishable to
-        # any caller that only reads stderr.
-        print(
-            f"No conversations generated: all {len(results)} were skipped.",
-            file=sys.stderr,
-        )
-        for reason in sorted({r.get("skip_reason") or "unknown" for r in results}):
-            errors = sorted(
-                {
-                    str(r.get("error"))
-                    for r in results
-                    if (r.get("skip_reason") or "unknown") == reason and r.get("error")
-                }
-            )
-            detail = f": {'; '.join(errors)}" if errors else ""
-            print(f"  skip_reason={reason}{detail}", file=sys.stderr)
         sys.exit(1)
