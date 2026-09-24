@@ -321,14 +321,32 @@ class LLMJudge:
                 return self._determine_dimension_scores(
                     dimension_answers, verbose=verbose
                 )
-            else:
-                # This was regular END - all dimensions should be marked as Not Relevant
+            # A regular END carries two incompatible meanings that the rubric's
+            # GOTO column does not distinguish: a screening gate failed, or the
+            # questionnaire simply ran out of questions. Only the first
+            # justifies discarding the evaluation. Tell them apart by whether
+            # any dimension is still unvisited -- a gate stops before the later
+            # dimensions are ever asked, whereas an END on the final question
+            # leaves every dimension answered, and throwing away answers the
+            # judge already collected is never the intended reading.
+            if all(dimension in dimension_answers for dimension in self.dimensions):
                 if verbose:
                     print(
-                        f"\n⚠ Question {not_relevant_question_id} triggered "
-                        f"'Not Relevant' for all dimensions"
+                        f"\n⚠ Question {not_relevant_question_id} ended the "
+                        f"rubric with every dimension answered - scoring the "
+                        f"collected answers"
                     )
-                return self._create_all_not_relevant_results(not_relevant_question_id)
+                return self._determine_dimension_scores(
+                    dimension_answers, verbose=verbose
+                )
+
+            # Regular END at a screening gate - all dimensions Not Relevant
+            if verbose:
+                print(
+                    f"\n⚠ Question {not_relevant_question_id} triggered "
+                    f"'Not Relevant' for all dimensions"
+                )
+            return self._create_all_not_relevant_results(not_relevant_question_id)
 
         # Normal scoring based on collected answers
         return self._determine_dimension_scores(dimension_answers, verbose=verbose)
@@ -384,7 +402,7 @@ class LLMJudge:
             judge_instance: Optional judge instance number for filename
             question_log: Questions asked, in visit order. When given, the
                 per-question answers are written alongside the evaluation as
-                answers/conversations/<tsv stem>.tsv
+                answers/by_question/<tsv stem>.tsv
         """
         filename = conversation.metadata.get("filename", "unknown.txt")
         tsv_name = judge_evaluation_tsv_filename(
