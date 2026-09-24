@@ -36,7 +36,7 @@ from llm_clients.config import Config
 # One GET against a models endpoint; generous enough for a proxied gateway.
 _TIMEOUT_SECONDS = 30
 
-pytestmark = pytest.mark.live
+pytestmark = [pytest.mark.live, pytest.mark.enable_socket]
 
 
 def _redact(url: str) -> str:
