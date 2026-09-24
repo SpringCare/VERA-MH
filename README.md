@@ -2,12 +2,17 @@
 
 [![CI](https://github.com/SpringCare/VERA-MH/workflows/CI/badge.svg)](https://github.com/SpringCare/VERA-MH/actions/workflows/ci.yml)
 
-VERA-MH (Validation of Ethical and Responsible AI in Mental Health) is a framework for evaluating how AI systems respond in mental health conversations that raise safety concerns. It simulates conversations between clinically developed user personas and the chatbot under test, then has an LLM judge rate each conversation against a clinical rubric. The result is a standardized score researchers, developers, and clinicians can use to compare systems before, during, and after deployment.
+VERA-MH (Validation of Ethical and Responsible AI in Mental Health) is a framework for evaluating how AI systems respond in mental health conversations that raise safety concerns. The result is a standardized score researchers, developers, and clinicians can use to compare systems before, during, and after deployment.
 
-This README covers **VERA-MH 2.0**, which adds:
+**VERA-MH 2.0 is a multi-turn, multi-target evaluator.**
+
+- **Multi-turn**—an LLM role-plays a clinically developed persona in a full conversation with the chatbot under test (30 turns by default), so the evaluation covers how the chatbot handles risk as it unfolds, not a single prompt and reply. An LLM judge then rates the whole transcript against a clinical rubric.
+- **Multi-target**—each **target** is a self-contained bundle of personas, prompts, and a clinical rubric, selected with `--target`. Two clinical rubrics ship by default: `SI` (suicidal ideation) and `HFO` (harm from others).
+- **Bring your own rubric**—anyone can add a target by dropping a folder with a `manifest.json` into `data/`; `vera` picks it up by name with no code changes. See [docs/targets.md](docs/targets.md#adding-personas-or-a-target) for the bundle layout and [docs/rubric.md](docs/rubric.md) for the rubric format and the current compatibility requirements (for now, scoring expects the same five dimensions the shipped rubrics use).
+
+2.0 also adds:
 
 - **The `vera` CLI**—a single entry point (`vera.py`) with `generate`, `judge`, `score`, and `pipeline` commands, replacing the separate scripts.
-- **Targets**—self-contained evaluation bundles (personas, prompts, rubric) selected with `--target`. Two ship today: `SI` (suicidal ideation) and `HFO` (harm from others).
 - **Config files**—any run can be described by a JSON config and replayed exactly; each command prints its fully resolved config when it starts.
 
 2.0 introduces breaking changes; see the [CHANGELOG](CHANGELOG.md). The project is a continuous work in progress, and feedback is welcome under the [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).

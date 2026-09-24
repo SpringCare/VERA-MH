@@ -1,6 +1,6 @@
 # Targets, personas, and prompts
 
-A **target** is a self-contained evaluation bundle: the personas the user model plays, the prompts that turn a persona into instructions, the clinical rubric, and the judge prompts. Scores from different targets measure different things and are never comparable.
+VERA-MH 2.0 is a multi-target evaluator: it ships with two clinical rubrics, and you can add your own. A **target** is a self-contained evaluation bundle: the personas the user model plays, the prompts that turn a persona into instructions, the clinical rubric, and the judge prompts. Scores from different targets measure different things and are never comparable.
 
 ## Targets that ship
 
@@ -52,4 +52,7 @@ To change which persona details the user model sees, edit the target's context t
 ## Adding personas or a target
 
 - **More personas:** add rows to the target's TSV with the same columns.
-- **A new target:** create `data/<name>/` with a `manifest.json` and the files it names; `--target <name>` then finds it. Scoring still assumes the SI dimension names, so read [rubric.md](rubric.md) for the compatibility requirements first. [judge.md](judge.md) explains how the rubric's question flow works.
+- **A new target (your own rubric):** VERA-MH is built so anyone can evaluate against their own clinical rubric. Create `data/<name>/` with a `manifest.json` and the files it names; `vera generate`, `vera judge`, and `vera pipeline` then accept `--target <name>`, with no code changes.
+  - [rubric.md](rubric.md)—the step-by-step guide: bundle layout, rubric TSV columns, navigation rules, and prompt placeholders. Scoring currently expects the five dimension names SI and HFO share; that limitation is described there.
+  - [judge.md](judge.md)—how the judge walks the rubric's question flow.
+  - [`data/HFO/`](../data/HFO/)—a complete second target to copy from.

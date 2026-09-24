@@ -47,8 +47,7 @@ data/NEW_TARGET/
 reads. It carries no compatibility fallback: the new CLI does not look for
 `rubric_manifest.json`.
 
-The legacy scripts listed under
-[Legacy entry points](#legacy-entry-points-being-removed) still read
+The deprecated [legacy scripts](legacy-scripts.md) still read
 `rubric_manifest.json`. In `data/SI/` that name is a **symlink** to
 `manifest.json`, not a second file: the two describe the same bundle, so a copy
 could drift and let `vera generate` and `run_pipeline.py` run against different
@@ -130,49 +129,32 @@ For more detail about ordinary Yes/No navigation, see
 
 ## Running a compatible rubric
 
-Generate conversations with the unified CLI by naming the target directory:
+Once `data/NEW_TARGET/manifest.json` exists, `vera generate`, `vera judge`, and
+`vera pipeline` find the target by name. Run generation, judging, and scoring in
+one go:
 
 ```bash
-uv run python vera.py generate \
+uv run python vera.py pipeline \
   -c <chatbot-model> \
   -u <user-model>:1 \
+  -j <judge-model>:1 \
   --target NEW_TARGET
 ```
 
-### Legacy entry points (being removed)
-
-Judging and pipeline runs have no `vera` command yet, so they still go through
-the legacy root scripts. These scripts are being deleted one at a time as each
-`vera` command replaces them, and they are the only reason a bundle needs a
-`rubric_manifest.json` symlink. When the last of them is gone, the symlink goes
-with it. Nothing below reflects the unified CLI's behavior.
-
-Judge existing conversations with the new bundle:
+Or judge existing conversations with the new rubric:
 
 ```bash
-uv run python judge.py \
-  --folder output/my-run \
-  --judge-model <model> \
-  --rubrics data/NEW_TARGET/rubric_manifest.json
+uv run python vera.py judge \
+  -j <judge-model>:1 \
+  --conversations output/my-run \
+  --target NEW_TARGET
 ```
 
-For a complete generation, judging, and scoring run, select the bundle for both
-generation and judging and provide its personas for risk analysis:
-
-```bash
-uv run python run_pipeline.py \
-  --user-agent <model> \
-  --provider-agent <model> \
-  --judge-model <model> \
-  --rubrics data/NEW_TARGET/rubric_manifest.json \
-  --rubric-manifest data/NEW_TARGET/rubric_manifest.json \
-  --personas-tsv data/NEW_TARGET/personas.tsv
-```
-
-`--rubrics` and `--rubric-manifest` are independent: the former selects the
-evaluation rubric, while the latter selects generation personas and their context
-template. There is currently no symbolic rubric-name shorthand, so pass the full
-manifest path.
+Use `--rubric NEW_TARGET` instead of `--target` to take only the rubric side of
+the bundle. The risk-level score breakdown assumes SI persona columns, so set
+`scoring.skip_risk_analysis` in a pipeline config (or omit `--personas` on
+`vera score`) unless your personas are compatible. See [cli.md](cli.md) for all
+options.
 
 When generating an improvement report, pass the new TSV explicitly so question
 IDs are joined to the correct question text:
@@ -182,6 +164,10 @@ uv run python scripts/summarize_results.py \
   --results output/my-run/evaluations/my-evaluation/results.csv \
   --rubric data/NEW_TARGET/rubric.tsv
 ```
+
+The deprecated legacy scripts take the bundle only as a manifest path
+(`--rubrics` / `--rubric-manifest data/NEW_TARGET/rubric_manifest.json`) and
+need the symlink described above; see [legacy-scripts.md](legacy-scripts.md).
 
 ## Current limitation
 
