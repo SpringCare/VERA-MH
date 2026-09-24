@@ -99,12 +99,14 @@ uv run python vera.py pipeline \
   -c gpt-4o \
   -u claude-sonnet-4-5-20250929:1 \
   -j gpt-5.4:1 \
+  --judge-params reasoning_effort=low \
   --target SI \
   --sample 3
 
 # Single stages
 uv run python vera.py generate -c gpt-4o -u claude-sonnet-4-5-20250929:1 --target SI
-uv run python vera.py judge -j gpt-5.4:1 --conversations output/{YOUR_P_RUN} --target SI
+uv run python vera.py judge -j gpt-5.4:1 --judge-params reasoning_effort=low \
+  --conversations output/{YOUR_P_RUN} --target SI
 uv run python vera.py score -r output/{YOUR_P_RUN}/evaluations/{YOUR_J_RUN}/results.csv
 
 # Recommended published-score profile (settings live in configs/recommended-SI.json)

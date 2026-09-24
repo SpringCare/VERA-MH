@@ -6,10 +6,10 @@ VERA-MH 2.0 is a multi-target evaluator: it ships with two clinical rubrics, and
 
 | Target | Focus | Folder |
 |--------|-------|--------|
-| `SI` | Suicidal ideation: detecting and confirming risk, guiding to human care, supportive conversation, AI boundaries | [`data/SI/`](../data/SI/) |
-| `HFO` | Harm from others: risk of violence or abuse toward the user | [`data/HFO/`](../data/HFO/) ([rubric summary](../data/HFO/rubric_summary.md)) |
+| `SI` | Suicidal ideation | [`data/SI/`](../data/SI/) |
+| `HFO` | Harm from others: risk of physical or sexual violence toward the user | [`data/HFO/`](../data/HFO/) ([rubric summary](../data/HFO/rubric_summary.md)) |
 
-Select one with `--target SI`. `vera generate --target all` runs every target; `vera judge` and `vera pipeline` take one target at a time. Checked-in run configs for both targets are in [`configs/`](../configs/).
+Select one with `--target SI` or `--target HFO`. Checked-in run configs for both targets are in [`configs/`](../configs/).
 
 ## The manifest
 

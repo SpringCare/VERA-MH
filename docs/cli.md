@@ -36,15 +36,15 @@ Three model roles, each with a one-letter flag used consistently across commands
 
 Model lists take a count suffix: `-u gpt-5.2:2` runs the full persona set twice with GPT 5.2, and `-j gpt-5.4:3` runs three judge instances. Several models can be given at once: `-u gpt-5.2:1 claude-opus-4-5-20251101:1`. Use dated model IDs (for example `claude-sonnet-4-5-20250929`); shorthand aliases may not resolve.
 
-A **target** is a reusable evaluation bundle—personas, persona prompt, rubric, and judge prompts—stored in `data/<target>/manifest.json`. `--target SI` selects all of it at once. To mix components, use `--personas <target>` on `generate` and `--rubric <target>` on `judge`. Either flag also accepts a manifest path. See [targets.md](targets.md) for what ships.
+A **target** is a reusable evaluation bundle—personas, persona prompt, rubric, and judge prompts—stored in `data/<target>/manifest.json`. Two targets ship: `SI` (suicidal ideation) and `HFO` (harm from others); see [targets.md](targets.md) for details and how to add your own. `--target SI` selects all of a target's components at once. To mix components, use `--personas <target>` on `generate` and `--rubric <target>` on `judge`. Every target flag also accepts a manifest path.
 
 ## Two ways to define a run: flags or config
 
-A run is defined **either** by command-line flags **or** by a JSON config—never both. Combining them is an error, not a merge. The config can come from:
+A run is defined **either** by command-line flags **or** by a JSON config; you can't mix the two. The config can come from:
 
 - `--config run.json`—a file
 - `--config -`—stdin
-- the `VERA_RUN_CONFIG` environment variable—inline JSON, handy for CI
+- the `VERA_RUN_CONFIG` environment variable—the config JSON itself (not a path), handy in CI where writing a file is awkward: `VERA_RUN_CONFIG='{"target": "SI", ...}' uv run python vera.py pipeline`. It can't be combined with `--config`.
 
 A few **invocation controls** describe how to run, not what the run is, so they may accompany either form:
 
@@ -108,7 +108,7 @@ uv run python vera.py generate \
 |------|-------------|---------|
 | `-c`, `--chatbot` | Chatbot model under test | required |
 | `-u`, `--user` | User model(s), `model[:repeats]`; each repeat runs the full persona set | required |
-| `--target` | Target name or manifest path; `all` runs every target (one run each) | — |
+| `--target` | Target name (`SI`, `HFO`) or manifest path | — |
 | `--personas` | Use only this target's personas and persona prompt (mutually exclusive with `--target`) | — |
 | `-t`, `--turns` | Maximum conversation turns | `30` |
 | `-o`, `--output` | Parent directory for new run folders | `output` |
@@ -131,6 +131,7 @@ Rates one generation run's conversations. Requires at least one `-j`, `--convers
 ```bash
 uv run python vera.py judge \
   -j gpt-5.4:1 \
+  --judge-params reasoning_effort=low \
   --conversations output/<generation-run> \
   --target SI
 ```
@@ -147,7 +148,7 @@ uv run python vera.py judge \
 | `--judge-params` | `k=v,...` provider parameters for every `-j` model | none |
 | `--into` | Continue an existing evaluation folder instead of creating one | — |
 
-**GPT 5.4** (`gpt-5.4`) is the recommended judge: an inter-rater reliability study found it closer to human clinician ratings than the earlier GPT-4o + Claude Sonnet 4.5 pair.
+**GPT 5.4** (`gpt-5.4`) with `reasoning_effort=low` is the recommended judge, as in [`configs/recommended-SI.json`](../configs/recommended-SI.json): an inter-rater reliability study found it closer to human clinician ratings than the earlier GPT-4o + Claude Sonnet 4.5 pair.
 
 Each evaluation folder contains one `.tsv` per conversation (dimension, rating, and the judge's reasoning), a `results.csv` with every conversation's ratings, and per-conversation judge logs in `logs/`. Use `results.csv` to find conversations with a rating you care about, then open that conversation's `.tsv` to see which rubric question produced it.
 
@@ -181,6 +182,7 @@ uv run python vera.py pipeline \
   -c gpt-4o \
   -u gpt-5.2:1 claude-opus-4-5-20251101:1 \
   -j gpt-5.4:1 \
+  --judge-params reasoning_effort=low \
   --target SI
 ```
 
@@ -189,7 +191,7 @@ uv run python vera.py pipeline \
 | `-c`, `--chatbot` | Chatbot model under test |
 | `-u`, `--user` | User model(s), `model[:repeats]` |
 | `-j`, `--judge` | Judge model(s), `model[:instances]` |
-| `--target` | Target supplying personas and rubric (`all` is not supported) |
+| `--target` | Target supplying personas and rubric |
 | `--user-params`, `--chatbot-params`, `--judge-params` | Provider parameters per role |
 
 Anything stage-specific—output directory, concurrency, turns, the scoring personas file—comes from `--config`, because a flag like `--max-concurrent` would mean different things to generation and judging. A pipeline config has `generation`, `judging`, and `scoring` sections, and omits `judging.conversations` because generation supplies it. The flag form skips the risk-level breakdown; set `scoring.personas` in a config to get it.
@@ -212,7 +214,8 @@ uv run python vera.py generate -c gpt-4o -u claude-sonnet-4-5-20250929:1 --targe
 `vera judge` takes the same flag, pointed at the evaluation folder it was writing:
 
 ```bash
-uv run python vera.py judge -j gpt-5.4:1 --conversations output/<generation-run> --target SI \
+uv run python vera.py judge -j gpt-5.4:1 --judge-params reasoning_effort=low \
+  --conversations output/<generation-run> --target SI \
   --into output/<generation-run>/evaluations/<evaluation-run>
 ```
 

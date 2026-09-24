@@ -34,13 +34,14 @@ uv run python vera.py pipeline \
   -c gpt-4o \
   -u claude-sonnet-4-5-20250929:1 \
   -j gpt-5.4:1 \
+  --judge-params reasoning_effort=low \
   --target SI \
   --sample 3
 ```
 
 - `-c` is the **chatbot** under test.
 - `-u` is the **user** model that role-plays the personas (`model:repeats`).
-- `-j` is the **judge** (`model:instances`).
+- `-j` is the **judge** (`model:instances`). GPT 5.4 with `reasoning_effort=low` is the recommended judge.
 
 Drop `--sample` to run every persona. Results land under `output/`: transcripts in `conversations/`, judge ratings in `evaluations/j_*/results.csv`, and scores in `evaluations/j_*/scores/`.
 
@@ -70,10 +71,10 @@ uv run python scripts/pool_vera_scores.py <evaluation-folder-A> <evaluation-fold
 | Doc | What's in it |
 |-----|--------------|
 | [docs/cli.md](docs/cli.md) | Full `vera` CLI reference: every command and flag, config files, `--into`, model parameters, output layout |
-| [docs/scoring.md](docs/scoring.md) | The VERA-MH score formula, score outputs, pooling, cross-model comparison, improvement reports |
 | [docs/targets.md](docs/targets.md) | Targets, personas, and prompts: what ships, how they're structured, how to customize them |
 | [docs/evaluating.md](docs/evaluating.md) | Connecting your own LLM, agent, or API as the chatbot under test |
 | [docs/judge.md](docs/judge.md), [docs/rubric.md](docs/rubric.md) | How the rubric-driven judge works; adding a compatible rubric |
+| [docs/scoring.md](docs/scoring.md) | The VERA-MH score formula, score outputs, pooling, cross-model comparison, improvement reports |
 | [docs/architecture.md](docs/architecture.md) | Target architecture and design invariants |
 | [docs/legacy-scripts.md](docs/legacy-scripts.md) | The pre-2.0 scripts (deprecated) |
 
