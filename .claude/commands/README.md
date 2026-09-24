@@ -41,7 +41,7 @@ To create a new command:
 
 **When adding new testing commands:**
 1. Update `.claude/agents/test-engineer.md` "Reference Documentation" section if the command contains testing patterns or conventions
-2. Update this README and the main `README.md`
+2. Update this README and the slash command table in `CLAUDE.md`
 
 **When updating existing testing commands:**
 1. The `test-engineer` agent reads command files directly, so updates automatically propagate

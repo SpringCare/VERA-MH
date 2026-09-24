@@ -44,7 +44,7 @@ See [AGENTS.md](./AGENTS.md) for full testing policy. Summary:
 
 2. **When adding new testing commands:**
    - Add to `.claude/commands/`
-   - Update `.claude/commands/README.md` and `README.md`
+   - Update `.claude/commands/README.md` and the slash command table above
    - Reference in `.claude/agents/test-engineer.md` if applicable
 
 ## Documentation Reference

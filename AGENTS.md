@@ -91,33 +91,25 @@ uv run pytest tests/integration/
 
 ## Key Commands
 
-Unified generation CLI:
+Full reference: [docs/cli.md](docs/cli.md).
 
 ```bash
-uv run python vera.py generate \
+# Generate, judge, and score in one run (smoke test on 3 personas)
+uv run python vera.py pipeline \
   -c gpt-4o \
   -u claude-sonnet-4-5-20250929:1 \
-  --target SI
-```
+  -j gpt-5.4:1 \
+  --judge-params reasoning_effort=low \
+  --target SI \
+  --sample 3
 
-Legacy commands for pipeline, judging, and compatibility:
+# Single stages
+uv run python vera.py generate -c gpt-4o -u claude-sonnet-4-5-20250929:1 --target SI
+uv run python vera.py judge -j gpt-5.4:1 --judge-params reasoning_effort=low \
+  --conversations output/{YOUR_P_RUN} --target SI
+uv run python vera.py score -r output/{YOUR_P_RUN}/evaluations/{YOUR_J_RUN}/results.csv
 
-```bash
-uv run python run_pipeline.py \
-  --user-agent claude-sonnet-4-5-20250929 \
-  --provider-agent gpt-4o \
-  --runs 1 \
-  --turns 10 \
-  --judge-model claude-sonnet-4-5-20250929 \
-  --max-personas 5
-
-uv run python generate.py -u claude-sonnet-4-5-20250929 -p gpt-4o -t 6 -r 1
-uv run python judge.py -f output/{YOUR_P_RUN}/ -j claude-sonnet-4-5-20250929
-
-# Recommended published-score profile (scripted; legacy)
-./scripts/run_recommended_vera_pipeline.sh <provider-agent-model>
-
-# Same profile through the unified CLI (settings live in configs/recommended-SI.json)
+# Recommended published-score profile (settings live in configs/recommended-SI.json)
 jq '.generation.chatbot.name = "<model-under-test>"' configs/recommended-SI.json \
   | uv run python vera.py pipeline --config -
 
@@ -132,6 +124,8 @@ uv run ruff check .
 uv run pyright
 pre-commit run --all-files
 ```
+
+`generate.py`, `judge.py`, `run_pipeline.py`, `judge/score.py`, and `scripts/run_recommended_vera_pipeline.sh` are deprecated and will be removed; don't build on them. Their flags and `vera` equivalents are in [docs/legacy-scripts.md](docs/legacy-scripts.md).
 
 Use dated model IDs (e.g. `claude-sonnet-4-5-20250929`) as in README; shorthand aliases may not resolve.
 
@@ -172,14 +166,15 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 
 | Doc | Audience | Use for |
 |-----|----------|---------|
-| [README.md](./README.md) | Humans | Setup, CLI usage, output layout |
+| [README.md](./README.md) | Humans | Overview, quick start, doc index (keep it short) |
+| [docs/cli.md](./docs/cli.md) | Humans and agents | `vera` CLI reference: flags, config, `--into`, output layout |
 | [docs/architecture.md](./docs/architecture.md) | Humans and agents | Target architecture, invariants, layer model |
 | [docs/design/](./docs/design/) | Humans and agents | Historical design decisions, rationale, and compatibility consequences |
 | **AGENTS.md** (this file) | All coding agents | Style, architecture map, testing, key commands, git conventions |
 | [CLAUDE.md](./CLAUDE.md) | Claude Code only | Slash commands, `.claude/` maintenance |
 | [docs/](./docs/) | Humans and agents | Topic deep dives (see links below) |
 
-**When to update which file:** pytest/CI policy → AGENTS.md; new CLI flag or output layout → README (+ AGENTS key commands if agents run it often); LLM provider integration → [docs/evaluating.md](./docs/evaluating.md); Claude slash commands → `.claude/commands/` + CLAUDE.md + README command list.
+**When to update which file:** pytest/CI policy → AGENTS.md; new CLI flag or output layout → [docs/cli.md](./docs/cli.md) (+ AGENTS key commands if agents run it often); scoring → [docs/scoring.md](./docs/scoring.md); targets/personas → [docs/targets.md](./docs/targets.md); LLM provider integration → [docs/evaluating.md](./docs/evaluating.md); Claude slash commands → `.claude/commands/` + CLAUDE.md.
 
 **OpenSpec:** not used in this repo. Consider [OpenSpec](https://github.com/Fission-AI/OpenSpec) only for large multi-file features where you want agreed behavioral specs before coding (e.g. new judge dimensions, pipeline CLI changes). It complements — does not replace — AGENTS.md or README.
 
@@ -187,7 +182,11 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 
 - **Architecture:** [docs/architecture.md](docs/architecture.md)
 - **Design decision records:** [docs/design/README.md](docs/design/README.md)
-- **Setup, pipeline, output layout:** [README.md](./README.md)
+- **Setup and quick start:** [README.md](./README.md)
+- **`vera` CLI reference, output layout:** [docs/cli.md](./docs/cli.md)
+- **Scoring, pooling, comparison:** [docs/scoring.md](./docs/scoring.md)
+- **Targets and personas:** [docs/targets.md](./docs/targets.md)
+- **Legacy scripts (deprecated):** [docs/legacy-scripts.md](./docs/legacy-scripts.md)
 - **Custom LLM providers:** [docs/evaluating.md](./docs/evaluating.md)
 - **Judge behavior:** [docs/judge.md](./docs/judge.md)
 - **`vera pipeline` input resolution:** [docs/pipeline.md](./docs/pipeline.md)
