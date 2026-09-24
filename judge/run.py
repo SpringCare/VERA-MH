@@ -40,6 +40,8 @@ async def run_judging(
     verbose_workers: bool,
     verbose: bool,
     resume: bool,
+    personas: Optional[List[str]] = None,
+    persona_annotation_columns: Optional[List[str]] = None,
 ) -> tuple[List[Dict[str, Any]], str]:
     """Evaluate a folder of conversations from fully resolved inputs.
 
@@ -67,6 +69,10 @@ async def run_judging(
         verbose_workers: Whether workers log concurrency behavior
         verbose: Whether to print progress
         resume: Whether to skip evaluation TSVs that already exist
+        personas: Resolved personas TSV paths supplying annotation values, or
+            None when the caller selected only a rubric component
+        persona_annotation_columns: Persona columns to copy into results.csv,
+            named by the target manifest. Empty or None annotates nothing.
 
     Returns:
         Tuple of (results, output_folder) where output_folder is where the
@@ -114,5 +120,7 @@ async def run_judging(
         per_judge=per_judge,
         verbose_workers=verbose_workers,
         resume=resume,
+        personas=personas,
+        persona_annotation_columns=persona_annotation_columns,
         **output_target,
     )

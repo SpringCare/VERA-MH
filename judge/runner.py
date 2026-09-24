@@ -15,7 +15,10 @@ import pandas as pd
 from .answers import conversation_answers_dir, write_answers_tsv
 from .llm_judge import LLMJudge
 from .rubric_config import ConversationData, RubricConfig
-from .score_utils import build_dataframe_from_tsv_files
+from .score_utils import (
+    add_persona_columns_to_dataframe,
+    build_dataframe_from_tsv_files,
+)
 from .utils import (
     build_evaluation_run_folder_path,
     build_judge_task_log_path,
@@ -501,6 +504,34 @@ async def batch_evaluate_with_individual_judges(
     return results
 
 
+def _annotate_with_personas(
+    df: "pd.DataFrame",
+    personas: Optional[List[str]],
+    columns: Optional[List[str]],
+    verbose: bool,
+) -> "pd.DataFrame":
+    """Copy persona annotation columns into the aggregated results frame.
+
+    Annotation is a reporting convenience, not part of the evaluation, so a
+    problem here must not lose a judging run that already cost model calls: a
+    missing column or unreadable personas file warns and returns the frame
+    unannotated rather than raising.
+
+    Only the first personas file is consulted. `judging.personas` is list-shaped
+    to mirror the manifest, and every current target names exactly one file; a
+    multi-file target would need a documented precedence rule before this reads
+    past the first.
+    """
+    if not columns or not personas:
+        return df
+    try:
+        return add_persona_columns_to_dataframe(df, Path(personas[0]), columns)
+    except (KeyError, OSError, ValueError) as error:
+        if verbose:
+            print(f"⚠️  Skipping persona annotation: {error}")
+        return df
+
+
 async def judge_conversations(
     judge_models: Dict[str, int],
     conversations: List[ConversationData],
@@ -516,6 +547,8 @@ async def judge_conversations(
     per_judge: bool = False,
     verbose_workers: bool = False,
     resume: bool = False,
+    personas: Optional[List[str]] = None,
+    persona_annotation_columns: Optional[List[str]] = None,
 ) -> tuple[List[Dict[str, Any]], str]:
     """
     Judge conversations with multiple judge models.
@@ -534,6 +567,10 @@ async def judge_conversations(
         judge_model_extra_params: Extra parameters for the judge model
         max_concurrent: Maximum number of concurrent workers
         per_judge: If True, max_concurrent applies per judge model; if False, total
+        personas: Personas TSV paths supplying persona annotation values
+        persona_annotation_columns: Persona columns to copy into the aggregated
+            CSV, joined on the persona name parsed from each conversation
+            filename. Empty or None annotates nothing.
 
     Returns:
         Tuple of (results, output_folder) where results is a flattened list of
@@ -650,6 +687,9 @@ async def judge_conversations(
         if has_eval_tsvs:
             # Per-job TSVs are source of truth; includes skipped rows on --resume.
             df = build_dataframe_from_tsv_files(Path(output_folder))
+            df = _annotate_with_personas(
+                df, personas, persona_annotation_columns, verbose
+            )
             df.to_csv(out_csv, index=False)
         elif results:
             # No TSVs yet (e.g. mocked batch in tests).
