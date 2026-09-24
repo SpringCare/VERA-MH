@@ -499,38 +499,6 @@ def test_execution_forwards_resolved_values(tmp_path: Path) -> None:
     )
 
 
-def test_into_continues_an_existing_evaluation_run(tmp_path: Path) -> None:
-    """Judge gets the same flag, mapping onto the same domain parameters.
-
-    `is_existing_run` flips with it: without `--into` the output is a parent to
-    mint a new `j_*` run under, with it the exact folder to land back in.
-    """
-    run = _generation_run(tmp_path)
-    evaluation = tmp_path / "j_gpt_4o__existing"
-    evaluation.mkdir()
-    with patch.object(judge, "run_judging", new_callable=AsyncMock) as run_judging:
-        run_judging.return_value = ([], str(evaluation))
-        result = vera.main(
-            [
-                "judge",
-                "-j",
-                "gpt-4o",
-                "--conversations",
-                str(run / "conversations"),
-                "--target",
-                "SI",
-                "--into",
-                str(evaluation),
-            ]
-        )
-
-    assert result == 0
-    kwargs = run_judging.await_args.kwargs
-    assert kwargs["output_dir"] == str(evaluation.resolve())
-    assert kwargs["is_existing_run"] is True
-    assert kwargs["resume"] is True
-
-
 def test_config_target_resolves_the_rubric_bundle(tmp_path: Path) -> None:
     """A config naming a `target` resolves to that target's three rubric files.
 
@@ -565,3 +533,35 @@ def test_config_target_resolves_the_rubric_bundle(tmp_path: Path) -> None:
         str((cli_config.ROOT / "data/SI/rubric_prompt_beginning.txt").resolve()),
         str((cli_config.ROOT / "data/SI/question_prompt.txt").resolve()),
     ]
+
+
+def test_into_continues_an_existing_evaluation_run(tmp_path: Path) -> None:
+    """Judge gets the same flag, mapping onto the same domain parameters.
+
+    `is_existing_run` flips with it: without `--into` the output is a parent to
+    mint a new `j_*` run under, with it the exact folder to land back in.
+    """
+    run = _generation_run(tmp_path)
+    evaluation = tmp_path / "j_gpt_4o__existing"
+    evaluation.mkdir()
+    with patch.object(judge, "run_judging", new_callable=AsyncMock) as run_judging:
+        run_judging.return_value = ([], str(evaluation))
+        result = vera.main(
+            [
+                "judge",
+                "-j",
+                "gpt-4o",
+                "--conversations",
+                str(run / "conversations"),
+                "--target",
+                "SI",
+                "--into",
+                str(evaluation),
+            ]
+        )
+
+    assert result == 0
+    kwargs = run_judging.await_args.kwargs
+    assert kwargs["output_dir"] == str(evaluation.resolve())
+    assert kwargs["is_existing_run"] is True
+    assert kwargs["resume"] is True

@@ -115,9 +115,11 @@ uv run python generate.py -u claude-sonnet-4-5-20250929 -p gpt-4o -t 6 -r 1
 uv run python judge.py -f output/{YOUR_P_RUN}/ -j claude-sonnet-4-5-20250929
 
 # Recommended published-score profile (scripted; legacy)
-uv run python vera.py pipeline -c <model-under-test> \
-  -u gpt-5.2:1 claude-opus-4-5-20251101:1 \
-  -j gpt-5.4:1 --judge-params reasoning_effort=low --target SI
+./scripts/run_recommended_vera_pipeline.sh <provider-agent-model>
+
+# Same profile through the unified CLI (settings live in configs/recommended-SI.json)
+jq '.generation.chatbot.name = "<model-under-test>"' configs/recommended-SI.json \
+  | uv run python vera.py pipeline --config -
 
 # Development
 uv sync
@@ -188,6 +190,7 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 - **Setup, pipeline, output layout:** [README.md](./README.md)
 - **Custom LLM providers:** [docs/evaluating.md](./docs/evaluating.md)
 - **Judge behavior:** [docs/judge.md](./docs/judge.md)
+- **`vera pipeline` input resolution:** [docs/pipeline.md](./docs/pipeline.md)
 - **Structured output:** [docs/structured-output.md](./docs/structured-output.md)
 - **Pre-commit hooks:** [docs/pre-commit-hooks.md](./docs/pre-commit-hooks.md)
 - **Claude Code commands:** [CLAUDE.md](./CLAUDE.md), [.claude/commands/](./.claude/commands/)

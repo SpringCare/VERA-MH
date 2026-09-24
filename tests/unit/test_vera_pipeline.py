@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 import vera
+from utils.config_schema import JudgingConfig
 from vera_cli import config as cli_config
 from vera_cli import pipeline
 
@@ -61,8 +62,8 @@ def test_shorthand_resolves_all_three_stages() -> None:
     assert generation is not None
     assert generation.chatbot.name == "claude-sonnet-5"
     assert [model.name for model in generation.user] == ["gpt-5.2"]
-    assert [model.name for model in resolved.judge_models] == ["gpt-5.4"]
-    assert resolved.rubric.rubric_file.endswith("data/SI/rubric.tsv")
+    assert [model.name for model in resolved.judging.models] == ["gpt-5.4"]
+    assert resolved.judging.rubrics[0].rubric_file.endswith("data/SI/rubric.tsv")
 
 
 def test_one_target_supplies_both_personas_and_rubric() -> None:
@@ -73,7 +74,24 @@ def test_one_target_supplies_both_personas_and_rubric() -> None:
     generation = resolved.generation.generation
     assert generation is not None
     personas_dir = Path(generation.personas[0]).parent
-    assert Path(resolved.rubric.rubric_file).parent == personas_dir
+    assert Path(resolved.judging.rubrics[0].rubric_file).parent == personas_dir
+
+
+def test_completing_the_judging_spec_yields_a_full_judging_config() -> None:
+    """The spec holds everything but the folders; `complete` adds exactly those."""
+    parser = vera.build_parser()
+    (resolved,) = pipeline.resolve_configs(parser.parse_args(_cli()))
+
+    judging = resolved.judging.complete(
+        conversations=["output/run/conversations"], output="output/run/evaluations"
+    )
+
+    assert isinstance(judging, JudgingConfig)
+    assert judging.to_dict() == {
+        **resolved.judging.to_dict(),
+        "conversations": ["output/run/conversations"],
+        "output": "output/run/evaluations",
+    }
 
 
 @pytest.mark.parametrize("flag", [["-j", "gpt-5.4:1"], ["--target", "SI"]])
@@ -92,7 +110,7 @@ def test_judge_params_apply_to_every_judge_model() -> None:
 
     assert all(
         model.extra_params == {"reasoning_effort": "low"}
-        for model in resolved.judge_models
+        for model in resolved.judging.models
     )
 
 
@@ -123,6 +141,33 @@ def test_config_must_not_supply_conversations(tmp_path: Path) -> None:
     with pytest.raises(
         cli_config.ConfigError, match="must not set judging.conversations"
     ):
+        pipeline.resolve_configs(
+            parser.parse_args(["pipeline", "--config", str(config)])
+        )
+
+
+@pytest.mark.parametrize(
+    ("section", "field", "value", "message"),
+    [
+        ("judging", "max_concurrent", "ten", "judging.max_concurrent"),
+        ("judging", "per_judge", "yes", "judging.per_judge"),
+        ("scoring", "skip_risk_analysis", "no", "scoring.skip_risk_analysis"),
+    ],
+)
+def test_config_judging_and_scoring_are_validated_before_generation(
+    tmp_path: Path, section: str, field: str, value: str, message: str
+) -> None:
+    """A malformed judging or scoring field fails at resolve time.
+
+    Not after generation has already spent the budget: these sections resolve
+    to `JudgingSpec`/`ScoringSpec`, which validate every field they hold.
+    """
+    data = _resolved_config()
+    data[section][field] = value
+    config = _write_config(tmp_path, data)
+    parser = vera.build_parser()
+
+    with pytest.raises(cli_config.ConfigError, match=message):
         pipeline.resolve_configs(
             parser.parse_args(["pipeline", "--config", str(config)])
         )
@@ -172,26 +217,27 @@ def test_scoring_section_is_optional_and_defaults_to_skipping_risk(
         parser.parse_args(["pipeline", "--config", str(config)])
     )
 
-    assert resolved.scoring_personas is None
-    assert resolved.skip_risk_analysis is False
+    assert resolved.scoring.personas is None
+    assert resolved.scoring.skip_risk_analysis is False
 
 
-def test_target_all_gives_each_run_its_own_rubric() -> None:
-    """Each target's conversations must be judged against that target's rubric.
-
-    With a single target checked in this is a one-element case, but it pins the
-    invariant that the rubric is resolved per run rather than once and shared.
-    """
+def test_target_all_is_rejected(tmp_path: Path) -> None:
+    """Deferred until a use case asks for it, as `vera judge` defers it."""
     parser = vera.build_parser()
     argv = ["pipeline", "-c", "bot", "-u", "user:1", "-j", "judge:1", "--target", "all"]
 
-    resolved = pipeline.resolve_configs(parser.parse_args(argv))
+    with pytest.raises(cli_config.ConfigError, match="does not support --target all"):
+        pipeline.resolve_configs(parser.parse_args(argv))
 
-    for run in resolved:
-        generation = run.generation.generation
-        assert generation is not None
-        assert (
-            Path(run.rubric.rubric_file).parent == Path(generation.personas[0]).parent
+    # And through a config, where `generate` would otherwise fan it out.
+    data = _resolved_config()
+    data["target"] = "all"
+    for field in ("personas", "persona_context_template"):
+        data["generation"].pop(field)
+    config = _write_config(tmp_path, data)
+    with pytest.raises(cli_config.ConfigError, match="does not support --target all"):
+        pipeline.resolve_configs(
+            parser.parse_args(["pipeline", "--config", str(config)])
         )
 
 
@@ -211,11 +257,12 @@ def test_pipeline_declares_no_stage_specific_knobs() -> None:
 def test_shipped_recommended_config_resolves() -> None:
     """The checked-in profile is an artifact that would otherwise rot silently.
 
-    It replaces `scripts/run_recommended_vera_pipeline.sh`, so a field going
-    stale has to fail here rather than at the start of an expensive run.
+    It publishes the same profile `scripts/run_recommended_vera_pipeline.sh`
+    runs, so a field going stale has to fail here rather than at the start of
+    an expensive run.
     """
     data = json.loads(
-        (Path(__file__).resolve().parents[2] / "configs/recommended.json").read_text(
+        (Path(__file__).resolve().parents[2] / "configs/recommended-SI.json").read_text(
             encoding="utf-8"
         )
     )
@@ -234,8 +281,8 @@ def test_shipped_recommended_config_resolves() -> None:
         "gpt-5.2",
         "claude-opus-4-5-20251101",
     ]
-    assert [model.name for model in resolved.judge_models] == ["gpt-5.4"]
-    assert resolved.judge_models[0].extra_params == {"reasoning_effort": "low"}
+    assert [model.name for model in resolved.judging.models] == ["gpt-5.4"]
+    assert resolved.judging.models[0].extra_params == {"reasoning_effort": "low"}
     assert generation.turns == 30
 
 

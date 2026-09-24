@@ -1,6 +1,6 @@
 ---
 status: resolved
-updated: 2026-07-16
+updated: 2026-09-15
 ---
 
 # `vera.py` — Use Cases and CLI/Config Design
@@ -106,16 +106,22 @@ combine with `vera pool`.
 
 **`vera judge --target all` is deferred, not disallowed.** It errors for now and
 is scheduled for Phase 4; `--target all` keeps its full meaning for `generate`
-throughout.
+throughout. `vera pipeline` defers it too, for a different reason — see
+[pipeline.md](./pipeline.md).
 
 The blocker is output attribution, not semantics. Judging every target means
 evaluating the same conversations under N rubrics, which resolves cleanly to N
-separate length-1 runs — but until Phase 4 adds the `evaluations/<target>/`
-segment, all N land in `<gen_run>/evaluations/j_*` distinguishable only by
-timestamp, because the judge run folder encodes judge model and time, not the
-rubric that produced it. Erroring until the path can attribute the result is
-preferable to writing output nobody can later tell apart. Phase 4 lifts this
-alongside multi-rubric support, and the error message should say so.
+separate length-1 runs — but under today's layout all N land in
+`<gen_run>/evaluations/j_*` distinguishable only by timestamp, because the judge
+run folder encodes judge model and time, not the rubric that produced it.
+Erroring until the path can attribute the result is preferable to writing output
+nobody can later tell apart.
+
+The per-target `output/<target>/` root in [Naming](#naming) is what lifts this:
+each rubric's results land under their own target root, so attribution comes
+from the path with no extra segment. That makes the restriction removable as
+soon as the layout lands — migration Phase 3 rather than Phase 4 — and the
+error message should say so.
 
 ## Use case 2 — Batch generate across personas
 
@@ -250,12 +256,37 @@ Reads the immutable `config.json` (verifying its `.sha256` sidecar first) plus t
 
 `vera resume` works identically regardless of which stage was interrupted — `generate`, `judge`, or a full `pipeline` — since it reads whichever `state.json` the target run directory has, not stage-specific logic.
 
+### Not built yet — use `--into` today
+
+`vera resume` is deferred (AD-18/23/24): it depends on the persisted
+`config.json`/`state.json` artifacts, which no command writes yet. What exists
+today is `--into <run folder>` on `vera generate` and `vera judge`:
+
+```
+vera generate -c gpt-4o -u sonnet:1 --target SI --into output/c_gpt-4o/<run>
+```
+
+It solves the expensive half of the problem — finished work is not redone — but
+it is a smaller thing than `vera resume`, in three specific ways:
+
+| | `--into` (today) | `vera resume` (planned) |
+|---|---|---|
+| How it finds remaining work | re-derives it from files already on disk, statelessly | reads `state.json` after verifying `config.json` against its `.sha256` |
+| Scope | one stage per invocation; continue generation and judging separately | any stage, or a whole `pipeline`, from one command |
+| What you type | the original command with `--output` swapped for `--into <path>` | the config path; the run folder is implied |
+
+The third row is the one users notice: `--into` requires the run folder, so
+continuing a run still means retrieving that path. Auto-discovering "the run
+this command last produced" is a property of `vera resume`, not a missing
+feature of `--into` — which is also why the flag is not called `--resume`, so
+the name stays free for the command that earns it.
+
 ## Config mechanism
 
 - `--config <path>` — JSON file, for local use.
 - `--config -` — read JSON from stdin.
 - `VERA_RUN_CONFIG` env var — inline JSON content, for remote/CI dispatch where uploading or mounting a file isn't convenient.
-- **Run-defining CLI flags and `--config` are strictly either/or, never combined for the same run.** A given piece of information (model selection/repeats, sampling knobs, persona/rubric lists) is supplied via one or the other, never both — the implementation rejects the combination rather than silently merging. Invocation controls `--sample`, `--debug`, and `--print` MAY accompany config input. Executed runs persist `sample` and `debug` under `invocation` in their immutable `config.json`; `--print` exits without creating a run.
+- **Run-defining CLI flags and `--config` are strictly either/or, never combined for the same run.** A given piece of information (model selection/repeats, sampling knobs, persona/rubric lists) is supplied via one or the other, never both — the implementation rejects the combination rather than silently merging. Invocation controls `--sample`, `--debug`, `--into`, and `--print` MAY accompany config input. Executed runs persist `sample` and `debug` under `invocation` in their immutable `config.json`; `--print` exits without creating a run.
 - Internally, `--config` always resolves to the same canonical flag-set the CLI would produce, so there is exactly one resolved form regardless of input path. The tool prints this resolved form at run start for terminal/CI-log visibility (it does not write to the shell's own history — an opt-in `--print` flag emits the resolved flag-string with no execution, for a caller who wants to `eval` it into their own shell explicitly).
 - JSON, not YAML — robust when passed as a one-line env var or stdin payload with no escaping ambiguity.
 - **Path fields inside `config.json` (`generation.personas`, etc.) resolve relative to `$ROOT`** — the directory containing `vera.py` — never relative to the current working directory or the config file. A [target manifest](./architecture.md#target-manifest) deliberately resolves its fields relative to its own directory so the complete target remains portable.
@@ -348,28 +379,70 @@ Each list entry's `name` is always a **specific model identifier** (e.g. `claude
 
 ## Naming
 
-`p_` is retired — too generic. The u/c/j vocabulary applies at both the run-folder and individual-file level:
+`p_` is retired — too generic. The u/c/j vocabulary applies at both the run-folder and individual-file level, under a per-target root:
 
 ```
 output/
-  c_sonnet/                                                 <- persistent per-chatbot directory
-    <nickname>_<timestamp>_<sha>/                            <- e.g. prophetic-bullfrog_20260713-1530_a1b2c3
-      conversations/
-        u_<persona-file>_<persona-name>_c_sonnet.json
-      evaluations/
-        <rubric_name>/
-          j_claude_<nickname>_<timestamp>_<sha>/            <- judge stays flat, no persistent per-judge-model parent
+  <target>/                                       <- SI, HFO, ... scores never cross this boundary
+    c_sonnet/                                     <- persistent per-chatbot directory
+      u_gpt-5.2_<sha>_<timestamp>/                <- generation run: the user model the parent does not name
+        conversations/
+          u_<persona-file>_<persona-name>_c_sonnet.json
+        evaluations/
+          j_claude_<sha>_<timestamp>/             <- judge stays flat, no persistent per-judge-model parent
             results.csv
+      pooled/                                     <- persistent container, same role as c_sonnet/
+        u_gpt-5.2+claude-opus-4-5_<sha>_<timestamp>/
+          results.csv
+          pool_metadata.json
+          scores/
 
-  evaluations/<config-sha256>/                                <- persistent per-config directory, same role as c_sonnet/
-    <rubric_name>/                                             <- standalone judging (vera judge run on its own)
-      j_claude_<nickname>_<timestamp>_<sha>/                   <- same run-root shape as the nested case -- re-runs don't collide
+  <target>/
+    evaluations/<config-sha256>/                  <- standalone judging (vera judge run on its own)
+      j_claude_<sha>_<timestamp>/                 <- same run-root shape as the nested case -- re-runs don't collide
         results.csv
 ```
 
-- **Generation** groups persistently by chatbot model (`c_sonnet/` accumulates every run against that model).
-- **Judging** stays flat per-run — intentionally asymmetric, not an inconsistency.
-- Every run-id is `<nickname>_<timestamp>_<sha>` when nested under a per-model parent (model already given by `c_sonnet/`), or `<model>_<nickname>_<timestamp>_<sha>` when flat (`j_claude_...`, nothing else names the model): readable (which model, where applicable), recognizable (`<nickname>` — a generated human-memorable tag, purely so a person can refer to a run without quoting a sha; carries no identity of its own and is never a substitute for it), ordered (when), integrity-checked (sha256 of `config.json`). The nickname never needs to encode which model was used — the surrounding path already does that.
-- Standalone judging (against one or many existing folders, not chained from a pipeline run) has no single parent run to nest under, so it groups under its own top-level directory — `evaluations/<config-sha256>/` — sibling to the `c_*` directories. **This container is not a run-root**, exactly like `c_sonnet/` isn't one for generation: it exists purely so every run of one exact config is discoverable in one place, and it accumulates runs rather than being collision-checked itself. The run-root actually created and checked for collisions is still the `j_claude_<nickname>_<timestamp>_<sha>/` folder inside it — so re-invoking `vera judge` standalone with an identical config produces a new run alongside prior ones, never an error and never a silent overwrite, for the same reason re-running generation against the same chatbot never collides.
+- **`<target>` is the outermost segment.** Scores produced under different targets are never comparable, so the layout makes mixing them structurally impossible rather than merely discouraged, and `ls output/SI/` answers "which chatbots have been evaluated against SI".
+
+  This does not contradict "generation has no knowledge of rubrics" (use case 3). A target is not a rubric — it is personas, prompts, *and* a rubric — and generation already consumes the persona files and persona context template from it. Conversations therefore genuinely belong to the target that produced them. What stays true is that generation is not organized by *rubric*: all of a run's conversations live together under one target root regardless of which rubrics later judge them.
+
+  **Consequence:** the `evaluations/<rubric_name>/` segment this scheme previously carried is gone, because the path already names the target. That segment was the stated blocker for `vera judge --target all` (use case 3), so that restriction can lift as soon as this layout lands rather than waiting for migration Phase 4.
+
+- **Generation** groups persistently by chatbot model (`c_sonnet/` accumulates every run against that model). **Judging** stays flat per-run — intentionally asymmetric, not an inconsistency.
+
+- **Every run-id is `<model>_<sha>_<timestamp>`**, where `<model>` is whichever model the surrounding path does not already name: the *user* model for a generation run (the chatbot is given by `c_sonnet/`), the *judge* model for a judging run, and the `+`-joined set of user models for a pooled result. Readable (which model), integrity-checked (sha256 of `config.json`), ordered (when).
+
+  **The timestamp goes last, uniformly.** Everything sharing a prefix still sorts chronologically, and one ordering rule is easier to hold than one-per-artifact-kind.
+
+  **There is no *generated* nickname.** An earlier draft minted a human-memorable tag (`prophetic-bullfrog`) so a person could refer to a run without quoting a sha. The model name does that job better, because it is also the thing a reader wants to know, so the arbitrary tag is retired.
+
+  **An optional human label may be supplied per run**, and it is *added* to the run-id rather than replacing anything:
+
+  ```text
+  u_<user-model>[_<label>]_<sha>_<timestamp>
+  ```
+
+  It **defaults to none**, in which case the run-id is exactly the form above without that segment — the model name alone. Additive rather than substitutive because the model is the one thing a reader always wants: a label like `smoke-test` or `pre-launch-check` says why a run exists, and would be strictly worse if the price were no longer being able to see what it ran against. The model stays first so that listing a directory still groups by model.
+
+  The label is run-defining, so it lives in the run's `config.json` and participates in the config sha like every other field — two otherwise-identical runs with different labels are different runs, which is what labelling them separately asserts. It is deliberately not spelled `--run-id`: it is a decorative handle, never an identifier, and the sha remains the identity.
+
+  **Open — the CLI flag and config-field spelling are deliberately undecided**, and stay that way until migration Phase 3 implements the label. That phase rewrites `utils/naming.py` (which needs the flag) and formalizes the config shape in `utils/config_schema.py` (which needs the field), so naming them earlier would only mean naming them twice. Everything above — optional, additive, defaults to none, run-defining, sha-participating — is settled; only the spelling is not. Noted explicitly because this document is marked `status: resolved`, and an unrecorded open question inside a resolved document reads as an already-made decision.
+
+- **Pooled results** live under `c_<chatbot>/pooled/`, a persistent container in the same role as `c_sonnet/` itself — not a run-root. The run-root created and collision-checked is the `u_<a>+<b>_<sha>_<timestamp>/` folder inside it, so re-pooling the same combination accumulates runs alongside prior ones rather than erroring or overwriting.
+
+  The combination is named in the path deliberately, so that listing one directory says which pools already exist without opening a metadata file. Two user models is the expected case; the segment renders at most three model names and then appends `+Nmore`, so it stays bounded if that ever changes. `pool_metadata.json` remains the authoritative record of the exact source evaluation folders and their row counts.
+
+  **Pooling writes only the merged artifacts** — `results.csv`, `pool_metadata.json`, and `scores/`. Per-question TSVs and transcripts are never copied; they stay in the source runs, which `pool_metadata.json` points back to.
+
+  Sources that do not all share one chatbot have no `c_<chatbot>/` to nest under, so they group under a top-level `pooled/<config-sha256>/` — the same nested-versus-standalone split judging already makes, for the same reason.
+
+- **Standalone judging** (against one or many existing folders, not chained from a pipeline run) has no single parent run to nest under, so it groups under `evaluations/<config-sha256>/` within its target root. **This container is not a run-root**, exactly like `c_sonnet/` isn't one for generation: it exists purely so every run of one exact config is discoverable in one place, and it accumulates runs rather than being collision-checked itself. The run-root actually created and checked for collisions is still the `j_claude_<sha>_<timestamp>/` folder inside it — so re-invoking `vera judge` standalone with an identical config produces a new run alongside prior ones, never an error and never a silent overwrite.
+
+- **Component-level selection is supported, and carries a known risk.** `--personas A --rubric B` generates from A's personas and judges with B's rubric, so the run lives under `output/A/` while nothing in the path records that the rubric came from B. This stays supported and deliberately gets no special handling — it is an expert path, and whole-target runs (the common case) stay fully glanceable.
+
+  **The risk is specific, and worth stating rather than discovering:** the target root's entire purpose is that scores never cross it, and a mixed run breaks that guarantee *inside* a root. Anything that finds results by globbing a target root — including `vera pool` — could therefore merge scores from two different rubrics without noticing.
+
+  **The mitigation is not a path segment, it is verification.** Aggregation must establish rubric identity from each source's own recorded config rather than inferring it from the enclosing path, and refuse to merge sources that disagree. That is the same capability two existing `TODO` entries already call for: persisting rubric dimensions and a rubric fingerprint with evaluation output, and recording the shas of the files a config consumed. Until that exists, a mixed run is safe to *produce* and unsafe to *pool blindly*.
 
 All naming/layout construction logic MUST live in a single `utils/` module (extending `utils/conversation_layout.py`), never duplicated across `generate/`, `judge/`, or `score/` handlers — this scheme has already changed multiple times during design and is expected to keep evolving.

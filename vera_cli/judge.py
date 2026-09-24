@@ -384,14 +384,16 @@ async def _execute(run_configs: list[RunConfig]) -> None:
         if judging is None:  # pragma: no cover - resolve_configs always sets it
             raise ConfigError("judge produced a run with no judging section")
         into = run_config.invocation.into
-        rubric = judging.rubrics[0]
+        # Exactly one of each, enforced by `JudgingConfig.__post_init__`; the
+        # unpacking fails loudly rather than judging only the first if that
+        # changes.
+        (conversations,) = judging.conversations
+        (rubric,) = judging.rubrics
 
         # Discovery of the transcripts directory is idempotent, so deriving it
         # here keeps the resolved config stating the folder the user named rather
         # than an internal subdirectory.
-        transcripts_dir, _, folder_name = resolve_conversation_input(
-            judging.conversations[0]
-        )
+        transcripts_dir, _, folder_name = resolve_conversation_input(conversations)
         await run_judging(
             judge_models={model.name: model.repeats for model in judging.models},
             rubric_file=rubric.rubric_file,
@@ -404,6 +406,9 @@ async def _execute(run_configs: list[RunConfig]) -> None:
             # it, the exact existing run folder to land back in.
             output_dir=into or judging.output,
             is_existing_run=into is not None,
+            # Every judge model shares one parameter dict
+            # (`JudgingSpec.__post_init__` rejects anything else), so the first
+            # model's stands for all of them.
             judge_model_extra_params=dict(judging.models[0].extra_params),
             max_concurrent=judging.max_concurrent,
             per_judge=judging.per_judge,
@@ -496,8 +501,8 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default=argparse.SUPPRESS,
         metavar="<run folder>",
         help=(
-            "Continue an existing run folder, skipping work already on disk "
-            "(mutually exclusive with --output)"
+            "Resume: continue an existing run folder, skipping work already on "
+            "disk (replaces --output, which mints a new run instead)"
         ),
     )
     parser.add_argument("--config", help="JSON path or '-' for stdin")
