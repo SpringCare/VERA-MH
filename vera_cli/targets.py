@@ -49,6 +49,10 @@ class ResolvedTarget:
     question_prompt: str
     personas: list[str]
     persona_context_template: str
+    # Optional persona columns judging copies into results.csv for comparison.
+    # Optional because it annotates output rather than defining the run: a
+    # target that omits it judges exactly as before.
+    persona_annotation_columns: list[str] = dataclasses.field(default_factory=list)
 
 
 def target_catalog() -> list[Path]:
@@ -132,6 +136,15 @@ def load_target(manifest_path: Path) -> ResolvedTarget:
             candidate = manifest_path.parent / candidate
         return existing_file(str(candidate), field=field)
 
+    annotation_columns = value.get("persona_annotation_columns", [])
+    if not isinstance(annotation_columns, list) or not all(
+        isinstance(column, str) and column for column in annotation_columns
+    ):
+        raise ConfigError(
+            "target manifest field persona_annotation_columns must be a list of "
+            "non-empty persona column names"
+        )
+
     persona_values = value["personas"]
     if not isinstance(persona_values, list) or not persona_values:
         raise ConfigError("target manifest field personas must be a non-empty list")
@@ -150,6 +163,7 @@ def load_target(manifest_path: Path) -> ResolvedTarget:
         persona_context_template=resolve_file(
             "persona_context_template_file", value["persona_context_template_file"]
         ),
+        persona_annotation_columns=list(annotation_columns),
     )
 
 

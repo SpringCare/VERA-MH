@@ -6,7 +6,7 @@ Extracted from score_comparison_v3.py to enable reuse across scripts.
 
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import pandas as pd
 
@@ -586,6 +586,45 @@ def build_dataframe_from_tsv_files(evaluations_dir: Path) -> pd.DataFrame:
     return df
 
 
+RISK_LEVEL_COLUMN = "Short Current Suicide Risk Level"
+
+
+def load_persona_column(personas_tsv_path: Path, column: str) -> Dict[str, str]:
+    """
+    Load a mapping of persona name to one annotation column's value.
+
+    The generic form behind `load_personas_risk_levels`. Targets do not share a
+    persona schema: SI carries `Short Current Suicide Risk Level` while HFO
+    carries `Active Life Threat`, so the column to join on is a parameter rather
+    than a constant.
+
+    Args:
+        personas_tsv_path: Path to the personas TSV
+        column: Persona column to read alongside `Name`
+
+    Returns:
+        Dictionary mapping persona name to that column's value
+
+    Raises:
+        KeyError: If the personas file has no such column. Returning an empty
+            map instead would annotate every row "Unknown", which reads like a
+            result rather than a misconfiguration.
+    """
+    # keep_default_na=False so a literal "None" stays the string "None" rather
+    # than becoming NaN -- a meaningful value for risk-level style columns.
+    df = pd.read_csv(personas_tsv_path, sep="\t", keep_default_na=False)
+    if "Name" not in df.columns:
+        raise KeyError(f"personas file {personas_tsv_path} has no 'Name' column")
+    if column not in df.columns:
+        raise KeyError(
+            f"personas file {personas_tsv_path} has no {column!r} column; "
+            f"available columns: {', '.join(map(str, df.columns))}"
+        )
+    return (
+        df[["Name", column]].set_index("Name")[column].astype(str).str.strip().to_dict()
+    )
+
+
 def load_personas_risk_levels(personas_tsv_path: Path) -> Dict[str, str]:
     """
     Load persona names and their risk levels from personas.tsv.
@@ -596,19 +635,7 @@ def load_personas_risk_levels(personas_tsv_path: Path) -> Dict[str, str]:
     Returns:
         Dictionary mapping persona name to risk level, or empty dict if error
     """
-    # read with keep_default_na=False to prevent pandas
-    # from converting value "None" to NaN for Short Current Suicide Risk Level
-    df = pd.read_csv(personas_tsv_path, sep="\t", keep_default_na=False)
-    # Map persona name to risk level
-    # Use keep_default_na=False to prevent pandas from converting "None" string to NaN
-    risk_map = (
-        df[["Name", "Short Current Suicide Risk Level"]]
-        .set_index("Name")["Short Current Suicide Risk Level"]
-        .astype(str)
-        .str.strip()
-        .to_dict()
-    )
-    return risk_map
+    return load_persona_column(personas_tsv_path, RISK_LEVEL_COLUMN)
 
 
 def add_risk_levels_to_dataframe(
@@ -658,6 +685,61 @@ def add_risk_levels_to_dataframe(
             3 if "persona_name" in df.columns else (2 if "run_id" in df.columns else 1)
         )
         cols.insert(insert_pos, "risk_level")
+        df = pd.DataFrame(df[cols])
+
+    return df
+
+
+def add_persona_columns_to_dataframe(
+    df: pd.DataFrame, personas_tsv_path: Path, columns: Sequence[str]
+) -> pd.DataFrame:
+    """
+    Annotate evaluation rows with persona columns, joined on the persona name.
+
+    The persona name is recovered from each row's conversation filename, the
+    same join `add_risk_levels_to_dataframe` performs, but the columns carried
+    over are named by the caller (ultimately by the target manifest) instead of
+    fixed to SI's risk level.
+
+    Annotation columns are placed directly after `persona_name` so the
+    identifying fields stay together at the left edge of `results.csv`.
+
+    Args:
+        df: DataFrame with a 'filename' column
+        personas_tsv_path: Path to the personas TSV
+        columns: Persona column names to add, in order
+
+    Returns:
+        DataFrame with `persona_name` and the requested columns added. Existing
+        columns are left untouched, so re-annotating is a no-op.
+    """
+    if not columns:
+        return df
+
+    persona_names = df["filename"].apply(
+        lambda filename: extract_persona_name_from_filename(str(filename)) or "Unknown"
+    )
+
+    if "persona_name" not in df.columns:
+        df = df.copy()
+        df["persona_name"] = persona_names
+        cols: list[str] = list(df.columns)
+        cols.remove("persona_name")
+        cols.insert(2 if "run_id" in cols else 1, "persona_name")
+        df = pd.DataFrame(df[cols])
+
+    # Offset grows per inserted column so several annotations keep the order the
+    # caller asked for; inserting each one directly after `persona_name` would
+    # reverse them.
+    for offset, column in enumerate(columns, start=1):
+        if column in df.columns:
+            continue
+        value_map = load_persona_column(personas_tsv_path, column)
+        df = df.copy()
+        df[column] = persona_names.map(lambda name: value_map.get(name, "Unknown"))
+        cols = list(df.columns)
+        cols.remove(column)
+        cols.insert(cols.index("persona_name") + offset, column)
         df = pd.DataFrame(df[cols])
 
     return df
