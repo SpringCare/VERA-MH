@@ -1,0 +1,23 @@
+{
+  "target": "HFO",
+  "generation": {
+    "chatbot": {"name": "claude-opus-5", "repeats": 1},
+    "user": [
+      {"name": "gpt-5.2", "repeats": 1}
+    ],
+    "turns": 30,
+    "output": "output",
+    "max_concurrent": 10,
+    "max_total_words": null,
+    "persona_speaks_first": true,
+    "sessions": null
+  },
+  "judging": {
+    "models": [{"name": "gpt-5.4", "repeats": 1, "reasoning_effort": "low"}],
+    "max_concurrent": 10,
+    "per_judge": false
+  },
+  "scoring": {
+    "skip_risk_analysis": true
+  }
+}
