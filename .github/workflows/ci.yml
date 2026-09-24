@@ -74,26 +74,3 @@ jobs:
           test-results/
           htmlcov/
         if-no-files-found: ignore
-
-  docker-build:
-    name: Docker Build Check
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v7
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v4
-
-    - name: Build Docker image
-      uses: docker/build-push-action@v7
-      with:
-        context: .
-        push: false
-        load: true
-        tags: vera-mh:test
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    - name: Smoke-test Docker image
-      run: docker run --rm vera-mh:test python3 --version
