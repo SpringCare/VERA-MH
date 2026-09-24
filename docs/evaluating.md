@@ -259,7 +259,7 @@ Provider APIs differ in how prompt/context caching works. The built-in clients b
 
 ## Reasoning / extended thinking (by provider)
 
-See [README.md](../README.md#reasoning--extended-thinking) for the user-facing `-uep`/`-pep`/`-jep` flag per provider (`thinking_effort`, `reasoning_effort`, `thinking_level`/`thinking_budget`). This section covers what each client does internally to make that flag work, and which sampling params it silently drops so a reasoning-enabled request doesn't 400.
+See [cli.md](cli.md#model-parameters-and-reasoning-effort) for the user-facing `--user-params`/`--chatbot-params`/`--judge-params` flag per provider (`thinking_effort`, `reasoning_effort`, `thinking_level`/`thinking_budget`). This section covers what each client does internally to make that flag work, and which sampling params it silently drops so a reasoning-enabled request doesn't 400.
 
 | Provider | Behavior in this repo |
 |----------|------------------------|
