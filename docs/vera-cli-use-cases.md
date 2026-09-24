@@ -106,7 +106,8 @@ combine with `vera pool`.
 
 **`vera judge --target all` is deferred, not disallowed.** It errors for now and
 is scheduled for Phase 4; `--target all` keeps its full meaning for `generate`
-throughout.
+throughout. `vera pipeline` defers it too, for a different reason — see
+[pipeline.md](./pipeline.md).
 
 The blocker is output attribution, not semantics. Judging every target means
 evaluating the same conversations under N rubrics, which resolves cleanly to N

@@ -68,7 +68,7 @@ async def run_for_user_models(
     *,
     max_personas: Optional[int],
     into: Optional[str] = None,
-) -> None:
+) -> List[str]:
     """Run one generation per user-side model, sequentially.
 
     STOPGAP. This exists so the CLI hands the generation domain a resolved
@@ -85,9 +85,17 @@ async def run_for_user_models(
     the same atomic change (see docs/architecture.md). The real fix is for the
     generation domain to accept these types natively, at which point
     `_legacy_model_config` below and this wrapper both disappear.
+
+    Returns the run folder each user model wrote to, in the order the models
+    were given. `main` has always returned its output folder and this wrapper
+    used to drop it; `vera pipeline` needs it, because chaining generation into
+    judging means knowing where the transcripts landed without re-deriving it
+    from the filesystem or scraping it out of a log. `vera generate` ignores
+    the return.
     """
+    run_folders: List[str] = []
     for user in generation.user:
-        await main(
+        _, run_folder = await main(
             persona_model_config=_legacy_model_config(user),
             # Only the agent side may carry `name`; see `_legacy_model_config`.
             agent_model_config=_legacy_model_config(generation.chatbot)
@@ -111,6 +119,8 @@ async def run_for_user_models(
             resume=into is not None,
             persona_context_template_path=generation.persona_context_template,
         )
+        run_folders.append(run_folder)
+    return run_folders
 
 
 def _legacy_model_config(model: ModelSpec) -> Dict[str, Any]:
