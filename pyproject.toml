@@ -26,6 +26,7 @@ dev = [
     "pytest-cov>=4.1.0",
     "pytest-asyncio>=0.21.0",
     "pytest-mock>=3.12.0",
+    "pytest-socket>=0.7.0",
     "pytest-timeout>=2.2.0",
     "freezegun>=1.4.0",
     "pre-commit>=3.0.0",
@@ -39,6 +40,7 @@ dev = [
     "pytest-cov>=4.1.0",
     "pytest-asyncio>=0.21.0",
     "pytest-mock>=3.12.0",
+    "pytest-socket>=0.7.0",
     "pytest-timeout>=2.2.0",
     "freezegun>=1.4.0",
     "pre-commit>=3.0.0",
@@ -62,6 +64,27 @@ typeCheckingMode = "basic"
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+# Ruff 0.16's default `include` carries `*.md`, so it reformats Python code
+# blocks inside Markdown. Our docs use snippets as illustrations -- pseudo-code,
+# partial excerpts, and deliberately aligned trailing comments -- which the
+# formatter rewrites in ways that hurt readability. Docs are not ruff's job.
+#
+# Both settings are needed, for different holes. `include` is the upstream
+# default minus `*.md`, and is what a bare `ruff format .` (CI) traverses -- an
+# allowlist, so the next release adding a file type to the defaults cannot
+# silently widen our scope again, which is exactly how Markdown got in.
+# `extend-exclude` covers the other path: `include` is ignored for files named
+# explicitly on the command line, and only an exclude rule stops those.
+include = [
+    "*.py",
+    "*.pyi",
+    "*.pyw",
+    "*.ipynb",
+    "**/pyproject.toml",
+    "**/ruff.toml",
+    "**/.ruff.toml",
+]
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]  # pycodestyle, pyflakes, isort
@@ -86,6 +109,13 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
+    # Fail any test that opens a network connection. Tests must mock their LLM
+    # calls; tests that legitimately need the network carry both the `live` and
+    # `enable_socket` markers. Without this, a test missing the `live` marker
+    # would silently pick up real API keys via load_dotenv() and make billable
+    # calls locally while failing in CI.
+    "--disable-socket",
+    "--allow-unix-socket",
     "--cov=.",
     "--cov-report=term-missing",
     "--cov-report=html",

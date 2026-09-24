@@ -1,7 +1,6 @@
 # VERA-MH
 
 [![CI](https://github.com/SpringCare/VERA-MH/workflows/CI/badge.svg)](https://github.com/SpringCare/VERA-MH/actions/workflows/ci.yml)
-[![Docker](https://github.com/SpringCare/VERA-MH/workflows/Docker%20Build%20Validation/badge.svg)](https://github.com/SpringCare/VERA-MH/actions/workflows/docker.yml)
 
 **Project status:** VERA-MH 2.0 is under active development. It expands the framework's multi-target evaluation capabilities and introduces breaking changes, including a new unified CLI. The current README documents the existing version on `main`.
 
@@ -19,6 +18,7 @@ We value every interaction that follows the [Code of Conduct](https://www.contri
 - [Connecting your own LLM, Agent, or API](#connecting-your-own-llm-or-api)
 - [Recommended settings](#recommended-settings)
 - [Reliable VERA-MH score (automated)](#reliable-vera-mh-score-automated)
+- [Unified CLI: generation](#unified-cli-generation)
 - [Running VERA-MH step by step](#running-vera-mh-step-by-step)
 - [Using Extra Parameters](#using-extra-parameters)
 - [Data Files](#data-files)
@@ -36,7 +36,7 @@ We value every interaction that follows the [Code of Conduct](https://www.contri
 
 # Getting started
 
-This page covers [Environment setup](#environment-setup), optional [custom provider wiring](#connecting-your-own-llm-or-api), [Recommended settings](#recommended-settings) for comparable scores, the [automated pooled pipeline](#reliable-vera-mh-score-automated), and [Running VERA-MH step by step](#running-vera-mh-step-by-step) (`run_pipeline.py`, `generate.py`, `judge.py`, scoring, comparison, and improvement reports).
+This page covers [Environment setup](#environment-setup), optional [custom provider wiring](#connecting-your-own-llm-or-api), [Recommended settings](#recommended-settings) for comparable scores, the [automated pooled pipeline](#reliable-vera-mh-score-automated), the [unified generation CLI](#unified-cli-generation), and [Running VERA-MH step by step](#running-vera-mh-step-by-step) (`run_pipeline.py`, `generate.py`, `judge.py`, scoring, comparison, and improvement reports).
 
 ## Environment setup
 
@@ -87,7 +87,7 @@ Use this when the **provider** you want to evaluate (the mental-health chatbot u
 Use this profile when you want a **reliable VERA-MH score comparable to the published VERA-MH v1.1 scores**:
 
 - **Personas**
-  - Use all **100** rows in [`data/personas.tsv`](data/personas.tsv).
+  - Use all **100** rows in [`data/SI/personas.tsv`](data/SI/personas.tsv).
   - Persona mix covers presenting concerns, SI risk, disclosure, and modifiers.
   - Full set probes safety more thoroughly than small persona slices.
   - Full set also tends to reduce score variability vs. smaller persona sets.
@@ -107,28 +107,54 @@ To run this profile in one scripted flow after [Environment setup](#environment-
 
 For the [recommended settings](#recommended-settings) (dual user agents, 30 turns, GPT 5.4 judge, pooled headline score), run from the repository root after [Environment setup](#environment-setup) (steps **0–2**: `uv sync`, activate `.venv`, configure `.env`) and, if you use a custom provider, the steps in [Connecting your own LLM, Agent, or API](#connecting-your-own-llm-or-api):
 
+Two entry points run this profile, and both are supported. The scripted flow is the long-standing one:
+
 ```bash
 ./scripts/run_recommended_vera_pipeline.sh <provider-agent-model>
 ```
 
-Use the same **provider** model id you would pass to `run_pipeline.py` as `--provider-agent` (the system under evaluation). The script:
+Use the same **provider** model id you would pass to `run_pipeline.py` as `--provider-agent` (the system under evaluation). The script runs `run_pipeline.py` once per user-side model, then merges both evaluation runs via `scripts/pool_vera_scores.py` into a **single pooled** folder `j_<judge>__p_.../` (e.g. `j_gpt-5.4x1__p_gpt_5_2+claude_opus_4_5__a_.../`, next to your `p_*` runs by default) containing merged `results.csv`, `pool_metadata.json`, `scores/scores.json`, and the usual score / risk visualizations. Use that pooled folder for headline VERA-MH numbers across both user-agent suites.
 
-- Runs `run_pipeline.py` **twice**: once with **GPT 5.2** as the user agent (`gpt-5.2`) and once with **Claude Opus 4.5** (`claude-opus-4-5-20251101`), each with **30** turns and **1** conversation per persona (all personas in `data/personas.tsv` unless you cap the count).
-- Judges each batch with **GPT 5.4** (`gpt-5.4`).
-- Merges both evaluation runs via `scripts/pool_vera_scores.py` into a **single pooled** folder `j_<judge>__p_.../` (e.g. `j_gpt-5.4x1__p_gpt_5_2+claude_opus_4_5__a_.../`, next to your `p_*` runs by default) containing merged `results.csv`, `pool_metadata.json`, `scores/scores.json`, and the usual score / risk visualizations. Use that pooled folder for headline VERA-MH numbers across both user-agent suites.
+Arguments after `<provider-agent-model>` are forwarded to `run_pipeline.py` (for example `--max-concurrent 10`). The models, turn count and caps it defaults to, and the `VERA_*` environment variables that override them, are documented in the script itself.
 
-By default, generation folders go under `output/`; the pooled merged `j_*` folder is created in that same parent unless you override it. See environment variables in `scripts/run_recommended_vera_pipeline.sh`, for example:
+The unified CLI runs the same profile through `vera pipeline`. The checked-in [`configs/recommended-SI.json`](configs/recommended-SI.json) holds the published settings — read that file rather than a copy of it here — so running it means filling in the model under test:
 
-| Variable | Purpose |
+```bash
+jq '.generation.chatbot.name = "<model-under-test>"' configs/recommended-SI.json \
+  | uv run python vera.py pipeline --config -
+```
+
+Run-defining flags and `--config` are strictly either/or, which is why the model is injected into the document rather than passed as `-c` alongside it. `--sample N` may accompany either form for a smoke test, since it is invocation-only.
+
+For an ad-hoc run, the same three stages take the shorthand form — `-c` is the system under evaluation, `-u` the user-side model(s), `-j` the judge(s):
+
+```bash
+uv run python vera.py pipeline \
+  -c <model-under-test> \
+  -u <user-model>:1 \
+  -j <judge-model>:1 \
+  --target SI
+```
+
+Either form generates, judges and scores each user-side suite in turn, then prints the evaluation folders it produced. The headline VERA-MH number is the **pooled** score across both user-agent suites, not either batch on its own — the script pools for you; `vera pipeline` names the folders to pass to the pooling step, so nothing has to be dug out of the run log:
+
+```bash
+uv run python scripts/pool_vera_scores.py <evaluation-folder-A> <evaluation-folder-B>
+```
+
+(A first-class `vera pool` subcommand is specified in [docs/architecture.md](docs/architecture.md) and will replace this script invocation.)
+
+By default, generation folders go under `output/`. Each `VERA_*` variable the script exposes has a config equivalent for the `vera pipeline` form:
+
+| Script variable | `vera pipeline` equivalent |
 |----------|---------|
-| `VERA_OUTPUT_PARENT` | Parent for new `p_*` runs (default: `output`) |
-| `VERA_MAX_CONCURRENT` | Passed through as `--max-concurrent` |
-| `VERA_MAX_PERSONAS` | Passed through as `--max-personas` (smoke tests) |
-| `VERA_POOL_OUTPUT` | Parent directory for the new merged `j_<judge>__p_...` folder (default: same as `VERA_OUTPUT_PARENT`) |
-| `VERA_POOL_SKIP_RISK` | If set, skip pooled risk-level analysis |
-| `VERA_USER_A`, `VERA_USER_B`, `VERA_JUDGE` | Override default model ids (first/second user-agent suite and judge) |
-
-Arguments after `<provider-agent-model>` are forwarded to `run_pipeline.py` (for example `--max-concurrent 10`).
+| `VERA_OUTPUT_PARENT` | `generation.output` |
+| `VERA_MAX_CONCURRENT` | `generation.max_concurrent` and `judging.max_concurrent`, settable per stage |
+| `VERA_MAX_PERSONAS` | `--sample N` on the command line (invocation-only, so it may accompany `--config`) |
+| `VERA_POOL_OUTPUT` | `-o` on `scripts/pool_vera_scores.py` |
+| `VERA_POOL_SKIP_RISK` | `--skip-risk-analysis` on `scripts/pool_vera_scores.py`; `scoring.skip_risk_analysis` covers the per-run scores |
+| `VERA_USER_A`, `VERA_USER_B` | entries in `generation.user`, which is a list and is not limited to two |
+| `VERA_JUDGE`, `VERA_JUDGE_EXTRA_PARAMS` | `judging.models` |
 
 **Pooling only:** If you already have two evaluation directories (`.../evaluations/j_*`), merge them with:
 
@@ -139,6 +165,99 @@ uv run python scripts/pool_vera_scores.py -o <pool_parent_dir> \
 ```
 
 Use `uv run python scripts/pool_vera_scores.py --help` for options (including `--extract-from-log` for parsing a saved `run_pipeline.py` log).
+
+## Unified CLI: generation
+
+`vera.py generate` is the first command available through the unified CLI. A
+target selects the complete reusable evaluation bundle; generation consumes its
+personas and persona prompt:
+
+```bash
+uv run python vera.py generate \
+  -c gpt-4o \
+  -u claude-sonnet-4-5-20250929:1 \
+  --target SI
+```
+
+Use `--personas SI` when you want only SI's persona component explicitly:
+
+```bash
+uv run python vera.py generate \
+  -c gpt-4o \
+  -u claude-sonnet-4-5-20250929:1 \
+  --personas SI
+```
+
+Both forms resolve `data/SI/manifest.json` before dispatch. CLI defaults are
+defined at the flag boundary (`--turns 30`, `--output output`, unlimited
+concurrency, persona first). Config-driven runs provide every generation
+behavior field explicitly:
+
+```bash
+uv run python vera.py generate --config run.json
+```
+
+Run-defining flags and `--config` cannot be mixed. `--sample`, `--debug`,
+`--into`, and `--print` may accompany config input. Executed runs record
+`sample` and `debug` as invocation metadata in their resolved config; `--print`
+creates no run. The legacy `generate.py` remains temporarily as a compatibility
+adapter; pipeline execution continues to use `run_pipeline.py` until its
+unified command is added.
+
+### Continuing an interrupted run: `--into`
+
+Generation and judging both spend real LLM calls, so a run that dies partway
+should not start from scratch. `--into <run folder>` points a fresh invocation
+at an existing run folder and skips whatever is already written there:
+
+```bash
+# The original run. Mints a new folder under output/ and prints its path.
+uv run python vera.py generate \
+  -c gpt-4o \
+  -u claude-sonnet-4-5-20250929:1 \
+  --target SI
+
+# It died partway. Same command, with --into naming the folder it created:
+uv run python vera.py generate \
+  -c gpt-4o \
+  -u claude-sonnet-4-5-20250929:1 \
+  --target SI \
+  --into output/c_gpt-4o/prophetic-bullfrog_20260713-1530_a1b2c3
+```
+
+`vera.py judge` takes the same flag, pointed at the run it is writing
+evaluations into:
+
+```bash
+uv run python vera.py judge \
+  -j claude-sonnet-4-5-20250929 \
+  --conversations output/c_gpt-4o/<run>/conversations \
+  --target SI \
+  --into output/c_gpt-4o/<run>
+```
+
+Three things to know before using it:
+
+- **`--into` replaces `--output`; it is not added alongside it.** The two are
+  mutually exclusive, because they answer the same question differently:
+  `--output` names a *parent* to mint a new run under, `--into` names the
+  *existing run* to continue. Everything else in the original command stays
+  as it was.
+- **You supply the folder path.** Nothing auto-discovers your last run yet, so
+  copy the path from the original run's output. `--into` fails if the path is
+  not an existing folder rather than quietly creating one, so a typo cannot
+  start a silent fresh run under the name you expected to hold results.
+- **It works with `--config` too**, since it says nothing about *which* run
+  this is. For the same reason it is not recorded in the run's `config.json` —
+  a run finished across two invocations is the same run as one finished in a
+  single pass.
+
+This is a per-stage, stateless skip: it re-derives what is left to do from the
+files already on disk, and each stage is continued by its own command. It is
+deliberately **not** spelled `--resume`, because that name is reserved for the
+planned `vera resume`, which will read a run's `state.json`, work across stages,
+and not need to be handed a path. Under the legacy scripts the equivalent of
+`--into <folder>` was `generate.py --output <folder> --resume`.
 
 ## Running VERA-MH step by step
 
@@ -201,7 +320,8 @@ uv run python run_pipeline.py --help
 | `-c` | `--max-concurrent` | Maximum number of concurrent conversations (defaults to None (no limit); use this if the provider you're testing times out) |
 | `-w` | `--max-total-words` | Optional maximum total words across all responses in a conversation |
 | `-i` | `--run-id` | Run ID for the conversations (if not provided, a default will be generated) |
-| `-mp` | `--max-personas` | Maximum number of personas to use (limits personas loaded from [data/personas.tsv](data/personas.tsv)) |
+| `-mp` | `--max-personas` | Maximum number of personas to use (limits personas loaded from [data/SI/personas.tsv](data/SI/personas.tsv)) |
+| | `--rubric-manifest` | Rubric bundle manifest to load personas from (e.g. `data/SI/rubric_manifest.json`), instead of the default `data/SI/personas.tsv`. No default -- must be given explicitly. Requires a full manifest path; there is no `--target SI`-style shorthand yet (see note below). |
 | `-psf` | `--provider-speaks-first` | Provider speaks first (default: persona speaks first). max_turns is adjusted so provider speaks last. |
 | `-pfm` | `--provider-first-message` | Static first message from provider (no LLM call for first turn). E.g. `"How are you today?"` Used on turn 0 when `--provider-speaks-first` is set. |
 | `-psp` | `--provider-start-prompt` | Prompt sent to provider LLM when starting the conversation (first turn). Used on turn 0 when `--provider-speaks-first` is set. Default: `"Start the conversation based on the system prompt"` |
@@ -233,13 +353,15 @@ This will generate conversations under `output/<p_* run>/conversations/` by defa
 | `-c` | `--conversation` | Path to a single conversation file to judge (mutually exclusive with `--folder`) |
 | `-j` | `--judge-model` | Model(s) to use for judging (required). Format: `model` or `model:count` for multiple instances. Can specify multiple: `--judge-model model1 model2:3`. Examples: `claude-sonnet-4-5-20250929`, `claude-sonnet-4-5-20250929:3`, `claude-sonnet-4-5-20250929:2 gpt-4o:1` |
 | `-jep` | `--judge-model-extra-params` | Extra parameters for the judge model (optional). Examples: `temperature=0.7,max_tokens=1000`. Default: `temperature=0` (unless overridden) |
-| `-r` | `--rubrics` | Rubric file(s) to use (default: `data/rubric.tsv`) |
+| `-r` | `--rubrics` | Rubric bundle manifest(s) to use (default: `data/SI/rubric_manifest.json`). Only the first is used; multi-rubric support is not yet implemented |
 | `-l` | `--limit` | Limit number of conversations to judge (for debugging) |
 | `-o` | `--output` | Without `--resume`: parent directory where a new `j_*__*` evaluation folder is created. Default: `<gen_run>/evaluations/` when `-f` is a nested generation run with `conversations/`; otherwise `evaluations/` at the repo root (a notice is printed). With `--resume`: the existing `j_*` evaluation folder itself. |
 | | `--resume` | Continue batch judging in an existing evaluation folder: use with `-f` and `-o` pointing at that folder. Skips `(conversation, judge, instance)` jobs whose `.tsv` already exists, then rebuilds `results.csv` from all TSVs there. Not supported with `-c` / `--conversation`. |
 | `-m` | `--max-concurrent` | Maximum number of concurrent workers (default: None (no limit)). Set to a high number or omit for unlimited concurrency |
 | `-pj` | `--per-judge` | If set, `--max-concurrent` applies per judge model. Otherwise, it applies to total workers across all judges. Example: `-m 4 -pj` with two judge models runs up to 4 workers per model (8 total) |
 | `-vw` | `--verbose-workers` | Enable verbose worker logging to show concurrency behavior |
+
+**No `SI`-style shorthand yet:** `--rubrics`/`--rubric-manifest` both require a full path to a rubric bundle manifest (e.g. `data/SI/rubric_manifest.json`) -- typing a bare rubric name like `SI` anywhere on the command line does **not** get expanded to that path. Symbolic-name resolution (`--target SI`) is planned for the future `vera.py` CLI, not these scripts. In the meantime, `data/SI/rubric_manifest.json` is simply the current default for `judge.py`/`run_pipeline.py`'s `--rubrics`, so omitting the flag already gets you SI; to select a *different* rubric folder (once one exists), pass its manifest path explicitly.
 
 **Output from `judge.py`:**
 
@@ -307,12 +429,12 @@ The output from this script goes to the `score_comparisons` folder by default.  
    ```bash
    uv run python3 scripts/summarize_results.py \
      --results output/{YOUR_P_RUN}/evaluations/{YOUR_J_RUN}/results.csv \
-     --rubric data/rubric.tsv \
+     --rubric data/SI/rubric.tsv \
      --out-stats output/{YOUR_J_RUN}/improvement_stats.json \
      --out-md output/{YOUR_J_RUN}/improvement_report.md
    ```
 
-After scoring, use `scripts/summarize_results.py` to turn a judge **`results.csv`** into a structured breakdown of where a provider failed and which rubric questions drove those failures. The script reads per-dimension outcome columns plus `*_yes_question_id` / `*_yes_reasoning` (the rubric branch that triggered a Suboptimal or High Potential for Harm rating), joins question text from **`data/rubric.tsv`**, and emits:
+After scoring, use `scripts/summarize_results.py` to turn a judge **`results.csv`** into a structured breakdown of where a provider failed and which rubric questions drove those failures. The script reads per-dimension outcome columns plus `*_yes_question_id` / `*_yes_reasoning` (the rubric branch that triggered a Suboptimal or High Potential for Harm rating), joins question text from **`data/SI/rubric.tsv`**, and emits:
 
 * **`--out-stats`** — JSON with dimension scores, global failure modes, and per-dimension counts broken down by outcome band and rubric question (including optional judge reasoning exemplars).
 * **`--out-md`** — Markdown **improvement report** with a TL;DR grouped by dimension (High Potential for Harm before Suboptimal), then detailed per-dimension sections with percentages, rubric question text, and sample judge reasoning.
@@ -324,7 +446,7 @@ If you omit both output paths, the script prints a short JSON meta summary and a
 | Flag | Description |
 |------|-------------|
 | `--results` | Path to judge **`results.csv`** (required) |
-| `--rubric` | Rubric TSV for question text and severity (default: `data/rubric.tsv`) |
+| `--rubric` | Rubric TSV for question text and severity (default: `data/SI/rubric.tsv`) |
 | `--out-stats` | Write structured JSON stats here |
 | `--out-md` | Write Markdown improvement report here |
 | `--top-questions` | Max rubric questions listed per outcome band per dimension (default: `12`) |
@@ -439,7 +561,9 @@ VERA-MH simulates realistic conversations between Large Language Models (LLMs) f
 
 ## Architecture
 
-### Core Components
+See **[docs/architecture.md](docs/architecture.md)** for the target layer model, invariants, and single CLI orchestrator (`vera.py`). Below is a quick module reference; CLI usage and output layout are in the sections above.
+
+### Core Components (current implementation)
 
 - **`generate.py`**: Main entry point for conversation generation with configurable parameters
 - **`judge.py`**: Main entry point for evaluating conversations using LLM judges
@@ -470,18 +594,19 @@ VERA-MH simulates realistic conversations between Large Language Models (LLMs) f
   - **`conversation_utils.py`**: Conversation formatting and file operations
   - **`logging_utils.py`**: Comprehensive logging for conversations
 - **`data/`**: Persona and configuration data
-  - **`personas.tsv`**: TSV file containing patient persona data
-  - **`persona_prompt_template.txt`**: Template for generating persona prompts
-  - **`rubric.tsv`**: Clinical rubric for conversation evaluation
-  - **`rubric_prompt_beginning.txt`**: System prompt for the judge
-  - **`question_prompt.txt`**: Prompt template for asking rubric questions
+  - **`SI/personas.tsv`**: TSV file containing patient persona data
+  - **`persona_prompt_template.txt`**: Shared template for persona behavior
+  - **`SI/persona_context_template.txt`**: SI-specific persona context fields
+  - **`SI/rubric.tsv`**: Clinical rubric for conversation evaluation
+  - **`SI/rubric_prompt_beginning.txt`**: System prompt for the judge
+  - **`SI/question_prompt.txt`**: Prompt template for asking rubric questions
   - **`model_config.json`**: Model assignments for different prompt types
 
 ### Persona System
 
 The system uses a TSV-based approach for managing mental health patient personas:
 
-#### Persona Data Structure (`data/personas.tsv`)
+#### Persona Data Structure (`data/SI/personas.tsv`)
 Each persona includes:
 - **Demographics**: Name, Age, Gender, Background
 - **Mental Health Context**: Current mental health situation
@@ -491,7 +616,9 @@ Each persona includes:
 - **Sample Prompt**: Example of what they might say
 
 #### Prompt Templating (`data/persona_prompt_template.txt`)
-Uses Python string formatting to inject persona data into a consistent prompt template, ensuring realistic and consistent behavior across conversations.
+The manifest selects a schema-specific context template, such as
+`data/SI/persona_context_template.txt`. Persona values are formatted into that
+context, then inserted into the shared `{persona_context}` placeholder.
 
 ### Structured Output System
 
@@ -582,7 +709,7 @@ uv run python generate.py
 ```
 
 The script will:
-1. Load personas from `data/personas.tsv`
+1. Load personas from `data/SI/personas.tsv`
 2. Generate conversations between each persona and the agent
 3. Run multiple iterations per persona (configurable)
 4. Save conversations and logs to timestamped folders
@@ -591,7 +718,7 @@ The script will:
 
 ### Custom Personas and Prompts
 
-#### 1. Add New Personas (`data/personas.tsv`)
+#### 1. Add New Personas (`data/SI/personas.tsv`)
 Add new rows to the TSV file with the required fields:
 - Name
 - Age
@@ -613,8 +740,10 @@ Add new rows to the TSV file with the required fields:
 - Recent Triggers and Stressors
 - Final Seed Phrase
 
-#### 2. Modify Prompt Template (`data/persona_prompt_template.txt`)
-Update the template to include new fields or modify behavior patterns.
+#### 2. Modify Prompt Templates
+Update `data/SI/persona_context_template.txt` to select or arrange TSV fields.
+Update `data/persona_prompt_template.txt` only for behavior shared by all persona
+schemas.
 
 #### 3. Configure Models (`model_config.json`)
 Assign models to different prompt types in the JSON configuration.

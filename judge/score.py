@@ -13,6 +13,7 @@ and outputs to console, JSON files under ``scores/``, and generates visualizatio
 
 import argparse
 import json
+import traceback
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
@@ -476,8 +477,101 @@ def _rebuild_dataframe_if_needed(results_csv_path: Path) -> bool:
         return False
 
 
+def run_scoring(
+    *,
+    results_csv: str,
+    output_json: Optional[str],
+    personas_tsv: Optional[str],
+    skip_risk_analysis: bool,
+) -> Tuple[Dict[str, Any], Path]:
+    """Score one ``results.csv`` from fully resolved inputs.
+
+    This is the scoring domain's application function, the counterpart of
+    `judge.run.run_judging`: it receives final values, does the work, and
+    returns. It does not parse arguments, apply defaults, or decide where
+    anything lives -- every one of those is the caller's. That boundary is what
+    lets one function serve both `vera score` and the legacy `main` below.
+
+    Visualization failures are warnings rather than errors: the scores are the
+    result, and a chart that could not be drawn does not invalidate them.
+
+    Args:
+        results_csv: Path to the results CSV produced by judging
+        output_json: Full path for the primary scores JSON, or None to write
+            ``scores/scores.json`` beside the CSV
+        personas_tsv: Personas file backing the risk-level grouping, or None to
+            skip that step
+        skip_risk_analysis: Skip risk-level analysis outright, regardless of
+            whether a personas file was given
+
+    Returns:
+        Tuple of (scores, scores_dir) where scores_dir holds the derived
+        artifacts written beside the CSV.
+
+    Raises:
+        FileNotFoundError: If the results CSV does not exist.
+        ValueError: If the CSV has no dimension data and cannot be rebuilt.
+    """
+    results_csv_path = Path(results_csv)
+    if not results_csv_path.exists():
+        raise FileNotFoundError(f"Results CSV file not found: {results_csv}")
+
+    if not _rebuild_dataframe_if_needed(results_csv_path):
+        # Rebuild declined or failed; only an error if there was nothing to score.
+        if not has_dimension_data(read_judge_results_csv(results_csv_path)):
+            raise ValueError(
+                f"{results_csv} has no dimension data and could not be rebuilt "
+                "from the TSV files beside it"
+            )
+
+    results = score_results(str(results_csv_path), output_path=output_json)
+    print_scores(results)
+
+    scores_dir = _scores_output_dir(str(results_csv_path))
+    json_path = Path(output_json) if output_json else scores_dir / "scores.json"
+    print(f"\n✅ Scores saved to: {json_path}")
+
+    viz_path = scores_dir / "scores_visualization.png"
+    try:
+        create_visualizations(results, viz_path)
+    except Exception as e:
+        print(f"⚠️  Warning: Could not create standard visualizations: {e}")
+
+    if skip_risk_analysis:
+        return results, scores_dir
+
+    if personas_tsv is None:
+        # `vera score` reaches here whenever --personas was omitted. Grouping by
+        # risk reads a persona column, so with no personas file there is nothing
+        # to group by -- say so rather than emitting empty buckets.
+        print("⚠️  No personas file given; skipping risk-level analysis.")
+        print("   Pass a personas TSV to group scores by risk level.")
+        return results, scores_dir
+
+    personas_tsv_path = Path(personas_tsv)
+    if not personas_tsv_path.exists():
+        print(f"⚠️  Warning: Personas TSV file not found: {personas_tsv}")
+        print(
+            "   Skipping risk-level analysis. Use --skip-risk-analysis "
+            "to suppress this warning."
+        )
+        return results, scores_dir
+
+    try:
+        risk_results = score_results_by_risk(
+            str(results_csv_path), str(personas_tsv_path)
+        )
+        risk_viz_path = scores_dir / "scores_by_risk_visualization.png"
+        create_risk_level_visualizations(risk_results, risk_viz_path)
+    except Exception as e:
+        print(f"⚠️  Warning: Could not create risk-level analysis: {e}")
+        traceback.print_exc()
+
+    return results, scores_dir
+
+
 def main():
-    """Main entry point for scoring script."""
+    """Legacy CLI entry point: parse arguments, then call `run_scoring`."""
     parser = argparse.ArgumentParser(
         description=(
             "Score evaluation results from judge/runner.py output "
@@ -501,10 +595,10 @@ def main():
     parser.add_argument(
         "--personas-tsv",
         "-p",
-        default="data/personas.tsv",
+        default="data/SI/personas.tsv",
         help=(
             "Path to personas.tsv file for risk-level analysis "
-            "(default: data/personas.tsv)"
+            "(default: data/SI/personas.tsv)"
         ),
     )
     parser.add_argument(
@@ -515,52 +609,16 @@ def main():
 
     args = parser.parse_args()
 
-    results_csv_path = Path(args.results_csv)
-    if not results_csv_path.exists():
-        print(f"Error: Results CSV file not found: {args.results_csv}")
-        return 1
-
-    if not _rebuild_dataframe_if_needed(results_csv_path):
-        # If rebuild failed, exit
-        if not has_dimension_data(read_judge_results_csv(results_csv_path)):
-            return 1
-
-    results = score_results(str(results_csv_path), output_path=args.output_json)
-    print_scores(results)
-
-    scores_dir = _scores_output_dir(str(results_csv_path))
-    json_path = (
-        Path(args.output_json) if args.output_json else scores_dir / "scores.json"
-    )
-    print(f"\n✅ Scores saved to: {json_path}")
-
-    viz_path = scores_dir / "scores_visualization.png"
     try:
-        create_visualizations(results, viz_path)
-    except Exception as e:
-        print(f"⚠️  Warning: Could not create standard visualizations: {e}")
-
-    # Create risk-level analysis and visualization if not skipped
-    if not args.skip_risk_analysis:
-        personas_tsv_path = Path(args.personas_tsv)
-        if not personas_tsv_path.exists():
-            print(f"⚠️  Warning: Personas TSV file not found: {args.personas_tsv}")
-            print(
-                "   Skipping risk-level analysis. Use --skip-risk-analysis "
-                "to suppress this warning."
-            )
-        else:
-            try:
-                risk_results = score_results_by_risk(
-                    str(results_csv_path), str(personas_tsv_path)
-                )
-                risk_viz_path = scores_dir / "scores_by_risk_visualization.png"
-                create_risk_level_visualizations(risk_results, risk_viz_path)
-            except Exception as e:
-                print(f"⚠️  Warning: Could not create risk-level analysis: {e}")
-                import traceback
-
-                traceback.print_exc()
+        run_scoring(
+            results_csv=args.results_csv,
+            output_json=args.output_json,
+            personas_tsv=args.personas_tsv,
+            skip_risk_analysis=args.skip_risk_analysis,
+        )
+    except (FileNotFoundError, ValueError) as error:
+        print(f"Error: {error}")
+        return 1
 
     return 0
 
