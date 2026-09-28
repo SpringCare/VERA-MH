@@ -97,6 +97,30 @@ class Config:
     # stripped before the deployment name reaches the API.
     DEFAULT_AZURE_MODEL = "azure-gpt-5.4"
 
+    # The recommended VERA-MH profile: the two user models and the judge behind
+    # the published scores. configs/recommended-SI.json must match these (a unit
+    # test enforces it), and scripts/run_recommended_vera_pipeline.sh reads them
+    # through get_recommended_models(). Change them only together with the
+    # published methodology -- scores from other models are not comparable.
+    RECOMMENDED_USER_MODELS = ("gpt-5.2", "claude-opus-4-5-20251101")
+    RECOMMENDED_JUDGE_MODEL = "gpt-5.4"
+
+    @classmethod
+    def get_recommended_models(cls) -> Dict[str, str]:
+        """Get the recommended profile's user and judge models.
+
+        ``VERA_USER_A``, ``VERA_USER_B`` and ``VERA_JUDGE`` replace the pins when
+        set, in the shell or in this repository's ``.env``. They are for
+        environments that cannot serve a pinned ID as written, such as a gateway
+        that exposes only an undated alias.
+        """
+        user_a, user_b = cls.RECOMMENDED_USER_MODELS
+        return {
+            "user_a": os.getenv("VERA_USER_A") or user_a,
+            "user_b": os.getenv("VERA_USER_B") or user_b,
+            "judge": os.getenv("VERA_JUDGE") or cls.RECOMMENDED_JUDGE_MODEL,
+        }
+
     @classmethod
     def get_claude_config(cls) -> Dict[str, Any]:
         """Get default Claude model name.

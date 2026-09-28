@@ -18,9 +18,10 @@
 # Second source of truth, on purpose and temporarily: the same published
 # profile is also checked in as ../configs/recommended-SI.json, which
 # `uv run python vera.py pipeline --config configs/recommended-SI.json` runs.
-# Nothing keeps the two in sync — the VERA_* defaults below and that file both
-# spell out the user models, judge, turns and concurrency caps. Change one and
-# change the other, until this script is retired in favor of `vera pipeline`.
+# The user and judge models are shared: both come from Config.RECOMMENDED_*
+# in ../llm_clients/config.py (a unit test holds the JSON to it). Turns and
+# concurrency caps are still spelled out in both places. Change one and change
+# the other, until this script is retired in favor of `vera pipeline`.
 #
 # Usage:
 #   ./scripts/run_recommended_vera_pipeline.sh <provider-agent-model> [extra run_pipeline.py args...]
@@ -33,6 +34,8 @@
 #   VERA_USER_A          User agent for the first suite (default: gpt-5.2)
 #   VERA_USER_B          User agent for the second suite (default: claude-opus-4-5-20251101)
 #   VERA_JUDGE           Judge model (default: gpt-5.4)
+#                        The three model defaults are Config.RECOMMENDED_*, and
+#                        the overrides are also read from .env.
 #   VERA_JUDGE_EXTRA_PARAMS  Judge model extra params, comma-separated key=value
 #                        (default: reasoning_effort=low; set empty to omit)
 #   VERA_MAX_CONCURRENT  Forwarded as --max-concurrent (default: 10)
@@ -60,9 +63,12 @@ PROVIDER_AGENT="$1"
 shift
 
 OUTPUT_PARENT="${VERA_OUTPUT_PARENT:-output}"
-USER_A="${VERA_USER_A:-gpt-5.2}"
-USER_B="${VERA_USER_B:-claude-opus-4-5-20251101}"
-JUDGE="${VERA_JUDGE:-gpt-5.4}"
+# Config.get_recommended_models() applies VERA_USER_A / VERA_USER_B /
+# VERA_JUDGE from the shell or .env on top of the Config.RECOMMENDED_* pins.
+MODELS="$(uv run python -c 'from llm_clients.config import Config
+m = Config.get_recommended_models()
+print(m["user_a"], m["user_b"], m["judge"])')"
+read -r USER_A USER_B JUDGE <<<"$MODELS"
 JUDGE_EXTRA_PARAMS="${VERA_JUDGE_EXTRA_PARAMS:-reasoning_effort=low}"
 
 POOL_PARENT="${VERA_POOL_OUTPUT:-$OUTPUT_PARENT}"

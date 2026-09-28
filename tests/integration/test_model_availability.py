@@ -95,7 +95,8 @@ def _assert_resolves(model_id: str, available: Set[str], provider: str) -> None:
     assert _resolves(model_id, available), (
         f"{provider} model {model_id!r} is configured in llm_clients/config.py "
         f"but the provider does not list it -- it is most likely retired or "
-        f"renamed. Update the corresponding Config.DEFAULT_*_MODEL.\n"
+        f"renamed. Update the corresponding Config.DEFAULT_*_MODEL or "
+        f"Config.RECOMMENDED_*, or set VERA_USER_A / VERA_USER_B / VERA_JUDGE.\n"
         f"Closest listed IDs: {sorted(_closest(model_id, available))[:10]}"
     )
 
@@ -181,3 +182,41 @@ class TestConfiguredModelsExist:
         available = _catalog("google", key)
         assert available, "Google returned an empty model catalog"
         _assert_resolves(Config.DEFAULT_GEMINI_MODEL, available, "Google")
+
+
+def _recommended_provider(model_id: str) -> str:
+    """The catalog a recommended model is listed in, from its ID prefix."""
+    if model_id.startswith("claude-"):
+        return "anthropic"
+    if model_id.startswith("gpt-"):
+        return "openai"
+    if model_id.startswith("gemini-"):
+        return "google"
+    raise AssertionError(f"No provider known for recommended model {model_id!r}")
+
+
+_PROVIDER_KEYS = {
+    "anthropic": ("ANTHROPIC_API_KEY", "Anthropic"),
+    "openai": ("OPENAI_API_KEY", "OpenAI"),
+    "google": ("GOOGLE_API_KEY", "Google"),
+}
+
+
+class TestRecommendedModelsExist:
+    """The recommended profile's models resolve, after any VERA_* overrides.
+
+    These are what run_recommended_vera_pipeline.sh actually calls, so an
+    environment that cannot serve a pin -- a gateway that lists only an
+    undated alias, say -- fails here with the ID named, rather than partway
+    through a 100-persona run.
+    """
+
+    @pytest.mark.parametrize("role", ["user_a", "user_b", "judge"])
+    def test_recommended_model_exists(self, role):
+        model_id = Config.get_recommended_models()[role]
+        provider = _recommended_provider(model_id)
+        env_var, label = _PROVIDER_KEYS[provider]
+        key = _require_key(getattr(Config, env_var), env_var)
+        available = _catalog(provider, key)
+        assert available, f"{label} returned an empty model catalog"
+        _assert_resolves(model_id, available, label)
