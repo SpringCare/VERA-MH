@@ -130,6 +130,9 @@ def expected_ratings_csv(conversations_dir: Path) -> Path:
 @pytest.mark.integration
 @pytest.mark.live
 @pytest.mark.enable_socket
+# Judges every fixture transcript against the full rubric with real calls,
+# far past the 30s suite default.
+@pytest.mark.timeout(900)
 class TestJudgeAgainstClinicianRatings:
     """Test judge.py output against expected clinician ratings."""
 

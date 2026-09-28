@@ -36,7 +36,10 @@ from llm_clients.config import Config
 # One GET against a models endpoint; generous enough for a proxied gateway.
 _TIMEOUT_SECONDS = 30
 
-pytestmark = [pytest.mark.live, pytest.mark.enable_socket]
+# Above the 30s suite default: each test's GET may take up to _TIMEOUT_SECONDS
+# on its own, and the request should time out with a named error before
+# pytest-timeout kills the test without one.
+pytestmark = [pytest.mark.live, pytest.mark.enable_socket, pytest.mark.timeout(120)]
 
 
 def _redact(url: str) -> str:

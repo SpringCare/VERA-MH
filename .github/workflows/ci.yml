@@ -7,6 +7,11 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# A new push to a PR cancels that PR's in-flight run; runs on main always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   code-quality:
     name: Code Quality Checks
@@ -61,8 +66,11 @@ jobs:
     - name: Install dependencies
       run: uv sync --all-extras
 
+    # --durations=10 lists the ten slowest tests at the end of the log, so a
+    # test that starts sleeping or waiting on a real timeout shows up here
+    # instead of silently slowing the suite (retry backoff once cost ~85s).
     - name: Run tests (excluding live tests; no API keys required)
-      run: uv run pytest -m "not live" --junitxml=test-results/pytest/results.xml
+      run: uv run pytest -m "not live" --durations=10 --junitxml=test-results/pytest/results.xml
 
     # Coverage HTML comes from --cov-report=html in pyproject.toml addopts.
     - name: Upload test results and coverage report

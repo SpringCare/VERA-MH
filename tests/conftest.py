@@ -68,6 +68,22 @@ def no_real_credentials(request: pytest.FixtureRequest, monkeypatch) -> None:
         monkeypatch.setenv(var, _DUMMY_CREDENTIAL)
 
 
+@pytest.fixture(autouse=True)
+def zero_retry_backoff(monkeypatch) -> None:
+    """Skip the real backoff between LLM retry attempts.
+
+    Error-path tests exhaust every retry, and the real full-jitter delay (0.75s
+    doubling to 8s) made them sleep 3-4s each: about 85 of the suite's 95
+    seconds. Tests that check the delays install their own override, which
+    replaces this one.
+    """
+    from llm_clients.llm_interface import LLMInterface
+
+    monkeypatch.setattr(
+        LLMInterface, "_compute_retry_delay_seconds", lambda self, attempt: 0.0
+    )
+
+
 @pytest.fixture
 def fixtures_dir() -> Path:
     """Path to test fixtures directory."""

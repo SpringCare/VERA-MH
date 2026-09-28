@@ -122,6 +122,9 @@ addopts = [
     "--cov-fail-under=30",
 ]
 norecursedirs = [".venv", ".git", "__pycache__", "tmp_tests"]
+# Fail a hung test instead of letting it run until the CI job times out. Tests
+# that legitimately take longer (the live pipeline run) set their own limit.
+timeout = 30
 
 [tool.coverage.run]
 omit = ["*/tests/*", "*/.venv/*", "*/tmp_tests/*", "distribute_files.py"]
