@@ -192,14 +192,14 @@ def load_model_data_from_export_summary_csv(
 
         try:
             vera_score = float(row["Total score"])
-        except (TypeError, ValueError, KeyError):
+        except TypeError, ValueError, KeyError:
             print(f"⚠️  Warning: Bad Total score for row Provider={model_name!r}, skip")
             continue
 
         try:
             overall_bp_pct = float(row["Total % BP (scored ratings)"])
             overall_hph_pct = float(row["Total % HPH (scored ratings)"])
-        except (TypeError, ValueError, KeyError):
+        except TypeError, ValueError, KeyError:
             overall_bp_pct = 0.0
             overall_hph_pct = 0.0
 
@@ -217,7 +217,7 @@ def load_model_data_from_export_summary_csv(
             else:
                 try:
                     vera_dim = float(raw_v)
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     vera_dim = 50.0
             col_hph = f"{d} — % HPH (scored)"
             col_bp = f"{d} — % BP (scored)"
@@ -225,12 +225,12 @@ def load_model_data_from_export_summary_csv(
             if col_hph in row.index and pd.notna(row[col_hph]):
                 try:
                     hph_d = float(row[col_hph])
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     pass
             if col_bp in row.index and pd.notna(row[col_bp]):
                 try:
                     bp_d = float(row[col_bp])
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     pass
             dimensions[d] = {
                 "vera_score": vera_dim,

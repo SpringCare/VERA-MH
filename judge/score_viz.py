@@ -43,7 +43,7 @@ def _safe_pie_value(value: Any) -> float:
     """Coerce aggregate percentage to a finite non-negative float for pie charts."""
     try:
         v = float(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0.0
     if v != v or v < 0:  # NaN or negative
         return 0.0
@@ -66,7 +66,7 @@ def _create_pie_chart(ax, results: Dict[str, Any]):
         score_display = float(overall_vera_score)
         if score_display != score_display:
             score_display = 0.0
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         score_display = 0.0
     pie_title = (
         f"Overall VERA-MH v1.2 Score: {score_display:.1f}\n\nRating Distribution"
