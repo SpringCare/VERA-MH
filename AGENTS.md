@@ -11,7 +11,7 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, etc.)
 ```
 
-**Python >= 3.11 required**
+**Python 3.14 required.** `.python-version` is the one place the version is set: `uv`, CI, and the Dockerfile's `FROM` line all follow it.
 
 ## Code Style
 

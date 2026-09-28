@@ -2,7 +2,7 @@
 name = "vera-mh"
 version = "0.1.0"
 description = "Validation of Ethical and Responsible AI in Mental Health"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 dependencies = [
     "langchain>=0.1.0",
     "langchain-anthropic>=1.5.6",
@@ -63,7 +63,8 @@ typeCheckingMode = "basic"
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+# No `target-version`: ruff reads it from `requires-python`, which follows
+# `.python-version`.
 # Ruff 0.16's default `include` carries `*.md`, so it reformats Python code
 # blocks inside Markdown. Our docs use snippets as illustrations -- pseudo-code,
 # partial excerpts, and deliberately aligned trailing comments -- which the
