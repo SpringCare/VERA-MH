@@ -119,7 +119,9 @@ addopts = [
     "--cov=.",
     "--cov-report=term-missing",
     "--cov-report=html",
-    "--cov-fail-under=30",
+    # Set for the unit layer that runs on PRs (70% when set); the integration
+    # job overrides it. Raise it as coverage grows.
+    "--cov-fail-under=68",
 ]
 norecursedirs = [".venv", ".git", "__pycache__", "tmp_tests"]
 # Fail a hung test instead of letting it run until the CI job times out. Tests
