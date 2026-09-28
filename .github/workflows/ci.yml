@@ -66,11 +66,12 @@ jobs:
     - name: Install dependencies
       run: uv sync --all-extras
 
+    # Integration tests run after merge (see the `integration` job), not on PRs.
     # --durations=10 lists the ten slowest tests at the end of the log, so a
     # test that starts sleeping or waiting on a real timeout shows up here
     # instead of silently slowing the suite (retry backoff once cost ~85s).
-    - name: Run tests (excluding live tests; no API keys required)
-      run: uv run pytest -m "not live" --durations=10 --junitxml=test-results/pytest/results.xml
+    - name: Run unit tests (no API keys required)
+      run: uv run pytest -m "not integration and not live" --durations=10 --junitxml=test-results/pytest/results.xml
 
     # Coverage HTML comes from --cov-report=html in pyproject.toml addopts.
     - name: Upload test results and coverage report
@@ -81,4 +82,39 @@ jobs:
         path: |
           test-results/
           htmlcov/
+        if-no-files-found: ignore
+
+  integration:
+    name: Integration Tests
+    # Runs on merge to main, or on any branch through a manual dispatch.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.11'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v10.2.0
+      with:
+        enable-cache: true
+        cache-dependency-glob: uv.lock
+
+    - name: Install dependencies
+      run: uv sync --all-extras
+
+    # The coverage floor in pyproject.toml is set for the unit layer alone.
+    - name: Run integration tests (mocked; no API keys required)
+      run: uv run pytest -m "integration and not live" --durations=10 --cov-fail-under=0 --junitxml=test-results/pytest/integration.xml
+
+    - name: Upload integration test results
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: integration-test-results
+        path: test-results/
         if-no-files-found: ignore

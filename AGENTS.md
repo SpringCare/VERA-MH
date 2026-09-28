@@ -59,7 +59,7 @@ consequences without duplicating that contract.
 
 ## Testing
 
-The project uses [pytest](https://docs.pytest.org/) with unit and integration tests under `tests/`. Coverage is enforced (`--cov-fail-under=30` in `pyproject.toml`).
+The project uses [pytest](https://docs.pytest.org/) with unit and integration tests under `tests/`. Coverage is enforced (`--cov-fail-under=68` in `pyproject.toml`, set for the unit layer alone).
 
 **Layout:**
 - `tests/unit/` — fast, isolated tests
@@ -71,8 +71,15 @@ The `e2e` marker exists in `pyproject.toml` but there is no `tests/e2e/` directo
 
 **Commands:**
 ```bash
-# Default local/CI run (no API keys needed)
+# Default local run: unit + integration (no API keys needed)
 uv run pytest -m "not live"
+
+# What CI runs on a PR: the unit layer only
+uv run pytest -m "not integration and not live"
+
+# What CI runs on merge to main: the integration layer. The coverage floor
+# is set for unit tests, so turn it off for this layer on its own.
+uv run pytest -m "integration and not live" --cov-fail-under=0
 
 # Full suite with coverage (default addopts include --cov)
 uv run pytest
@@ -85,7 +92,9 @@ uv run pytest tests/unit/judge/test_score.py
 uv run pytest tests/integration/
 ```
 
-**Markers:** `unit`, `integration`, `e2e`, `live` (see `pyproject.toml`). CI runs `pytest -m "not live"`; live tests run in a separate job when secrets are available.
+**Markers:** `unit`, `integration`, `e2e`, `live` (see `pyproject.toml`). `tests/conftest.py` adds `unit` or `integration` from the test's directory, so where a test lives decides which CI job runs it. PRs run the unit layer; merges to `main` (and manual `workflow_dispatch` runs on any branch) also run the integration layer. Add `live` (plus `enable_socket`) only for tests that call real providers.
+
+**Pipeline smoke tests:** `tests/integration/test_vera_pipeline_e2e.py` runs `vera pipeline` through generate, judge, and score on one persona and 4 turns. The mocked variant runs in the integration layer; the live variant needs real keys (`uv run pytest -m live tests/integration/test_vera_pipeline_e2e.py`).
 
 **Scratch scripts:** use `tmp_tests/` for one-off experiments, not committed tests.
 

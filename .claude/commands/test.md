@@ -4,7 +4,7 @@ Run the test suite for VERA-MH with comprehensive options:
 2. Check if pytest and pytest-cov are installed
 3. Parse command arguments:
    - `--unit`: Run only unit tests (fast)
-   - `--integration`: Run only integration tests
+   - `--integration`: Run only integration tests (add `--cov-fail-under=0`: the floor is set for the unit layer)
    - `--e2e`: Run only E2E tests (slow)
    - `--no-cov`: Skip coverage reporting
    - `[path]`: Run tests in specific file or directory
@@ -20,7 +20,7 @@ Run the test suite for VERA-MH with comprehensive options:
    - 🟡 Yellow: 70-85% coverage (approaching target)
    - 🟢 Green: ≥85% coverage (meets target)
    - Note: Project has dual coverage targets:
-     - 30% = CI minimum (--cov-fail-under in pyproject.toml)
+     - 68% = CI minimum for the unit layer (--cov-fail-under in pyproject.toml)
      - 75%+ = Quality target for new/changed code
 8. If coverage below threshold, suggest specific files to add tests for
 9. If tests fail, show failure details and suggest fixes

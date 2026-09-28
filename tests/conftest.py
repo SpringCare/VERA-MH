@@ -34,6 +34,27 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     _adhoc_temp = None
 
 
+_TESTS_ROOT = Path(__file__).parent
+_DIRECTORY_MARKERS = {
+    _TESTS_ROOT / "unit": "unit",
+    _TESTS_ROOT / "integration": "integration",
+}
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Mark every test with the layer its directory belongs to.
+
+    CI splits on these markers: PRs run `not integration and not live`, and
+    merges to main run the integration layer. Keying on the directory means
+    a test that forgets its decorator still lands in the right job.
+    """
+    for item in items:
+        path = Path(item.fspath)
+        for directory, marker in _DIRECTORY_MARKERS.items():
+            if path.is_relative_to(directory):
+                item.add_marker(marker)
+
+
 _CREDENTIAL_ENV_VARS = (
     "ANTHROPIC_API_KEY",
     "OPENAI_API_KEY",
