@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 import vera
+from llm_clients.config import Config
 from utils.config_schema import JudgingConfig
 from vera_cli import config as cli_config
 from vera_cli import pipeline
@@ -277,11 +278,13 @@ def test_shipped_recommended_config_resolves() -> None:
     generation = resolved.generation.generation
     assert generation is not None
     # The two published user-side models, the published judge and its profile.
-    assert [model.name for model in generation.user] == [
-        "gpt-5.2",
-        "claude-opus-4-5-20251101",
+    # Config holds the pins, which run_recommended_vera_pipeline.sh also reads.
+    assert [model.name for model in generation.user] == list(
+        Config.RECOMMENDED_USER_MODELS
+    )
+    assert [model.name for model in resolved.judging.models] == [
+        Config.RECOMMENDED_JUDGE_MODEL
     ]
-    assert [model.name for model in resolved.judging.models] == ["gpt-5.4"]
     assert resolved.judging.models[0].extra_params == {"reasoning_effort": "low"}
     assert generation.turns == 30
 
