@@ -32,13 +32,14 @@ jobs:
     timeout-minutes: 45
 
     # Mirrors the team .env: every provider goes through the gateway at
-    # API_BASE_URL with one gateway key, so all three provider variables read
-    # the same API_KEY secret.
+    # API_BASE_URL. Each provider reads its own secret, falling back to the
+    # shared gateway API_KEY, so one provider can move to a direct key without
+    # touching the others.
     env:
       API_BASE_URL: ${{ secrets.API_BASE_URL }}
-      OPENAI_API_KEY: ${{ secrets.API_KEY }}
-      ANTHROPIC_API_KEY: ${{ secrets.API_KEY }}
-      GOOGLE_API_KEY: ${{ secrets.API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || secrets.API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY || secrets.API_KEY }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY || secrets.API_KEY }}
 
     steps:
     - uses: actions/checkout@v7
@@ -66,7 +67,7 @@ jobs:
           [ -n "${!var}" ] || missing="$missing $var"
         done
         if [ -n "$missing" ]; then
-          echo "::error::Empty:$missing. Set the API_KEY and API_BASE_URL repository secrets."
+          echo "::error::Empty:$missing. Set API_BASE_URL, and API_KEY or the per-provider key secrets."
           exit 1
         fi
 
