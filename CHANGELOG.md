@@ -4,11 +4,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [v2.0.0] \- Unreleased
+## [v2.0.0](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.0) \- 2026-10-01
+
+VERA-MH 2.0 is released. It breaks the legacy scripts: they still run in 2.0.0, but 2.0.1 moves them to `legacy/`, which changes how they are invoked.
 
 ### Breaking / migration
 
-- **`vera` CLI**—[`vera.py`](vera.py) (`generate`, `judge`, `score`, `pipeline`) replaces `generate.py`, `judge.py`, `run_pipeline.py`, and `judge/score.py`. The old scripts still run but are deprecated; [`docs/legacy-scripts.md`](docs/legacy-scripts.md) maps their flags to `vera`.
+- **`vera` CLI**—[`vera.py`](vera.py) (`generate`, `judge`, `score`, `pipeline`) replaces `generate.py`, `judge.py`, `run_pipeline.py`, and `judge/score.py`. The old scripts are deprecated and still run unchanged in 2.0.0; [`docs/legacy-scripts.md`](docs/legacy-scripts.md) maps their flags to `vera`.
 - **`vera score` has no default personas file**—Without `--personas`, the risk-level breakdown is skipped and `scores_by_risk.json` is not written. Pass `--personas data/SI/personas.tsv` for the legacy behavior.
 - **`vera judge` needs `--output` for flat transcript folders**—It no longer falls back to `evaluations/` in the working directory. Generation runs still write to `<run>/evaluations/`.
 - **Per-question answers moved**—`answers/conversations/` is now `answers/by_question/`.
