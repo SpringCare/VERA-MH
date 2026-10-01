@@ -25,7 +25,7 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
-from generate import run_for_user_models
+from generate_conversations import run_for_user_models
 from utils.config_schema import GenerationConfig, InvocationConfig, ModelSpec, RunConfig
 from utils.debug import set_debug
 from utils.utils import parse_key_value_list
@@ -342,7 +342,7 @@ async def _execute(run_configs: list[RunConfig]) -> list[str]:
 
     Expanding a run's user models into individual generations belongs to the
     domain, not the CLI, so this passes the resolved `GenerationConfig` straight
-    through to `generate.run_for_user_models` — a stopgap wrapper, see its
+    through to `generate_conversations.run_for_user_models` — a stopgap wrapper, see its
     docstring. Targets stay sequential here: `--target all` runs share chatbot,
     user models, turns, and repeats, and run folder names carry only
     second-granularity timestamps, so concurrent starts would collide.

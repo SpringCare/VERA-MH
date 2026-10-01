@@ -72,14 +72,15 @@ UNIFIED_ARGV = [
 def calls(monkeypatch: pytest.MonkeyPatch) -> Iterator[list[dict[str, Any]]]:
     """Stub the domain boundary and collect the kwargs each CLI sends it.
 
-    Both patches are needed: `generate` bound `run_generation` at import time,
-    while a fresh `runpy` exec of `generate.py` re-imports it from the package.
+    Both patches are needed: `run_for_user_models` (the `vera` path) calls the
+    `run_generation` bound in `generate_conversations.main`, while a fresh
+    `runpy` exec of `generate.py` re-imports it from the package.
 
     `chdir` matters because the legacy CLI resolves paths against the working
     directory, so its manifest argument only resolves from the repository root.
     """
-    import generate
     import generate_conversations
+    import generate_conversations.main
 
     recorded: list[dict[str, Any]] = []
 
@@ -89,7 +90,7 @@ def calls(monkeypatch: pytest.MonkeyPatch) -> Iterator[list[dict[str, Any]]]:
 
     monkeypatch.chdir(REPO_ROOT)
     with (
-        patch.object(generate, "run_generation", record),
+        patch.object(generate_conversations.main, "run_generation", record),
         patch.object(generate_conversations, "run_generation", record),
     ):
         yield recorded
