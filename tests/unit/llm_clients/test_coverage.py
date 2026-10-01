@@ -13,6 +13,7 @@ import ast
 import importlib
 import inspect
 import pkgutil
+import re
 from pathlib import Path
 from typing import Dict, List, Set
 
@@ -20,6 +21,21 @@ import pytest
 
 import llm_clients
 from llm_clients.llm_interface import JudgeLLM, LLMInterface
+
+
+def implementation_to_test_file_stem(impl_name: str) -> str:
+    """Convert an LLM class name to its test module stem, without ``.py``.
+
+    ``ClaudeLLM`` -> ``test_claude_llm``, ``OpenAILLM`` -> ``test_openai_llm``.
+    Every check below derives the test file from this one function: when they
+    each converted the name themselves, two of them skipped the ``OpenAI`` fix,
+    looked for ``test_open_a_i_llm.py``, and silently exempted ``OpenAILLM``
+    because that file doesn't exist.
+    """
+    name = impl_name.removesuffix("LLM")
+    snake_case = re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
+    snake_case = snake_case.replace("open_a_i", "openai")
+    return f"test_{snake_case}_llm"
 
 
 def get_all_llm_classes() -> Dict[str, List[str]]:
@@ -174,23 +190,7 @@ class TestLLMCoverage:
         )
 
         for impl_name in all_implementations:
-            # Convert class name to expected test file name
-            # e.g., "ClaudeLLM" -> "test_claude_llm"
-            # e.g., "OpenAILLM" -> "test_openai_llm"
-
-            # Remove "LLM" suffix and convert to snake_case
-            name_without_llm = impl_name.replace("LLM", "")
-
-            # Convert CamelCase to snake_case
-            # Special handling for common patterns
-            import re
-
-            snake_case = re.sub(r"(?<!^)(?=[A-Z])", "_", name_without_llm).lower()
-
-            # Handle special cases like "OpenAI" -> "openai" instead of "open_a_i"
-            snake_case = snake_case.replace("open_a_i", "openai")
-
-            expected_test_file = f"test_{snake_case}_llm"
+            expected_test_file = implementation_to_test_file_stem(impl_name)
 
             if expected_test_file not in test_files:
                 missing_tests.append((impl_name, expected_test_file + ".py"))
@@ -212,12 +212,7 @@ class TestLLMCoverage:
         missing_structured_tests = []
 
         for impl_name in implementations["JudgeLLM"]:
-            # Convert class name to test file name
-            name_without_llm = impl_name.replace("LLM", "")
-            import re
-
-            snake_case = re.sub(r"(?<!^)(?=[A-Z])", "_", name_without_llm).lower()
-            test_file_name = f"test_{snake_case}_llm.py"
+            test_file_name = f"{implementation_to_test_file_stem(impl_name)}.py"
             test_file_path = test_path / test_file_name
 
             if test_file_path.exists():
@@ -239,8 +234,6 @@ class TestLLMCoverage:
 
     def test_all_llm_implementations_test_empty_conversation_history(self):
         """Ensure all LLM implementations have an empty-conversation-history test."""
-        import re
-
         implementations = get_all_llm_classes()
         test_path = Path(__file__).parent
         all_implementations = (
@@ -249,10 +242,7 @@ class TestLLMCoverage:
         missing_empty_history_tests = []
 
         for impl_name in all_implementations:
-            name_without_llm = impl_name.replace("LLM", "")
-            snake_case = re.sub(r"(?<!^)(?=[A-Z])", "_", name_without_llm).lower()
-            snake_case = snake_case.replace("open_a_i", "openai")
-            test_file_name = f"test_{snake_case}_llm.py"
+            test_file_name = f"{implementation_to_test_file_stem(impl_name)}.py"
             test_file_path = test_path / test_file_name
 
             if test_file_path.exists():
@@ -280,12 +270,7 @@ class TestLLMCoverage:
         # Check each implementation
         for impl_type in ["LLMInterface", "JudgeLLM"]:
             for impl_name in implementations[impl_type]:
-                # Get test file path
-                name_without_llm = impl_name.replace("LLM", "")
-                import re
-
-                snake_case = re.sub(r"(?<!^)(?=[A-Z])", "_", name_without_llm).lower()
-                test_file_name = f"test_{snake_case}_llm.py"
+                test_file_name = f"{implementation_to_test_file_stem(impl_name)}.py"
                 test_file_path = test_path / test_file_name
 
                 if not test_file_path.exists():
@@ -393,6 +378,37 @@ class TestCoverageHelpers:
         assert len(test_files) > 0
         # Should find this file
         assert "test_coverage" in test_files
+
+    @pytest.mark.parametrize(
+        "impl_name, stem",
+        [
+            ("ClaudeLLM", "test_claude_llm"),
+            ("OpenAILLM", "test_openai_llm"),
+            ("AzureLLM", "test_azure_llm"),
+            ("CustomEndpointLLM", "test_custom_endpoint_llm"),
+            # Only the trailing suffix is stripped, not every "LLM" in the name.
+            ("LLMProxyLLM", "test_l_l_m_proxy_llm"),
+        ],
+    )
+    def test_implementation_to_test_file_stem(self, impl_name, stem):
+        """Class names map to test module stems, including the OpenAI case."""
+        assert implementation_to_test_file_stem(impl_name) == stem
+
+    def test_every_implementation_maps_to_an_existing_test_file(self):
+        """No implementation is skipped for pointing at a file that isn't there.
+
+        The per-check ``if test_file_path.exists()`` guards skip silently, so a
+        wrong mapping exempts a class from every check that has one.
+        """
+        implementations = get_all_llm_classes()
+        test_files = get_test_files()
+        unmapped = [
+            impl_name
+            for impl_name in implementations["LLMInterface"]
+            + implementations["JudgeLLM"]
+            if implementation_to_test_file_stem(impl_name) not in test_files
+        ]
+        assert not unmapped, f"No test file for: {unmapped}"
 
     def test_check_file_contains_string(self):
         """Test string search in files."""
