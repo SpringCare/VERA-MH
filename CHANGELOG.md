@@ -4,7 +4,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [v2.0.0](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.0) \- 2026-10-01
+### Runtime, CLI, and pipeline
+
+- **Recommended models from config**—The recommended SI profile reads its models from [`llm_clients/config.py`](llm_clients/config.py).
+
+### Testing and CI
+
+- **Faster tests**—Tests no longer wait out real retry backoff, so the suite drops from ~95s to ~10s. Each test has a 30s timeout.
+- **CI split**—PRs run unit tests; merges to `main` also run integration tests, including a mocked end-to-end `vera pipeline` run. The Docker build runs only when its inputs change.
+
+## [v2.0.0](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.0) \- 2026-09-25
 
 VERA-MH 2.0 is released. It breaks the legacy scripts: they still run in 2.0.0, but 2.0.1 moves them to `legacy/`, which changes how they are invoked.
 
@@ -26,12 +35,12 @@ VERA-MH 2.0 is released. It breaks the legacy scripts: they still run in 2.0.0, 
 - **Config files**—Every `vera` command takes `--config`, `VERA_RUN_CONFIG`, or `--print`. The recommended SI profile is [`configs/recommended-SI.json`](configs/recommended-SI.json).
 - **`vera pipeline`**—Runs generation, judging, and scoring in one invocation, passing each stage's output to the next.
 - **`--into`**—`vera generate` and `vera judge` can continue an existing run.
-- **Model IDs in one place**—Default and recommended models are read from [`llm_clients/config.py`](llm_clients/config.py).
+- **Model IDs in one place**—Default models are read from [`llm_clients/config.py`](llm_clients/config.py).
 
 ### Testing, CI, and documentation
 
-- **Faster, safer tests**—Tests no longer wait out real retry backoff, so the suite drops from ~95s to ~10s. Tests cannot open network connections or see real API keys. Each test has a 30s timeout.
-- **CI**—PRs run unit tests; merges to `main` also run integration tests, including a mocked end-to-end `vera pipeline` run. A live check confirms configured model IDs still exist. The Docker build runs only when its inputs change.
+- **Safer tests**—Tests cannot open network connections or see real API keys.
+- **Model availability check**—A live test confirms the configured model IDs still exist at each provider.
 - **Docs**—README rewritten for 2.0, with reference docs split under [`docs/`](docs/).
 
 ## [v1.2.0](https://github.com/SpringCare/VERA-MH/releases/tag/v1.2.0) \- 2026-07-16
