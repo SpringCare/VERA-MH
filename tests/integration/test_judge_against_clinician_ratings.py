@@ -193,7 +193,9 @@ class TestJudgeAgainstClinicianRatings:
         cmd = [
             "uv",
             "run",
-            "judge.py",
+            "python",
+            "-m",
+            "legacy.judge",
             "-f",
             str(conversations_dir),
             "-j",

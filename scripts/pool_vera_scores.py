@@ -7,7 +7,7 @@ Inputs may differ by user agent, judge model, or both—the merged dataframe is 
 straight concatenation of every source's rows. Common uses include combining the
 two user-agent suites of the recommended profile (each judged with ``gpt-5.4``
 by default), or merging separate judge runs (e.g. GPT-4o and Sonnet) over the
-same conversations. ``scripts/run_recommended_vera_pipeline.sh`` calls this
+same conversations. ``legacy/run_recommended_vera_pipeline.sh`` calls this
 itself; ``vera pipeline`` does not — it prints the evaluation folders to pass
 here, because pooling is a separate command by design (``docs/pipeline.md``).
 

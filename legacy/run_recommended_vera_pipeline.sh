@@ -24,10 +24,10 @@
 # the other, until this script is retired in favor of `vera pipeline`.
 #
 # Usage:
-#   ./scripts/run_recommended_vera_pipeline.sh <provider-agent-model> [extra run_pipeline.py args...]
+#   ./legacy/run_recommended_vera_pipeline.sh <provider-agent-model> [extra run_pipeline.py args...]
 #
 # Example:
-#   ./scripts/run_recommended_vera_pipeline.sh gpt-4o
+#   ./legacy/run_recommended_vera_pipeline.sh gpt-4o
 #
 # Optional environment (override defaults without editing this file):
 #   VERA_OUTPUT_PARENT     Where new p_* run folders go (default: output)
@@ -103,7 +103,7 @@ run_pipeline_capture_eval() {
   log="$(mktemp)"
   # tee duplicates stream to stderr so the user sees progress; stdout would
   # otherwise pollute the captured eval path from command substitution.
-  uv run python run_pipeline.py "$@" 2>&1 | tee "$log" >&2
+  uv run python -m legacy.run_pipeline "$@" 2>&1 | tee "$log" >&2
   local st="${PIPESTATUS[0]}"
   if [[ "$st" -ne 0 ]]; then
     rm -f "$log"

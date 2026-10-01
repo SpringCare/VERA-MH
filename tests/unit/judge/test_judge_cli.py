@@ -9,9 +9,9 @@ import pytest
 import judge.run as _judge_run
 from utils.conversation_layout import resolve_conversation_input
 
-# Load judge.py script (project root) so we can test get_parser and main
+# Load legacy/judge.py by path so we can test get_parser and main
 _PROJECT_ROOT = Path(__file__).resolve().parents[3]
-_JUDGE_SCRIPT = _PROJECT_ROOT / "judge.py"
+_JUDGE_SCRIPT = _PROJECT_ROOT / "legacy" / "judge.py"
 _spec = importlib.util.spec_from_file_location("judge_script", _JUDGE_SCRIPT)
 assert _spec is not None and _spec.loader is not None
 _judge_script = importlib.util.module_from_spec(_spec)

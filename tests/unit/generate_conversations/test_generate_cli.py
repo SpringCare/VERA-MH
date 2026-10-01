@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-import generate
+from legacy import generate
 
 
 def _generation_kwargs(output_folder: str, **overrides: object) -> dict:
