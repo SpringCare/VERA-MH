@@ -28,7 +28,7 @@ See [AGENTS.md](./AGENTS.md) for full testing policy. Summary:
 - `tests/unit/` and `tests/integration/`; fixtures in `tests/fixtures/`
 - Default: `uv run pytest -m "not live"` (unit + integration, no API keys)
 - CI: PRs run `-m "not integration and not live"`; merges to `main` add the integration layer. Markers come from the test's directory
-- Live API tests: `uv run pytest -m live`; in CI, `live.yml` runs the smoke set on main merge and nightly; the full set only by manual dispatch
+- Live API tests: `uv run pytest -m live`; in CI, `live.yml` runs the smoke set on main merge and weekly; the full set only by manual dispatch
 - Coverage enforced via `pyproject.toml` (`--cov-fail-under=68`, set for the unit layer)
 
 ### Claude Code Testing Configuration

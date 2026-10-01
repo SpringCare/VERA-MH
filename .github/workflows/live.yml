@@ -7,9 +7,9 @@ on:
   push:
     branches: [ main ]
   schedule:
-    # Nightly, 06:00 UTC: catches a provider retiring a model on days with no
-    # merge to main.
-    - cron: '0 6 * * *'
+    # Weekly, Monday 06:00 UTC: catches a provider retiring a model during
+    # weeks with no merge to main.
+    - cron: '0 6 * * 1'
   workflow_dispatch:
     inputs:
       scope:
@@ -18,10 +18,12 @@ on:
         options: [ smoke, all ]
         default: smoke
 
-# Never cancel a live run halfway: its calls are already paid for.
+# A newer run of the same trigger supersedes an in-flight one, and cancelling
+# saves the calls it has not made yet (providers bill per call). Grouping by
+# trigger keeps a merge from cancelling a manual `all` run, or the reverse.
 concurrency:
-  group: live-tests
-  cancel-in-progress: false
+  group: live-tests-${{ github.event_name }}
+  cancel-in-progress: true
 
 jobs:
   live:
@@ -65,7 +67,7 @@ jobs:
           exit 1
         fi
 
-    # Every merge and the nightly run do the cheap checks: configured model IDs still exist, and
+    # Every merge and the weekly run do the cheap checks: configured model IDs still exist, and
     # a 4-turn `vera pipeline` run on cheap models goes through all three stages.
     - name: Run live smoke tests
       if: github.event_name != 'workflow_dispatch' || inputs.scope == 'smoke'
