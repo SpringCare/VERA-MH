@@ -4,16 +4,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Runtime, CLI, and pipeline
+
+- **Recommended models from config**—The recommended SI profile reads its models from [`llm_clients/config.py`](llm_clients/config.py).
+
+### Testing and CI
+
+- **Faster tests**—Tests no longer wait out real retry backoff, so the suite drops from ~95s to ~10s. Each test has a 30s timeout.
+- **CI split**—PRs run unit tests; merges to `main` also run integration tests, including a mocked end-to-end `vera pipeline` run. The Docker build runs only when its inputs change.
+
+## [v2.0.0](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.0) \- 2026-09-25
+
+VERA-MH 2.0 is released. It breaks the legacy scripts: they still run in 2.0.0, but 2.0.1 moves them to `legacy/`, which changes how they are invoked.
+
 ### Breaking / migration
 
-- **`vera score` skips the risk-level breakdown when no personas file is given** — Legacy [`judge/score.py`](judge/score.py) defaults `--personas-tsv` to `data/SI/personas.tsv`. `vera score`'s `--personas` has no default: omit it and the risk-level breakdown is skipped with a message, so `scores_by_risk.json` is not written at all. The default was dropped because `load_personas_risk_levels` ([`judge/score_utils.py`](judge/score_utils.py)) joins on a column literally named `"Short Current Suicide Risk Level"`; against any other target's personas file every row silently became `"Unknown"` and the resulting `scores_by_risk.json` was empty — output that looked like a result but was not one. Pass `--personas data/SI/personas.tsv` for exactly the legacy behavior. Legacy [`judge/score.py`](judge/score.py) keeps its default until it is removed.
-- **`vera judge` requires an explicit output location for flat conversation folders** — Legacy [`judge.py`](judge.py) falls back to writing evaluations into `evaluations/` *relative to the working directory* when `--folder` points at a flat folder of `.txt` transcripts rather than a generation run. `vera judge` does not carry that fallback: it errors and asks for `--output`. The default for a generation run is unchanged and still lands beside the transcripts, at `<conversation run>/evaluations/`. Reading old flat-layout conversations continues to work — pass `--output` to say where the results go. The fallback was dropped because it detached evaluations from the conversations that produced them, and because the same relative path means different directories depending on the input form (CLI paths resolve against the working directory, config paths against the repository root). Legacy `judge.py` keeps the old behavior until it is removed.
+- **`vera` CLI**—[`vera.py`](vera.py) (`generate`, `judge`, `score`, `pipeline`) replaces `generate.py`, `judge.py`, `run_pipeline.py`, and `judge/score.py`. The old scripts are deprecated and still run unchanged in 2.0.0; [`docs/legacy-scripts.md`](docs/legacy-scripts.md) maps their flags to `vera`.
+- **`vera score` has no default personas file**—Without `--personas`, the risk-level breakdown is skipped and `scores_by_risk.json` is not written. Pass `--personas data/SI/personas.tsv` for the legacy behavior.
+- **`vera judge` needs `--output` for flat transcript folders**—It no longer falls back to `evaluations/` in the working directory. Generation runs still write to `<run>/evaluations/`.
+- **Per-question answers moved**—`answers/conversations/` is now `answers/by_question/`.
+
+### Targets, rubric, and scoring
+
+- **Multiple targets**—A target bundles a rubric, personas, and prompts in `data/<target>/manifest.json`, selected with `--target` or a config's `target`. Ships with `SI` and the new [`HFO`](data/HFO/) target.
+- **Persona annotation**—A manifest can list `persona_annotation_columns`, which judging copies into `results.csv` so scores can be broken down by persona trait.
+- **Terminal `END`**—A plain `GOTO=END` on a rubric's last question no longer marks the evaluation Not Relevant; `ASSIGN_END` on a non-Yes answer is rejected.
 
 ### Runtime, CLI, and pipeline
 
-- **[`configs/recommended-SI.json`](configs/recommended-SI.json)** — The published recommended profile for the `SI` target as a checked-in `vera pipeline` config, so the settings live in one place instead of being restated in prose. Read the file for the models and settings it fixes; fill in `generation.chatbot.name` with the model under test. [`scripts/run_recommended_vera_pipeline.sh`](scripts/run_recommended_vera_pipeline.sh) still runs the same profile through the legacy `run_pipeline.py` and is unchanged.
-- **`vera pipeline`** — Added the chained stage to the unified CLI: `uv run python vera.py pipeline -c <chatbot> -u <model>:1 -j <model>:1 --target <name>` runs generation, judging, and scoring in one invocation, passing each stage's resolved output paths to the next instead of requiring the caller to copy them between commands. The CLI shorthand covers only the three model roles and the target; stage-specific knobs such as `--output` and `--max-concurrent` mean different things to generation and judging, so they come from `--config` rather than from a prefixed second spelling. A pipeline config omits `judging.conversations` — generation supplies it — and stating it is an error; [`docs/pipeline.md`](docs/pipeline.md) explains why this command resolves in two halves. `--target all` is rejected for now, as `vera judge` rejects it. `generate.run_for_user_models` now returns the run folders it wrote, which `vera generate` ignores and `vera pipeline` needs.
-- **`vera score`** — Added the scoring stage to the unified CLI: `uv run python vera.py score -r <results.csv>`. It accepts the same `--config`/`VERA_RUN_CONFIG`/`--print` input forms as `vera generate` and `vera judge`, and calls the same scoring code the legacy script does — `main()` in [`judge/score.py`](judge/score.py) is now a shim over a new `run_scoring` domain function that both entry points share.
+- **Config files**—Every `vera` command takes `--config`, `VERA_RUN_CONFIG`, or `--print`. The recommended SI profile is [`configs/recommended-SI.json`](configs/recommended-SI.json).
+- **`vera pipeline`**—Runs generation, judging, and scoring in one invocation, passing each stage's output to the next.
+- **`--into`**—`vera generate` and `vera judge` can continue an existing run.
+- **Model IDs in one place**—Default models are read from [`llm_clients/config.py`](llm_clients/config.py).
+
+### Testing, CI, and documentation
+
+- **Safer tests**—Tests cannot open network connections or see real API keys.
+- **Model availability check**—A live test confirms the configured model IDs still exist at each provider.
+- **Docs**—README rewritten for 2.0, with reference docs split under [`docs/`](docs/).
 
 ## [v1.2.0](https://github.com/SpringCare/VERA-MH/releases/tag/v1.2.0) \- 2026-07-16
 
