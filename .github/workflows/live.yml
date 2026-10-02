@@ -1,0 +1,90 @@
+name: Live Tests
+
+# Tests marked `live` call real providers, so they need API keys and cost
+# money. They never run on pull requests: fork PRs cannot read secrets, and a
+# PR run would bill every push.
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    # Weekly, Monday 06:00 UTC: catches a provider retiring a model during
+    # weeks with no merge to main.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "Which live tests to run"
+        type: choice
+        options: [ smoke, all ]
+        default: smoke
+
+# A newer run of the same trigger supersedes an in-flight one, and cancelling
+# saves the calls it has not made yet (providers bill per call). Grouping by
+# trigger keeps a merge from cancelling a manual `all` run, or the reverse.
+concurrency:
+  group: live-tests-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  live:
+    name: Live Tests
+    # Self-hosted, like internal-ai-gateway's budget-requests workflow: the
+    # gateway sits behind an internal load balancer that GitHub-hosted runners
+    # can't reach.
+    runs-on: [self-hosted, linux, x64, medium]
+    timeout-minutes: 45
+
+    # Mirrors the team .env: every provider goes through the gateway at
+    # API_BASE_URL. Each provider reads its own secret, falling back to the
+    # shared gateway API_KEY, so one provider can move to a direct key without
+    # touching the others.
+    env:
+      API_BASE_URL: ${{ secrets.API_BASE_URL }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || secrets.API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY || secrets.API_KEY }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY || secrets.API_KEY }}
+
+    steps:
+    - uses: actions/checkout@v7
+
+    # The runner is an AL2023 host, which setup-python has no builds for, so
+    # uv installs Python instead.
+    - name: Install uv
+      uses: astral-sh/setup-uv@v10.2.0
+      with:
+        python-version: '3.11'
+        enable-cache: true
+        cache-dependency-glob: uv.lock
+
+    - name: Install dependencies
+      run: uv sync --all-extras
+
+    # Live tests skip themselves when a key is missing, so without this check a
+    # repo with no secrets configured would pass here having tested nothing.
+    - name: Require API keys
+      run: |
+        missing=""
+        for var in API_BASE_URL OPENAI_API_KEY ANTHROPIC_API_KEY; do
+          [ -n "${!var}" ] || missing="$missing $var"
+        done
+        if [ -n "$missing" ]; then
+          echo "::error::Empty:$missing. Set API_BASE_URL, and API_KEY or the per-provider key secrets."
+          exit 1
+        fi
+
+    # Every merge and the weekly run do the cheap checks: configured model IDs still exist, and
+    # a 4-turn `vera pipeline` run on cheap models goes through all three stages.
+    - name: Run live smoke tests
+      if: github.event_name != 'workflow_dispatch' || inputs.scope == 'smoke'
+      run: >-
+        uv run pytest -m live --no-cov --durations=10
+        tests/integration/test_model_availability.py
+        tests/integration/test_vera_pipeline_e2e.py
+
+    # Manual only. `all` adds the legacy-script suite (test_scoring.py: 7
+    # tests on reasoning models, each generating its own conversations) and
+    # the clinician-ratings judge check, too costly to run on a schedule. See
+    # the live-test consolidation item in TODO.
+    - name: Run all live tests
+      if: inputs.scope == 'all'
+      run: uv run pytest -m live --no-cov --durations=10

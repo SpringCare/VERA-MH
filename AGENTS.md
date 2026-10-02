@@ -92,7 +92,7 @@ uv run pytest tests/unit/judge/test_score.py
 uv run pytest tests/integration/
 ```
 
-**Markers:** `unit`, `integration`, `e2e`, `live` (see `pyproject.toml`). `tests/conftest.py` adds `unit` or `integration` from the test's directory, so where a test lives decides which CI job runs it. PRs run the unit layer; merges to `main` (and manual `workflow_dispatch` runs on any branch) also run the integration layer. Add `live` (plus `enable_socket`) only for tests that call real providers.
+**Markers:** `unit`, `integration`, `e2e`, `live` (see `pyproject.toml`). `tests/conftest.py` adds `unit` or `integration` from the test's directory, so where a test lives decides which CI job runs it. PRs run the unit layer; merges to `main` (and manual `workflow_dispatch` runs on any branch) also run the integration layer. Add `live` (plus `enable_socket`) only for tests that call real providers. Live tests run in `.github/workflows/live.yml`, never on PRs: every merge to `main` and a weekly run do the cheap ones (model availability and the live pipeline smoke test). The full live suite, including the costly legacy `test_scoring.py`, runs only when started manually with `workflow_dispatch` and scope `all`. Its repository secrets mirror the team `.env`: `API_BASE_URL` (the gateway), plus `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, and `GOOGLE_API_KEY`, each of which falls back to the shared gateway `API_KEY` when unset.
 
 **Pipeline smoke tests:** `tests/integration/test_vera_pipeline_e2e.py` runs `vera pipeline` through generate, judge, and score on one persona and 4 turns. The mocked variant runs in the integration layer; the live variant needs real keys (`uv run pytest -m live tests/integration/test_vera_pipeline_e2e.py`).
 
