@@ -128,7 +128,7 @@ class MockLLM(JudgeLLM):
 
             response_data = json.loads(response_text)
             return response_model(**response_data)
-        except (json.JSONDecodeError, ValueError, TypeError):
+        except json.JSONDecodeError, ValueError, TypeError:
             # Create instance with mock default values
             # Check if the model has example data in json_schema_extra
             if hasattr(response_model, "model_config") and isinstance(

@@ -48,11 +48,10 @@ jobs:
     - uses: actions/checkout@v7
 
     # The runner is an AL2023 host, which setup-python has no builds for, so
-    # uv installs Python instead.
+    # uv installs the Python pinned in .python-version instead.
     - name: Install uv
       uses: astral-sh/setup-uv@v10.2.0
       with:
-        python-version: '3.11'
         enable-cache: true
         cache-dependency-glob: uv.lock
 

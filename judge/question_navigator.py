@@ -111,7 +111,7 @@ class QuestionNavigator:
             current_index = self.question_order.index(current_question_id)
             if current_index + 1 < len(self.question_order):
                 return self.question_order[current_index + 1]
-        except (ValueError, AttributeError):
+        except ValueError, AttributeError:
             pass
         return None
 

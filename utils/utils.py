@@ -11,7 +11,7 @@ def parse_key_value_list(arg):
         # https://docs.python.org/3/library/ast.html#ast.literal_eval
         try:
             value = ast.literal_eval(value)
-        except (ValueError, SyntaxError):
+        except ValueError, SyntaxError:
             # Note: not logging the error here as we are leaving the value as a string
             pass
         d[key] = value

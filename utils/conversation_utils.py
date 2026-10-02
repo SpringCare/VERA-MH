@@ -117,7 +117,7 @@ def format_conversation_summary(
         try:
             turn_role = Role(speaker_value)
             prefix = "user:" if turn_role == Role.PERSONA else "chatbot:"
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             raise ValueError(f"Invalid role value '{speaker_value}' for turn {i}")
 
         # Add the response with proper formatting
@@ -222,7 +222,7 @@ def build_langchain_messages(
                         message = AIMessage(content=text)
                     else:
                         message = HumanMessage(content=text)
-                except (ValueError, TypeError):
+                except ValueError, TypeError:
                     raise ValueError(
                         f"Invalid role value '{turn_speaker}' for turn {turn_number}"
                     )
