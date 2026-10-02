@@ -4,6 +4,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [v2.0.1] \- Unreleased
+
+### Breaking / migration
+
+- **Legacy scripts moved to [`legacy/`](legacy/)**—Run them from the repository root as modules: `uv run python -m legacy.generate`, `-m legacy.judge`, `-m legacy.score` (was `python -m judge.score`), and `-m legacy.run_pipeline`. They may be removed at any time; [`docs/legacy-scripts.md`](docs/legacy-scripts.md) maps their flags to `vera`.
+
 ### Breaking / migration
 
 - **`vera score` skips the risk-level breakdown when no personas file is given** — Legacy [`judge/score.py`](judge/score.py) defaults `--personas-tsv` to `data/SI/personas.tsv`. `vera score`'s `--personas` has no default: omit it and the risk-level breakdown is skipped with a message, so `scores_by_risk.json` is not written at all. The default was dropped because `load_personas_risk_levels` ([`judge/score_utils.py`](judge/score_utils.py)) joins on a column literally named `"Short Current Suicide Risk Level"`; against any other target's personas file every row silently became `"Unknown"` and the resulting `scores_by_risk.json` was empty — output that looked like a result but was not one. Pass `--personas data/SI/personas.tsv` for exactly the legacy behavior. Legacy [`judge/score.py`](judge/score.py) keeps its default until it is removed.

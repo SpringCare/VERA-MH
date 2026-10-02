@@ -20,7 +20,7 @@ no log-scraping.
 That chaining is the entire reason the command exists. Running the three
 commands by hand works, but the caller has to copy the generation run folder
 into the judge invocation and the `results.csv` path into the score
-invocation — which is what `scripts/run_recommended_vera_pipeline.sh` does by
+invocation — which is what `legacy/run_recommended_vera_pipeline.sh` does by
 scraping them out of a log.
 
 `docs/pipeline.md` covers what makes this command's input different from the

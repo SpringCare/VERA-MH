@@ -85,7 +85,7 @@ class TestPipelineArgumentParsing:
 
     def test_parse_arguments_required_only(self):
         """Test parsing with only required arguments."""
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -111,7 +111,7 @@ class TestPipelineArgumentParsing:
 
     def test_parse_short_co_is_conversation_output(self):
         """-co is shorthand for --conversation-output."""
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -133,7 +133,7 @@ class TestPipelineArgumentParsing:
 
     def test_parse_short_jo_is_judge_output(self):
         """-jo is shorthand for --judge-output."""
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -162,7 +162,7 @@ class TestPipelineArgumentParsing:
     )
     def test_parse_arguments_with_judge_output(self, co_flag, jo_flag):
         """Parse co/jo; resolve_pipeline_resume_paths for a non-resume run."""
-        from run_pipeline import parse_arguments, resolve_pipeline_resume_paths
+        from legacy.run_pipeline import parse_arguments, resolve_pipeline_resume_paths
 
         test_args = [
             "--user-agent",
@@ -191,7 +191,7 @@ class TestPipelineArgumentParsing:
 
     def test_parse_arguments_with_extra_params(self):
         """Test parsing with extra model parameters."""
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -224,7 +224,7 @@ class TestPipelineArgumentParsing:
 
     def test_parse_arguments_multiple_judge_models(self):
         """Test parsing with multiple judge models."""
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -247,7 +247,7 @@ class TestPipelineArgumentParsing:
 
     def test_parse_arguments_missing_required(self):
         """Test that missing required arguments raises error."""
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -261,7 +261,7 @@ class TestPipelineArgumentParsing:
 
     def test_parse_arguments_optional_flags(self):
         """Test parsing optional boolean flags."""
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -290,7 +290,7 @@ class TestPipelineArgumentParsing:
 
     def test_parse_arguments_with_all_optional_arguments(self):
         """Test parsing with all optional arguments provided."""
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -556,7 +556,7 @@ class TestPipelineNewArguments:
 
     def test_parse_arguments_with_run_id(self):
         """Test parsing arguments with --run-id."""
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -580,7 +580,7 @@ class TestPipelineNewArguments:
 
     def test_parse_arguments_with_rubrics(self):
         """Test parsing arguments with --rubrics."""
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -605,7 +605,7 @@ class TestPipelineNewArguments:
 
     def test_parse_arguments_defaults_for_new_args(self):
         """Test that new arguments have correct defaults."""
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -631,7 +631,7 @@ class TestPipelineNewArguments:
 
     def test_short_flags_for_extra_params(self):
         """Test that short flags work for extra params arguments."""
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -664,7 +664,7 @@ class TestPipelineNewArguments:
 
     def test_short_flag_for_run_id(self):
         """Test that short flag -i works for run-id."""
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -720,14 +720,14 @@ class TestPipelineValidation:
         import sys
         from unittest.mock import patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         # Mock generate module's main to return a non-existent folder
         async def mock_generate(*args, **kwargs):
             return None, str(tmp_path / "nonexistent")
 
         # Patch generate.main at the source
-        with patch("generate.main", side_effect=mock_generate):
+        with patch("legacy.generate.main", side_effect=mock_generate):
             # Mock sys.exit to raise SystemExit instead of actually exiting
             with patch.object(sys, "exit", side_effect=SystemExit) as mock_exit:
                 # Mock importlib to avoid judge loading (not needed for step 1 test)
@@ -748,7 +748,7 @@ class TestPipelineValidation:
         import sys
         from unittest.mock import patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         gen_run = _make_gen_run_empty_conversations(tmp_path)
 
@@ -756,7 +756,7 @@ class TestPipelineValidation:
         async def mock_generate(*args, **kwargs):
             return None, str(gen_run)
 
-        with patch("generate.main", side_effect=mock_generate):
+        with patch("legacy.generate.main", side_effect=mock_generate):
             # Mock sys.exit to raise SystemExit instead of actually exiting
             with patch.object(sys, "exit", side_effect=SystemExit) as mock_exit:
                 with patch("importlib.util.spec_from_file_location"):
@@ -774,7 +774,7 @@ class TestPipelineValidation:
         import sys
         from unittest.mock import patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         gen_run = _make_gen_run_with_txt(
             tmp_path,
@@ -788,7 +788,7 @@ class TestPipelineValidation:
         async def mock_generate(*args, **kwargs):
             return None, str(gen_run)
 
-        with patch("generate.main", side_effect=mock_generate):
+        with patch("legacy.generate.main", side_effect=mock_generate):
             # Mock sys.exit to raise SystemExit instead of actually exiting
             with patch.object(sys, "exit", side_effect=SystemExit) as mock_exit:
                 with patch("importlib.util.spec_from_file_location"):
@@ -808,7 +808,7 @@ class TestPipelineValidation:
         import sys
         from unittest.mock import MagicMock, patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         gen_run = _make_gen_run_with_txt(
             tmp_path, {"conv1.txt": "User: Hi\nAssistant: Hello"}
@@ -827,7 +827,7 @@ class TestPipelineValidation:
         mock_judge_module.main = mock_judge
 
         with (
-            patch("generate.main", side_effect=mock_generate),
+            patch("legacy.generate.main", side_effect=mock_generate),
             patch("importlib.util.module_from_spec", return_value=mock_judge_module),
             patch("importlib.util.spec_from_file_location"),
         ):
@@ -849,7 +849,7 @@ class TestPipelineValidation:
         import sys
         from unittest.mock import MagicMock, patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         gen_run = _make_gen_run_with_txt(
             tmp_path, {"conv1.txt": "User: Hi\nAssistant: Hello"}
@@ -868,7 +868,7 @@ class TestPipelineValidation:
         mock_judge_module.main = mock_judge
 
         with (
-            patch("generate.main", side_effect=mock_generate),
+            patch("legacy.generate.main", side_effect=mock_generate),
             patch("importlib.util.module_from_spec", return_value=mock_judge_module),
             patch("importlib.util.spec_from_file_location"),
         ):
@@ -888,7 +888,7 @@ class TestPipelineValidation:
         import sys
         from unittest.mock import MagicMock, patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         gen_run = _make_gen_run_with_txt(
             tmp_path, {"conv1.txt": "User: Hi\nAssistant: Hello"}
@@ -912,7 +912,7 @@ class TestPipelineValidation:
         mock_judge_module.main = mock_judge
 
         with (
-            patch("generate.main", side_effect=mock_generate),
+            patch("legacy.generate.main", side_effect=mock_generate),
             patch("importlib.util.module_from_spec", return_value=mock_judge_module),
             patch("importlib.util.spec_from_file_location"),
         ):
@@ -934,7 +934,7 @@ class TestPipelineValidation:
         import sys
         from unittest.mock import MagicMock, patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         gen_run = _make_gen_run_with_txt(
             tmp_path, {"conv1.txt": "User: Hi\nAssistant: Hello"}
@@ -959,7 +959,7 @@ class TestPipelineValidation:
         mock_judge_module.main = mock_judge
 
         with (
-            patch("generate.main", side_effect=mock_generate),
+            patch("legacy.generate.main", side_effect=mock_generate),
             patch("importlib.util.module_from_spec", return_value=mock_judge_module),
             patch("importlib.util.spec_from_file_location"),
         ):
@@ -988,7 +988,7 @@ class TestPipelineValidation:
         import csv
         from unittest.mock import MagicMock, patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         gen_run = _make_gen_run_with_txt(
             tmp_path, {"conv1.txt": "User: Hi\nAssistant: Hello"}
@@ -1030,12 +1030,12 @@ class TestPipelineValidation:
         mock_judge_module.main = mock_judge
 
         with (
-            patch("generate.main", side_effect=mock_generate),
+            patch("legacy.generate.main", side_effect=mock_generate),
             patch("importlib.util.module_from_spec", return_value=mock_judge_module),
             patch("importlib.util.spec_from_file_location"),
-            patch("run_pipeline.score_results", new=mock_score),
-            patch("run_pipeline.print_scores"),
-            patch("run_pipeline.create_visualizations"),
+            patch("legacy.run_pipeline.score_results", new=mock_score),
+            patch("legacy.run_pipeline.print_scores"),
+            patch("legacy.run_pipeline.create_visualizations"),
         ):
             with patch("sys.argv", valid_pipeline_args + ["--skip-risk-analysis"]):
                 await pipeline_main()
@@ -1092,7 +1092,7 @@ class TestPipelineValidation:
         """Test pipeline handling when results.csv is missing required columns."""
         from unittest.mock import MagicMock, patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         gen_run = _make_gen_run_with_txt(
             tmp_path, {"conv1.txt": "User: Hi\nAssistant: Hello"}
@@ -1120,12 +1120,12 @@ class TestPipelineValidation:
         mock_judge_module.main = mock_judge
 
         with (
-            patch("generate.main", side_effect=mock_generate),
+            patch("legacy.generate.main", side_effect=mock_generate),
             patch("importlib.util.module_from_spec", return_value=mock_judge_module),
             patch("importlib.util.spec_from_file_location"),
-            patch("run_pipeline.score_results", new=mock_score),
-            patch("run_pipeline.print_scores"),
-            patch("run_pipeline.create_visualizations"),
+            patch("legacy.run_pipeline.score_results", new=mock_score),
+            patch("legacy.run_pipeline.print_scores"),
+            patch("legacy.run_pipeline.create_visualizations"),
         ):
             with patch("sys.argv", valid_pipeline_args + ["--skip-risk-analysis"]):
                 # Pipeline should complete but the scoring function will handle
@@ -1139,7 +1139,7 @@ class TestPipelineValidation:
         """Test that validation success messages are displayed."""
         from unittest.mock import MagicMock, patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         gen_run = _make_gen_run_with_txt(
             tmp_path,
@@ -1171,12 +1171,12 @@ class TestPipelineValidation:
         mock_judge_module.main = mock_judge
 
         with (
-            patch("generate.main", side_effect=mock_generate),
+            patch("legacy.generate.main", side_effect=mock_generate),
             patch("importlib.util.module_from_spec", return_value=mock_judge_module),
             patch("importlib.util.spec_from_file_location"),
-            patch("run_pipeline.score_results", new=mock_score),
-            patch("run_pipeline.print_scores"),
-            patch("run_pipeline.create_visualizations"),
+            patch("legacy.run_pipeline.score_results", new=mock_score),
+            patch("legacy.run_pipeline.print_scores"),
+            patch("legacy.run_pipeline.create_visualizations"),
         ):
             with patch("sys.argv", valid_pipeline_args + ["--skip-risk-analysis"]):
                 await pipeline_main()
@@ -1197,7 +1197,7 @@ class TestPipelineResumeParsing:
     """CLI parsing for --resume-generate / --resume-judge."""
 
     def test_parse_resume_flags_default_false(self):
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -1217,7 +1217,7 @@ class TestPipelineResumeParsing:
             assert args.resume_judge is False
 
     def test_parse_resume_flags_can_be_true(self):
-        from run_pipeline import parse_arguments
+        from legacy.run_pipeline import parse_arguments
 
         test_args = [
             "--user-agent",
@@ -1244,7 +1244,7 @@ class TestPipelineResumeValidation:
     """resolve_pipeline_resume_paths() path checks."""
 
     def test_fresh_run_uses_conversation_output(self, tmp_path):
-        from run_pipeline import resolve_pipeline_resume_paths
+        from legacy.run_pipeline import resolve_pipeline_resume_paths
 
         gen_parent = tmp_path / "gen_parent"
         args = argparse.Namespace(
@@ -1256,7 +1256,7 @@ class TestPipelineResumeValidation:
         assert args._pipeline_gen_folder == str(gen_parent.resolve())
 
     def test_resume_generate_rejects_non_p_output(self, tmp_path):
-        from run_pipeline import resolve_pipeline_resume_paths
+        from legacy.run_pipeline import resolve_pipeline_resume_paths
 
         bad = tmp_path / "not_a_p_folder"
         bad.mkdir()
@@ -1270,7 +1270,7 @@ class TestPipelineResumeValidation:
         assert exc_info.value.code == 2
 
     def test_resume_generate_requires_existing_directory(self, tmp_path):
-        from run_pipeline import resolve_pipeline_resume_paths
+        from legacy.run_pipeline import resolve_pipeline_resume_paths
 
         missing = tmp_path / "p_x__a_y__t1__r1__nope"
         args = argparse.Namespace(
@@ -1283,7 +1283,7 @@ class TestPipelineResumeValidation:
         assert exc_info.value.code == 2
 
     def test_resume_generate_accepts_valid_run_folder(self, tmp_path):
-        from run_pipeline import resolve_pipeline_resume_paths
+        from legacy.run_pipeline import resolve_pipeline_resume_paths
 
         run_dir = tmp_path / "p_persona__a_agent__t4__r1__20260101_120000"
         run_dir.mkdir()
@@ -1295,7 +1295,7 @@ class TestPipelineResumeValidation:
         resolve_pipeline_resume_paths(args)
 
     def test_resume_judge_requires_existing_directory(self, tmp_path):
-        from run_pipeline import resolve_pipeline_resume_paths
+        from legacy.run_pipeline import resolve_pipeline_resume_paths
 
         p_run = tmp_path / "p_x__a_y__t1__r1__ts"
         p_run.mkdir()
@@ -1312,7 +1312,7 @@ class TestPipelineResumeValidation:
         assert exc_info.value.code == 2
 
     def test_resume_judge_rejects_parent_evaluations_directory(self, tmp_path):
-        from run_pipeline import resolve_pipeline_resume_paths
+        from legacy.run_pipeline import resolve_pipeline_resume_paths
 
         p_run = tmp_path / "p_x__a_y__t1__r1__ts"
         p_run.mkdir()
@@ -1328,7 +1328,7 @@ class TestPipelineResumeValidation:
         assert exc_info.value.code == 2
 
     def test_resume_judge_requires_j_evaluation_folder_basename(self, tmp_path):
-        from run_pipeline import resolve_pipeline_resume_paths
+        from legacy.run_pipeline import resolve_pipeline_resume_paths
 
         p_run = tmp_path / "p_x__a_y__t1__r1__ts"
         p_run.mkdir()
@@ -1346,7 +1346,7 @@ class TestPipelineResumeValidation:
         assert exc_info.value.code == 2
 
     def test_resume_judge_accepts_valid_evaluation_folder(self, tmp_path):
-        from run_pipeline import resolve_pipeline_resume_paths
+        from legacy.run_pipeline import resolve_pipeline_resume_paths
 
         p_run = tmp_path / "p_gpt4o__a_x__t1__r1__20260101_120000"
         p_run.mkdir()
@@ -1362,7 +1362,7 @@ class TestPipelineResumeValidation:
         resolve_pipeline_resume_paths(args)
 
     def test_resume_judge_requires_judge_output(self):
-        from run_pipeline import resolve_pipeline_resume_paths
+        from legacy.run_pipeline import resolve_pipeline_resume_paths
 
         args = argparse.Namespace(
             resume_generate=False,
@@ -1374,7 +1374,7 @@ class TestPipelineResumeValidation:
         assert exc_info.value.code == 2
 
     def test_both_resume_requires_single_j_under_evaluations(self, tmp_path):
-        from run_pipeline import resolve_pipeline_resume_paths
+        from legacy.run_pipeline import resolve_pipeline_resume_paths
 
         run_dir = tmp_path / "p_u__a_p__t1__r1__20260101_120000"
         run_dir.mkdir()
@@ -1421,7 +1421,7 @@ class TestPipelineResumeWiring:
     ):
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         gen_run = _make_gen_run_with_txt(
             tmp_path, {"c.txt": "User: hi\nAssistant: hey"}
@@ -1438,12 +1438,12 @@ class TestPipelineResumeWiring:
         mock_judge_module.main = judge_mock
 
         with (
-            patch("generate.main", side_effect=gen_mock),
+            patch("legacy.generate.main", side_effect=gen_mock),
             patch("importlib.util.module_from_spec", return_value=mock_judge_module),
             patch("importlib.util.spec_from_file_location"),
-            patch("run_pipeline.score_results", return_value={}),
-            patch("run_pipeline.print_scores"),
-            patch("run_pipeline.create_visualizations"),
+            patch("legacy.run_pipeline.score_results", return_value={}),
+            patch("legacy.run_pipeline.print_scores"),
+            patch("legacy.run_pipeline.create_visualizations"),
             patch("sys.argv", valid_pipeline_args + ["--skip-risk-analysis"]),
         ):
             await pipeline_main()
@@ -1459,7 +1459,7 @@ class TestPipelineResumeWiring:
     ):
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         run_dir = _make_gen_run_with_txt(
             tmp_path,
@@ -1487,12 +1487,12 @@ class TestPipelineResumeWiring:
         ]
 
         with (
-            patch("generate.main", side_effect=gen_mock),
+            patch("legacy.generate.main", side_effect=gen_mock),
             patch("importlib.util.module_from_spec", return_value=mock_judge_module),
             patch("importlib.util.spec_from_file_location"),
-            patch("run_pipeline.score_results", return_value={}),
-            patch("run_pipeline.print_scores"),
-            patch("run_pipeline.create_visualizations"),
+            patch("legacy.run_pipeline.score_results", return_value={}),
+            patch("legacy.run_pipeline.print_scores"),
+            patch("legacy.run_pipeline.create_visualizations"),
             patch("sys.argv", argv),
         ):
             await pipeline_main()
@@ -1506,7 +1506,7 @@ class TestPipelineResumeWiring:
     ):
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         gen_run = _make_gen_run_with_txt(
             tmp_path,
@@ -1533,12 +1533,12 @@ class TestPipelineResumeWiring:
         ]
 
         with (
-            patch("generate.main", side_effect=gen_mock),
+            patch("legacy.generate.main", side_effect=gen_mock),
             patch("importlib.util.module_from_spec", return_value=mock_judge_module),
             patch("importlib.util.spec_from_file_location"),
-            patch("run_pipeline.score_results", return_value={}),
-            patch("run_pipeline.print_scores"),
-            patch("run_pipeline.create_visualizations"),
+            patch("legacy.run_pipeline.score_results", return_value={}),
+            patch("legacy.run_pipeline.print_scores"),
+            patch("legacy.run_pipeline.create_visualizations"),
             patch("sys.argv", argv),
         ):
             await pipeline_main()
@@ -1552,7 +1552,7 @@ class TestPipelineResumeWiring:
     ):
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from run_pipeline import main as pipeline_main
+        from legacy.run_pipeline import main as pipeline_main
 
         run_dir = _make_gen_run_with_txt(
             tmp_path,
@@ -1580,12 +1580,12 @@ class TestPipelineResumeWiring:
         ]
 
         with (
-            patch("generate.main", side_effect=gen_mock),
+            patch("legacy.generate.main", side_effect=gen_mock),
             patch("importlib.util.module_from_spec", return_value=mock_judge_module),
             patch("importlib.util.spec_from_file_location"),
-            patch("run_pipeline.score_results", return_value={}),
-            patch("run_pipeline.print_scores"),
-            patch("run_pipeline.create_visualizations"),
+            patch("legacy.run_pipeline.score_results", return_value={}),
+            patch("legacy.run_pipeline.print_scores"),
+            patch("legacy.run_pipeline.create_visualizations"),
             patch("sys.argv", argv),
         ):
             await pipeline_main()

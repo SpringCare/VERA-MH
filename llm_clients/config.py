@@ -99,7 +99,7 @@ class Config:
 
     # The recommended VERA-MH profile: the two user models and the judge behind
     # the published scores. configs/recommended-SI.json must match these (a unit
-    # test enforces it), and scripts/run_recommended_vera_pipeline.sh reads them
+    # test enforces it), and legacy/run_recommended_vera_pipeline.sh reads them
     # through get_recommended_models(). Change them only together with the
     # published methodology -- scores from other models are not comparable.
     RECOMMENDED_USER_MODELS = ("gpt-5.2", "claude-opus-4-5-20251101")

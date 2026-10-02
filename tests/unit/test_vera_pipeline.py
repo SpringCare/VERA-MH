@@ -258,7 +258,7 @@ def test_pipeline_declares_no_stage_specific_knobs() -> None:
 def test_shipped_recommended_config_resolves() -> None:
     """The checked-in profile is an artifact that would otherwise rot silently.
 
-    It publishes the same profile `scripts/run_recommended_vera_pipeline.sh`
+    It publishes the same profile `legacy/run_recommended_vera_pipeline.sh`
     runs, so a field going stale has to fail here rather than at the start of
     an expensive run.
     """

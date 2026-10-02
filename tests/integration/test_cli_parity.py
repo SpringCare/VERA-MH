@@ -9,7 +9,8 @@ already names its own end: `docs/architecture.md` Phase 1 deletes
 `generate.py`/`judge.py`/`run_pipeline.py` and makes `vera.py` the only entry
 point. At that moment the comparison loses its second side, so delete this file
 rather than adapting it. See the transitional-boundary section of
-`docs/architecture.md` and the docstring on `generate.run_for_user_models`.
+`docs/architecture.md` and the docstring on
+`generate_conversations.run_for_user_models`.
 
 The seam is `generate_conversations.run_generation`: both CLIs converge on
 exactly one call to it, so stubbing it and diffing the recorded kwargs compares
@@ -72,14 +73,15 @@ UNIFIED_ARGV = [
 def calls(monkeypatch: pytest.MonkeyPatch) -> Iterator[list[dict[str, Any]]]:
     """Stub the domain boundary and collect the kwargs each CLI sends it.
 
-    Both patches are needed: `generate` bound `run_generation` at import time,
-    while a fresh `runpy` exec of `generate.py` re-imports it from the package.
+    Both patches are needed: `run_for_user_models` (the `vera` path) calls the
+    `run_generation` bound in `generate_conversations.main`, while a fresh
+    `runpy` exec of `generate.py` re-imports it from the package.
 
     `chdir` matters because the legacy CLI resolves paths against the working
     directory, so its manifest argument only resolves from the repository root.
     """
-    import generate
     import generate_conversations
+    import generate_conversations.main
 
     recorded: list[dict[str, Any]] = []
 
@@ -89,7 +91,7 @@ def calls(monkeypatch: pytest.MonkeyPatch) -> Iterator[list[dict[str, Any]]]:
 
     monkeypatch.chdir(REPO_ROOT)
     with (
-        patch.object(generate, "run_generation", record),
+        patch.object(generate_conversations.main, "run_generation", record),
         patch.object(generate_conversations, "run_generation", record),
     ):
         yield recorded
@@ -100,7 +102,7 @@ def run_legacy_cli() -> None:
     sys.argv = list(LEGACY_ARGV)
     # Returns rather than exiting: the script only calls `sys.exit(1)` when every
     # conversation was skipped, and the stub reports no conversations at all.
-    runpy.run_path(str(REPO_ROOT / "generate.py"), run_name="__main__")
+    runpy.run_module("legacy.generate", run_name="__main__")
 
 
 def run_unified_cli() -> None:
