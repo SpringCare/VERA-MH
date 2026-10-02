@@ -28,7 +28,10 @@ concurrency:
 jobs:
   live:
     name: Live Tests
-    runs-on: ubuntu-latest
+    # Self-hosted, like internal-ai-gateway's budget-requests workflow: the
+    # gateway sits behind an internal load balancer that GitHub-hosted runners
+    # can't reach.
+    runs-on: [self-hosted, linux, x64, medium]
     timeout-minutes: 45
 
     # Mirrors the team .env: every provider goes through the gateway at
@@ -44,14 +47,12 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
-    - name: Set up Python
-      uses: actions/setup-python@v7
-      with:
-        python-version: '3.11'
-
+    # The runner is an AL2023 host, which setup-python has no builds for, so
+    # uv installs Python instead.
     - name: Install uv
       uses: astral-sh/setup-uv@v10.2.0
       with:
+        python-version: '3.11'
         enable-cache: true
         cache-dependency-glob: uv.lock
 
