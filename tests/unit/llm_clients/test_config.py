@@ -156,3 +156,24 @@ class TestConfig:
         """Test that get_base_url raises on an unknown provider name."""
         with pytest.raises(ValueError, match="Unknown provider"):
             Config.get_base_url("mistral")
+
+    def test_recommended_models_default_to_pins(self, monkeypatch):
+        """Without overrides, the recommended profile is the Config pins."""
+        for var in ("VERA_USER_A", "VERA_USER_B", "VERA_JUDGE"):
+            monkeypatch.delenv(var, raising=False)
+        user_a, user_b = Config.RECOMMENDED_USER_MODELS
+        assert Config.get_recommended_models() == {
+            "user_a": user_a,
+            "user_b": user_b,
+            "judge": Config.RECOMMENDED_JUDGE_MODEL,
+        }
+
+    def test_recommended_models_env_overrides_pins(self, monkeypatch):
+        """VERA_USER_B replaces only its own pin; empty values are ignored."""
+        monkeypatch.delenv("VERA_USER_A", raising=False)
+        monkeypatch.setenv("VERA_USER_B", "claude-opus-4-5")
+        monkeypatch.setenv("VERA_JUDGE", "")
+        models = Config.get_recommended_models()
+        assert models["user_a"] == Config.RECOMMENDED_USER_MODELS[0]
+        assert models["user_b"] == "claude-opus-4-5"
+        assert models["judge"] == Config.RECOMMENDED_JUDGE_MODEL
