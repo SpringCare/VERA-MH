@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from generate_conversations.conversation_simulator import ConversationSimulator
+from generate.conversation_simulator import ConversationSimulator
 from llm_clients.llm_interface import DEFAULT_START_PROMPT, LLMGenerationFailed, Role
 from tests.mocks.mock_llm import MockLLM
 
@@ -380,7 +380,7 @@ class TestConversationSimulator:
         await simulator.generate_conversation(max_turns=2)
 
         with patch(
-            "generate_conversations.conversation_simulator.save_conversation_to_file"
+            "generate.conversation_simulator.save_conversation_to_file"
         ) as mock_save:
             simulator.save_conversation("test_convo.txt", folder="test_folder")
 

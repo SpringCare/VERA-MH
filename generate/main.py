@@ -224,7 +224,7 @@ def _legacy_model_config(model: ModelSpec) -> Dict[str, Any]:
     function's to decide, and it is not about output naming — run folders are
     built from `model` (`utils/naming.py:model_token_for_run_folder`). `name` is
     the provider's display name, defaulted to `"Provider"` in
-    `generate_conversations/runner.py`. It is legal on the agent config only
+    `generate/runner.py`. It is legal on the agent config only
     because the runner filters reserved keys out of that one before splatting
     it into `LLMFactory.create_llm`, while splatting the persona config raw —
     so a `name` key there would collide. Fix belongs in the runner.

@@ -54,7 +54,7 @@ Work with coverage reports:
 ## VERA-MH Context
 
 **Project structure:**
-- `generate_conversations/` - Conversation generation
+- `generate/` - Conversation generation
 - `llm_clients/` - LLM provider implementations
 - `utils/` - Utility functions
 - `tests/` - Test directory

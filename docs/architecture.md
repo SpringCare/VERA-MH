@@ -125,10 +125,8 @@ rather than to a script entry point.
 
 Legacy scripts live in `legacy/` until they are removed, and nothing outside
 `legacy/` and its tests imports them. For generation, the flow is
-`vera_cli.generate` → `generate_conversations.run_for_user_models` →
-`generate_conversations.run_generation`. With `generate.py` out of the root,
-renaming `generate_conversations/` to the permanent `generate/` package no
-longer collides with a root `generate` module.
+`vera_cli.generate` → `generate.run_for_user_models` →
+`generate.run_generation`.
 
 `run_for_user_models` and its `_legacy_model_config` helper are explicit
 stopgaps. They put the expansion of a run's user models, and the flattening of
@@ -139,7 +137,7 @@ models identically.
 
 | Subcommand | Delegates to | Purpose |
 |------------|--------------|---------|
-| `vera generate` | generation application function (temporarily `generate_conversations.run_for_user_models`) | Simulate conversations → `<target>/c_<chatbot>/u_*/conversations/` |
+| `vera generate` | generation application function (temporarily `generate.run_for_user_models`) | Simulate conversations → `<target>/c_<chatbot>/u_*/conversations/` |
 | `vera judge` | `judge.runner` | Evaluate transcripts → `<target>/c_<chatbot>/u_*/evaluations/j_*` |
 | `vera score` | `score.score` | Aggregate `results.csv` → scores and visualizations |
 | `vera pool` | `score.pool` | Concatenate multiple evaluation folders into one pooled result → `<target>/c_<chatbot>/pooled/u_<a>+<b>_*` |

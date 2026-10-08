@@ -10,9 +10,9 @@ already names its own end: `docs/architecture.md` Phase 1 deletes
 point. At that moment the comparison loses its second side, so delete this file
 rather than adapting it. See the transitional-boundary section of
 `docs/architecture.md` and the docstring on
-`generate_conversations.run_for_user_models`.
+`generate.run_for_user_models`.
 
-The seam is `generate_conversations.run_generation`: both CLIs converge on
+The seam is `generate.run_generation`: both CLIs converge on
 exactly one call to it, so stubbing it and diffing the recorded kwargs compares
 the two resolution paths without API keys, model calls, or written output.
 """
@@ -74,14 +74,14 @@ def calls(monkeypatch: pytest.MonkeyPatch) -> Iterator[list[dict[str, Any]]]:
     """Stub the domain boundary and collect the kwargs each CLI sends it.
 
     Both patches are needed: `run_for_user_models` (the `vera` path) calls the
-    `run_generation` bound in `generate_conversations.main`, while a fresh
+    `run_generation` bound in `generate.main`, while a fresh
     `runpy` exec of `generate.py` re-imports it from the package.
 
     `chdir` matters because the legacy CLI resolves paths against the working
     directory, so its manifest argument only resolves from the repository root.
     """
-    import generate_conversations
-    import generate_conversations.main
+    import generate
+    import generate.main
 
     recorded: list[dict[str, Any]] = []
 
@@ -91,8 +91,8 @@ def calls(monkeypatch: pytest.MonkeyPatch) -> Iterator[list[dict[str, Any]]]:
 
     monkeypatch.chdir(REPO_ROOT)
     with (
-        patch.object(generate_conversations.main, "run_generation", record),
-        patch.object(generate_conversations, "run_generation", record),
+        patch.object(generate.main, "run_generation", record),
+        patch.object(generate, "run_generation", record),
     ):
         yield recorded
 

@@ -2,7 +2,7 @@
 
 This is the judging domain's application function: it receives fully resolved
 values, loads what those values point at, and runs the evaluation. It is the
-counterpart of `generate_conversations.run.run_generation` on the generation
+counterpart of `generate.run_generation` on the generation
 side, and it is what `vera judge` calls.
 
 It deliberately does none of the CLI's work. It does not parse arguments, read
