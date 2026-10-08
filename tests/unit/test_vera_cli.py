@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-import generate_conversations.main as generation_domain
+import generate.main as generation_domain
 import vera
 from utils.config_schema import InvocationConfig, ModelSpec
 from vera_cli import (
@@ -81,7 +82,7 @@ def test_entry_point_stays_thin_and_generate_only() -> None:
     parser = vera.build_parser()
 
     assert len(source.splitlines()) < 50
-    assert "generate_conversations" not in source
+    assert not re.search(r"^\s*(import|from)\s+generate\b", source, re.MULTILINE)
     with pytest.raises(SystemExit) as help_exit:
         parser.parse_args(["generate", "--help"])
     assert help_exit.value.code == 0

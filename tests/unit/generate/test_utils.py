@@ -1,10 +1,10 @@
-"""Unit tests for generate_conversations/utils.py"""
+"""Unit tests for generate/utils.py"""
 
 from pathlib import Path
 
 import pytest
 
-from generate_conversations.utils import load_prompts_from_csv as _load_prompts_from_csv
+from generate.utils import load_prompts_from_csv as _load_prompts_from_csv
 
 
 def load_prompts_from_csv(*, prompt_template_path, **kwargs):

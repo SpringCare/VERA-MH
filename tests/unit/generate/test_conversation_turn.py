@@ -2,7 +2,7 @@
 
 from langchain_core.messages import AIMessage, HumanMessage
 
-from generate_conversations.conversation_turn import ConversationTurn
+from generate.conversation_turn import ConversationTurn
 from llm_clients import Role
 
 

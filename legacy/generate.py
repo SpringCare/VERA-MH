@@ -8,7 +8,7 @@ import asyncio
 import sys
 from typing import Any, Dict, List, Optional
 
-from generate_conversations import run_generation
+from generate import run_generation
 from llm_clients.llm_interface import DEFAULT_START_PROMPT
 from utils.debug import set_debug
 from utils.rubric_manifest import (

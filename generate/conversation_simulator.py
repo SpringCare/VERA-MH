@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from langchain_core.messages import AIMessage, HumanMessage
 
-from generate_conversations.conversation_turn import ConversationTurn
+from generate.conversation_turn import ConversationTurn
 from llm_clients import LLMInterface
 from utils.conversation_utils import (
     ensure_provider_has_last_turn,

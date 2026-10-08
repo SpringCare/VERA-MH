@@ -30,7 +30,7 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 | Area | Key paths | When to edit |
 |------|-----------|--------------|
 | **CLI** | `vera.py`, `vera_cli/`, `utils/config_schema.py` | Thin entry point, command adapters, and shared command/config wiring |
-| **Generation** | `generate_conversations/` | Conversation simulation, turns, personas |
+| **Generation** | `generate/` | Conversation simulation, turns, personas |
 | **Judging** | `judge/` | Rubric scoring, TSV output, question navigation |
 | **LLM providers** | `llm_clients/`, `llm_clients/llm_factory.py` | New models, custom HTTP/API providers |
 | **Pipeline helpers** | `scripts/` | Pooling and automation until absorbed into `vera pool` |
