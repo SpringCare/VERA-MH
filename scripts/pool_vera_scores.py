@@ -348,14 +348,14 @@ def pool_evaluation_directories(
     """
     import pandas as pd
 
-    from judge.score import (
+    from judge.score_utils import ensure_results_csv
+    from score.score import (
         _save_results_json,
         print_scores,
         score_results,
         score_results_by_risk,
     )
-    from judge.score_utils import ensure_results_csv
-    from judge.score_viz import (
+    from score.score_viz import (
         create_risk_level_visualizations,
         create_visualizations,
     )

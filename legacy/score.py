@@ -8,7 +8,7 @@ docs/legacy-scripts.md.
 import argparse
 import sys
 
-from judge.score import run_scoring
+from score.score import run_scoring
 
 
 def main():

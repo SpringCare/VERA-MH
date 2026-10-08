@@ -18,7 +18,7 @@ is rather than from a different opinion about the contract:
 - **`_execute` is synchronous.** No model is called, so there is no event loop
   to start.
 
-One deliberate behavior difference from legacy `judge/score.py`, recorded in
+One deliberate behavior difference from legacy `legacy/score.py`, recorded in
 CHANGELOG.md: with no `--personas`, risk-level analysis is skipped rather than
 run against a default `data/SI/personas.tsv`. The lookup behind it joins on a
 column literally named "Short Current Suicide Risk Level", so against any other
@@ -33,7 +33,7 @@ import argparse
 from pathlib import Path
 from typing import Any
 
-from judge.score import run_scoring
+from score.score import run_scoring
 from utils.config_schema import InvocationConfig, RunConfig, ScoringConfig
 from utils.debug import set_debug
 

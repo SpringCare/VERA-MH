@@ -74,7 +74,7 @@ Fix failing tests iteratively until they pass, then show coverage focused on bra
      🟢 generate.py: 92% (lines 45-48, 156 missing)
      🟡 judge/runner.py: 81% (lines 89-103 missing)
      🟡 llm_clients/claude_llm.py: 75% (lines 120-135 missing)
-     🔴 judge/score.py: 65% (lines 23-45, 78-92 missing)
+     🔴 score/score.py: 65% (lines 23-45, 78-92 missing)
      ```
 
    **With `--all` flag**:

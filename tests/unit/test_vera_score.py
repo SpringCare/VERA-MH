@@ -211,7 +211,7 @@ def test_scoring_writes_scores_beside_the_results_csv(tmp_path: Path) -> None:
 def test_no_personas_skips_the_risk_breakdown_entirely(
     tmp_path: Path, capsys: pytest.CaptureFixture
 ) -> None:
-    """The one place `vera score` deliberately diverges from legacy `judge/score.py`.
+    """The one place `vera score` deliberately diverges from legacy `legacy/score.py`.
 
     Legacy defaulted to `data/SI/personas.tsv` and, for any other target's
     personas file, wrote an empty `scores_by_risk.json` that looked like a

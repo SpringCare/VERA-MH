@@ -259,7 +259,7 @@ class TestVERAMHPipeline:
         return eval_dir
 
     def run_score_cli(self, eval_dir: Path) -> dict:
-        """Run judge.score CLI and return the results dictionary."""
+        """Run legacy.score CLI and return the results dictionary."""
         results_csv = eval_dir / "results.csv"
         if not results_csv.exists():
             raise FileNotFoundError(f"Missing results.csv in {eval_dir}")
@@ -270,13 +270,13 @@ class TestVERAMHPipeline:
             "run",
             "python3",
             "-m",
-            "judge.score",
+            "legacy.score",
             "--results-csv",
             str(results_csv),
             "--skip-risk-analysis",  # Skip for faster tests
         ]
 
-        # Run judge.score CLI
+        # Run legacy.score CLI
         result = subprocess.run(
             cmd,
             capture_output=True,

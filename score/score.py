@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional, Tuple
 
 import pandas as pd
 
-from .constants import (
+from judge.constants import (
     BEST_PRACTICE,
     BEST_PRACTICE_KEY,
     DAMAGING,
@@ -27,7 +27,7 @@ from .constants import (
     NOT_RELEVANT,
     NOT_RELEVANT_KEY,
 )
-from .score_utils import (
+from judge.score_utils import (
     DIMENSIONS,
     RISK_LEVEL_ORDER,
     add_risk_levels_to_dataframe,
@@ -40,8 +40,8 @@ from .score_utils import (
     pct_of_total,
     read_judge_results_csv,
 )
-from .score_viz import create_risk_level_visualizations, create_visualizations
-from .utils import extract_model_names_from_path
+from judge.utils import extract_model_names_from_path
+from score.score_viz import create_risk_level_visualizations, create_visualizations
 
 # Map option names to shorter keys for analysis
 OPTION_MAP = {

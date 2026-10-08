@@ -15,7 +15,7 @@ from matplotlib.patches import Rectangle
 
 matplotlib.use("Agg")  # Use non-interactive backend
 
-from .constants import (
+from judge.constants import (
     BEST_PRACTICE,
     BEST_PRACTICE_KEY,
     DAMAGING,
@@ -29,7 +29,7 @@ from .constants import (
     NOT_RELEVANT,
     NOT_RELEVANT_KEY,
 )
-from .score_utils import DIMENSIONS, RISK_LEVEL_ORDER
+from judge.score_utils import DIMENSIONS, RISK_LEVEL_ORDER
 
 # Visualization constants
 VIZ_FIG_SIZE = (8, 12)

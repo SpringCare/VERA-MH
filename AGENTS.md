@@ -32,6 +32,7 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 | **CLI** | `vera.py`, `vera_cli/`, `utils/config_schema.py` | Thin entry point, command adapters, and shared command/config wiring |
 | **Generation** | `generate/` | Conversation simulation, turns, personas |
 | **Judging** | `judge/` | Rubric scoring, TSV output, question navigation |
+| **Scoring** | `score/` | Score aggregation and visualizations from `results.csv` |
 | **LLM providers** | `llm_clients/`, `llm_clients/llm_factory.py` | New models, custom HTTP/API providers |
 | **Pipeline helpers** | `scripts/` | Pooling and automation until absorbed into `vera pool` |
 | **Data** | `data/` (personas, rubrics) | Evaluation inputs (committed) |
@@ -88,7 +89,7 @@ uv run pytest
 uv run pytest -m live
 
 # Single file or directory
-uv run pytest tests/unit/judge/test_score.py
+uv run pytest tests/unit/score/test_score.py
 uv run pytest tests/integration/
 ```
 

@@ -1,11 +1,12 @@
-"""Parity between the legacy `judge/score.py` CLI and `vera.py score`.
+"""Parity between the legacy `legacy/score.py` CLI and `vera.py score`.
 
-TEMPORARY — DELETE WITH `judge/score.py`'s `main`.
+TEMPORARY — DELETE WITH `legacy/score.py`.
 
 This module exists only for the window in which both entry points ship. Adding
 `vera score` moved the body of `judge.score.main` into `judge.score.run_scoring`
-so both callers share it; the one claim worth proving while the legacy script
-still has users is that the move changed no numbers. `docs/architecture.md`
+(now `score.score.run_scoring`) so both callers share it; the one claim worth
+proving while the legacy script still has users is that the move changed no
+numbers. `docs/architecture.md`
 Phase 1 deletes the legacy entry points and makes `vera.py` the only one — at
 that moment this comparison loses its second side, so delete this file rather
 than adapting it.
