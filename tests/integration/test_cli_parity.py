@@ -4,10 +4,9 @@ TEMPORARY — DELETE WITH `generate.py`.
 
 This module exists only for the window in which both CLIs ship. It asserts that
 adding `vera generate` did not change what reaches the generation domain, which
-is the one claim worth proving while `generate.py` still has users. The roadmap
-already names its own end: `docs/architecture.md` Phase 1 deletes
-`generate.py`/`judge.py`/`run_pipeline.py` and makes `vera.py` the only entry
-point. At that moment the comparison loses its second side, so delete this file
+is the one claim worth proving while `generate.py` still has users. Its end is
+the deferred removal of `legacy/` (`docs/roadmap.md`): once `vera.py` is the
+only entry point, the comparison loses its second side, so delete this file
 rather than adapting it. See the transitional-boundary section of
 `docs/architecture.md` and the docstring on
 `generate.run_for_user_models`.

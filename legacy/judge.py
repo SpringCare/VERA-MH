@@ -167,14 +167,14 @@ def _resolve_output_target(args, gen_run: Optional[str]) -> tuple[str, bool]:
     it is the exact existing folder to land back in instead of starting a new
     run.
 
-    This is CLI policy and it deliberately stays in this script rather than
-    moving to ``utils/``: every branch below is legacy. The
-    ``<gen_run>/evaluations`` default and the flat-folder note encode the
-    ``p_*``/``j_*`` layout that Phase 3 retires, and the resume check encodes a
-    ``j_*__*`` basename rule that ``vera resume`` will not use -- it reads
-    ``config.json``/``state.json``, which old-layout runs do not have (see
-    docs/architecture.md's phase table). Sharing any of it would outlive the
-    conventions it describes; ``vera judge`` resolves its own output instead.
+    This is CLI policy and it deliberately stays in this script rather than moving to
+    ``utils/``: every branch below is legacy. The ``<gen_run>/evaluations`` default and
+    the flat-folder note encode the ``p_*``/``j_*`` layout that the Traceability phase
+    retires, and the resume check encodes a ``j_*__*`` basename rule that
+    ``vera resume`` will not use -- it reads ``config.json``/``state.json``, which
+    old-layout runs do not have (see docs/roadmap.md). Sharing any of it would
+    outlive the conventions it describes; ``vera judge`` resolves its own output
+    instead.
     """
     if args.resume:
         if not args.output:

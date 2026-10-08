@@ -95,10 +95,9 @@ def _resolve_manifest_file(
 async def load_manifest_personas(manifest_path: str) -> list[str]:
     """Read a rubric bundle manifest's `personas` list.
 
-    Used by `generate.py --rubric-manifest` (Phase 0's generation-side
-    counterpart to `judge.py --rubrics`, see docs/architecture.md's Phase 0
-    migration entry) to select personas from the same manifest that
-    `judge.py` loads the rubric from. `personas` is optional in the
+    Used by `generate.py --rubric-manifest` (the generation-side counterpart to
+    `judge.py --rubrics`, from the target-manifest work) to select personas from the
+    same manifest that `judge.py` loads the rubric from. `personas` is optional in the
     manifest and defaults to an empty list.
 
     Entries resolve relative to the manifest's own folder (never `$ROOT` or

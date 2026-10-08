@@ -44,7 +44,7 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 **Entry points:** `vera.py` (`generate`, `judge`, `score`, `pipeline`) is the only
 supported entry point. The old scripts live in [`legacy/`](legacy/); they are
 deprecated but kept for now, and their removal is deferred (see
-[docs/architecture.md](docs/architecture.md#migration-from-current-layout)).
+[docs/roadmap.md](docs/roadmap.md#deferred)).
 
 **Legacy adapts; the domain doesn't bend.** `legacy/` may import domain packages
 and `utils/`, never the reverse. When a change alters a domain signature or a
@@ -188,6 +188,7 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 | [README.md](./README.md) | Humans | Overview, quick start, doc index (keep it short) |
 | [docs/cli.md](./docs/cli.md) | Humans and agents | `vera` CLI reference: flags, config, `--into`, output layout |
 | [docs/architecture.md](./docs/architecture.md) | Humans and agents | Target architecture, invariants, layer model |
+| [docs/roadmap.md](./docs/roadmap.md) | Humans and agents | Remaining structural work, in phase order; update when a phase lands |
 | [docs/design/](./docs/design/) | Humans and agents | Historical design decisions, rationale, and compatibility consequences |
 | [CHANGELOG.md](./CHANGELOG.md) | Humans and agents | Record of notable changes; every PR adds its entry under `[Unreleased]` |
 | **AGENTS.md** (this file) | All coding agents | Style, architecture map, testing, key commands, git conventions |

@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Changelog entries required**—[`AGENTS.md`](AGENTS.md) now asks every PR to add its entry under `[Unreleased]`, and asks agents to suggest a version bump to a human rather than make one.
 - **Module naming and type-checking conventions**—[`AGENTS.md`](AGENTS.md) sets one file layout for domain packages (`run.py` entry point re-exported from the package, `viz.py`, `utils.py`, no module named after its package) and asks new code to pass pyright locally, since CI doesn't block on it yet.
 - **Legacy scripts kept, with a direction rule**—[`legacy/`](legacy/) stays for now. It may import domain code but never the reverse, and compatibility adapters for it live in `legacy/`, not in the domain.
+- **Roadmap split out of the architecture doc**—Remaining structural work moved from `docs/architecture.md` to [`docs/roadmap.md`](docs/roadmap.md), now listing only future phases, which are named instead of numbered. It absorbs the phase-sized items from `TODO` and adds a "Rubric-agnostic scoring" phase. Multiple rubrics per run is deferred, superseded by targets.
 
 ## [v2.0.2] \- Unreleased
 

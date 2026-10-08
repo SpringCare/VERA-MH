@@ -105,7 +105,7 @@ that judging several folders is already expressible today — judge each, then
 combine with `vera pool`.
 
 **`vera judge --target all` is deferred, not disallowed.** It errors for now and
-is scheduled for Phase 4; `--target all` keeps its full meaning for `generate`
+is scheduled for the [Traceability](./roadmap.md#traceability) phase; `--target all` keeps its full meaning for `generate`
 throughout. `vera pipeline` defers it too, for a different reason — see
 [pipeline.md](./pipeline.md).
 
@@ -120,7 +120,7 @@ nobody can later tell apart.
 The per-target `output/<target>/` root in [Naming](#naming) is what lifts this:
 each rubric's results land under their own target root, so attribution comes
 from the path with no extra segment. That makes the restriction removable as
-soon as the layout lands — migration Phase 3 rather than Phase 4 — and the
+soon as the layout lands, in [Traceability](./roadmap.md#traceability), and the
 error message should say so.
 
 ## Use case 2 — Batch generate across personas
@@ -407,7 +407,7 @@ output/
 
   This does not contradict "generation has no knowledge of rubrics" (use case 3). A target is not a rubric — it is personas, prompts, *and* a rubric — and generation already consumes the persona files and persona context template from it. Conversations therefore genuinely belong to the target that produced them. What stays true is that generation is not organized by *rubric*: all of a run's conversations live together under one target root regardless of which rubrics later judge them.
 
-  **Consequence:** the `evaluations/<rubric_name>/` segment this scheme previously carried is gone, because the path already names the target. That segment was the stated blocker for `vera judge --target all` (use case 3), so that restriction can lift as soon as this layout lands rather than waiting for migration Phase 4.
+  **Consequence:** the `evaluations/<rubric_name>/` segment this scheme previously carried is gone, because the path already names the target. That segment was the stated blocker for `vera judge --target all` (use case 3), so that restriction can lift as soon as this layout lands.
 
 - **Generation** groups persistently by chatbot model (`c_sonnet/` accumulates every run against that model). **Judging** stays flat per-run — intentionally asymmetric, not an inconsistency.
 
@@ -427,7 +427,7 @@ output/
 
   The label is run-defining, so it lives in the run's `config.json` and participates in the config sha like every other field — two otherwise-identical runs with different labels are different runs, which is what labelling them separately asserts. It is deliberately not spelled `--run-id`: it is a decorative handle, never an identifier, and the sha remains the identity.
 
-  **Open — the CLI flag and config-field spelling are deliberately undecided**, and stay that way until migration Phase 3 implements the label. That phase rewrites `utils/naming.py` (which needs the flag) and formalizes the config shape in `utils/config_schema.py` (which needs the field), so naming them earlier would only mean naming them twice. Everything above — optional, additive, defaults to none, run-defining, sha-participating — is settled; only the spelling is not. Noted explicitly because this document is marked `status: resolved`, and an unrecorded open question inside a resolved document reads as an already-made decision.
+  **Open — the CLI flag and config-field spelling are deliberately undecided**, and stay that way until the [Traceability](./roadmap.md#traceability) phase implements the label. That phase rewrites `utils/naming.py` (which needs the flag) and formalizes the config shape in `utils/config_schema.py` (which needs the field), so naming them earlier would only mean naming them twice. Everything above — optional, additive, defaults to none, run-defining, sha-participating — is settled; only the spelling is not. Noted explicitly because this document is marked `status: resolved`, and an unrecorded open question inside a resolved document reads as an already-made decision.
 
 - **Pooled results** live under `c_<chatbot>/pooled/`, a persistent container in the same role as `c_sonnet/` itself — not a run-root. The run-root created and collision-checked is the `u_<a>+<b>_<sha>_<timestamp>/` folder inside it, so re-pooling the same combination accumulates runs alongside prior ones rather than erroring or overwriting.
 
