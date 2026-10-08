@@ -26,7 +26,7 @@ failed=()
 for user in "${users[@]}"; do
     for provider in "${providers[@]}"; do
         cmd=(
-            uv run python generate.py
+            uv run python -m legacy.generate
             --user-agent "$user"
             --provider-agent "$provider"
             --turns "$TURNS"

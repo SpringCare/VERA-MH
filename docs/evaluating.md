@@ -242,8 +242,8 @@ Add configuration to [config.py](../llm_clients/config.py) if your LLM requires 
 ### 5. Use the new LLM in your simulations
 
 ```bash
-python3 generate.py -u your-model-name -p your-model-name -t 5 -r 1
-python3 judge.py -f conversations/{YOUR_FOLDER} -j your-model-name
+uv run python vera.py generate -c your-model-name -u your-model-name -t 5 --target SI
+uv run python vera.py judge --conversations output/{YOUR_RUN_FOLDER} -j your-model-name --target SI
 ```
 
 ## Prompt caching (by provider)

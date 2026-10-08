@@ -4,7 +4,7 @@
 /llm_clients/ @SpringCare/vera-mh-maintainers
 /judge/ @SpringCare/vera-mh-maintainers
 /generate/ @SpringCare/vera-mh-maintainers
-/run_pipeline.py @SpringCare/vera-mh-maintainers
+/legacy/ @SpringCare/vera-mh-maintainers
 /openspec/ @SpringCare/vera-mh-maintainers
 /pyproject.toml @SpringCare/vera-mh-maintainers
 

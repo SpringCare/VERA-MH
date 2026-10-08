@@ -1,23 +1,25 @@
 # Legacy scripts (deprecated)
 
-> **These scripts will be removed soon.** Use the [`vera` CLI](cli.md) for new work. This page exists so workflows that still depend on a script keep running while they migrate.
+> **These scripts may be removed at any time.** Use the [`vera` CLI](cli.md) for new work. This page exists so workflows that still depend on a script keep running while they migrate.
+
+The scripts live in [`legacy/`](../legacy/). Run the Python ones from the repository root as modules (`uv run python -m legacy.<script>`); running the file directly can't import the project's packages.
 
 | Legacy script | Replacement |
 |---------------|-------------|
-| `generate.py` | `vera generate` |
-| `judge.py` | `vera judge` |
-| `python -m judge.score` | `vera score` |
-| `run_pipeline.py` | `vera pipeline` |
-| `scripts/run_recommended_vera_pipeline.sh` | `vera pipeline --config` with [`configs/recommended-SI.json`](../configs/recommended-SI.json), then [pooling](scoring.md#pooling-several-evaluations) |
+| `python -m legacy.generate` | `vera generate` |
+| `python -m legacy.judge` | `vera judge` |
+| `python -m legacy.score` | `vera score` |
+| `python -m legacy.run_pipeline` | `vera pipeline` |
+| `legacy/run_recommended_vera_pipeline.sh` | `vera pipeline --config` with [`configs/recommended-SI.json`](../configs/recommended-SI.json), then [pooling](scoring.md#pooling-several-evaluations) |
 
 **The flags are not the same.** The `vera` CLI uses `-u`/`-c`/`-j` for user/chatbot/judge. The scripts use `-p` for the chatbot, and reuse `-c` and `-r` for unrelated things (`-c` is `--max-concurrent` in `generate.py` and `--conversation` in `judge.py`; `-r` is `--runs` in `generate.py` and `--rubrics` in `judge.py`). Don't copy flags between the two.
 
 The scripts also take rubric bundles only as full manifest paths (`data/SI/rubric_manifest.json`); there is no `--target SI` shorthand. Omitting the flag defaults to SI.
 
-## `generate.py`
+## `legacy/generate.py`
 
 ```bash
-uv run python generate.py -u gpt-4o -p gpt-4o -t 6 -r 1
+uv run python -m legacy.generate -u gpt-4o -p gpt-4o -t 6 -r 1
 ```
 
 | Flag | `vera generate` equivalent | Description |
@@ -43,10 +45,10 @@ uv run python generate.py -u gpt-4o -p gpt-4o -t 6 -r 1
 | `-usp`, `--user-start-prompt` | none | Prompt sent to the user model for its first turn |
 | `-d`, `--debug` | `-d` | Debug logging |
 
-## `judge.py`
+## `legacy/judge.py`
 
 ```bash
-uv run python judge.py -f output/<generation-run>/ -j gpt-5.4
+uv run python -m legacy.judge -f output/<generation-run>/ -j gpt-5.4
 ```
 
 | Flag | `vera judge` equivalent | Description |
@@ -63,20 +65,20 @@ uv run python judge.py -f output/<generation-run>/ -j gpt-5.4
 | `-pj`, `--per-judge` | `--per-judge` | Apply `--max-concurrent` per judge model |
 | `-vw`, `--verbose-workers` | none | Verbose worker logging |
 
-## `judge/score.py`
+## `legacy/score.py`
 
 ```bash
-uv run python -m judge.score -r output/<generation-run>/evaluations/<evaluation-run>/results.csv
+uv run python -m legacy.score -r output/<generation-run>/evaluations/<evaluation-run>/results.csv
 ```
 
 Same flags as `vera score` (`-r`, `-o`, `--skip-risk-analysis`), except `--personas-tsv` / `-p` defaults to `data/SI/personas.tsv`. `vera score --personas` has no default and skips the risk breakdown when omitted.
 
-## `run_pipeline.py`
+## `legacy/run_pipeline.py`
 
-Runs `generate.py`, `judge.py`, and `judge/score.py` in sequence:
+Runs the generation, judging, and scoring scripts in sequence:
 
 ```bash
-uv run python run_pipeline.py \
+uv run python -m legacy.run_pipeline \
   --user-agent claude-sonnet-4-5-20250929 \
   --provider-agent gpt-4o \
   --runs 2 \
@@ -93,14 +95,14 @@ To resume:
 - **`--resume-judge`**—set `-jo` to the existing `j_*` folder.
 - **Both**—set `-co` to the `p_*` folder; it must contain exactly one `j_*` under `evaluations/`.
 
-See `uv run python run_pipeline.py --help` for everything.
+See `uv run python -m legacy.run_pipeline --help` for everything.
 
-## `scripts/run_recommended_vera_pipeline.sh`
+## `legacy/run_recommended_vera_pipeline.sh`
 
-Runs the recommended profile through `run_pipeline.py`, once per user model, then pools the two evaluations:
+Runs the recommended profile through `legacy/run_pipeline.py`, once per user model, then pools the two evaluations:
 
 ```bash
-./scripts/run_recommended_vera_pipeline.sh <provider-agent-model> [extra run_pipeline.py args]
+./legacy/run_recommended_vera_pipeline.sh <provider-agent-model> [extra run_pipeline arguments]
 ```
 
 Its defaults, and the `VERA_*` environment variables that override them, are documented in the script. Their `vera pipeline` equivalents:

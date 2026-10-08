@@ -25,7 +25,7 @@ from unittest.mock import patch
 import pytest
 
 import vera
-from judge import score as score_domain
+from legacy import score as legacy_score
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EVAL_FIXTURE = REPO_ROOT / "tests/fixtures/eval_tsv_rebuild__20260415_140037"
@@ -73,7 +73,7 @@ def test_both_entry_points_produce_the_same_scores(
         *extra_legacy,
     ]
     with patch.object(sys, "argv", legacy_argv):
-        assert score_domain.main() == 0
+        assert legacy_score.main() == 0
 
     parser = vera.build_parser()
     args = parser.parse_args(
@@ -91,4 +91,4 @@ def test_legacy_main_still_reports_a_missing_results_csv(tmp_path: Path) -> None
     unchanged for callers that check the status rather than the exception.
     """
     with patch.object(sys, "argv", ["score.py", "-r", str(tmp_path / "absent.csv")]):
-        assert score_domain.main() == 1
+        assert legacy_score.main() == 1

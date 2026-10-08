@@ -134,7 +134,7 @@ uv run pyright
 pre-commit run --all-files
 ```
 
-`generate.py`, `judge.py`, `run_pipeline.py`, `judge/score.py`, and `scripts/run_recommended_vera_pipeline.sh` are deprecated and will be removed; don't build on them. Their flags and `vera` equivalents are in [docs/legacy-scripts.md](docs/legacy-scripts.md).
+The scripts in [`legacy/`](legacy/) (`generate.py`, `judge.py`, `score.py`, `run_pipeline.py`, `run_recommended_vera_pipeline.sh`) are deprecated and may be removed at any time; don't build on them, and never import them from `vera_cli/` or the domain packages. Their flags and `vera` equivalents are in [docs/legacy-scripts.md](docs/legacy-scripts.md).
 
 Use dated model IDs (e.g. `claude-sonnet-4-5-20250929`) as in README; shorthand aliases may not resolve.
 

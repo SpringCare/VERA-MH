@@ -1,6 +1,6 @@
 Verify that a code change works correctly without hitting live APIs.
 
-IMPORTANT: Never run `generate.py`, `judge.py`, or `run_pipeline.py` directly — these make live LLM API calls. Verification must use the test suite only.
+IMPORTANT: Never run the `vera` commands or the scripts in `legacy/` directly — these make live LLM API calls. Verification must use the test suite only.
 
 Steps:
 1. Identify what changed (git diff --stat) to understand the scope

@@ -13,9 +13,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Faster tests**—Tests no longer wait out real retry backoff, so the suite drops from ~95s to ~10s. Each test has a 30s timeout.
 - **CI split**—PRs run unit tests; merges to `main` also run integration tests, including a mocked end-to-end `vera pipeline` run. The Docker build runs only when its inputs change.
 
+## [v2.0.2] \- Unreleased
+
+### Breaking / migration
+
+- **Legacy scripts moved to [`legacy/`](legacy/)**—Run them from the repository root as modules: `uv run python -m legacy.generate`, `-m legacy.judge`, `-m legacy.score` (was `python -m judge.score`), and `-m legacy.run_pipeline`. They may be removed at any time; [`docs/legacy-scripts.md`](docs/legacy-scripts.md) maps their flags to `vera`.
+
 ## [v2.0.0](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.0) \- 2026-09-25
 
-VERA-MH 2.0 is released. It breaks the legacy scripts: they still run in 2.0.0, but 2.0.1 moves them to `legacy/`, which changes how they are invoked.
+VERA-MH 2.0 is released. It breaks the legacy scripts: they still run in 2.0.0, but 2.0.2 moves them to `legacy/`, which changes how they are invoked.
 
 ### Breaking / migration
 

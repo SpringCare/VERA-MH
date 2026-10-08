@@ -441,14 +441,16 @@ async def main():
 
     # Import generate and judge main functions
     # We import here to avoid circular dependencies and to allow --debug flag to be set
-    # Import judge.py main function
-    # (note: judge.py is a module file, judge/ is a package)
+    # Import legacy/judge.py main function by path
+    # (note: legacy/judge.py is a module file, judge/ is a package)
     import importlib.util
 
-    from generate import main as generate_main
-    from generate import resolve_persona_inputs
+    from legacy.generate import main as generate_main
+    from legacy.generate import resolve_persona_inputs
 
-    spec = importlib.util.spec_from_file_location("judge_script", "judge.py")
+    spec = importlib.util.spec_from_file_location(
+        "judge_script", Path(__file__).with_name("judge.py")
+    )
     judge_script = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(judge_script)
     judge_main = judge_script.main

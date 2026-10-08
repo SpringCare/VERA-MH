@@ -11,4 +11,4 @@ RUN uv sync --frozen
 
 COPY . .
 
-CMD ["python", "generate.py"]
+CMD ["python", "vera.py", "--help"]

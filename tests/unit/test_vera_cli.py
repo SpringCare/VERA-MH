@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-import generate as generation_domain
+import generate_conversations.main as generation_domain
 import vera
 from utils.config_schema import InvocationConfig, ModelSpec
 from vera_cli import (
@@ -222,7 +222,7 @@ def test_cli_defaults_resolve_before_print(capsys: pytest.CaptureFixture) -> Non
 
 def test_generation_delegates_every_value_to_generate_main() -> None:
     with patch.object(
-        generation_domain, "main", new_callable=AsyncMock
+        generation_domain, "run_generation", new_callable=AsyncMock
     ) as generate_main:
         generate_main.return_value = ([], "output/generated")
         result = vera.main(
@@ -273,7 +273,7 @@ def test_generation_delegates_every_value_to_generate_main() -> None:
 def test_each_user_model_gets_one_generate_main_call(tmp_path: Path) -> None:
     manifest = _write_target(tmp_path, persona_count=2)
     with patch.object(
-        generation_domain, "main", new_callable=AsyncMock
+        generation_domain, "run_generation", new_callable=AsyncMock
     ) as generate_main:
         generate_main.return_value = ([], "output/generated")
         vera.main(
@@ -452,7 +452,9 @@ def test_incomplete_target_fails_before_dispatch(tmp_path: Path) -> None:
     manifest.write_text(json.dumps({"personas": ["personas.tsv"]}), encoding="utf-8")
 
     with (
-        patch.object(generation_domain, "main", new_callable=AsyncMock) as runner,
+        patch.object(
+            generation_domain, "run_generation", new_callable=AsyncMock
+        ) as runner,
         pytest.raises(SystemExit) as error,
     ):
         vera.main(
@@ -534,7 +536,7 @@ def test_into_continues_an_existing_run_folder(tmp_path: Path) -> None:
     run_folder = tmp_path / "p_user__a_bot__t5__r1"
     run_folder.mkdir()
     with patch.object(
-        generation_domain, "main", new_callable=AsyncMock
+        generation_domain, "run_generation", new_callable=AsyncMock
     ) as generate_main:
         generate_main.return_value = ([], "output/generated")
         result = vera.main(
@@ -610,7 +612,7 @@ def test_into_is_invocation_only_so_it_may_accompany_config(tmp_path: Path) -> N
     run_folder.mkdir()
     config = _write_config(tmp_path, _generation_config())
     with patch.object(
-        generation_domain, "main", new_callable=AsyncMock
+        generation_domain, "run_generation", new_callable=AsyncMock
     ) as generate_main:
         generate_main.return_value = ([], "output/generated")
         result = vera.main(

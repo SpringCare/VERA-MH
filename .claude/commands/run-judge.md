@@ -1,4 +1,4 @@
-Help the user run the conversation evaluator (judge.py):
+Help the user run the conversation evaluator (`uv run python vera.py judge`; flags in docs/cli.md):
 
 1. Ask the user for parameters:
    - Input directory (default: output/conversations)

@@ -1,4 +1,4 @@
-Help the user run the conversation generator (generate.py):
+Help the user run the conversation generator (`uv run python vera.py generate`; flags in docs/cli.md):
 
 1. Ask the user for parameters:
    - Model to use (default: claude-3-7-sonnet)

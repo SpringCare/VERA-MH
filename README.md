@@ -89,7 +89,7 @@ pre-commit install             # optional: format and lint on commit
 
 ## Legacy scripts
 
-The pre-2.0 entry points—`generate.py`, `judge.py`, `run_pipeline.py`, `judge/score.py`, and `scripts/run_recommended_vera_pipeline.sh`—still work, but they are **deprecated and will be removed soon**. Their flags differ from the `vera` CLI (for example `-c` means `--max-concurrent` in `generate.py`). Use `vera` for new work; if you still depend on a script, see [docs/legacy-scripts.md](docs/legacy-scripts.md) for its options and the `vera` equivalent.
+The pre-2.0 entry points live in [`legacy/`](legacy/) and run as modules, for example `uv run python -m legacy.generate`. They still work, but they are **deprecated and may be removed at any time**. Their flags differ from the `vera` CLI (for example `-c` means `--max-concurrent` in `legacy/generate.py`). Use `vera` for new work; if you still depend on a script, see [docs/legacy-scripts.md](docs/legacy-scripts.md) for its options and the `vera` equivalent.
 
 ## License
 

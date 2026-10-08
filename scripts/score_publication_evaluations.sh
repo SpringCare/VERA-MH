@@ -51,7 +51,7 @@ while IFS= read -r eval_folder; do
     echo "[$count/$total] 📈 Scoring: $eval_folder"
     
     # Run score.py
-    if python3 -m judge.score -r "$results_csv" 2>&1; then
+    if python3 -m legacy.score -r "$results_csv" 2>&1; then
         success=$((success + 1))
         echo "   ✅ Success"
     else

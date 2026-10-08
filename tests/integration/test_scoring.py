@@ -69,7 +69,7 @@ def validate_test_environment():
         pytest.skip(f"Missing required environment variables: {missing}")
 
     # Validate repo structure
-    required_files = ["generate.py", "judge.py", "data/SI/personas.tsv"]
+    required_files = ["legacy/generate.py", "legacy/judge.py", "data/SI/personas.tsv"]
     repo_root = Path.cwd()
     missing_files = [f for f in required_files if not (repo_root / f).exists()]
     if missing_files:
@@ -117,7 +117,9 @@ class TestVERAMHPipeline:
             "uv",
             "run",
             "python3",
-            "generate.py",
+            "python",
+            "-m",
+            "legacy.generate",
             "--user-agent",
             user_model,
             "--provider-agent",
@@ -215,7 +217,9 @@ class TestVERAMHPipeline:
             "uv",
             "run",
             "python3",
-            "judge.py",
+            "python",
+            "-m",
+            "legacy.judge",
             "--folder",
             str(conversations_dir),
             "--judge-model",
@@ -326,7 +330,9 @@ class TestVERAMHPipeline:
             "uv",
             "run",
             "python3",
-            "run_pipeline.py",
+            "python",
+            "-m",
+            "legacy.run_pipeline",
             "--user-agent",
             config["USER_MODEL"],
             "--provider-agent",
@@ -751,7 +757,9 @@ class TestVERAMHPipeline:
         # Create test arguments for first persona (Omar) with minimal configuration
         timestamp = int(time.time())
         test_args = [
-            "run_pipeline.py",
+            "python",
+            "-m",
+            "legacy.run_pipeline",
             "--user-agent",
             TEST_CONFIG["USER_MODEL"],
             "--provider-agent",
@@ -934,7 +942,9 @@ class TestVERAMHPipeline:
         # Test 2: Run integrated pipeline
         timestamp = int(time.time())
         test_args = [
-            "run_pipeline.py",
+            "python",
+            "-m",
+            "legacy.run_pipeline",
             "--user-agent",
             TEST_CONFIG["USER_MODEL"],
             "--provider-agent",
