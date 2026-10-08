@@ -18,6 +18,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Faster tests**—Tests no longer wait out real retry backoff, so the suite drops from ~95s to ~10s. Each test has a 30s timeout.
 - **CI split**—PRs run unit tests; merges to `main` also run integration tests, including a mocked end-to-end `vera pipeline` run. The Docker build runs only when its inputs change.
 
+### Documentation and development workflow
+
+- **Changelog entries required**—[`AGENTS.md`](AGENTS.md) now asks every PR to add its entry under `[Unreleased]`, and asks agents to suggest a version bump to a human rather than make one.
+
 ## [v2.0.2] \- Unreleased
 
 ### Breaking / migration
