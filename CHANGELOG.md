@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - **Generation package renamed**—`generate_conversations` is now [`generate/`](generate/). Update imports and `patch()` targets accordingly.
 
+### Targets, rubric, and scoring
+
+- **HFO persona prompt**—The simulated user's HFO system prompt now includes the persona's `Active Life Threat` value. It's still a judge annotation column too.
+
 ### Runtime, CLI, and pipeline
 
 - **Recommended models from config**—The recommended SI profile reads its models from [`llm_clients/config.py`](llm_clients/config.py).
