@@ -32,7 +32,7 @@
 # Optional environment (override defaults without editing this file):
 #   VERA_OUTPUT_PARENT     Where new p_* run folders go (default: output)
 #   VERA_USER_A          User agent for the first suite (default: gpt-5.2)
-#   VERA_USER_B          User agent for the second suite (default: claude-opus-4-5-20251101)
+#   VERA_USER_B          User agent for the second suite (default: claude-opus-4-5)
 #   VERA_JUDGE           Judge model (default: gpt-5.4)
 #                        The three model defaults are Config.RECOMMENDED_*, and
 #                        the overrides are also read from .env.

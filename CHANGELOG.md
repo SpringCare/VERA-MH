@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Runtime, CLI, and pipeline
 
 - **Recommended models from config**—The recommended SI profile reads its models from [`llm_clients/config.py`](llm_clients/config.py).
+- **Opus 4.5 alias**—The recommended second user model is now `claude-opus-4-5`, the undated alias of the same `20251101` snapshot, which more endpoints accept.
 
 ### Testing and CI
 
