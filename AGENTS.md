@@ -24,6 +24,8 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 - Don't create example files unless asked
 - Use `python3` or `uv run python` explicitly
 - Add or update tests when changing behavior
+- **Module naming in domain packages** (`generate/`, `judge/`, `score/`): `run.py` holds the `run_<verb>` entry point and the package `__init__` re-exports it, so callers write `from score import run_scoring`. The engine lives in `runner.py` or a topic module (`aggregate.py`, `pool.py`); charts go in `viz.py` and package helpers in `utils.py`. Never repeat the package name in a module name (no `score/score.py` or `score/score_viz.py`)
+- **Type-check new code**: new or changed code should pass `uv run pyright <changed paths>` (basic mode, configured in `pyproject.toml`). CI reports pyright errors but doesn't block on them yet, so check locally
 
 ## Architecture Map
 
@@ -39,11 +41,17 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 | **Config** | `utils/model_config_loader.py`, `llm_clients/config.py` | Model name resolution, API keys |
 | **Shared utils** | `utils/` | Naming, logging, conversation layout |
 
-**Entry points:** `vera.py generate` is the first unified CLI feature. `generate.py`
-remains temporarily as a compatibility adapter, while `judge.py` and
-`run_pipeline.py` remain the current entry points for features not migrated yet.
-Each legacy script is removed after its replacement feature is available; see
-[docs/architecture.md](docs/architecture.md#migration-from-current-layout).
+**Entry points:** `vera.py` (`generate`, `judge`, `score`, `pipeline`) is the only
+supported entry point. The old scripts live in [`legacy/`](legacy/); they are
+deprecated but kept for now, and their removal is deferred (see
+[docs/architecture.md](docs/architecture.md#migration-from-current-layout)).
+
+**Legacy adapts; the domain doesn't bend.** `legacy/` may import domain packages
+and `utils/`, never the reverse. When a change alters a domain signature or a
+`utils/` helper that a legacy script uses, put the old-shape adapter in `legacy/`
+rather than keeping a compatibility stopgap in the domain. The parity tests
+(`tests/integration/test_cli_parity.py`, `tests/integration/test_score_parity.py`)
+must stay green.
 
 **Temporary experiments:** `tmp_tests/` (not committed). **Permanent tests:** `tests/`.
 
