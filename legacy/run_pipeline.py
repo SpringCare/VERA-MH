@@ -43,7 +43,7 @@ def _display_path(path: str | os.PathLike[str]) -> str:
         resolved = Path(path).resolve()
         cwd = Path.cwd().resolve()
         return str(resolved.relative_to(cwd))
-    except (ValueError, OSError):
+    except ValueError, OSError:
         return str(Path(path).resolve())
 
 

@@ -265,7 +265,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 | Name | Version |
 | --- | --- |
-| Python | `>=3.11` (per `pyproject.toml` `requires-python`; ruff `target-version = "py311"`) |
+| Python | `3.14`, set in `.python-version`; `requires-python` and ruff `target-version` match it |
 | Package/dependency manager | uv (`uv.lock` present; CLI usage documented as `uv run python vera.py ...`) |
 | langchain / langchain-anthropic / langchain-openai / langchain-ollama | `>=0.1.0` direct floor per `pyproject.toml`, but effectively constrained to the post-1.0 langchain rewrite by `[tool.uv] constraint-dependencies`' `langchain-core>=1.2.5` pin — pre-1.0 langchain is not actually installable under this lockfile despite the loose direct floor |
 | langchain-google-genai / langchain-azure-ai | `>=1.0.0` |

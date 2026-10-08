@@ -20,11 +20,6 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
-    - name: Set up Python
-      uses: actions/setup-python@v7
-      with:
-        python-version: '3.11'
-
     - name: Install uv
       uses: astral-sh/setup-uv@v10.2.0
       with:
@@ -33,6 +28,16 @@ jobs:
 
     - name: Install dependencies
       run: uv sync --all-extras
+
+    # `.python-version` sets the version everywhere; a Dockerfile `FROM` line
+    # cannot read it, so check that the two agree.
+    - name: Check the Dockerfile uses the pinned Python
+      run: |
+        want="FROM python:$(cat .python-version)-slim"
+        if ! grep -qxF "$want" Dockerfile; then
+          echo "::error file=Dockerfile::Expected '$want' to match .python-version"
+          exit 1
+        fi
 
     - name: Check code formatting with Ruff
       run: uv run ruff format --check .
@@ -51,11 +56,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
-
-    - name: Set up Python
-      uses: actions/setup-python@v7
-      with:
-        python-version: '3.11'
 
     - name: Install uv
       uses: astral-sh/setup-uv@v10.2.0
@@ -92,11 +92,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
-
-    - name: Set up Python
-      uses: actions/setup-python@v7
-      with:
-        python-version: '3.11'
 
     - name: Install uv
       uses: astral-sh/setup-uv@v10.2.0
