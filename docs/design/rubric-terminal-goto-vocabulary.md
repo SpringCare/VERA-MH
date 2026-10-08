@@ -134,8 +134,8 @@ the resulting numbers.
   `docs/judge.md`, `docs/ARCHITECTURE-SPINE.md`, and roughly seventy test
   assertions that match on the marker strings.
 - **Interacts with the planned `dimension_verdicts` refactor** recorded in
-  `TODO`, which replaces the synthetic `ASSIGN_END` / `NOT_RELEVANT>>` marker
-  records in `dimension_answers` with an explicit verdict map. Both touch the
+  `docs/roadmap.md` (Rubric-agnostic scoring), which replaces the synthetic
+  `ASSIGN_END` / `NOT_RELEVANT>>` marker records in `dimension_answers` with an explicit verdict map. Both touch the
   same code region. The verdict map subsumes the marker-string matching that
   this rename would otherwise have to carry forward, so it should land first or
   alongside step 2; the correctness fix in step 1 does not depend on either.

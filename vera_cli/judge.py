@@ -211,7 +211,7 @@ def _from_config(
             )
         # The one-element list is AD-20's shape, not this branch's limitation: `rubrics`
         # is list-shaped from day one while `JudgingConfig` accepts only length 1
-        # (multiple rubrics per run are deferred, see docs/roadmap.md). It is
+        # (several rubrics are evaluated as one target each, see docs/roadmap.md). It is
         # independent of the guard above — per AD-21 the `target all` lift produces one
         # invocation *per target*, so this line stays a one-element list inside a
         # comprehension rather than growing a second entry.
