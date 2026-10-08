@@ -1,5 +1,5 @@
 """
-Unit tests for score/score.py data processing functions.
+Unit tests for score/aggregate.py data processing functions.
 
 Tests focus on testable data processing functions:
 - score_results()
@@ -33,7 +33,7 @@ from judge.rubric_config import (
     GUIDES_TO_HUMAN_CARE,
     SUPPORTIVE_CONVERSATION,
 )
-from score.score import (
+from score.aggregate import (
     OPTION_MAP,
     REVERSE_OPTION_MAP,
     RISK_LEVEL_ORDER,
@@ -811,7 +811,7 @@ def _mock_results_df(**kwargs):
 
 
 @pytest.mark.unit
-@patch("score.score.ensure_results_csv")
+@patch("score.aggregate.ensure_results_csv")
 def test_score_results_by_risk_basic(mock_ensure_csv, tmp_path, fixtures_dir):
     """Test basic scoring by risk level."""
     csv_path = tmp_path / "results.csv"
@@ -881,7 +881,7 @@ def test_score_results_by_risk_groups_by_risk_from_tsv(tmp_path):
 
 
 @pytest.mark.unit
-@patch("score.score.ensure_results_csv")
+@patch("score.aggregate.ensure_results_csv")
 def test_score_results_by_risk_dimension_scores(
     mock_ensure_csv, tmp_path, fixtures_dir
 ):
@@ -934,7 +934,7 @@ def test_score_results_by_risk_dimension_percentages_same_risk_bucket(tmp_path):
 
 
 @pytest.mark.unit
-@patch("score.score.ensure_results_csv")
+@patch("score.aggregate.ensure_results_csv")
 def test_score_results_by_risk_includes_not_relevant(
     mock_ensure_csv, tmp_path, fixtures_dir
 ):
@@ -1006,7 +1006,7 @@ def test_score_results_by_risk_rewrites_results_csv_from_tsv(tmp_path):
 
 
 @pytest.mark.unit
-@patch("score.score.ensure_results_csv")
+@patch("score.aggregate.ensure_results_csv")
 def test_score_results_by_risk_saves_updated_csv(
     mock_ensure_csv, tmp_path, fixtures_dir
 ):
@@ -1064,7 +1064,7 @@ def test_score_results_by_risk_write_json_false_skips_file(tmp_path):
 
 
 @pytest.mark.unit
-@patch("score.score.ensure_results_csv")
+@patch("score.aggregate.ensure_results_csv")
 def test_score_results_by_risk_saves_json(mock_ensure_csv, tmp_path, fixtures_dir):
     """Test that results are saved to JSON file."""
     csv_path = tmp_path / "results.csv"
@@ -1102,7 +1102,7 @@ def test_score_results_by_risk_model_names_from_eval_dir(tmp_path):
 
 
 @pytest.mark.unit
-@patch("score.score.ensure_results_csv")
+@patch("score.aggregate.ensure_results_csv")
 def test_score_results_by_risk_extracts_model_names(
     mock_ensure_csv, tmp_path, fixtures_dir
 ):

@@ -4,7 +4,7 @@ TEMPORARY — DELETE WITH `legacy/score.py`.
 
 This module exists only for the window in which both entry points ship. Adding
 `vera score` moved the body of `judge.score.main` into `judge.score.run_scoring`
-(now `score.score.run_scoring`) so both callers share it; the one claim worth
+(now `score.run_scoring`) so both callers share it; the one claim worth
 proving while the legacy script still has users is that the move changed no
 numbers. `docs/architecture.md`
 Phase 1 deletes the legacy entry points and makes `vera.py` the only one — at

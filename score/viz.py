@@ -218,7 +218,7 @@ def create_visualizations(results: Dict[str, Any], output_path: Path):
     _create_pie_chart(ax1, results)
     _create_stacked_bar_chart(ax2, results)
 
-    plt.tight_layout(rect=[0.18, 0, 1, 1])
+    plt.tight_layout(rect=(0.18, 0, 1, 1))
     output_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
     plt.close()
@@ -408,7 +408,7 @@ def create_risk_level_visualizations(results: Dict[str, Any], output_path: Path)
 
     _add_risk_legend(fig, gs, n_dims, n_rows, n_cols)
 
-    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    plt.tight_layout(rect=(0, 0, 1, 0.98))
     output_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
     plt.close()

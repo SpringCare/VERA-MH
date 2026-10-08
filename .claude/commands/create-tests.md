@@ -9,7 +9,7 @@ Create tests for VERA-MH following project conventions.
 
 Create tests for a specific module:
 - `/create-tests llm_clients/claude_llm.py` - Ask which layer
-- `/create-tests score/score.py --layer=unit` - Create unit tests directly
+- `/create-tests score/aggregate.py --layer=unit` - Create unit tests directly
 - `/create-tests conversation_runner.py --layer=integration` - Create integration tests
 
 ### Coverage Analysis Mode (Multiple Modules)

@@ -89,7 +89,7 @@ uv run pytest
 uv run pytest -m live
 
 # Single file or directory
-uv run pytest tests/unit/score/test_score.py
+uv run pytest tests/unit/score/test_aggregate.py
 uv run pytest tests/integration/
 ```
 

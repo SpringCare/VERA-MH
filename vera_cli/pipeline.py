@@ -3,7 +3,7 @@
 A **shim**, deliberately. It owns no generation, judging, or scoring logic and
 no defaults of its own: it resolves input with the same helpers the three
 single-stage commands use, then calls `vera_cli.generate._execute`,
-`judge.run.run_judging`, and `score.score.run_scoring` in order, passing each
+`judge.run.run_judging`, and `score.run_scoring` in order, passing each
 stage's output to the next.
 
 It is exactly those three stages and no more. `docs/architecture.md` defines
@@ -69,7 +69,7 @@ from pathlib import Path
 from typing import Any
 
 from judge import run_judging
-from score.score import run_scoring
+from score import run_scoring
 from utils.config_schema import (
     InvocationConfig,
     JudgingSpec,

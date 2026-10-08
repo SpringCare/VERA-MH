@@ -33,7 +33,7 @@ import argparse
 from pathlib import Path
 from typing import Any
 
-from score.score import run_scoring
+from score import run_scoring
 from utils.config_schema import InvocationConfig, RunConfig, ScoringConfig
 from utils.debug import set_debug
 
