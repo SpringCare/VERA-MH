@@ -4,6 +4,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [v2.0.3] \- Unreleased
+
 ### Breaking / migration
 
 - **Generation package renamed**—`generate_conversations` is now [`generate/`](generate/). Update imports and `patch()` targets accordingly.
