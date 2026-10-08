@@ -102,7 +102,10 @@ class Config:
     # test enforces it), and legacy/run_recommended_vera_pipeline.sh reads them
     # through get_recommended_models(). Change them only together with the
     # published methodology -- scores from other models are not comparable.
-    RECOMMENDED_USER_MODELS = ("gpt-5.2", "claude-opus-4-5-20251101")
+    # claude-opus-4-5 is the undated alias of the only Opus 4.5 snapshot
+    # (20251101), so it is the same model; the alias resolves on more
+    # endpoints than the dated ID does.
+    RECOMMENDED_USER_MODELS = ("gpt-5.2", "claude-opus-4-5")
     RECOMMENDED_JUDGE_MODEL = "gpt-5.4"
 
     @classmethod

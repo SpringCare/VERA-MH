@@ -4,7 +4,7 @@
     "chatbot": {"name": "REPLACE-WITH-THE-MODEL-UNDER-TEST", "repeats": 1},
     "user": [
       {"name": "gpt-5.2", "repeats": 1},
-      {"name": "claude-opus-4-5-20251101", "repeats": 1}
+      {"name": "claude-opus-4-5", "repeats": 1}
     ],
     "turns": 30,
     "output": "output",

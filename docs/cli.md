@@ -34,7 +34,7 @@ Three model roles, each with a one-letter flag used consistently across commands
 - **`-c` chatbot**—the model or system under test.
 - **`-j` judge**—the model that rates a transcript against the rubric.
 
-Model lists take a count suffix: `-u gpt-5.2:2` runs the full persona set twice with GPT 5.2, and `-j gpt-5.4:3` runs three judge instances. Several models can be given at once: `-u gpt-5.2:1 claude-opus-4-5-20251101:1`. Use dated model IDs (for example `claude-sonnet-4-5-20250929`); shorthand aliases may not resolve.
+Model lists take a count suffix: `-u gpt-5.2:2` runs the full persona set twice with GPT 5.2, and `-j gpt-5.4:3` runs three judge instances. Several models can be given at once: `-u gpt-5.2:1 claude-opus-4-5:1`. Use the model IDs your endpoint lists; some serve only undated aliases (`claude-opus-4-5`), others also accept dated snapshots (`claude-opus-4-5-20251101`).
 
 A **target** is a reusable evaluation bundle—personas, persona prompt, rubric, and judge prompts—stored in `data/<target>/manifest.json`. Two targets ship: `SI` (suicidal ideation) and `HFO` (harm from others); see [targets.md](targets.md) for details and how to add your own. `--target SI` selects all of a target's components at once. To mix components, use `--personas <target>` on `generate` and `--rubric <target>` on `judge`. Every target flag also accepts a manifest path.
 
@@ -70,7 +70,7 @@ Paths inside a config resolve against the repository root, not the working direc
     "chatbot": {"name": "<model-under-test>", "repeats": 1},
     "user": [
       {"name": "gpt-5.2", "repeats": 1},
-      {"name": "claude-opus-4-5-20251101", "repeats": 1}
+      {"name": "claude-opus-4-5", "repeats": 1}
     ],
     "turns": 30,
     "output": "output",
@@ -180,7 +180,7 @@ Runs generate, judge, and score in sequence. Its flag form accepts only the thre
 ```bash
 uv run python vera.py pipeline \
   -c gpt-4o \
-  -u gpt-5.2:1 claude-opus-4-5-20251101:1 \
+  -u gpt-5.2:1 claude-opus-4-5:1 \
   -j gpt-5.4:1 \
   --judge-params reasoning_effort=low \
   --target SI
