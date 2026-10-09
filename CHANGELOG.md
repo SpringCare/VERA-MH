@@ -4,6 +4,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Breaking / migration
+
+- **`generate.main` is now `generate.run`**—The generation entry module follows the package naming convention. `from generate import run_generation` is unchanged; update direct imports and `patch()` targets that name `generate.main`.
+
 ## [v2.0.3](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.3) \- 2026-10-09
 
 ### Breaking / migration
