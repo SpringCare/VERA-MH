@@ -4,6 +4,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Documentation and development workflow
+
+- **Wider maintainer review**—[`.github/CODEOWNERS`](.github/CODEOWNERS) now also covers `score/`, `vera_cli/`, `vera.py`, `utils/`, `scripts/`, `.github/`, and `docs/roadmap.md`, and [`AGENTS.md`](AGENTS.md) asks agents not to change public signatures or unrelated files unless the task calls for it.
+
 ## [v2.0.3](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.3) \- 2026-10-09
 
 ### Breaking / migration

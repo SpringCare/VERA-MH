@@ -7,6 +7,13 @@
 /legacy/ @SpringCare/vera-mh-maintainers
 /openspec/ @SpringCare/vera-mh-maintainers
 /pyproject.toml @SpringCare/vera-mh-maintainers
+/score/ @SpringCare/vera-mh-maintainers
+/vera_cli/ @SpringCare/vera-mh-maintainers
+/vera.py @SpringCare/vera-mh-maintainers
+/utils/ @SpringCare/vera-mh-maintainers
+/scripts/ @SpringCare/vera-mh-maintainers
+/.github/ @SpringCare/vera-mh-maintainers
+/docs/roadmap.md @SpringCare/vera-mh-maintainers
 
 # Stable interfaces -- changing these requires a design doc (see docs/architecture.md#stable-interfaces-agent-coding-optimization)
 /llm_clients/llm_interface.py    @SpringCare/vera-mh-maintainers
