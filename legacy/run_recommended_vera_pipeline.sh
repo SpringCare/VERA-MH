@@ -8,11 +8,11 @@
 #      the provider agent you pass on the command line.
 #   2) Same pipeline with user model B (default: Claude Opus 4.5).
 #   3) Merge the two evaluation folders into one pooled bundle (results.csv
-#      and scores/) using pool_vera_scores.py.
+#      and scores/) using scripts/pool_vera_scores.py.
 #
 # Implementation detail: each phase runs run_pipeline.py; the evaluation
 # directory path printed by the pipeline is captured from the log via
-# pool_vera_scores.py --extract-from-log so the final pooling step knows which
+# scripts/pool_vera_scores.py --extract-from-log so the final pooling step knows which
 # folders to merge.
 #
 # Second source of truth, on purpose and temporarily: the same published
@@ -89,7 +89,7 @@ fi
 # Throttling and persona cap (defaults here; override with VERA_* env vars).
 COMMON_ARGS+=(--max-concurrent "${VERA_MAX_CONCURRENT:-10}" --max-personas "${VERA_MAX_PERSONAS:-100}")
 
-# Arguments for the final pool_vera_scores.py invocation only.
+# Arguments for the final scripts/pool_vera_scores.py invocation only.
 POOL_ARGS=(-o "$POOL_PARENT")
 if [[ -n "${VERA_POOL_SKIP_RISK:-}" ]]; then
   POOL_ARGS+=(--skip-risk-analysis)
@@ -110,7 +110,7 @@ run_pipeline_capture_eval() {
     return "$st"
   fi
   local ev
-  ev="$(uv run python "$SCRIPT_DIR/pool_vera_scores.py" --extract-from-log "$log")" || {
+  ev="$(uv run python scripts/pool_vera_scores.py --extract-from-log "$log")" || {
     rm -f "$log"
     return 1
   }
@@ -128,4 +128,4 @@ EVAL_B="$(run_pipeline_capture_eval --user-agent "$USER_B" "${COMMON_ARGS[@]}" "
 echo ""
 echo "== Pooling evaluation scores into $POOL_PARENT =="
 # Merge the two evaluation roots into one j_<judge>__p_* folder under POOL_PARENT.
-uv run python "$SCRIPT_DIR/pool_vera_scores.py" "${POOL_ARGS[@]}" "$EVAL_A" "$EVAL_B"
+uv run python scripts/pool_vera_scores.py "${POOL_ARGS[@]}" "$EVAL_A" "$EVAL_B"
