@@ -24,6 +24,8 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 - Don't create example files unless asked
 - Use `python3` or `uv run python` explicitly
 - Add or update tests when changing behavior
+- **Module naming in domain packages** (`generate/`, `judge/`, `score/`): `run.py` holds the `run_<verb>` entry point and the package `__init__` re-exports it, so callers write `from score import run_scoring`. The engine lives in `runner.py` or a topic module (`aggregate.py`, `pool.py`); charts go in `viz.py` and package helpers in `utils.py`. Never repeat the package name in a module name (no `score/score.py` or `score/score_viz.py`)
+- **Type-check new code**: new or changed code should pass `uv run pyright <changed paths>` (basic mode, configured in `pyproject.toml`). CI reports pyright errors but doesn't block on them yet, so check locally
 
 ## Architecture Map
 
@@ -39,11 +41,17 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 | **Config** | `utils/model_config_loader.py`, `llm_clients/config.py` | Model name resolution, API keys |
 | **Shared utils** | `utils/` | Naming, logging, conversation layout |
 
-**Entry points:** `vera.py generate` is the first unified CLI feature. `generate.py`
-remains temporarily as a compatibility adapter, while `judge.py` and
-`run_pipeline.py` remain the current entry points for features not migrated yet.
-Each legacy script is removed after its replacement feature is available; see
-[docs/architecture.md](docs/architecture.md#migration-from-current-layout).
+**Entry points:** `vera.py` (`generate`, `judge`, `score`, `pipeline`) is the only
+supported entry point. The old scripts live in [`legacy/`](legacy/); they are
+deprecated but kept for now, and their removal is deferred (see
+[docs/architecture.md](docs/architecture.md#migration-from-current-layout)).
+
+**Legacy adapts; the domain doesn't bend.** `legacy/` may import domain packages
+and `utils/`, never the reverse. When a change alters a domain signature or a
+`utils/` helper that a legacy script uses, put the old-shape adapter in `legacy/`
+rather than keeping a compatibility stopgap in the domain. The parity tests
+(`tests/integration/test_cli_parity.py`, `tests/integration/test_score_parity.py`)
+must stay green.
 
 **Temporary experiments:** `tmp_tests/` (not committed). **Permanent tests:** `tests/`.
 
@@ -166,8 +174,10 @@ Format: `<type>/<brief-description>` (kebab-case), e.g. `feat/add-gpt4-support`,
 
 1. Branch from `main`
 2. Make changes; run `uv run pytest -m "not live"` for code changes
-3. Atomic commits; pre-commit hooks run on commit
-4. Push and open a PR
+3. Record the change in [CHANGELOG.md](./CHANGELOG.md) under `## [Unreleased]`, in the matching section (e.g. "Breaking / migration", "Runtime, CLI, and pipeline", "Testing and CI"). Follow the existing entry style: `- **Short title**—one or two sentences`. Every user-visible or contributor-visible change needs an entry: behavior, CLI flags, outputs, renamed or moved modules, test/CI policy. Skip it only for changes nobody would notice, such as typo fixes or internal refactors with no import or behavior change
+   - **Suggest a version bump; don't make it.** Releases are git tags (`v2.0.0`) that match a CHANGELOG heading. When `[Unreleased]` holds a "Breaking / migration" entry, or enough changes to be worth a release, say so to the human and propose the next version under [Semantic Versioning](https://semver.org/): major for breaking changes, minor for new features, patch for fixes. The human decides; don't rename the `[Unreleased]` heading or create tags yourself
+4. Atomic commits; pre-commit hooks run on commit
+5. Push and open a PR
 
 ## Documentation Map
 
@@ -179,6 +189,7 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 | [docs/cli.md](./docs/cli.md) | Humans and agents | `vera` CLI reference: flags, config, `--into`, output layout |
 | [docs/architecture.md](./docs/architecture.md) | Humans and agents | Target architecture, invariants, layer model |
 | [docs/design/](./docs/design/) | Humans and agents | Historical design decisions, rationale, and compatibility consequences |
+| [CHANGELOG.md](./CHANGELOG.md) | Humans and agents | Record of notable changes; every PR adds its entry under `[Unreleased]` |
 | **AGENTS.md** (this file) | All coding agents | Style, architecture map, testing, key commands, git conventions |
 | [CLAUDE.md](./CLAUDE.md) | Claude Code only | Slash commands, `.claude/` maintenance |
 | [docs/](./docs/) | Humans and agents | Topic deep dives (see links below) |
