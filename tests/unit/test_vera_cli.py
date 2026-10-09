@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-import generate.main as generation_domain
+import generate.run as generation_domain
 import vera
 from utils.config_schema import InvocationConfig, ModelSpec
 from vera_cli import (

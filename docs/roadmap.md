@@ -63,7 +63,7 @@ Scoring today assumes the SI rubric in several places.
 
 ### Model spec boundary
 
-- Generation and judging take `ModelSpec` directly. Delete the `run_for_user_models` / `_legacy_model_config` stopgaps in `generate/main.py`; `legacy/generate.py` builds its own `ModelSpec` instead.
+- Generation and judging take `ModelSpec` directly. Delete the `run_for_user_models` / `_legacy_model_config` stopgaps in `generate/run.py`; `legacy/generate.py` builds its own `ModelSpec` instead.
 - Per-model judge parameters: lift the "all judge models must share provider parameters" check in `utils/config_schema.py`.
 - Afterwards `generate` and `judge` describe models identically.
 
