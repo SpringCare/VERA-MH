@@ -25,7 +25,7 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 - Use `python3` or `uv run python` explicitly
 - Add or update tests when changing behavior
 - **Module naming in domain packages** (`generate/`, `judge/`, `score/`): `run.py` holds the `run_<verb>` entry point and the package `__init__` re-exports it, so callers write `from score import run_scoring`. The engine lives in `runner.py` or a topic module (`aggregate.py`, `pool.py`); charts go in `viz.py` and package helpers in `utils.py`. Never repeat the package name in a module name (no `score/score.py` or `score/score_viz.py`)
-- **Type-check new code**: new or changed code should pass `uv run pyright <changed paths>` (basic mode, configured in `pyproject.toml`). CI reports pyright errors but doesn't block on them yet, so check locally
+- **Type-check new code**: new or changed code should pass `uv run pyright <changed paths>` (basic mode, configured in `pyproject.toml`). CI fails on pyright errors in `generate/`, `score/`, `utils/`, `vera_cli/`, and `vera.py`, and only reports them elsewhere, so check locally
 
 ## Architecture Map
 
