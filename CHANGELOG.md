@@ -4,10 +4,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [v2.0.3] \- Unreleased
+## [v2.0.3](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.3) \- 2026-10-09
 
 ### Breaking / migration
 
+- **Legacy scripts moved to [`legacy/`](legacy/)**—Run them from the repository root as modules: `uv run python -m legacy.generate`, `-m legacy.judge`, `-m legacy.score` (was `python -m judge.score`), and `-m legacy.run_pipeline`. They may be removed at any time; [`docs/legacy-scripts.md`](docs/legacy-scripts.md) maps their flags to `vera`.
 - **Generation package renamed**—`generate_conversations` is now [`generate/`](generate/). Update imports and `patch()` targets accordingly.
 - **Scoring moved to [`score/`](score/)**—`judge.score` is split into `score.run` (`run_scoring`, also importable as `from score import run_scoring`) and `score.aggregate` (score computation); `judge.score_viz` is now `score.viz`.
 
@@ -32,15 +33,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Legacy scripts kept, with a direction rule**—[`legacy/`](legacy/) stays for now. It may import domain code but never the reverse, and compatibility adapters for it live in `legacy/`, not in the domain.
 - **Roadmap split out of the architecture doc**—Remaining structural work moved from `docs/architecture.md` to [`docs/roadmap.md`](docs/roadmap.md), now listing only future phases, which are named instead of numbered. The root `TODO` file is gone: its phase-sized items became a new "Rubric-agnostic scoring" phase and parts of others, and the rest moved to the roadmap's Backlog section. Multi-rubric evaluation is recorded as complete: one target per rubric, each judged separately, is the intended design, so the plan for several rubrics inside one run is dropped.
 
-## [v2.0.2] \- Unreleased
-
-### Breaking / migration
-
-- **Legacy scripts moved to [`legacy/`](legacy/)**—Run them from the repository root as modules: `uv run python -m legacy.generate`, `-m legacy.judge`, `-m legacy.score` (was `python -m judge.score`), and `-m legacy.run_pipeline`. They may be removed at any time; [`docs/legacy-scripts.md`](docs/legacy-scripts.md) maps their flags to `vera`.
-
 ## [v2.0.0](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.0) \- 2026-09-25
 
-VERA-MH 2.0 is released. It breaks the legacy scripts: they still run in 2.0.0, but 2.0.2 moves them to `legacy/`, which changes how they are invoked.
+VERA-MH 2.0 is released. It breaks the legacy scripts: they still run in 2.0.0, but 2.0.3 moves them to `legacy/`, which changes how they are invoked.
 
 ### Breaking / migration
 
