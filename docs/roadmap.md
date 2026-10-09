@@ -17,7 +17,7 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
 
 | Phase | Goal | Done when |
 |-------|------|-----------|
-| [Scoring split](#scoring-split) | `score/` owns pooling and stops importing `judge/` | `vera pool` matches `scripts/pool_vera_scores.py` on the same inputs; `vera pipeline` ends with the pooled score; import-linter `judge/` ⊥ `score/` passes in CI |
+| [Scoring split](#scoring-split) | `score/` owns pooling and stops importing `judge/` | `vera pipeline` ends with the pooled score; import-linter `judge/` ⊥ `score/` passes in CI |
 | [Rubric-agnostic scoring](#rubric-agnostic-scoring) | Scoring works for any rubric, with unambiguous stop tokens | A non-SI target scores and groups by risk with no SI assumptions; every terminating rubric row uses an explicit stop token |
 | [Traceability](#traceability) | Every run records what produced it, under the target-rooted layout | New runs write `config.json`, `state.json`, and checksums under `output/<target>/`; `vera judge --target all` works; `utils/` leaf contract passes |
 | [Model spec boundary](#model-spec-boundary) | Domains take `ModelSpec` directly | `run_for_user_models` and `_legacy_model_config` are gone; per-model judge parameters work |
@@ -28,10 +28,9 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
 
 ### Scoring split
 
-- **`vera pool`**, implemented in `score/pool.py`. `scripts/pool_vera_scores.py` becomes a thin legacy wrapper over it (moved to `legacy/`), so `legacy/run_recommended_vera_pipeline.sh` keeps working. Two user-visible strings already promise this command: `vera judge --conversations` help (`vera_cli/judge.py`) and a `JudgingConfig` error (`utils/config_schema.py`).
-- **`vera pipeline` ends with the final score.** Today a multi-user-model pipeline leaves N per-user-model scores and no headline number, and the caller finishes the job by hand with the pool script. The pooled score is the answer the pipeline was run to get, so the pipeline should produce it. An earlier attempt was reverted for three reasons, each now addressed:
-  1. The pooled artifact had nowhere correct to live. #215 documents its home at `<target>/c_<chatbot>/pooled/`; until [Traceability](#traceability) builds that layout, pooled output stays where the pool script writes it today.
-  2. It inverted the layering (`vera_cli/` imported from `scripts/`). Fixed by `score/pool.py` above.
+- **`vera pipeline` ends with the final score.** Today a multi-user-model pipeline leaves N per-user-model scores and no headline number, and the caller finishes the job by hand with `vera pool`. The pooled score is the answer the pipeline was run to get, so the pipeline should produce it. An earlier attempt was reverted for three reasons, each now addressed:
+  1. The pooled artifact had nowhere correct to live. #215 documents its home at `<target>/c_<chatbot>/pooled/`; until [Traceability](#traceability) builds that layout, pooled output stays where `vera pool` writes it today.
+  2. It inverted the layering (`vera_cli/` imported from `scripts/`). Fixed: pooling now lives in `score/pool.py`.
   3. It seemed to contradict "judge never auto-scores". That rule is about `vera judge` staying non-scoring, which still holds; `pipeline` exists to run every stage.
 
   A standalone `vera pool` stays useful for pooling evaluations judged separately, across targets, or re-pooled later.
@@ -151,3 +150,4 @@ Smaller items that belong to no phase. Each can ship as its own PR whenever it's
 - **`vera` CLI and config.** `vera.py` (`generate`, `judge`, `score`, `pipeline`) with `--config`, `--target`, `--personas`, `--rubric`, `-u`, `-j`, `--sample`, and `--into` resume. The old root scripts moved to `legacy/` (#243) instead of being deleted; see [Deferred](#deferred).
 - **Multi-rubric evaluation, through targets.** This is the intended end state, not a stopgap. Evaluating the same conversations with several evaluators (rubrics) means one target per rubric: each target bundles its rubric with its personas and prompts, and each is judged separately with `vera judge --target <name>`, writing its own results. Keeping rubrics separate is deliberate, because scores from different rubrics aren't comparable and must never be merged. The earlier plan for several rubrics inside one run (`judging.rubrics` with length > 1, per-rubric judge-model overrides) is dropped. `judging.rubrics` keeps its list shape with a length-1 check, so revisiting it later wouldn't break the schema. What remains is convenience, not capability: `vera judge --target all` comes with [Traceability](#traceability), once the output path attributes each target.
 - **Package moves.** `generate_conversations/` → `generate/` (#245); scoring out of `judge/` into `score/` with `run.py`, `aggregate.py`, `viz.py` (#246).
+- **`vera pool`.** Pooling moved from `scripts/pool_vera_scores.py` into `score/pool.py`, behind a new `vera pool` command; the script is now the legacy wrapper `legacy/pool_vera_scores.py`.

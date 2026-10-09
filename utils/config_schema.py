@@ -534,11 +534,56 @@ class ScoringConfig(ScoringSpec):
 
 
 @dataclasses.dataclass(frozen=True)
+class PoolingConfig:
+    """What pooling run to perform: the run-defining section for `vera pool`.
+
+    `evaluations` names two or more judge evaluations (``j_*`` folders or the
+    ``results.csv`` inside them); pooling merges their rows and scores the
+    result, so one input would just be `vera score`. `output` is the folder the
+    pooled ``j_*`` folder is created in. `personas` and `skip_risk_analysis`
+    mean exactly what they mean in `ScoringSpec`: null personas skips the
+    risk-level breakdown rather than defaulting to the SI personas file.
+    """
+
+    evaluations: list[str]
+    output: str
+    personas: str | None
+    skip_risk_analysis: bool
+
+    def __post_init__(self) -> None:
+        if (
+            not isinstance(self.evaluations, list)
+            or len(self.evaluations) < 2
+            or not all(isinstance(path, str) and path for path in self.evaluations)
+        ):
+            raise ValueError(
+                "pooling.evaluations must be a list of at least two path strings"
+            )
+        if not isinstance(self.output, str) or not self.output:
+            raise ValueError("pooling.output must be a non-empty path string")
+        if self.personas is not None and (
+            not isinstance(self.personas, str) or not self.personas
+        ):
+            raise ValueError("pooling.personas must be null or a non-empty path string")
+        if not isinstance(self.skip_risk_analysis, bool):
+            raise ValueError("pooling.skip_risk_analysis must be a boolean")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "evaluations": list(self.evaluations),
+            "output": self.output,
+            "personas": self.personas,
+            "skip_risk_analysis": self.skip_risk_analysis,
+        }
+
+
+@dataclasses.dataclass(frozen=True)
 class RunConfig:
     """One fully resolved `vera` run, ready to execute.
 
     Holds one section per command taking part in the run. `generate` populates
-    `generation`, `judge` populates `judging`, `score` populates `scoring`, and
+    `generation`, `judge` populates `judging`, `score` populates `scoring`,
+    `pool` populates `pooling`, and
     a later `pipeline` populates all three; at least one is required.
 
     `invocation` is a different kind of thing from those two, and the split is
@@ -575,11 +620,18 @@ class RunConfig:
     generation: GenerationConfig | None = None
     judging: JudgingConfig | None = None
     scoring: ScoringConfig | None = None
+    pooling: PoolingConfig | None = None
 
     def __post_init__(self) -> None:
-        if self.generation is None and self.judging is None and self.scoring is None:
+        if (
+            self.generation is None
+            and self.judging is None
+            and self.scoring is None
+            and self.pooling is None
+        ):
             raise ValueError(
-                "a run must define generation, judging, scoring, or a combination"
+                "a run must define generation, judging, scoring, pooling, "
+                "or a combination"
             )
 
     def to_dict(self) -> dict[str, Any]:
@@ -597,4 +649,6 @@ class RunConfig:
             config["judging"] = self.judging.to_dict()
         if self.scoring is not None:
             config["scoring"] = self.scoring.to_dict()
+        if self.pooling is not None:
+            config["pooling"] = self.pooling.to_dict()
         return config

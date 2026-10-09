@@ -173,6 +173,25 @@ uv run python vera.py score \
 
 The risk-level breakdown currently works only with SI personas. What each output file contains is described in [scoring.md](scoring.md).
 
+## `vera pool`
+
+Merges two or more judge evaluations into one `results.csv` and scores it, typically the two user-model evaluations of the recommended profile. Each evaluation is a `j_*` folder or the `results.csv` inside it.
+
+```bash
+uv run python vera.py pool --personas data/SI/personas.tsv \
+  --evaluations output/<generation-run-A>/evaluations/<evaluation-run-A> \
+               output/<generation-run-B>/evaluations/<evaluation-run-B>
+```
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--evaluations` | Two or more evaluations to merge | required |
+| `-o`, `--output` | Folder the pooled `j_*` folder is created in | `output/` |
+| `--personas` | Personas file for the risk-level breakdown | none (breakdown skipped) |
+| `--skip-risk-analysis` | Skip the risk-level breakdown even when `--personas` is given | off |
+
+The config section is `pooling` with the same four fields (`evaluations`, `output`, `personas`, `skip_risk_analysis`). The output files are described in [scoring.md](scoring.md#pooling-several-evaluations).
+
 ## `vera pipeline`
 
 Runs generate, judge, and score in sequence. Its flag form accepts only the three model roles and the target:
@@ -273,5 +292,4 @@ Folder names still use the legacy `p_` (user) and `a_` (chatbot) prefixes. A lay
 
 These are specified in [architecture.md](architecture.md) but not implemented:
 
-- **`vera pool`**—combine several evaluations into one score. Until then, use [`scripts/pool_vera_scores.py`](scoring.md#pooling-several-evaluations).
 - **`vera resume`**—continue a run from its own `config.json` and `state.json`, across stages and without being given a path. Until then, use [`--into`](#continuing-an-interrupted-run---into).

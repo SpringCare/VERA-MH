@@ -61,7 +61,8 @@ jq '.generation.chatbot.name = "<model-under-test>"' configs/recommended-SI.json
 This produces one evaluation per user model. The headline score is the **pooled** result across both:
 
 ```bash
-uv run python scripts/pool_vera_scores.py <evaluation-folder-A> <evaluation-folder-B>
+uv run python vera.py pool --evaluations <evaluation-folder-A> <evaluation-folder-B> \
+  --personas data/SI/personas.tsv
 ```
 
 `vera pipeline` prints both evaluation folders when it finishes. How the score is computed and what the output files contain is covered in [docs/scoring.md](docs/scoring.md).
