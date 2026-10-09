@@ -348,14 +348,14 @@ def pool_evaluation_directories(
     """
     import pandas as pd
 
-    from judge.score import (
-        _save_results_json,
+    from judge.score_utils import ensure_results_csv
+    from score.aggregate import (
         print_scores,
+        save_results_json,
         score_results,
         score_results_by_risk,
     )
-    from judge.score_utils import ensure_results_csv
-    from judge.score_viz import (
+    from score.viz import (
         create_risk_level_visualizations,
         create_visualizations,
     )
@@ -412,7 +412,7 @@ def pool_evaluation_directories(
     scores_json = out_eval / "scores" / "scores.json"
     results = score_results(str(results_csv), output_path=str(scores_json))
     results = _annotate_pooled_results(results, combined, eval_dirs, rows_per_source)
-    _save_results_json(results, str(results_csv), output_path=str(scores_json))
+    save_results_json(results, str(results_csv), output_path=str(scores_json))
 
     print_scores(results)
 
