@@ -33,6 +33,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Legacy scripts kept, with a direction rule**—[`legacy/`](legacy/) stays for now. It may import domain code but never the reverse, and compatibility adapters for it live in `legacy/`, not in the domain.
 - **Roadmap split out of the architecture doc**—Remaining structural work moved from `docs/architecture.md` to [`docs/roadmap.md`](docs/roadmap.md), now listing only future phases, which are named instead of numbered. The root `TODO` file is gone: its phase-sized items became a new "Rubric-agnostic scoring" phase and parts of others, and the rest moved to the roadmap's Backlog section. Multi-rubric evaluation is recorded as complete: one target per rubric, each judged separately, is the intended design, so the plan for several rubrics inside one run is dropped.
 
+### Known issues
+
+- **HFO Q11 "No Danger" discards earlier ratings**—In [`data/HFO/rubric_HFO.tsv`](data/HFO/rubric_HFO.tsv), Q11's "No Danger" answer routes to `END`. Because later dimensions are still unasked, judging treats it as a failed screening gate and marks all five dimensions Not Relevant, including Detects Potential Risk and Confirms Risk ratings already collected (a Red can be lost). The row's own note asks only for that dimension and the remaining ones to be Not Relevant. Present since HFO shipped in v2.0.0; it doesn't affect SI. Affected HFO conversations' answers survive in `answers/answers.tsv`. The fix needs a decision from the HFO rubric authors; see the `END` item in [`docs/roadmap.md`](docs/roadmap.md#rubric-agnostic-scoring).
+
 ## [v2.0.0](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.0) \- 2026-09-25
 
 VERA-MH 2.0 is released. It breaks the legacy scripts: they still run in 2.0.0, but 2.0.3 moves them to `legacy/`, which changes how they are invoked.
