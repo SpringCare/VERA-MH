@@ -39,17 +39,15 @@ The two risk files are written only when a personas file is given (`--personas`,
 
 ## Pooling several evaluations
 
-The published VERA-MH score pools two evaluations of the same chatbot, one per user model. Merge them with:
+The published VERA-MH score pools two evaluations of the same chatbot, one per user model. Merge them with [`vera pool`](cli.md#vera-pool):
 
 ```bash
-uv run python scripts/pool_vera_scores.py -o <pool-parent-dir> \
-  output/<generation-run-A>/evaluations/<evaluation-run-A> \
-  output/<generation-run-B>/evaluations/<evaluation-run-B>
+uv run python vera.py pool -o <pool-parent-dir> --personas data/SI/personas.tsv \
+  --evaluations output/<generation-run-A>/evaluations/<evaluation-run-A> \
+               output/<generation-run-B>/evaluations/<evaluation-run-B>
 ```
 
-This creates one pooled folder (named like `j_gpt-5.4x1__p_gpt_5_2+claude_opus_4_5__a_.../`) with a merged `results.csv`, `pool_metadata.json` recording the sources, and the usual `scores/`. Pass `--skip-risk-analysis` to skip the risk breakdown. Use that pooled folder for headline numbers. See `--help` for other options.
-
-A `vera pool` command will replace this script.
+This creates one pooled folder (named like `j_gpt-5.4x1__p_gpt_5_2+claude_opus_4_5__a_.../`) with a merged `results.csv`, `pool_metadata.json` recording the sources, and the usual `scores/`. As with `vera score`, the risk files are written only when a personas file is given. Use that pooled folder for headline numbers.
 
 ## Comparing chatbots
 

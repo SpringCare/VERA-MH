@@ -34,9 +34,9 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 | **CLI** | `vera.py`, `vera_cli/`, `utils/config_schema.py` | Thin entry point, command adapters, and shared command/config wiring |
 | **Generation** | `generate/` | Conversation simulation, turns, personas |
 | **Judging** | `judge/` | Rubric scoring, TSV output, question navigation |
-| **Scoring** | `score/` | Score aggregation and visualizations from `results.csv` |
+| **Scoring** | `score/` | Score aggregation, pooling, and visualizations from `results.csv` |
 | **LLM providers** | `llm_clients/`, `llm_clients/llm_factory.py` | New models, custom HTTP/API providers |
-| **Pipeline helpers** | `scripts/` | Pooling and automation until absorbed into `vera pool` |
+| **Pipeline helpers** | `scripts/` | Batch and reporting helpers |
 | **Data** | `data/` (personas, rubrics) | Evaluation inputs (committed) |
 | **Output** | `output/` (gitignored) | Generated transcripts, evaluations, logs |
 | **Config** | `utils/model_config_loader.py`, `llm_clients/config.py` | Model name resolution, API keys |
