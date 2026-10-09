@@ -5,7 +5,7 @@ VERA-MH End-to-End Pipeline Runner (Python version)
 This script orchestrates the complete workflow:
   1. Generate conversations (generate.py)
   2. Evaluate them with LLM judge (judge.py)
-  3. Score and visualize results (judge/score.py)
+  3. Score and visualize results (score/aggregate.py)
 
 It automatically passes the output folder from each step to the next step,
 so you don't have to manually copy paths between commands.
@@ -17,16 +17,16 @@ import os
 import sys
 from pathlib import Path
 
-from judge.score import (
+from llm_clients.llm_interface import DEFAULT_START_PROMPT
+from score.aggregate import (
     print_scores,
     score_results,
     score_results_by_risk,
 )
-from judge.score_viz import (
+from score.viz import (
     create_risk_level_visualizations,
     create_visualizations,
 )
-from llm_clients.llm_interface import DEFAULT_START_PROMPT
 from utils.conversation_layout import resolve_conversation_input
 from utils.naming import is_generation_run_folder_basename, is_judge_run_folder_basename
 from utils.utils import parse_key_value_list
@@ -211,7 +211,7 @@ def parse_arguments():
     Parse command line arguments and separate them into three groups:
     - Arguments for generate.py
     - Arguments for judge.py
-    - Arguments for judge/score.py
+    - Arguments for the scoring step (score/aggregate.py)
     """
     parser = argparse.ArgumentParser(
         description="VERA-MH Pipeline Runner: Generation → Evaluation → Scoring",

@@ -467,7 +467,7 @@ class ScoringSpec:
     fields up front, but the `results.csv` they apply to is written by its own
     judging stage. `complete` supplies it.
 
-    `personas` is optional and has no default. Legacy `judge/score.py` defaulted
+    `personas` is optional and has no default. Legacy `legacy/score.py` defaulted
     it to `data/SI/personas.tsv`, which silently produced an empty
     `scores_by_risk.json` for any rubric whose personas file lacks the column
     that lookup joins on. Null here means "skip risk-level analysis", which is

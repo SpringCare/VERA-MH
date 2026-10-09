@@ -44,7 +44,7 @@ data/<target>/manifest.json ──► generate ──► <target>/c_<chatbot>/u_
 | Transcript | `<target>/c_<chatbot>/u_<user-model>_<sha>_<ts>/conversations/*.json` | Turn-by-turn chat log; filename encodes persona file + name + chatbot model |
 | Rubric | rubric files | Question flow, dimensions, severity. Rubric-derived data files (dimension names, rating values) live outside `src/`, accessible to all packages. |
 | Evaluation run | `j_<judge>_<timestamp>_<sha>/` | TSV results, logs, metadata; flat per-run, not nested under a persistent per-judge-model parent |
-| Dimension score | `score/score.py` | Aggregated from rubric answers |
+| Dimension score | `score/aggregate.py` | Aggregated from rubric answers |
 | Pooled scores | `score/pool.py` | Concatenates multiple evaluation folders into `<target>/c_<chatbot>/pooled/` (`vera pool`); writes only the merged `results.csv`, `pool_metadata.json`, and `scores/` — never copies transcripts or per-question TSVs |
 
 Deep dives: [judge.md](./judge.md) (question flow and rubric navigation), [structured-output.md](./structured-output.md) (judge response schema), [vera-cli-use-cases.md](./vera-cli-use-cases.md) (CLI/config surface, naming scheme in full).
@@ -139,7 +139,7 @@ models identically.
 |------------|--------------|---------|
 | `vera generate` | generation application function (temporarily `generate.run_for_user_models`) | Simulate conversations → `<target>/c_<chatbot>/u_*/conversations/` |
 | `vera judge` | `judge.runner` | Evaluate transcripts → `<target>/c_<chatbot>/u_*/evaluations/j_*` |
-| `vera score` | `score.score` | Aggregate `results.csv` → scores and visualizations |
+| `vera score` | `score.run_scoring` | Aggregate `results.csv` → scores and visualizations |
 | `vera pool` | `score.pool` | Concatenate multiple evaluation folders into one pooled result → `<target>/c_<chatbot>/pooled/u_<a>+<b>_*` |
 | `vera pipeline` | orchestration layer | Full workflow for one chatbot; passes paths between steps |
 | `vera resume` | orchestration layer | Reads `config.json` (sha-verified) + `state.json`, continues an incomplete run |
@@ -291,7 +291,7 @@ orthogonal.
 | `vera_cli/` | One cohesive adapter per command plus shared config/target helpers | `generate.py`, `judge.py`, `config.py`, `targets.py` |
 | `generate/` | Simulation, turns, batch runner (pure core; handler owns I/O) | `conversation_simulator.py`, `runner.py` |
 | `judge/` | Rubric navigation, LLM judge, improvement reporting (pure core; handler owns I/O) | `question_navigator.py`, `llm_judge.py`, `scripts/summarize_results.py` |
-| `score/` | Aggregation, visualization, pooling — split out of `judge/` | `score.py`, `score_viz.py`, `pool.py` |
+| `score/` | Aggregation, visualization, pooling — split out of `judge/` | `run.py`, `aggregate.py`, `viz.py`, `pool.py` |
 | `workers/` | Shared queue protocol, worker pool, job dispatch | `queue.py`, `job_context.py` |
 | `llm_clients/` | Provider plugin registry; providers self-register, factory resolves by prefix | `llm_interface.py`, `llm_factory.py` |
 | `storage/` | Storage backend abstraction; raw bytes+keys, knows nothing about run semantics | `storage_backend.py`, `local_filesystem_storage.py` |

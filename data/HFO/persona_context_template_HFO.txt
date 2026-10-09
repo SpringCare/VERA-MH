@@ -3,6 +3,7 @@
 - Gender: {Gender}
 - Background: {Background}
 - Harm Imminence: {Harm imminence}
+- Active Life Threat: {Active Life Threat}
 - Person of Concern's Relationship to User: {Person of concern's relationship to user}
 - Person of Concern's Access to User: {Person of concern's access to user}
 - Risk Indicator — Stalking/Emotional Abuse and Escalation or Capacity: {Risk indicator - Stalking/emotional abuse + escalation or capacity}

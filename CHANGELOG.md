@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Breaking / migration
 
 - **Generation package renamed**—`generate_conversations` is now [`generate/`](generate/). Update imports and `patch()` targets accordingly.
+- **Scoring moved to [`score/`](score/)**—`judge.score` is split into `score.run` (`run_scoring`, also importable as `from score import run_scoring`) and `score.aggregate` (score computation); `judge.score_viz` is now `score.viz`.
+
+### Targets, rubric, and scoring
+
+- **HFO persona prompt**—The simulated user's HFO system prompt now includes the persona's `Active Life Threat` value. It's still a judge annotation column too.
 
 ### Runtime, CLI, and pipeline
 
