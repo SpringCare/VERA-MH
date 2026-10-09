@@ -209,12 +209,12 @@ def _from_config(
                 "judge does not support target 'all' yet: evaluations for "
                 "different rubrics would share one output folder"
             )
-        # The one-element list is AD-20's shape, not this branch's limitation:
-        # `rubrics` is list-shaped from day one while `JudgingConfig` accepts
-        # only length 1, which Phase 4 lifts. It is independent of the guard
-        # above — per AD-21 the `target all` lift produces one invocation *per
-        # target*, so this line stays a one-element list inside a comprehension
-        # rather than growing a second entry.
+        # The one-element list is AD-20's shape, not this branch's limitation: `rubrics`
+        # is list-shaped from day one while `JudgingConfig` accepts only length 1
+        # (several rubrics are evaluated as one target each, see docs/roadmap.md). It is
+        # independent of the guard above — per AD-21 the `target all` lift produces one
+        # invocation *per target*, so this line stays a one-element list inside a
+        # comprehension rather than growing a second entry.
         rubrics = [_rubric_files(targets[0])]
         personas = list(targets[0].personas)
         annotation_columns = list(targets[0].persona_annotation_columns)
@@ -273,8 +273,8 @@ def _reject_target_all(selection: str) -> str:
     That resolves cleanly, but every run would land in the same
     `<run>/evaluations/` distinguishable only by timestamp, because the judge run
     folder name encodes the judge model and time, not the rubric. Erroring beats
-    writing output nobody can attribute. Lifted in Phase 4, which adds the
-    `evaluations/<target>/` segment (see docs/architecture.md).
+    writing output nobody can attribute. Lifted in the Traceability phase, whose
+    `output/<target>/` root attributes each run (see docs/roadmap.md).
     """
     if selection.casefold() == "all":
         raise ConfigError(

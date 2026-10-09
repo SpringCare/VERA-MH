@@ -127,7 +127,7 @@ def test_flat_folder_works_with_explicit_output(tmp_path: Path) -> None:
 
 
 def test_target_all_is_rejected(tmp_path: Path) -> None:
-    """Deferred to Phase 4: N rubrics would share one output folder."""
+    """Deferred to the Traceability phase: N rubrics would share one output folder."""
     run = _generation_run(tmp_path)
 
     with pytest.raises(SystemExit) as error:

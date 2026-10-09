@@ -6,8 +6,7 @@ This module exists only for the window in which both entry points ship. Adding
 `vera score` moved the body of `judge.score.main` into `judge.score.run_scoring`
 (now `score.run_scoring`) so both callers share it; the one claim worth
 proving while the legacy script still has users is that the move changed no
-numbers. `docs/architecture.md`
-Phase 1 deletes the legacy entry points and makes `vera.py` the only one — at
+numbers. Its end is the deferred removal of `legacy/` (`docs/roadmap.md`) — at
 that moment this comparison loses its second side, so delete this file rather
 than adapting it.
 

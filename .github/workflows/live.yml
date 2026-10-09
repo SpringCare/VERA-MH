@@ -83,7 +83,7 @@ jobs:
     # Manual only. `all` adds the legacy-script suite (test_scoring.py: 7
     # tests on reasoning models, each generating its own conversations) and
     # the clinician-ratings judge check, too costly to run on a schedule. See
-    # the live-test consolidation item in TODO.
+    # the live-test consolidation item in docs/roadmap.md's Backlog.
     - name: Run all live tests
       if: inputs.scope == 'all'
       run: uv run pytest -m live --no-cov --durations=10

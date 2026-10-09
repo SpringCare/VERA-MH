@@ -14,5 +14,5 @@
 /utils/naming.py                 @SpringCare/vera-mh-maintainers
 /utils/conversation_layout.py    @SpringCare/vera-mh-maintainers
 # /workers/queue.py, /utils/config_schema.py, and /storage/storage_backend.py will be
-# added here once each file exists (Phase 5, Phase 3, and Phase S respectively --
-# see docs/architecture.md#migration-from-current-layout)
+# added here once each one becomes a stable interface (the Shared engine,
+# Traceability, and Storage phases respectively -- see docs/roadmap.md)
