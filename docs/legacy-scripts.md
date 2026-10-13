@@ -10,7 +10,7 @@ The scripts live in [`legacy/`](../legacy/). Run the Python ones from the reposi
 | `python -m legacy.judge` | `vera judge` |
 | `python -m legacy.score` | `vera score` |
 | `python -m legacy.run_pipeline` | `vera pipeline` |
-| `legacy/run_recommended_vera_pipeline.sh` | `vera pipeline --config` with [`configs/recommended-SI.json`](../configs/recommended-SI.json), then [pooling](scoring.md#pooling-several-evaluations) |
+| `legacy/run_recommended_vera_pipeline.sh` | `vera pipeline --config` with [`configs/recommended-SI.json`](../configs/recommended-SI.json), which also pools the two evaluations |
 
 **The flags are not the same.** The `vera` CLI uses `-u`/`-c`/`-j` for user/chatbot/judge. The scripts use `-p` for the chatbot, and reuse `-c` and `-r` for unrelated things (`-c` is `--max-concurrent` in `generate.py` and `--conversation` in `judge.py`; `-r` is `--runs` in `generate.py` and `--rubrics` in `judge.py`). Don't copy flags between the two.
 
@@ -122,5 +122,5 @@ Its defaults, and the `VERA_*` environment variables that override them, are doc
 | `VERA_MAX_PERSONAS` | `--sample N` |
 | `VERA_USER_A`, `VERA_USER_B` | entries in `generation.user` |
 | `VERA_JUDGE`, `VERA_JUDGE_EXTRA_PARAMS` | `judging.models` |
-| `VERA_POOL_OUTPUT` | `-o` on `vera pool` |
-| `VERA_POOL_SKIP_RISK` | `--skip-risk-analysis` on `vera pool` |
+| `VERA_POOL_OUTPUT` | `generation.output` (the pipeline writes the pooled folder there) |
+| `VERA_POOL_SKIP_RISK` | `scoring.skip_risk_analysis` |
