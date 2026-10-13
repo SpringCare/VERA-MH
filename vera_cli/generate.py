@@ -8,6 +8,10 @@ contract described in `vera_cli/README.md`:
 3. `_execute` hands each resolved run to the generation domain.
 4. `register` declares the flags and attaches `run` as the subparser's handler.
 
+`run`, `resolve_configs` and the shared flags in `register` delegate to
+`run_command`, `resolve_with` and `add_common_flags` in `vera_cli/config.py`;
+this module supplies only what is specific to the command.
+
 Steps 1-3 are the path one run takes, in the order it takes them. `register`
 comes last because it is a declaration rather than a step: `vera.py` calls it
 once at startup, and its ~100 lines of flag definitions sit between the reader
@@ -21,28 +25,27 @@ before `_execute` touches the generation domain.
 from __future__ import annotations
 
 import argparse
-import asyncio
 from pathlib import Path
 from typing import Any
 
 from generate import run_for_user_models
-from utils.config_schema import GenerationConfig, InvocationConfig, ModelSpec, RunConfig
-from utils.debug import set_debug
+from utils.config_schema import GenerationConfig, InvocationConfig, RunConfig
 from utils.utils import parse_key_value_list
 
 from .config import (
     ConfigError,
+    add_common_flags,
     config_path,
     config_paths,
+    config_section,
     flag_value,
     model_from_config,
     models_from_cli,
     models_from_config,
     path_from_root,
-    print_resolved_config,
-    render_invocation,
     required,
-    resolve_input,
+    resolve_with,
+    run_command,
 )
 from .targets import (
     load_target,
@@ -95,18 +98,9 @@ def run(args: argparse.Namespace) -> int:
     Resolution happens up front and completely, so an invalid target, missing
     persona file, or contradictory input fails before any model is called.
     """
-    run_configs = resolve_configs(args)
-    if args.print_only:
-        for run_config in run_configs:
-            print(render_invocation(run_config, command="generate"))
-        return 0
-
-    if any(config.invocation.debug for config in run_configs):
-        set_debug(True)
-    for run_config in run_configs:
-        print_resolved_config(run_config)
-    asyncio.run(_execute(run_configs))
-    return 0
+    return run_command(
+        args, command="generate", resolve=resolve_configs, execute=_execute
+    )
 
 
 def resolve_configs(args: argparse.Namespace) -> list[RunConfig]:
@@ -117,20 +111,13 @@ def resolve_configs(args: argparse.Namespace) -> list[RunConfig]:
     *not* multiply this list — a `RunConfig` carries every user model, and the
     generation domain expands them into runs.
     """
-    try:
-        config, invocation = resolve_input(
-            args,
-            allowed_config_fields=ALLOWED_CONFIG_FIELDS,
-        )
-        return (
-            _from_config(config, invocation)
-            if config is not None
-            else _from_cli(args, invocation)
-        )
-    except ConfigError:
-        raise
-    except (TypeError, ValueError) as error:
-        raise ConfigError(f"invalid generation config: {error}") from error
+    return resolve_with(
+        args,
+        allowed_config_fields=ALLOWED_CONFIG_FIELDS,
+        label="generation",
+        from_config=_from_config,
+        from_cli=_from_cli,
+    )
 
 
 def _from_cli(
@@ -171,22 +158,26 @@ def _from_cli(
 
     resolved_targets = [load_target(manifest) for manifest in manifests]
     return [
-        _run_config(
+        RunConfig(
             invocation=invocation,
-            chatbot=chatbot_spec,
-            users=models_from_cli(users, getattr(args, "user_params", None)),
-            personas=resolved.personas,
-            persona_context_template=resolved.persona_context_template,
-            turns=flag_value(args, "turns", defaults=DEFAULTS),
-            # CLI paths resolve against the working directory, unlike config
-            # paths, which resolve against the repository root.
-            output=str(Path(flag_value(args, "output", defaults=DEFAULTS)).resolve()),
-            max_concurrent=flag_value(args, "max_concurrent", defaults=DEFAULTS),
-            max_total_words=flag_value(args, "max_total_words", defaults=DEFAULTS),
-            persona_speaks_first=not flag_value(
-                args, "provider_speaks_first", defaults=DEFAULTS
+            generation=GenerationConfig(
+                chatbot=chatbot_spec,
+                user=models_from_cli(users, getattr(args, "user_params", None)),
+                personas=resolved.personas,
+                persona_context_template=resolved.persona_context_template,
+                turns=flag_value(args, "turns", defaults=DEFAULTS),
+                # CLI paths resolve against the working directory, unlike config
+                # paths, which resolve against the repository root.
+                output=str(
+                    Path(flag_value(args, "output", defaults=DEFAULTS)).resolve()
+                ),
+                max_concurrent=flag_value(args, "max_concurrent", defaults=DEFAULTS),
+                max_total_words=flag_value(args, "max_total_words", defaults=DEFAULTS),
+                persona_speaks_first=not flag_value(
+                    args, "provider_speaks_first", defaults=DEFAULTS
+                ),
+                sessions=_sessions(flag_value(args, "sessions", defaults=DEFAULTS)),
             ),
-            sessions=_sessions(flag_value(args, "sessions", defaults=DEFAULTS)),
         )
         for resolved in resolved_targets
     ]
@@ -201,10 +192,7 @@ def _from_config(
     meant to be a complete, reproducible description of a run, so a value the
     file does not state is an error instead of something this code fills in.
     """
-    value = config.get("generation")
-    if not isinstance(value, dict):
-        raise ConfigError("generate requires a generation config object")
-    generation = dict(value)
+    generation = config_section(config, "generation", command="generate")
     chatbot = model_from_config(
         required(generation, "chatbot", section="generation config"),
         field="generation.chatbot",
@@ -229,13 +217,15 @@ def _from_config(
     behavior["output"] = path_from_root(behavior["output"])
 
     return [
-        _run_config(
+        RunConfig(
             invocation=invocation,
-            chatbot=chatbot,
-            users=users,
-            personas=personas,
-            persona_context_template=context,
-            **behavior,
+            generation=GenerationConfig(
+                chatbot=chatbot,
+                user=users,
+                personas=personas,
+                persona_context_template=context,
+                **behavior,
+            ),
         )
         for personas, context in _persona_sets(config, generation)
     ]
@@ -295,46 +285,6 @@ def _sessions(value: str | None) -> list[str] | None:
     if not sessions:
         raise ConfigError("--sessions must contain at least one non-empty name")
     return sessions
-
-
-def _run_config(
-    *,
-    invocation: InvocationConfig,
-    chatbot: ModelSpec,
-    users: list[ModelSpec],
-    personas: list[str],
-    persona_context_template: str,
-    turns: int,
-    output: str,
-    max_concurrent: int | None,
-    max_total_words: int | None,
-    persona_speaks_first: bool,
-    sessions: list[str] | None,
-) -> RunConfig:
-    """Assemble and validate one canonical `RunConfig`.
-
-    Behavior fields are named rather than forwarded as opaque keywords so this
-    signature is a readable statement of what a run consists of, and so the
-    `RunConfig`/`GenerationConfig` nesting is written once for both input paths.
-    Type enforcement itself happens at runtime in `GenerationConfig.__post_init__`
-    — the config path reaches here as `dict[str, Any]`, so a static checker
-    cannot vouch for it.
-    """
-    return RunConfig(
-        invocation=invocation,
-        generation=GenerationConfig(
-            chatbot=chatbot,
-            user=users,
-            personas=personas,
-            persona_context_template=persona_context_template,
-            turns=turns,
-            output=output,
-            max_concurrent=max_concurrent,
-            max_total_words=max_total_words,
-            persona_speaks_first=persona_speaks_first,
-            sessions=sessions,
-        ),
-    )
 
 
 async def _execute(run_configs: list[RunConfig]) -> list[str]:
@@ -470,36 +420,9 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         metavar="k=v[,k=v...]",
         help="Provider parameters applied to the -c model (default: none)",
     )
-    destination.add_argument(
-        "--into",
-        default=argparse.SUPPRESS,
-        metavar="<run folder>",
-        help=(
-            "Resume: continue an existing run folder, skipping work already on "
-            "disk (replaces --output, which mints a new run instead)"
-        ),
+    add_common_flags(
+        parser,
+        handler=run,
+        sample_help="Debug-only cap on personas loaded per file",
+        into_group=destination,
     )
-    parser.add_argument("--config", help="JSON path or '-' for stdin")
-    parser.add_argument(
-        "--sample",
-        type=int,
-        default=argparse.SUPPRESS,
-        help="Debug-only cap on personas loaded per file",
-    )
-    parser.add_argument(
-        "-d",
-        "--debug",
-        action="store_true",
-        default=argparse.SUPPRESS,
-        help="Enable debug logging",
-    )
-    parser.add_argument(
-        "--print",
-        action="store_true",
-        dest="print_only",
-        help="Print the resolved invocation without executing it",
-    )
-
-    # `run` is this module's handler, defined at the top of the module. `vera.py`
-    # dispatches to whatever a subparser records here.
-    parser.set_defaults(handler=run)

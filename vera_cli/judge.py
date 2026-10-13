@@ -8,6 +8,10 @@ implementation of the command contract in `vera_cli/README.md`:
 3. `_execute` hands each resolved run to the judging domain.
 4. `register` declares the flags and attaches `run` as the subparser's handler.
 
+`run`, `resolve_configs` and the shared flags in `register` delegate to
+`run_command`, `resolve_with` and `add_common_flags` in `vera_cli/config.py`;
+this module supplies only what is specific to the command.
+
 Steps 1-3 are the path one run takes, in the order it takes them. `register`
 comes last for the reason given in `generate.py`: it is a declaration rather
 than a step, and its ~95 lines of flag definitions sit between the reader and
@@ -24,7 +28,6 @@ containing one conversation instead.
 from __future__ import annotations
 
 import argparse
-import asyncio
 from pathlib import Path
 from typing import Any
 
@@ -32,27 +35,27 @@ from judge import run_judging
 from utils.config_schema import (
     InvocationConfig,
     JudgingConfig,
-    ModelSpec,
     RubricFiles,
     RunConfig,
 )
 from utils.conversation_layout import resolve_conversation_input
-from utils.debug import set_debug
 from utils.utils import parse_key_value_list
 
 from .config import (
     ConfigError,
+    add_common_flags,
     config_dir,
     config_path,
+    config_section,
     flag_value,
     models_from_cli,
     models_from_config,
     path_from_root,
-    print_resolved_config,
-    render_invocation,
     required,
-    resolve_input,
+    resolve_with,
     rubrics_from_config,
+    run_command,
+    string_list,
 )
 from .targets import (
     ResolvedTarget,
@@ -84,18 +87,7 @@ def run(args: argparse.Namespace) -> int:
     Resolution happens up front and completely, so an invalid target, missing
     rubric file, or underivable output location fails before any model is called.
     """
-    run_configs = resolve_configs(args)
-    if args.print_only:
-        for run_config in run_configs:
-            print(render_invocation(run_config, command="judge"))
-        return 0
-
-    if any(config.invocation.debug for config in run_configs):
-        set_debug(True)
-    for run_config in run_configs:
-        print_resolved_config(run_config)
-    asyncio.run(_execute(run_configs))
-    return 0
+    return run_command(args, command="judge", resolve=resolve_configs, execute=_execute)
 
 
 def resolve_configs(args: argparse.Namespace) -> list[RunConfig]:
@@ -104,20 +96,13 @@ def resolve_configs(args: argparse.Namespace) -> list[RunConfig]:
     Always returns exactly one `RunConfig`. Unlike `generate`, `--target all` is
     rejected rather than fanned out — see `_target_selection`.
     """
-    try:
-        config, invocation = resolve_input(
-            args,
-            allowed_config_fields=ALLOWED_CONFIG_FIELDS,
-        )
-        return (
-            _from_config(config, invocation)
-            if config is not None
-            else _from_cli(args, invocation)
-        )
-    except ConfigError:
-        raise
-    except (TypeError, ValueError) as error:
-        raise ConfigError(f"invalid judging config: {error}") from error
+    return resolve_with(
+        args,
+        allowed_config_fields=ALLOWED_CONFIG_FIELDS,
+        label="judging",
+        from_config=_from_config,
+        from_cli=_from_cli,
+    )
 
 
 def _from_cli(
@@ -156,18 +141,20 @@ def _from_cli(
 
     folders = [str(Path(folder).resolve()) for folder in conversations]
     return [
-        _run_config(
+        RunConfig(
             invocation=invocation,
-            models=models_from_cli(models, getattr(args, "judge_params", None)),
-            conversations=folders,
-            rubrics=[rubric_files],
-            output=_output_root(
-                folders[0], flag_value(args, "output", defaults=DEFAULTS)
+            judging=JudgingConfig(
+                models=models_from_cli(models, getattr(args, "judge_params", None)),
+                conversations=folders,
+                rubrics=[rubric_files],
+                output=_output_root(
+                    folders[0], flag_value(args, "output", defaults=DEFAULTS)
+                ),
+                max_concurrent=flag_value(args, "max_concurrent", defaults=DEFAULTS),
+                per_judge=flag_value(args, "per_judge", defaults=DEFAULTS),
+                personas=personas,
+                persona_annotation_columns=annotation_columns,
             ),
-            max_concurrent=flag_value(args, "max_concurrent", defaults=DEFAULTS),
-            per_judge=flag_value(args, "per_judge", defaults=DEFAULTS),
-            personas=personas,
-            persona_annotation_columns=annotation_columns,
         )
     ]
 
@@ -181,17 +168,14 @@ def _from_config(
     a stored config is a complete, reproducible description of a run, so a value
     it does not state is an error rather than something this code fills in.
     """
-    value = config.get("judging")
-    if not isinstance(value, dict):
-        raise ConfigError("judge requires a judging config object")
-    judging = dict(value)
+    judging = config_section(config, "judging", command="judge")
     models = models_from_config(
         required(judging, "models", section="judging config"),
         field="judging.models",
     )
     conversations = [
         config_dir(folder, field="judging.conversations")
-        for folder in _string_list(
+        for folder in string_list(
             required(judging, "conversations", section="judging config"),
             field="judging.conversations",
         )
@@ -226,21 +210,21 @@ def _from_config(
         # `required`: they annotate output rather than defining the run, and a
         # stored config that predates them still describes its run completely.
         # Reading them back is what makes `--print` round-trip.
-        # `_string_list` rejects an empty list, but empty is the meaningful
+        # `string_list` rejects an empty list, but empty is the meaningful
         # "annotate nothing" value here, so absent and empty are both accepted
         # and only a non-empty value is shape-checked.
         raw_personas = judging.get("personas") or []
         personas = (
             [
                 config_path(path, field="judging.personas")
-                for path in _string_list(raw_personas, field="judging.personas")
+                for path in string_list(raw_personas, field="judging.personas")
             ]
             if raw_personas
             else []
         )
         raw_columns = judging.get("persona_annotation_columns") or []
         annotation_columns = (
-            _string_list(raw_columns, field="judging.persona_annotation_columns")
+            string_list(raw_columns, field="judging.persona_annotation_columns")
             if raw_columns
             else []
         )
@@ -250,18 +234,20 @@ def _from_config(
         raise ConfigError("judging.output must be a path string")
 
     return [
-        _run_config(
+        RunConfig(
             invocation=invocation,
-            models=models,
-            conversations=conversations,
-            rubrics=rubrics,
-            output=path_from_root(output),
-            max_concurrent=required(
-                judging, "max_concurrent", section="judging config"
+            judging=JudgingConfig(
+                models=models,
+                conversations=conversations,
+                rubrics=rubrics,
+                output=path_from_root(output),
+                max_concurrent=required(
+                    judging, "max_concurrent", section="judging config"
+                ),
+                per_judge=required(judging, "per_judge", section="judging config"),
+                personas=personas,
+                persona_annotation_columns=annotation_columns,
             ),
-            per_judge=required(judging, "per_judge", section="judging config"),
-            personas=personas,
-            persona_annotation_columns=annotation_columns,
         )
     ]
 
@@ -331,50 +317,6 @@ def _output_root(conversations: str, output: str | None) -> str:
             "should go."
         )
     return str((Path(generation_run) / "evaluations").resolve())
-
-
-def _string_list(value: Any, *, field: str) -> list[str]:
-    """Validate a config value is a non-empty list of non-empty strings."""
-    if (
-        not isinstance(value, list)
-        or not value
-        or not all(isinstance(item, str) and item for item in value)
-    ):
-        raise ConfigError(f"{field} must be a non-empty list of paths")
-    return value
-
-
-def _run_config(
-    *,
-    invocation: InvocationConfig,
-    models: list[ModelSpec],
-    conversations: list[str],
-    rubrics: list[RubricFiles],
-    output: str,
-    max_concurrent: int | None,
-    per_judge: bool,
-    personas: list[str],
-    persona_annotation_columns: list[str],
-) -> RunConfig:
-    """Assemble and validate one canonical `RunConfig` holding a judging section.
-
-    Fields are named rather than forwarded as opaque keywords so this signature
-    states what a judging run consists of. Type enforcement happens at runtime in
-    `JudgingConfig.__post_init__`.
-    """
-    return RunConfig(
-        invocation=invocation,
-        judging=JudgingConfig(
-            models=models,
-            conversations=conversations,
-            rubrics=rubrics,
-            output=output,
-            max_concurrent=max_concurrent,
-            per_judge=per_judge,
-            personas=personas,
-            persona_annotation_columns=persona_annotation_columns,
-        ),
-    )
 
 
 async def _execute(run_configs: list[RunConfig]) -> None:
@@ -496,36 +438,9 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         metavar="k=v[,k=v...]",
         help="Provider parameters applied to every -j model (default: none)",
     )
-    destination.add_argument(
-        "--into",
-        default=argparse.SUPPRESS,
-        metavar="<run folder>",
-        help=(
-            "Resume: continue an existing run folder, skipping work already on "
-            "disk (replaces --output, which mints a new run instead)"
-        ),
+    add_common_flags(
+        parser,
+        handler=run,
+        sample_help="Debug-only cap on conversations judged",
+        into_group=destination,
     )
-    parser.add_argument("--config", help="JSON path or '-' for stdin")
-    parser.add_argument(
-        "--sample",
-        type=int,
-        default=argparse.SUPPRESS,
-        help="Debug-only cap on conversations judged",
-    )
-    parser.add_argument(
-        "-d",
-        "--debug",
-        action="store_true",
-        default=argparse.SUPPRESS,
-        help="Enable debug logging",
-    )
-    parser.add_argument(
-        "--print",
-        action="store_true",
-        dest="print_only",
-        help="Print the resolved invocation without executing it",
-    )
-
-    # `run` is this module's handler, defined at the top of the module. `vera.py`
-    # dispatches to whatever a subparser records here.
-    parser.set_defaults(handler=run)

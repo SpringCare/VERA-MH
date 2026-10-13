@@ -18,7 +18,7 @@ not built yet.
 | `score.py` | The `score` command, same five steps. Two structural differences, both following from scoring calling no model: no `--target` (it reads a `results.csv` judging already wrote), and a synchronous `_execute`. Differs from legacy [`legacy/score.py`](../legacy/score.py) in one way, recorded in [../CHANGELOG.md](../CHANGELOG.md): omitting `--personas` skips the risk-level breakdown instead of defaulting to an SI personas file. |
 | `pool.py` | The `pool` command, structured like `score`: no `--target`, a synchronous `_execute`, and no personas default. Calls `score.run_pooling`. |
 | `pipeline.py` | The `pipeline` command: generate, then judge, then score, feeding each stage's output to the next. A shim — it reuses the three single-stage resolvers and domain functions and owns no logic or defaults of its own. Its CLI shorthand is only `-c`/`-u`/`-j`/`--target`, because `--output` and `--max-concurrent` mean different things per stage; everything stage-specific comes from `--config`. Its input resolves in two halves because the chained paths cannot be known up front — see [../docs/pipeline.md](../docs/pipeline.md). |
-| `config.py` | Shared input handling: loading config JSON, the config-or-flags rule, turning config-stated strings into verified absolute paths, resolved-run rendering. |
+| `config.py` | Shared input handling: loading config JSON, the config-or-flags rule, turning config-stated strings into verified absolute paths, resolved-run rendering, and the command skeleton every command shares (`run_command`, `resolve_with`, `add_common_flags`). |
 | `targets.py` | Target discovery and manifest validation — turning a target *name* into concrete, verified file paths. Builds on `config.py`'s path helpers rather than owning them. |
 | `../utils/config_schema.py` | *Not a CLI module.* Shared canonical types (`RunConfig` and friends) in the leaf `utils/` layer, so domain packages may consume them too. Validation and serialization only; no parsing, no defaults. |
 
@@ -44,11 +44,20 @@ until `build_parser` calls its `register` — the module is unreachable code. Tw
 steps:
 
 1. In your command module, define `register(subparsers)`. It adds a subparser,
-   declares that command's flags, and ends with
-   `parser.set_defaults(handler=run)` so the dispatcher knows what to call.
+   declares that command's run-defining flags, and ends with
+   `add_common_flags(parser, handler=run, ...)` (from `config.py`), which adds
+   `--config`, `-d/--debug`, `--print`, and optionally `--sample`/`--into`, and
+   calls `parser.set_defaults(handler=run)` so the dispatcher knows what to call.
 2. In `vera.py`, import that `register` and call it inside `build_parser`.
 
 Your handler receives the parsed `argparse.Namespace` and returns an exit code.
+
+The handler and resolver are thin: `run` returns `run_command(...)` and
+`resolve_configs` returns `resolve_with(...)`, both in `config.py`. They
+hold the steps every command shares (`--print`, `--debug`, echoing the
+resolved run, wrapping validation errors as `ConfigError`). A command
+module supplies its config sections, `DEFAULTS`, `_from_cli`/`_from_config`,
+`_execute`, and its run-defining flags.
 
 ## The rules a command must follow
 

@@ -27,6 +27,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - **Recommended pipeline pooling**—[`legacy/run_recommended_vera_pipeline.sh`](legacy/run_recommended_vera_pipeline.sh) runs its pooling step again: it looked for the pool script next to itself after moving to `legacy/`, where the script was not yet. It now runs `python -m legacy.pool_vera_scores`.
 
+### Documentation and development workflow
+
+- **Shared command skeleton**—The `vera` command modules now share `run_command`, `resolve_with`, `add_common_flags`, and `config_section` from [`vera_cli/config.py`](vera_cli/config.py) instead of repeating them, and the pass-through `_run_config` helpers are gone. No change to flags, help text, or output.
+
 ## [v2.0.3](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.3) \- 2026-10-09
 
 ### Breaking / migration
