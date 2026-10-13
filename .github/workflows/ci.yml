@@ -21,7 +21,7 @@ jobs:
     - uses: actions/checkout@v7
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v10.2.0
+      uses: astral-sh/setup-uv@v10.3.0
       with:
         enable-cache: true
         cache-dependency-glob: uv.lock
@@ -45,7 +45,12 @@ jobs:
     - name: Lint with Ruff
       run: uv run ruff check .
 
-    # Not gating the build on type errors while the project is a prototype.
+    # Packages with zero pyright errors are gated: a new error fails the build.
+    # Add a package here once its errors are fixed (docs/roadmap.md, Quality gates).
+    - name: Type check gated packages with Pyright
+      run: uv run pyright generate score utils vera_cli vera.py
+
+    # The rest of the repo still has errors; report them without failing.
     - name: Type check with Pyright
       run: uv run pyright
       continue-on-error: true
@@ -58,7 +63,7 @@ jobs:
     - uses: actions/checkout@v7
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v10.2.0
+      uses: astral-sh/setup-uv@v10.3.0
       with:
         enable-cache: true
         cache-dependency-glob: uv.lock
@@ -94,7 +99,7 @@ jobs:
     - uses: actions/checkout@v7
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v10.2.0
+      uses: astral-sh/setup-uv@v10.3.0
       with:
         enable-cache: true
         cache-dependency-glob: uv.lock

@@ -297,7 +297,7 @@ orthogonal.
 | `storage/` | Storage backend abstraction; raw bytes+keys, knows nothing about run semantics | `storage_backend.py`, `local_filesystem_storage.py` |
 | `utils/` | Cross-cutting types, naming/layout, I/O helpers | `role.py`, `naming.py`, `conversation_layout.py` |
 
-**Module naming.** Domain packages (`generate/`, `judge/`, `score/`) use the same file roles: `run.py` holds the `run_<verb>` application entry point and the package `__init__` re-exports it (`from score import run_scoring`); the engine lives in `runner.py` or a topic module (`aggregate.py`, `pool.py`); charts go in `viz.py`, package helpers in `utils.py`. No module repeats its package name. `generate/main.py` is the one remaining exception until it becomes `generate/run.py`.
+**Module naming.** Domain packages (`generate/`, `judge/`, `score/`) use the same file roles: `run.py` holds the `run_<verb>` application entry point and the package `__init__` re-exports it (`from score import run_scoring`); the engine lives in `runner.py` or a topic module (`aggregate.py`, `pool.py`); charts go in `viz.py`, package helpers in `utils.py`. No module repeats its package name.
 
 **Extension points:**
 
