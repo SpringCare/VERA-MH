@@ -370,6 +370,14 @@ def print_resolved_config(run_config: RunConfig) -> None:
 
 
 class _Renderable(Protocol):
+    """Any resolved run that can serialize itself: has a ``to_dict()``.
+
+    A typing-only description, so `render_invocation` (and `run_command`'s
+    `--print` path) accept both a `RunConfig` (generate, judge, score, pool)
+    and a pipeline's `PipelineRun`, which share no base class but both
+    serialize to the config dict `--print` emits.
+    """
+
     def to_dict(self) -> dict[str, Any]: ...
 
 
@@ -395,17 +403,21 @@ def render_invocation(run_config: _Renderable, *, command: str) -> str:
 # (fields, defaults, the domain call, run-defining flags) live in the command
 # modules; the identical parts live here.
 
-Run = TypeVar("Run")
+# The type of one resolved run, as a command's `resolve_configs` returns it:
+# `RunConfig` for generate, judge, score, and pool; `PipelineRun` for pipeline.
+# A type variable rather than a fixed type, so the type checker can confirm that
+# `resolve`'s output is what `execute`, `echo`, and `debug_of` receive.
+ResolvedRun = TypeVar("ResolvedRun", bound=_Renderable)
 
 
 def run_command(
     args: argparse.Namespace,
     *,
     command: str,
-    resolve: Callable[[argparse.Namespace], Sequence[Run]],
-    execute: Callable[[list[Run]], Any],
-    echo: Callable[[Run], Any] | None = None,
-    debug_of: Callable[[Run], bool] | None = None,
+    resolve: Callable[[argparse.Namespace], Sequence[ResolvedRun]],
+    execute: Callable[[list[ResolvedRun]], Any],
+    echo: Callable[[ResolvedRun], Any] | None = None,
+    debug_of: Callable[[ResolvedRun], bool] | None = None,
 ) -> int:
     """Resolve, then print-only or execute: the body of every command's `run`.
 
@@ -420,7 +432,7 @@ def run_command(
     runs = list(resolve(args))
     if args.print_only:
         for run in runs:
-            print(render_invocation(run, command=command))  # type: ignore[arg-type]
+            print(render_invocation(run, command=command))
         return 0
 
     debug = debug_of or (lambda run: run.invocation.debug)  # type: ignore[attr-defined]
@@ -440,9 +452,9 @@ def resolve_with(
     *,
     allowed_config_fields: set[str],
     label: str,
-    from_config: Callable[[dict[str, Any], InvocationConfig], list[Run]],
-    from_cli: Callable[[argparse.Namespace, InvocationConfig], list[Run]],
-) -> list[Run]:
+    from_config: Callable[[dict[str, Any], InvocationConfig], list[ResolvedRun]],
+    from_cli: Callable[[argparse.Namespace, InvocationConfig], list[ResolvedRun]],
+) -> list[ResolvedRun]:
     """Resolve config JSON or CLI flags into canonical runs.
 
     `ConfigError` passes through untouched, because it already carries a
