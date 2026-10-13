@@ -4,6 +4,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- **Recommended pipeline pooling**—[`legacy/run_recommended_vera_pipeline.sh`](legacy/run_recommended_vera_pipeline.sh) finds [`scripts/pool_vera_scores.py`](scripts/pool_vera_scores.py) again. It looked for the pool script next to itself, which broke its final pooling step when the shell script moved to `legacy/`.
+
 ## [v2.0.3](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.3) \- 2026-10-09
 
 ### Breaking / migration
