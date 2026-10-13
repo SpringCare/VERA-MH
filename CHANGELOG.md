@@ -4,9 +4,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Breaking / migration
+
+- **Pool script moved to [`legacy/`](legacy/)**—`scripts/pool_vera_scores.py` is now `legacy/pool_vera_scores.py`; run it as `uv run python -m legacy.pool_vera_scores`. Its flags and defaults are unchanged. Prefer `vera pool`.
+
+### Runtime, CLI, and pipeline
+
+- **`vera pool`**—Merges two or more judge evaluations into one scored result (`vera pool --evaluations <a> <b>`), replacing the pool script. Pooling now lives in [`score/pool.py`](score/pool.py) (`from score import run_pooling`). Like `vera score`, it skips the risk breakdown unless `--personas` is given.
+
 ### Fixed
 
-- **Recommended pipeline pooling**—[`legacy/run_recommended_vera_pipeline.sh`](legacy/run_recommended_vera_pipeline.sh) finds [`scripts/pool_vera_scores.py`](scripts/pool_vera_scores.py) again. It looked for the pool script next to itself, which broke its final pooling step when the shell script moved to `legacy/`.
+- **Recommended pipeline pooling**—[`legacy/run_recommended_vera_pipeline.sh`](legacy/run_recommended_vera_pipeline.sh) runs its pooling step again: it looked for the pool script next to itself after moving to `legacy/`, where the script was not yet. It now runs `python -m legacy.pool_vera_scores`.
 
 ## [v2.0.3](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.3) \- 2026-10-09
 
