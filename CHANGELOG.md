@@ -7,10 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Breaking / migration
 
 - **Pool script moved to [`legacy/`](legacy/)**—`scripts/pool_vera_scores.py` is now `legacy/pool_vera_scores.py`; run it as `uv run python -m legacy.pool_vera_scores`. Its flags and defaults are unchanged. Prefer `vera pool`.
+- **`generate.main` is now `generate.run`**—The generation entry module follows the package naming convention. `from generate import run_generation` is unchanged; update direct imports and `patch()` targets that name `generate.main`.
 
 ### Runtime, CLI, and pipeline
 
 - **`vera pool`**—Merges two or more judge evaluations into one scored result (`vera pool --evaluations <a> <b>`), replacing the pool script. Pooling now lives in [`score/pool.py`](score/pool.py) (`from score import run_pooling`). Like `vera score`, it skips the risk breakdown unless `--personas` is given.
+
+### Testing and CI
+
+- **Pyright gate**—CI now fails on type errors in `generate/`, `score/`, `utils/`, `vera_cli/`, and `vera.py`, which have none today. The full-repo pyright run still reports without failing.
+
+### Documentation and development workflow
+
+- **Wider maintainer review**—[`.github/CODEOWNERS`](.github/CODEOWNERS) now also covers `score/`, `vera_cli/`, `vera.py`, `utils/`, `scripts/`, `.github/`, and `docs/roadmap.md`, and [`AGENTS.md`](AGENTS.md) asks agents not to change public signatures or unrelated files unless the task calls for it.
 
 ### Fixed
 

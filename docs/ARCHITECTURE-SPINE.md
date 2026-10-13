@@ -278,7 +278,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 | pytest-cov / pytest-asyncio / pytest-mock / pytest-timeout | `>=4.1.0` / `>=0.21.0` / `>=3.12.0` / `>=2.2.0` (dev group) |
 | freezegun | `>=1.4.0` (dev group) |
 | pre-commit | `>=3.0.0` (dev group) |
-| pyright | `>=1.1.0`, mode `basic` currently; target: blocking per package as each reaches zero errors, all packages by the Quality gates phase (`docs/roadmap.md`) |
+| pyright | `>=1.1.0`, mode `basic` currently; blocking in CI for `generate/`, `score/`, `utils/`, `vera_cli/`, `vera.py`; target: blocking per package as each reaches zero errors, all packages by the Quality gates phase (`docs/roadmap.md`) |
 | ruff | `>=0.3.0`, line-length 88, rules `E`/`F`/`I` |
 | import-linter, grimp | Not yet present in `pyproject.toml` — planned additions (AD-16), introduced incrementally starting the phase each new boundary is created |
 
