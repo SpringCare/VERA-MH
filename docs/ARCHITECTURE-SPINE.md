@@ -107,7 +107,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 - **Binds:** `judge/`, `score/`
 - **Prevents:** scoring logic re-coupling into `judge/`; hidden auto-scoring side effects from a judge run.
-- **Rule:** [ADOPTED] `judge/` is evaluation only (pure navigator + LLM-judge core; handler owns I/O). `score/` is a separate top-level package owning aggregation, visualization, and pooling (`run.py`, `aggregate.py`, `viz.py`, `pool.py`). Judge never auto-scores — `vera score` and `vera pool` are separate subcommands a caller must invoke explicitly.
+- **Rule:** [ADOPTED] `judge/` is evaluation only (pure navigator + LLM-judge core; handler owns I/O). `score/` is a separate top-level package owning aggregation, visualization, and pooling (`run.py`, `aggregate.py`, `viz.py`, `pool.py`). Judge never auto-scores: `vera judge` writes evaluations only, and `vera score` and `vera pool` are separate subcommands. `vera pipeline`, whose job is to run every stage, ends with scoring and, with several user models, pooling.
 
 ### AD-5 — Generate→judge handoff is file-first
 

@@ -1,15 +1,15 @@
 """End-to-end runs of ``vera pipeline``: one mocked, one live.
 
 `tests/unit/test_vera_pipeline.py` covers resolution and stage wiring with the
-stages mocked. The tests here run all three stages (generate, judge, score) for
-real on one persona and 4 turns:
+stages mocked. The tests here run every stage (generate, judge, score, and pool
+when there are several user models) for real on one persona and 4 turns:
 
 - The mocked test swaps every LLM for `MockLLM` at the factory, so it needs no
   network or keys and runs with the rest of the integration suite.
 - The live test lets all three stages call real providers. It is kept as small
   as it can be while still exercising the parts a mock cannot: two user-side
   models from different providers (so two generation runs, two evaluations,
-  and the "folders to pool" report) and two judges (so `results.csv` carries
+  and the pooled headline score) and two judges (so `results.csv` carries
   both). Run it with
   ``uv run pytest -m live tests/integration/test_vera_pipeline_e2e.py``.
 """
@@ -75,15 +75,24 @@ def _config(
 
 
 def _reported_folders(stdout: str) -> list[Path]:
-    """The evaluation folders listed after the pipeline's "folders to pool" line."""
+    """The evaluation folders listed after the pipeline's "evaluations written" line."""
     lines = stdout.splitlines()
-    start = next(index for index, line in enumerate(lines) if "folders to pool" in line)
+    start = next(
+        index for index, line in enumerate(lines) if "evaluations written" in line
+    )
     folders = []
     for line in lines[start + 1 :]:
         if not line.startswith("  "):
             break
         folders.append(Path(line.strip()))
     return folders
+
+
+def _pooled_folder(stdout: str) -> Path:
+    """The pooled folder named on the pipeline's headline-score line."""
+    marker = "Headline (pooled) score: "
+    (line,) = [line for line in stdout.splitlines() if line.startswith(marker)]
+    return Path(line[len(marker) :])
 
 
 def _mock_llm(**kwargs) -> MockLLM:
@@ -130,7 +139,7 @@ def test_pipeline_runs_end_to_end_with_mocked_llms(
         exit_code = vera.main(["pipeline", "--config", str(config), "--sample", "1"])
     assert exit_code == 0
 
-    # With a single evaluation there is no "folders to pool" report to read.
+    # A single evaluation is the headline score: nothing is pooled.
     (run_folder,) = (tmp_path / "output").iterdir()
     (evaluation,) = (run_folder / "evaluations").iterdir()
     (transcript,) = (run_folder / "conversations").glob("*.txt")
@@ -145,6 +154,46 @@ def test_pipeline_runs_end_to_end_with_mocked_llms(
     assert {row["judge_model"] for row in rows} == {"mock-judge"}
 
     scores = json.loads((evaluation / "scores" / "scores.json").read_text())
+    assert "vera_score" in scores["aggregates"]
+
+
+@pytest.mark.integration
+@pytest.mark.timeout(60)
+def test_pipeline_pools_two_user_models_with_mocked_llms(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+) -> None:
+    """Two user models: two evaluations, then one pooled folder beside the runs."""
+    monkeypatch.delenv(cli_config.VERA_RUN_CONFIG_ENV, raising=False)
+
+    config = tmp_path / "pipeline.json"
+    config.write_text(
+        json.dumps(
+            _config(
+                tmp_path / "output",
+                chatbot="mock-bot",
+                user_models=["mock-user-a", "mock-user-b"],
+                judge_models=["mock-judge"],
+            )
+        ),
+        encoding="utf-8",
+    )
+
+    with patch.object(LLMFactory, "create_llm", side_effect=_mock_llm):
+        exit_code = vera.main(["pipeline", "--config", str(config), "--sample", "1"])
+    assert exit_code == 0
+
+    stdout = capsys.readouterr().out
+    evaluations = _reported_folders(stdout)
+    assert len(evaluations) == 2, "one evaluation per user-side model"
+
+    pooled = _pooled_folder(stdout)
+    assert pooled.parent.resolve() == (tmp_path / "output").resolve()
+    for name in ("results.csv", "pool_metadata.json", "scores/scores.json"):
+        assert (pooled / name).is_file(), name
+    metadata = json.loads((pooled / "pool_metadata.json").read_text())
+    assert len(metadata["source_evaluation_directories"]) == 2
+    scores = json.loads((pooled / "scores" / "scores.json").read_text())
+    assert scores["judge_model"] == "pooled"
     assert "vera_score" in scores["aggregates"]
 
 
@@ -182,7 +231,8 @@ def test_pipeline_runs_end_to_end_on_cheap_models(
     exit_code = vera.main(["pipeline", "--config", str(config), "--sample", "1"])
     assert exit_code == 0
 
-    evaluations = _reported_folders(capsys.readouterr().out)
+    stdout = capsys.readouterr().out
+    evaluations = _reported_folders(stdout)
     assert len(evaluations) == 2, "one evaluation per user-side model"
 
     for evaluation in evaluations:
@@ -199,3 +249,7 @@ def test_pipeline_runs_end_to_end_on_cheap_models(
 
         scores = json.loads((evaluation / "scores" / "scores.json").read_text())
         assert "vera_score" in scores["aggregates"]
+
+    # The headline number: both evaluations pooled into one folder.
+    pooled = _pooled_folder(stdout)
+    assert (pooled / "scores" / "scores.json").is_file()

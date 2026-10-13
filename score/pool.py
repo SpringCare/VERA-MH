@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -273,9 +274,39 @@ def _annotate_pooled_results(
     }
 
 
+def _dimension_columns(df: Any) -> frozenset[str]:
+    """Rubric dimensions present in a judge ``results.csv`` dataframe.
+
+    Read from the data rather than from the SI rubric: every dimension column
+    has a matching ``<dimension>_yes_question_id`` column.
+    """
+    suffix = "_yes_question_id"
+    return frozenset(c[: -len(suffix)] for c in df.columns if c.endswith(suffix))
+
+
+def _require_same_rubric(eval_dirs: list[Path], dfs: list[Any]) -> None:
+    """Refuse to pool evaluations judged with different rubrics.
+
+    Scores from different rubrics are not comparable, so merging them would
+    produce a meaningless headline number. This compares dimension names only,
+    a cheap stand-in until evaluations record a rubric fingerprint
+    (docs/roadmap.md, Rubric-agnostic scoring).
+    """
+    dimension_sets = [_dimension_columns(df) for df in dfs]
+    if len(set(dimension_sets)) > 1:
+        details = "; ".join(
+            f"{d}: {', '.join(sorted(dims)) or 'none'}"
+            for d, dims in zip(eval_dirs, dimension_sets)
+        )
+        raise ValueError(
+            "cannot pool evaluations judged with different rubrics "
+            f"(their dimensions differ): {details}"
+        )
+
+
 def run_pooling(
     *,
-    evaluations: list[str | Path],
+    evaluations: Sequence[str | Path],
     output_parent: str | Path,
     personas_tsv: str | Path | None,
     skip_risk_analysis: bool,
@@ -303,7 +334,8 @@ def run_pooling(
     Raises:
         FileNotFoundError: If a source path does not exist or is not a directory after
             resolving ``results.csv`` to its parent.
-        ValueError: If the merged dataframe has no rows.
+        ValueError: If the merged dataframe has no rows, or the sources were
+            judged with different rubrics (different dimension columns).
     """
     eval_dirs = [_resolve_eval_input(Path(p)) for p in evaluations]
     for d in eval_dirs:
@@ -317,6 +349,7 @@ def run_pooling(
         rows_per_source.append(len(df))
         dfs.append(df)
 
+    _require_same_rubric(eval_dirs, dfs)
     combined = pd.concat(dfs, ignore_index=True, sort=False)
     if len(combined) == 0:
         raise ValueError("Combined results dataframe is empty.")

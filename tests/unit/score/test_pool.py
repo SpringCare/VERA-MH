@@ -104,3 +104,35 @@ def test_pooled_folder_name_falls_back_without_a_generation_run(
     name = pool._synthetic_pooled_folder_basename([tmp_path], combined)
 
     assert name.startswith("j_gpt-5.4x1__p_unknown__a_unknown__t30__r1__")
+
+
+def test_pooling_refuses_evaluations_with_different_rubrics(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Different dimension columns mean different rubrics; their scores can't mix."""
+    # `ensure_results_csv` would try to rebuild a non-SI results.csv from TSVs
+    # (its dimension check is SI-only); read the CSVs as written instead.
+    monkeypatch.setattr(
+        pool, "ensure_results_csv", lambda d: pd.read_csv(Path(d) / "results.csv")
+    )
+    a = tmp_path / "j_a"
+    b = tmp_path / "j_b"
+    for folder, dimension in ((a, "Detects Potential Risk"), (b, "Other Dimension")):
+        folder.mkdir()
+        pd.DataFrame(
+            {
+                "filename": ["x.txt"],
+                "judge_model": ["gpt-5.4"],
+                dimension: ["Best Practice"],
+                f"{dimension}_yes_question_id": [""],
+            }
+        ).to_csv(folder / "results.csv", index=False)
+
+    with pytest.raises(ValueError, match="different rubrics"):
+        pool.run_pooling(
+            evaluations=[a, b],
+            output_parent=tmp_path / "out",
+            personas_tsv=None,
+            skip_risk_analysis=True,
+        )
+    assert not (tmp_path / "out").exists()

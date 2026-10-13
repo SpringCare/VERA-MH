@@ -11,6 +11,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Runtime, CLI, and pipeline
 
+- **`vera pipeline` ends with the pooled score**—With more than one user model, the pipeline now pools the per-model evaluations and prints `Headline (pooled) score: <folder>`, using the `scoring` section's personas settings and writing under `generation.output`. It used to print the folders and leave pooling to you.
+- **Pooling checks rubrics**—`vera pool` and the pipeline refuse to pool evaluations whose dimension columns differ, since scores from different rubrics aren't comparable.
 - **`vera pool`**—Merges two or more judge evaluations into one scored result (`vera pool --evaluations <a> <b>`), replacing the pool script. Pooling now lives in [`score/pool.py`](score/pool.py) (`from score import run_pooling`). Like `vera score`, it skips the risk breakdown unless `--personas` is given.
 
 ### Testing and CI
