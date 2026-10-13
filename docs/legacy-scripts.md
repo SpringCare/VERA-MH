@@ -73,6 +73,14 @@ uv run python -m legacy.score -r output/<generation-run>/evaluations/<evaluation
 
 Same flags as `vera score` (`-r`, `-o`, `--skip-risk-analysis`), except `--personas-tsv` / `-p` defaults to `data/SI/personas.tsv`. `vera score --personas` has no default and skips the risk breakdown when omitted.
 
+## `legacy/pool_vera_scores.py`
+
+```bash
+uv run python -m legacy.pool_vera_scores <evaluation-A> <evaluation-B>
+```
+
+Was `scripts/pool_vera_scores.py`. Same behavior as `vera pool`, with legacy flags: positional evaluation paths instead of `--evaluations`, `-o`/`--output-dir`, and `--personas-tsv`, which defaults to `data/SI/personas.tsv` (`vera pool --personas` has no default and skips the risk breakdown when omitted). `--extract-from-log` prints the last evaluation folder found in a `legacy.run_pipeline` log; only `legacy/run_recommended_vera_pipeline.sh` uses it.
+
 ## `legacy/run_pipeline.py`
 
 Runs the generation, judging, and scoring scripts in sequence:
@@ -114,5 +122,5 @@ Its defaults, and the `VERA_*` environment variables that override them, are doc
 | `VERA_MAX_PERSONAS` | `--sample N` |
 | `VERA_USER_A`, `VERA_USER_B` | entries in `generation.user` |
 | `VERA_JUDGE`, `VERA_JUDGE_EXTRA_PARAMS` | `judging.models` |
-| `VERA_POOL_OUTPUT` | `-o` on `scripts/pool_vera_scores.py` |
-| `VERA_POOL_SKIP_RISK` | `--skip-risk-analysis` on `scripts/pool_vera_scores.py` |
+| `VERA_POOL_OUTPUT` | `-o` on `vera pool` |
+| `VERA_POOL_SKIP_RISK` | `--skip-risk-analysis` on `vera pool` |

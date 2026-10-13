@@ -10,6 +10,7 @@ from vera_cli.config import ConfigError
 from vera_cli.generate import register as register_generate
 from vera_cli.judge import register as register_judge
 from vera_cli.pipeline import register as register_pipeline
+from vera_cli.pool import register as register_pool
 from vera_cli.score import register as register_score
 
 
@@ -21,6 +22,7 @@ def build_parser() -> argparse.ArgumentParser:
     register_generate(subparsers)
     register_judge(subparsers)
     register_score(subparsers)
+    register_pool(subparsers)
     register_pipeline(subparsers)
     return parser
 

@@ -1,39 +1,20 @@
-#!/usr/bin/env uv run python
-"""
-Pool judge evaluation results from multiple ``j_*`` evaluation directories into
-one ``results.csv``, then recompute VERA-MH scores and visualizations.
+"""Pool several judge evaluations into one scored result.
 
-Inputs may differ by user agent, judge model, or both—the merged dataframe is a
-straight concatenation of every source's rows. Common uses include combining the
-two user-agent suites of the recommended profile (each judged with ``gpt-5.4``
-by default), or merging separate judge runs (e.g. GPT-4o and Sonnet) over the
-same conversations. ``legacy/run_recommended_vera_pipeline.sh`` calls this
-itself; ``vera pipeline`` does not — it prints the evaluation folders to pass
-here, because pooling is a separate command by design (``docs/pipeline.md``).
+Merges the ``results.csv`` of several ``j_*`` evaluation folders (any mix of user
+models and judge models), writes the merged CSV plus ``pool_metadata.json`` into
+a new ``j_*``-style folder, and scores it like `score.run.run_scoring`. Typical
+use is combining the two user-model suites of the recommended profile.
 
-Typical layout for each input path:
-  output/p_<user>__a_<agent>__t30__r1__<ts>/evaluations/j_<...>/results.csv
+`run_pooling` is the scoring domain's application function for ``vera pool``;
+``legacy/pool_vera_scores.py`` wraps the same function for the legacy CLI.
 
-You may pass either the evaluation directory (``j_*`` folder) or ``results.csv``
-inside it. For example::
-
-  uv run python scripts/pool_vera_scores.py \\
-    output/p_claude__a_gpt_4o__t6__r1_20260422_100000/evaluations/j_gpt_4o__... \\
-    output/p_gpt_4o__a_gpt_4o__t6__r1_20260422_110000/evaluations/j_gpt_4o__.../results.csv
-
-**Legacy layout** (e.g. top-level ``evaluations/j_*`` next to a flat ``conversations/``
-run): merging and scoring still work; only the auto-generated merged ``j_*`` folder
-name may fall back to ``unknown`` placeholders because the script cannot infer the
-``p_*`` generation basename from the path alone.
-
-Merged folder names follow ``judge.py`` conventions: ``j_<model>x<count>`` for a
-single judge, or ``j_<model1>x2+<model2>x1__p_...`` when multiple judges are present.
-
-Also supports extracting the last evaluation directory from a run_pipeline log:
-  uv run python scripts/pool_vera_scores.py --extract-from-log /path/to/log.txt
+Until the Traceability phase (docs/roadmap.md) builds the target-rooted layout,
+the pooled folder is named in the legacy ``j_<judge>__p_<a>+<b>__a_<agent>__...``
+style and written under the caller's output folder.
 """
 
-import argparse
+from __future__ import annotations
+
 import json
 import re
 import sys
@@ -41,12 +22,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-# in case running from the scripts directory
-REPO_ROOT = Path(__file__).resolve().parent.parent
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+import pandas as pd
 
-from utils.naming import parse_generation_run_folder_name  # noqa: E402
+from judge.score_utils import ensure_results_csv
+from score.aggregate import (
+    print_scores,
+    save_results_json,
+    score_results,
+    score_results_by_risk,
+)
+from score.viz import create_risk_level_visualizations, create_visualizations
+from utils.naming import parse_generation_run_folder_name
 
 # ``j_{judge_info}_{timestamp}__p_...`` or ``...__conversations`` (legacy flat layout)
 _JUDGE_EVAL_DIR_HEAD = re.compile(
@@ -54,33 +40,6 @@ _JUDGE_EVAL_DIR_HEAD = re.compile(
     re.IGNORECASE,
 )
 _JUDGE_SPEC_TOKEN = re.compile(r"([^_]+x\d+)")
-
-
-def extract_last_evaluation_dir_from_pipeline_log(text: str) -> str:
-    """
-    Parse captured ``run_pipeline.py`` log text and return the last evaluation folder.
-
-    The pipeline prints a line containing ``Evaluations saved to:`` followed by the
-    ``j_*`` evaluation directory (with or without a trailing slash). When the log
-    contains multiple runs, the **last** match is returned so callers can chain
-    subprocess output from successive pipeline invocations.
-
-    Args:
-        text: Full stdout/stderr text (e.g. contents of a temp file used with ``tee``).
-
-    Returns:
-        Absolute path to the evaluation directory as a string.
-
-    Raises:
-        ValueError: If no matching line exists in *text*.
-    """
-    matches = re.findall(r"Evaluations saved to:\s*(.+)$", text, flags=re.MULTILINE)
-    if not matches:
-        raise ValueError(
-            "Could not find any 'Evaluations saved to:' line in pipeline log output."
-        )
-    path = matches[-1].strip().rstrip("/")
-    return str(Path(path).resolve())
 
 
 def _resolve_eval_input(path: Path) -> Path:
@@ -314,12 +273,12 @@ def _annotate_pooled_results(
     }
 
 
-def pool_evaluation_directories(
-    source_paths: list[str | Path],
-    output_parent: Path,
+def run_pooling(
     *,
-    personas_tsv: Path | None = None,
-    skip_risk_analysis: bool = False,
+    evaluations: list[str | Path],
+    output_parent: str | Path,
+    personas_tsv: str | Path | None,
+    skip_risk_analysis: bool,
     judge_slug: str | None = None,
 ) -> Path:
     """
@@ -330,11 +289,11 @@ def pool_evaluation_directories(
     scoring artifacts under a new synthetic ``j_<judge>__p_...`` directory.
 
     Args:
-        source_paths: Paths to ``j_*`` folders or to ``results.csv`` inside them.
+        evaluations: Paths to ``j_*`` folders or to ``results.csv`` inside them.
         output_parent: Directory under which the new merged ``j_*`` folder is
-            created (e.g. repo ``output/``).
-        personas_tsv: Personas file for risk-level analysis; defaults to
-            ``data/SI/personas.tsv`` under the repo when None.
+            created; created if missing.
+        personas_tsv: Personas file for risk-level analysis, or None to skip that
+            step, as in `score.run.run_scoring`.
         skip_risk_analysis: When True, skip ``score_results_by_risk`` and risk charts.
         judge_slug: Optional override for the judge name (e.g. ``gpt-4ox1+sonnet45x1``).
 
@@ -346,21 +305,7 @@ def pool_evaluation_directories(
             resolving ``results.csv`` to its parent.
         ValueError: If the merged dataframe has no rows.
     """
-    import pandas as pd
-
-    from judge.score_utils import ensure_results_csv
-    from score.aggregate import (
-        print_scores,
-        save_results_json,
-        score_results,
-        score_results_by_risk,
-    )
-    from score.viz import (
-        create_risk_level_visualizations,
-        create_visualizations,
-    )
-
-    eval_dirs = [_resolve_eval_input(Path(p)) for p in source_paths]
+    eval_dirs = [_resolve_eval_input(Path(p)) for p in evaluations]
     for d in eval_dirs:
         if not d.is_dir():
             raise FileNotFoundError(d)
@@ -386,7 +331,7 @@ def pool_evaluation_directories(
             f"({preview}). "
             "Merged results and scores are unchanged; the new merged j_* folder name "
             "may use unknown placeholders for persona/agent/turns/runs. "
-            "Use nested paths from generate.py / run_pipeline.py for descriptive "
+            "Use nested paths from vera generate / vera judge for descriptive "
             "names.",
             file=sys.stderr,
         )
@@ -394,7 +339,7 @@ def pool_evaluation_directories(
     synth_name = _synthetic_pooled_folder_basename(
         eval_dirs, combined, judge_slug=judge_slug
     )
-    out_eval = (output_parent / synth_name).resolve()
+    out_eval = (Path(output_parent) / synth_name).resolve()
     out_eval.mkdir(parents=True, exist_ok=True)
     results_csv = out_eval / "results.csv"
     combined.to_csv(results_csv, index=False)
@@ -422,25 +367,30 @@ def pool_evaluation_directories(
     except Exception as e:
         print(f"Warning: could not create standard visualizations: {e}")
 
-    personas_tsv = personas_tsv or (REPO_ROOT / "data" / "SI" / "personas.tsv")
-    if not skip_risk_analysis and personas_tsv.is_file():
-        try:
-            risk_results = score_results_by_risk(
-                str(results_csv), str(personas_tsv), write_json=False
+    if not skip_risk_analysis:
+        if personas_tsv is None:
+            print("No personas file given; skipping risk-level analysis.")
+        elif not Path(personas_tsv).is_file():
+            print(
+                f"Warning: personas TSV not found ({personas_tsv}), "
+                "skipping risk analysis."
             )
-            risk_results["judge_model"] = "pooled"
-            risk_results["persona_model"] = "pooled"
-            risk_json = out_eval / "scores" / "scores_by_risk.json"
-            risk_json.parent.mkdir(parents=True, exist_ok=True)
-            risk_json.write_text(json.dumps(risk_results, indent=2), encoding="utf-8")
-            risk_viz = out_eval / "scores" / "scores_by_risk_visualization.png"
-            create_risk_level_visualizations(risk_results, risk_viz)
-        except Exception as e:
-            print(f"Warning: could not create risk-level analysis: {e}")
-    elif not skip_risk_analysis:
-        print(
-            f"Warning: personas TSV not found ({personas_tsv}), skipping risk analysis."
-        )
+        else:
+            try:
+                risk_results = score_results_by_risk(
+                    str(results_csv), str(personas_tsv), write_json=False
+                )
+                risk_results["judge_model"] = "pooled"
+                risk_results["persona_model"] = "pooled"
+                risk_json = out_eval / "scores" / "scores_by_risk.json"
+                risk_json.parent.mkdir(parents=True, exist_ok=True)
+                risk_json.write_text(
+                    json.dumps(risk_results, indent=2), encoding="utf-8"
+                )
+                risk_viz = out_eval / "scores" / "scores_by_risk_visualization.png"
+                create_risk_level_visualizations(risk_results, risk_viz)
+            except Exception as e:
+                print(f"Warning: could not create risk-level analysis: {e}")
 
     print("")
     print("Pooled outputs:")
@@ -453,124 +403,3 @@ def pool_evaluation_directories(
         print(f"  {out_eval / 'scores' / 'scores_by_risk_visualization.png'}")
     print(f"  {out_eval / 'pool_metadata.json'}")
     return out_eval
-
-
-def _cli_pool(args: argparse.Namespace) -> int:
-    """
-    Handle the ``pool_vera_scores`` CLI in merge mode (one or more evaluation paths).
-
-    Resolves ``--output-dir`` (defaulting to the repo ``output/`` directory), then
-    delegates to :func:`pool_evaluation_directories`.
-
-    Args:
-        args: Parsed namespace with ``eval_paths``, ``output_dir``, ``personas_tsv``,
-            and ``skip_risk_analysis``.
-
-    Returns:
-        Process exit code: ``0`` on success, ``2`` if no evaluation paths were given.
-    """
-    if len(args.eval_paths) < 1:
-        print(
-            "error: pass at least one evaluation directory or results.csv",
-            file=sys.stderr,
-        )
-        return 2
-
-    out_parent = Path(args.output_dir).resolve() if args.output_dir else None
-    if out_parent is None:
-        out_parent = (REPO_ROOT / "output").resolve()
-    out_parent.mkdir(parents=True, exist_ok=True)
-
-    personas = Path(args.personas_tsv).resolve() if args.personas_tsv else None
-    pool_evaluation_directories(
-        args.eval_paths,
-        out_parent,
-        personas_tsv=personas,
-        skip_risk_analysis=args.skip_risk_analysis,
-    )
-    return 0
-
-
-def _cli_extract(args: argparse.Namespace) -> int:
-    """
-    Handle ``--extract-from-log``: print the last evaluation directory path.
-
-    Reads the log file as UTF-8 (replacing undecodable bytes), parses it with
-    :func:`extract_last_evaluation_dir_from_pipeline_log`, and prints the resolved
-    path to stdout for use in shell command substitution.
-
-    Args:
-        args: Parsed namespace with ``extract_from_log`` set to the log file path.
-
-    Returns:
-        ``0`` on success, ``1`` if no evaluation line was found in the log.
-    """
-    log_path = Path(args.extract_from_log)
-    text = log_path.read_text(encoding="utf-8", errors="replace")
-    try:
-        path = extract_last_evaluation_dir_from_pipeline_log(text)
-    except ValueError as e:
-        print(f"error: {e}", file=sys.stderr)
-        return 1
-    print(path)
-    return 0
-
-
-def main() -> int:
-    """
-    CLI entry point: parse arguments and run pool or extract mode.
-
-    In extract mode (``--extract-from-log``), runs :func:`_cli_extract` and exits.
-    Otherwise requires at least one evaluation path and runs :func:`_cli_pool`.
-
-    Returns:
-        Process exit code from the selected subcommand.
-    """
-    parser = argparse.ArgumentParser(
-        description=(
-            "Merge multiple j_* evaluation runs (any mix of user agents and/or "
-            "judge models) into one scored folder, or extract an evaluation path "
-            "from run_pipeline log output."
-        )
-    )
-    parser.add_argument(
-        "eval_paths",
-        nargs="*",
-        help="Evaluation directories (j_*) or results.csv paths to merge",
-    )
-    parser.add_argument(
-        "-o",
-        "--output-dir",
-        help=(
-            "Parent directory for pooled output (a synthetic j_<judge>__p_* folder is "
-            "created inside, with pool_metadata.json next to results.csv). "
-            "Default: output/ under the repo."
-        ),
-    )
-    parser.add_argument(
-        "--personas-tsv",
-        default=str(REPO_ROOT / "data" / "SI" / "personas.tsv"),
-        help="Personas file for risk-level scoring (default: data/SI/personas.tsv)",
-    )
-    parser.add_argument(
-        "--skip-risk-analysis",
-        action="store_true",
-        help="Skip risk-level scores and visualization",
-    )
-    parser.add_argument(
-        "--extract-from-log",
-        metavar="FILE",
-        help="Print the last evaluation directory path found in a pipeline log file",
-    )
-    args = parser.parse_args()
-
-    if args.extract_from_log:
-        return _cli_extract(args)
-
-    if not args.eval_paths:
-        parser.error("pass at least one eval path, or use --extract-from-log")
-    return _cli_pool(args)
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
