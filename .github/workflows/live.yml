@@ -50,7 +50,7 @@ jobs:
     # The runner is an AL2023 host, which setup-python has no builds for, so
     # uv installs the Python pinned in .python-version instead.
     - name: Install uv
-      uses: astral-sh/setup-uv@v10.2.0
+      uses: astral-sh/setup-uv@v10.3.0
       with:
         enable-cache: true
         cache-dependency-glob: uv.lock
