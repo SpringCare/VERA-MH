@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - **`generate.main` is now `generate.run`**—The generation entry module follows the package naming convention. `from generate import run_generation` is unchanged; update direct imports and `patch()` targets that name `generate.main`.
 
+### Testing and CI
+
+- **Pyright gate**—CI now fails on type errors in `generate/`, `score/`, `utils/`, `vera_cli/`, and `vera.py`, which have none today. The full-repo pyright run still reports without failing.
+
 ### Fixed
 
 - **Recommended pipeline pooling**—[`legacy/run_recommended_vera_pipeline.sh`](legacy/run_recommended_vera_pipeline.sh) finds [`scripts/pool_vera_scores.py`](scripts/pool_vera_scores.py) again. It looked for the pool script next to itself, which broke its final pooling step when the shell script moved to `legacy/`.

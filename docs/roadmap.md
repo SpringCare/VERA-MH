@@ -90,7 +90,7 @@ The engine rewrite can change concurrency, timing, and error handling even when 
 
 ### Quality gates
 
-- **Pyright, package by package.** Add a blocking pyright step for the packages with zero errors (today `generate/`, `score/`, `utils/`, `vera_cli/`, `vera.py`), and add each remaining package as its errors are fixed: `judge/`, then `llm_clients/`, then the rest. Done when no package is left on the non-blocking run.
+- **Pyright, package by package.** CI already blocks on pyright errors in `generate/`, `score/`, `utils/`, `vera_cli/`, and `vera.py` (`.github/workflows/ci.yml`). Add each remaining package to that step as its errors are fixed: `judge/`, then `llm_clients/`, then the rest. Done when no package is left on the non-blocking run.
 - **Import contracts.** Full import-linter contract (all [Layer model](./architecture.md#layer-model) boundaries) plus grimp import-graph assertions.
 - **Root-clutter cleanup:**
   - delete `logging/`, `logs/`, root `conversations/`, `human_validation/` (old generated dumps, already gitignored)
