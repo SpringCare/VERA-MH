@@ -1,8 +1,9 @@
 """Shared config input, path resolution, and rendering for the unified CLI.
 
-Three groups, in order: loading a config document and reading fields off it;
-turning config-supplied strings into verified absolute paths; and rendering a
-resolved run back out.
+Four groups, in order: loading a config document and reading fields off it;
+turning config-supplied strings into verified absolute paths; rendering a
+resolved run back out; and the command skeleton every `vera` command shares
+(`run_command`, `resolve_with`, `add_common_flags`).
 
 The path-resolution group is here rather than in `targets.py` because it has
 nothing to do with target manifests -- `config_path` and friends apply one
@@ -13,15 +14,20 @@ bundle, and it builds on these rather than owning them.
 
 from __future__ import annotations
 
+import argparse
+import asyncio
 import dataclasses
+import inspect
 import json
 import os
 import shlex
 import sys
+from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol, TypeVar
 
 from utils.config_schema import InvocationConfig, ModelSpec, RubricFiles, RunConfig
+from utils.debug import set_debug
 
 ROOT = Path(__file__).resolve().parents[1]
 VERA_RUN_CONFIG_ENV = "VERA_RUN_CONFIG"
@@ -103,6 +109,16 @@ def load_config(config_path: str | None) -> dict[str, Any] | None:
     return value
 
 
+def config_section(
+    config: dict[str, Any], name: str, *, command: str
+) -> dict[str, Any]:
+    """Return a copy of the config section `name`, which must be an object."""
+    value = config.get(name)
+    if not isinstance(value, dict):
+        raise ConfigError(f"{command} requires a {name} config object")
+    return dict(value)
+
+
 def required(data: dict[str, Any], field: str, *, section: str) -> Any:
     """Return a required config field with one consistent error shape."""
     if field not in data:
@@ -156,15 +172,20 @@ def config_path(value: object, *, field: str) -> str:
     return existing_file(path_from_root(value), field=field)
 
 
-def config_paths(value: object, *, field: str) -> list[str]:
-    """Resolve a non-empty list of explicit config paths, verifying each."""
+def string_list(value: object, *, field: str) -> list[str]:
+    """Validate a config value is a non-empty list of non-empty strings."""
     if (
         not isinstance(value, list)
         or not value
         or not all(isinstance(item, str) and item for item in value)
     ):
         raise ConfigError(f"{field} must be a non-empty list of paths")
-    return [config_path(item, field=field) for item in value]
+    return value
+
+
+def config_paths(value: object, *, field: str) -> list[str]:
+    """Resolve a non-empty list of explicit config paths, verifying each."""
+    return [config_path(item, field=field) for item in string_list(value, field=field)]
 
 
 def config_dir(value: object, *, field: str) -> str:
@@ -348,7 +369,19 @@ def print_resolved_config(run_config: RunConfig) -> None:
     print(json.dumps(run_config.to_dict(), indent=2))
 
 
-def render_invocation(run_config: RunConfig, *, command: str) -> str:
+class _Renderable(Protocol):
+    """Any resolved run that can serialize itself: has a ``to_dict()``.
+
+    A typing-only description, so `render_invocation` (and `run_command`'s
+    `--print` path) accept both a `RunConfig` (generate, judge, score, pool)
+    and a pipeline's `PipelineRun`, which share no base class but both
+    serialize to the config dict `--print` emits.
+    """
+
+    def to_dict(self) -> dict[str, Any]: ...
+
+
+def render_invocation(run_config: _Renderable, *, command: str) -> str:
     """Render a resolved run as a copy-pasteable command that reproduces it.
 
     This is what `--print` emits. The resolved config travels in the
@@ -359,3 +392,139 @@ def render_invocation(run_config: RunConfig, *, command: str) -> str:
     return (
         f"{VERA_RUN_CONFIG_ENV}={shlex.quote(compact)} uv run python vera.py {command}"
     )
+
+
+# --- The command skeleton -------------------------------------------------
+#
+# Every `vera` command follows the same four steps (vera_cli/README.md): `run`
+# resolves the input, honors `--print` and `--debug`, echoes the resolved run,
+# then executes it; `resolve_configs` picks config or flags; `_execute` calls
+# the domain; `register` declares the flags. Only the per-command parts
+# (fields, defaults, the domain call, run-defining flags) live in the command
+# modules; the identical parts live here.
+
+# The type of one resolved run, as a command's `resolve_configs` returns it:
+# `RunConfig` for generate, judge, score, and pool; `PipelineRun` for pipeline.
+# A type variable rather than a fixed type, so the type checker can confirm that
+# `resolve`'s output is what `execute`, `echo`, and `debug_of` receive.
+ResolvedRun = TypeVar("ResolvedRun", bound=_Renderable)
+
+
+def run_command(
+    args: argparse.Namespace,
+    *,
+    command: str,
+    resolve: Callable[[argparse.Namespace], Sequence[ResolvedRun]],
+    execute: Callable[[list[ResolvedRun]], Any],
+    echo: Callable[[ResolvedRun], Any] | None = None,
+    debug_of: Callable[[ResolvedRun], bool] | None = None,
+) -> int:
+    """Resolve, then print-only or execute: the body of every command's `run`.
+
+    Resolution happens up front and completely, so bad input fails before any
+    model is called or file written. `execute` may be async (generate, judge,
+    pipeline), in which case it is run to completion and the exit code is 0;
+    a sync `execute` (score, pool) returns the exit code itself.
+
+    `echo` and `debug_of` default to a `RunConfig`'s; `pipeline` passes its
+    own because a `PipelineRun` holds its invocation inside `generation`.
+    """
+    runs = list(resolve(args))
+    if args.print_only:
+        for run in runs:
+            print(render_invocation(run, command=command))
+        return 0
+
+    debug = debug_of or (lambda run: run.invocation.debug)  # type: ignore[attr-defined]
+    if any(debug(run) for run in runs):
+        set_debug(True)
+    for run in runs:
+        (echo or print_resolved_config)(run)  # type: ignore[arg-type]
+    result = execute(runs)
+    if inspect.iscoroutine(result):
+        asyncio.run(result)
+        return 0
+    return result
+
+
+def resolve_with(
+    args: argparse.Namespace,
+    *,
+    allowed_config_fields: set[str],
+    label: str,
+    from_config: Callable[[dict[str, Any], InvocationConfig], list[ResolvedRun]],
+    from_cli: Callable[[argparse.Namespace, InvocationConfig], list[ResolvedRun]],
+) -> list[ResolvedRun]:
+    """Resolve config JSON or CLI flags into canonical runs.
+
+    `ConfigError` passes through untouched, because it already carries a
+    message written for the user; that arm must come first, since `ConfigError`
+    is itself a `ValueError` and would otherwise be wrapped a second time.
+    Anything else a section's validation raises (`TypeError`/`ValueError` from
+    a dataclass `__post_init__`) is wrapped as
+    `invalid <label> config: ...`, so every bad input reaches `vera.py` as the
+    same kind of error.
+    """
+    try:
+        config, invocation = resolve_input(
+            args, allowed_config_fields=allowed_config_fields
+        )
+        return (
+            from_config(config, invocation)
+            if config is not None
+            else from_cli(args, invocation)
+        )
+    except ConfigError:
+        raise
+    except (TypeError, ValueError) as error:
+        raise ConfigError(f"invalid {label} config: {error}") from error
+
+
+def add_common_flags(
+    parser: argparse.ArgumentParser,
+    *,
+    handler: Callable[[argparse.Namespace], int],
+    sample_help: str | None = None,
+    into_group: Any = None,
+) -> None:
+    """Add the invocation flags every command shares, then attach `handler`.
+
+    `--config`, `-d/--debug` and `--print` exist on every command. `--sample`
+    is added only when a command has work to cap (`sample_help` says what it
+    caps), and `--into` only into the mutually exclusive group it shares with
+    `-o/--output`. Flags are added in one fixed order so `-h` output stays
+    stable across commands.
+    """
+    if into_group is not None:
+        into_group.add_argument(
+            "--into",
+            default=argparse.SUPPRESS,
+            metavar="<run folder>",
+            help=(
+                "Resume: continue an existing run folder, skipping work already on "
+                "disk (replaces --output, which mints a new run instead)"
+            ),
+        )
+    parser.add_argument("--config", help="JSON path or '-' for stdin")
+    if sample_help is not None:
+        parser.add_argument(
+            "--sample",
+            type=int,
+            default=argparse.SUPPRESS,
+            help=sample_help,
+        )
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Enable debug logging",
+    )
+    parser.add_argument(
+        "--print",
+        action="store_true",
+        dest="print_only",
+        help="Print the resolved invocation without executing it",
+    )
+    # `vera.py` dispatches with `args.handler(args)`.
+    parser.set_defaults(handler=handler)

@@ -9,6 +9,10 @@ are the reference implementations of the command contract in
 3. `_execute` hands the resolved run to the scoring domain.
 4. `register` declares the flags and attaches `run` as the subparser's handler.
 
+`run`, `resolve_configs` and the shared flags in `register` delegate to
+`run_command`, `resolve_with` and `add_common_flags` in `vera_cli/config.py`;
+this module supplies only what is specific to the command.
+
 Two structural differences from its siblings, both following from what scoring
 is rather than from a different opinion about the contract:
 
@@ -35,18 +39,18 @@ from typing import Any
 
 from score import run_scoring
 from utils.config_schema import InvocationConfig, RunConfig, ScoringConfig
-from utils.debug import set_debug
 
 from .config import (
     ConfigError,
+    add_common_flags,
     config_path,
+    config_section,
     existing_file,
     flag_value,
     path_from_root,
-    print_resolved_config,
-    render_invocation,
     required,
-    resolve_input,
+    resolve_with,
+    run_command,
 )
 
 # CLI behavior defaults, applied during resolution by `flag_value` rather than
@@ -73,17 +77,7 @@ def run(args: argparse.Namespace) -> int:
     Resolution happens up front and completely, so a missing results CSV or
     personas file fails before anything is written.
     """
-    run_configs = resolve_configs(args)
-    if args.print_only:
-        for run_config in run_configs:
-            print(render_invocation(run_config, command="score"))
-        return 0
-
-    if any(config.invocation.debug for config in run_configs):
-        set_debug(True)
-    for run_config in run_configs:
-        print_resolved_config(run_config)
-    return _execute(run_configs)
+    return run_command(args, command="score", resolve=resolve_configs, execute=_execute)
 
 
 def resolve_configs(args: argparse.Namespace) -> list[RunConfig]:
@@ -93,20 +87,13 @@ def resolve_configs(args: argparse.Namespace) -> list[RunConfig]:
     commands so `run` reads the same in all three; only `generate` can ever
     return more than one, via `--target all`.
     """
-    try:
-        config, invocation = resolve_input(
-            args,
-            allowed_config_fields=ALLOWED_CONFIG_FIELDS,
-        )
-        return (
-            _from_config(config, invocation)
-            if config is not None
-            else _from_cli(args, invocation)
-        )
-    except ConfigError:
-        raise
-    except (TypeError, ValueError) as error:
-        raise ConfigError(f"invalid scoring config: {error}") from error
+    return resolve_with(
+        args,
+        allowed_config_fields=ALLOWED_CONFIG_FIELDS,
+        label="scoring",
+        from_config=_from_config,
+        from_cli=_from_cli,
+    )
 
 
 def _from_cli(
@@ -125,22 +112,24 @@ def _from_cli(
     output = flag_value(args, "output", defaults=DEFAULTS)
 
     return [
-        _run_config(
+        RunConfig(
             invocation=invocation,
-            # Resolved against the working directory, like every other
-            # command-line tool, and verified so a typo fails before any file
-            # is written. The config form of this same field resolves against
-            # the repository root instead -- see `_from_config`, which is the
-            # only place a config is read.
-            results=existing_file(str(Path(results).resolve()), field="--results"),
-            output=str(Path(output).resolve()) if output is not None else None,
-            personas=(
-                existing_file(str(Path(personas).resolve()), field="--personas")
-                if personas is not None
-                else None
-            ),
-            skip_risk_analysis=flag_value(
-                args, "skip_risk_analysis", defaults=DEFAULTS
+            scoring=ScoringConfig(
+                # Resolved against the working directory, like every other
+                # command-line tool, and verified so a typo fails before any file
+                # is written. The config form of this same field resolves against
+                # the repository root instead -- see `_from_config`, which is the
+                # only place a config is read.
+                results=existing_file(str(Path(results).resolve()), field="--results"),
+                output=str(Path(output).resolve()) if output is not None else None,
+                personas=(
+                    existing_file(str(Path(personas).resolve()), field="--personas")
+                    if personas is not None
+                    else None
+                ),
+                skip_risk_analysis=flag_value(
+                    args, "skip_risk_analysis", defaults=DEFAULTS
+                ),
             ),
         )
     ]
@@ -157,10 +146,7 @@ def _from_config(
     code fills in. `output` and `personas` are required to be *present*, and
     explicit `null` is how a config says "no value".
     """
-    value = config.get("scoring")
-    if not isinstance(value, dict):
-        raise ConfigError("score requires a scoring config object")
-    scoring = dict(value)
+    scoring = config_section(config, "scoring", command="score")
 
     output = required(scoring, "output", section="scoring config")
     if output is not None and (not isinstance(output, str) or not output):
@@ -168,48 +154,25 @@ def _from_config(
     personas = required(scoring, "personas", section="scoring config")
 
     return [
-        _run_config(
+        RunConfig(
             invocation=invocation,
-            results=config_path(
-                required(scoring, "results", section="scoring config"),
-                field="scoring.results",
-            ),
-            output=path_from_root(output) if output is not None else None,
-            personas=(
-                config_path(personas, field="scoring.personas")
-                if personas is not None
-                else None
-            ),
-            skip_risk_analysis=required(
-                scoring, "skip_risk_analysis", section="scoring config"
+            scoring=ScoringConfig(
+                results=config_path(
+                    required(scoring, "results", section="scoring config"),
+                    field="scoring.results",
+                ),
+                output=path_from_root(output) if output is not None else None,
+                personas=(
+                    config_path(personas, field="scoring.personas")
+                    if personas is not None
+                    else None
+                ),
+                skip_risk_analysis=required(
+                    scoring, "skip_risk_analysis", section="scoring config"
+                ),
             ),
         )
     ]
-
-
-def _run_config(
-    *,
-    invocation: InvocationConfig,
-    results: str,
-    output: str | None,
-    personas: str | None,
-    skip_risk_analysis: bool,
-) -> RunConfig:
-    """Assemble and validate one canonical `RunConfig` holding a scoring section.
-
-    Fields are named rather than forwarded as opaque keywords so this signature
-    states what a scoring run consists of. Type enforcement happens at runtime
-    in `ScoringConfig.__post_init__`.
-    """
-    return RunConfig(
-        invocation=invocation,
-        scoring=ScoringConfig(
-            results=results,
-            output=output,
-            personas=personas,
-            skip_risk_analysis=skip_risk_analysis,
-        ),
-    )
 
 
 def _execute(run_configs: list[RunConfig]) -> int:
@@ -290,21 +253,7 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default=argparse.SUPPRESS,
         help="Skip the risk-level breakdown even when --personas is given",
     )
-    parser.add_argument("--config", help="JSON path or '-' for stdin")
-    parser.add_argument(
-        "-d",
-        "--debug",
-        action="store_true",
-        default=argparse.SUPPRESS,
-        help="Enable debug logging",
+    add_common_flags(
+        parser,
+        handler=run,
     )
-    parser.add_argument(
-        "--print",
-        action="store_true",
-        dest="print_only",
-        help="Print the resolved invocation without executing it",
-    )
-
-    # `run` is this module's handler, defined at the top of the module. `vera.py`
-    # dispatches to whatever a subparser records here.
-    parser.set_defaults(handler=run)

@@ -8,6 +8,10 @@ Structured like `vera_cli/score.py`, which follows the command contract in
 3. `_execute` hands the resolved run to the scoring domain's `run_pooling`.
 4. `register` declares the flags and attaches `run` as the subparser's handler.
 
+`run`, `resolve_configs` and the shared flags in `register` delegate to
+`run_command`, `resolve_with` and `add_common_flags` in `vera_cli/config.py`;
+this module supplies only what is specific to the command.
+
 Pooling merges two or more judge evaluations into one ``results.csv`` and
 scores it. It is a separate command from `score` (`judge` never pools, and
 `pipeline` calls the same `run_pooling` as its last stage),
@@ -24,18 +28,18 @@ from typing import Any
 
 from score import run_pooling
 from utils.config_schema import InvocationConfig, PoolingConfig, RunConfig
-from utils.debug import set_debug
 
 from .config import (
     ConfigError,
+    add_common_flags,
     config_path,
+    config_section,
     existing_file,
     flag_value,
     path_from_root,
-    print_resolved_config,
-    render_invocation,
     required,
-    resolve_input,
+    resolve_with,
+    run_command,
 )
 
 # CLI behavior defaults, applied during resolution by `flag_value` rather than
@@ -56,35 +60,18 @@ def run(args: argparse.Namespace) -> int:
     Resolution happens up front and completely, so a missing evaluation or
     personas file fails before anything is written.
     """
-    run_configs = resolve_configs(args)
-    if args.print_only:
-        for run_config in run_configs:
-            print(render_invocation(run_config, command="pool"))
-        return 0
-
-    if any(config.invocation.debug for config in run_configs):
-        set_debug(True)
-    for run_config in run_configs:
-        print_resolved_config(run_config)
-    return _execute(run_configs)
+    return run_command(args, command="pool", resolve=resolve_configs, execute=_execute)
 
 
 def resolve_configs(args: argparse.Namespace) -> list[RunConfig]:
     """Resolve either config JSON or CLI flags into exactly one canonical run."""
-    try:
-        config, invocation = resolve_input(
-            args,
-            allowed_config_fields=ALLOWED_CONFIG_FIELDS,
-        )
-        return (
-            _from_config(config, invocation)
-            if config is not None
-            else _from_cli(args, invocation)
-        )
-    except ConfigError:
-        raise
-    except (TypeError, ValueError) as error:
-        raise ConfigError(f"invalid pooling config: {error}") from error
+    return resolve_with(
+        args,
+        allowed_config_fields=ALLOWED_CONFIG_FIELDS,
+        label="pooling",
+        from_config=_from_config,
+        from_cli=_from_cli,
+    )
 
 
 def _existing_evaluation(path: str, *, field: str) -> str:
@@ -119,20 +106,24 @@ def _from_cli(
 
     personas = flag_value(args, "personas", defaults=DEFAULTS)
     return [
-        _run_config(
+        RunConfig(
             invocation=invocation,
-            evaluations=[
-                _existing_evaluation(path, field="--evaluations")
-                for path in evaluations
-            ],
-            output=str(Path(flag_value(args, "output", defaults=DEFAULTS)).resolve()),
-            personas=(
-                existing_file(str(Path(personas).resolve()), field="--personas")
-                if personas is not None
-                else None
-            ),
-            skip_risk_analysis=flag_value(
-                args, "skip_risk_analysis", defaults=DEFAULTS
+            pooling=PoolingConfig(
+                evaluations=[
+                    _existing_evaluation(path, field="--evaluations")
+                    for path in evaluations
+                ],
+                output=str(
+                    Path(flag_value(args, "output", defaults=DEFAULTS)).resolve()
+                ),
+                personas=(
+                    existing_file(str(Path(personas).resolve()), field="--personas")
+                    if personas is not None
+                    else None
+                ),
+                skip_risk_analysis=flag_value(
+                    args, "skip_risk_analysis", defaults=DEFAULTS
+                ),
             ),
         )
     ]
@@ -147,10 +138,7 @@ def _from_config(
     describes a run. Paths resolve against the repository root, and explicit
     `null` is how a config says "no personas file".
     """
-    value = config.get("pooling")
-    if not isinstance(value, dict):
-        raise ConfigError("pool requires a pooling config object")
-    pooling = dict(value)
+    pooling = config_section(config, "pooling", command="pool")
 
     evaluations = required(pooling, "evaluations", section="pooling config")
     if not isinstance(evaluations, list) or not all(
@@ -163,46 +151,27 @@ def _from_config(
     personas = required(pooling, "personas", section="pooling config")
 
     return [
-        _run_config(
+        RunConfig(
             invocation=invocation,
-            evaluations=[
-                _existing_evaluation(path_from_root(path), field="pooling.evaluations")
-                for path in evaluations
-            ],
-            output=path_from_root(output),
-            personas=(
-                config_path(personas, field="pooling.personas")
-                if personas is not None
-                else None
-            ),
-            skip_risk_analysis=required(
-                pooling, "skip_risk_analysis", section="pooling config"
+            pooling=PoolingConfig(
+                evaluations=[
+                    _existing_evaluation(
+                        path_from_root(path), field="pooling.evaluations"
+                    )
+                    for path in evaluations
+                ],
+                output=path_from_root(output),
+                personas=(
+                    config_path(personas, field="pooling.personas")
+                    if personas is not None
+                    else None
+                ),
+                skip_risk_analysis=required(
+                    pooling, "skip_risk_analysis", section="pooling config"
+                ),
             ),
         )
     ]
-
-
-def _run_config(
-    *,
-    invocation: InvocationConfig,
-    evaluations: list[str],
-    output: str,
-    personas: str | None,
-    skip_risk_analysis: bool,
-) -> RunConfig:
-    """Assemble one canonical `RunConfig` holding a pooling section.
-
-    Type enforcement happens at runtime in `PoolingConfig.__post_init__`.
-    """
-    return RunConfig(
-        invocation=invocation,
-        pooling=PoolingConfig(
-            evaluations=evaluations,
-            output=output,
-            personas=personas,
-            skip_risk_analysis=skip_risk_analysis,
-        ),
-    )
 
 
 def _execute(run_configs: list[RunConfig]) -> int:
@@ -273,18 +242,7 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default=argparse.SUPPRESS,
         help="Skip the risk-level breakdown even when --personas is given",
     )
-    parser.add_argument("--config", help="JSON path or '-' for stdin")
-    parser.add_argument(
-        "-d",
-        "--debug",
-        action="store_true",
-        default=argparse.SUPPRESS,
-        help="Enable debug logging",
+    add_common_flags(
+        parser,
+        handler=run,
     )
-    parser.add_argument(
-        "--print",
-        action="store_true",
-        dest="print_only",
-        help="Print the resolved invocation without executing it",
-    )
-    parser.set_defaults(handler=run)

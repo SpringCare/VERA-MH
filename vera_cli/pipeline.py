@@ -60,10 +60,7 @@ malformed `max_concurrent` fails before spending the budget.
 from __future__ import annotations
 
 import argparse
-import asyncio
 import dataclasses
-import json
-import shlex
 from pathlib import Path
 from typing import Any
 
@@ -77,21 +74,22 @@ from utils.config_schema import (
     ScoringSpec,
 )
 from utils.conversation_layout import resolve_conversation_input
-from utils.debug import set_debug
 from utils.utils import parse_key_value_list
 
 from . import generate as generate_command
 from . import judge as judge_command
 from .config import (
-    VERA_RUN_CONFIG_ENV,
     ConfigError,
+    add_common_flags,
     config_path,
+    config_section,
     models_from_cli,
     models_from_config,
     print_resolved_config,
     required,
-    resolve_input,
+    resolve_with,
     rubrics_from_config,
+    run_command,
 )
 from .targets import load_target, resolve_target_manifest
 
@@ -131,23 +129,21 @@ class PipelineRun:
 
 
 def run(args: argparse.Namespace) -> int:
-    """Resolve the requested pipeline(s) and execute them end to end."""
-    runs = resolve_configs(args)
-    if args.print_only:
-        for pipeline_run in runs:
-            print(_render(pipeline_run))
-        return 0
+    """Resolve the requested pipeline(s) and execute them end to end.
 
-    # Debug is per invocation, not per stage: `set_debug` flips a process
-    # global (`utils/debug.py`) and `debug` lives on `InvocationConfig`, which
-    # is one per run.
-    # Whether per-stage debug is worth having is an open item in `TODO`.
-    if any(run.generation.invocation.debug for run in runs):
-        set_debug(True)
-    for pipeline_run in runs:
-        print_resolved_config(pipeline_run.generation)
-    asyncio.run(_execute(runs))
-    return 0
+    Debug is per invocation, not per stage: `set_debug` flips a process global
+    (`utils/debug.py`) and `debug` lives on `InvocationConfig`, which is one per
+    run. Whether per-stage debug is worth having is a Backlog item in
+    `docs/roadmap.md`.
+    """
+    return run_command(
+        args,
+        command="pipeline",
+        resolve=resolve_configs,
+        execute=_execute,
+        echo=lambda pipeline_run: print_resolved_config(pipeline_run.generation),
+        debug_of=lambda pipeline_run: pipeline_run.generation.invocation.debug,
+    )
 
 
 def resolve_configs(args: argparse.Namespace) -> list[PipelineRun]:
@@ -157,30 +153,13 @@ def resolve_configs(args: argparse.Namespace) -> list[PipelineRun]:
     rejected for now (see `_reject_target_all`), so today it always holds
     exactly one pipeline.
     """
-    try:
-        config, invocation = resolve_input(
-            args,
-            allowed_config_fields=ALLOWED_CONFIG_FIELDS,
-        )
-        return (
-            _from_config(config, invocation)
-            if config is not None
-            else _from_cli(args, invocation)
-        )
-    # Not dead code, and the order matters: `ConfigError` *is* a `ValueError`
-    # (`vera_cli/config.py`), so without this arm the broad one below would
-    # catch every error the resolvers already diagnosed and wrap its message a
-    # second time — "judging config is missing required field: models" would
-    # reach the user as "invalid pipeline config: judging config is missing
-    # required field: models".
-    except ConfigError:
-        raise
-    # Raw TypeError/ValueError come from the dataclass constructors underneath,
-    # which have no idea they are behind a CLI — `ModelSpec.from_dict` on a
-    # wrong-typed field is the common one. Normalized so the user sees a config
-    # error rather than a traceback.
-    except (TypeError, ValueError) as error:
-        raise ConfigError(f"invalid pipeline config: {error}") from error
+    return resolve_with(
+        args,
+        allowed_config_fields=ALLOWED_CONFIG_FIELDS,
+        label="pipeline",
+        from_config=_from_config,
+        from_cli=_from_cli,
+    )
 
 
 def _from_cli(
@@ -245,10 +224,7 @@ def _from_config(
     matching every other config-mode command: a stored config is a complete
     description of a run.
     """
-    value = config.get("judging")
-    if not isinstance(value, dict):
-        raise ConfigError("pipeline requires a judging config object")
-    judging = dict(value)
+    judging = config_section(config, "judging", command="pipeline")
     if "conversations" in judging:
         raise ConfigError(
             "pipeline config must not set judging.conversations: the generation "
@@ -455,14 +431,6 @@ async def _judge_and_score(pipeline_run: PipelineRun, run_folder: str) -> str:
     return evaluation_folder
 
 
-def _render(pipeline_run: PipelineRun) -> str:
-    """Render a resolved pipeline as a command that reproduces it."""
-    compact = json.dumps(pipeline_run.to_dict(), sort_keys=True, separators=(",", ":"))
-    return (
-        f"{VERA_RUN_CONFIG_ENV}={shlex.quote(compact)} uv run python vera.py pipeline"
-    )
-
-
 def register(subparsers: argparse._SubParsersAction) -> None:
     """Register ``pipeline`` with the root parser.
 
@@ -526,25 +494,8 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         metavar="k=v[,k=v...]",
         help="Provider parameters applied to every -j model (default: none)",
     )
-    parser.add_argument("--config", help="JSON path or '-' for stdin")
-    parser.add_argument(
-        "--sample",
-        type=int,
-        default=argparse.SUPPRESS,
-        help="Debug-only cap on personas loaded per file",
+    add_common_flags(
+        parser,
+        handler=run,
+        sample_help="Debug-only cap on personas loaded per file",
     )
-    parser.add_argument(
-        "-d",
-        "--debug",
-        action="store_true",
-        default=argparse.SUPPRESS,
-        help="Enable debug logging",
-    )
-    parser.add_argument(
-        "--print",
-        action="store_true",
-        dest="print_only",
-        help="Print the resolved invocation without executing it",
-    )
-
-    parser.set_defaults(handler=run)
