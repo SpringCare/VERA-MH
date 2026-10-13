@@ -289,16 +289,8 @@ def test_shipped_recommended_config_resolves() -> None:
     assert generation.turns == 30
 
 
-def test_pipeline_runs_three_stages_and_never_pools(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
-) -> None:
-    """Pooling is a separate command; pipeline names the folders instead.
-
-    `docs/architecture.md` defines this command as three stages and lists
-    `vera pool` separately, so a multi-user-model run must not quietly produce a
-    fourth artifact. It reports the evaluation folders so pooling needs no
-    log-scraping.
-    """
+def _fake_stages(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
+    """Stub generation, judging/scoring and pooling; return the pooling calls."""
 
     async def fake_generate(run_configs):
         generation = run_configs[0].generation
@@ -307,17 +299,38 @@ def test_pipeline_runs_three_stages_and_never_pools(
     async def fake_judge_and_score(run, run_folder):
         return f"{run_folder}/evaluations/j_x"
 
+    pool_calls: list[dict] = []
+
+    def fake_run_pooling(**kwargs):
+        pool_calls.append(kwargs)
+        return Path("pooled/j_pooled")
+
     monkeypatch.setattr(pipeline.generate_command, "_execute", fake_generate)
     monkeypatch.setattr(pipeline, "_judge_and_score", fake_judge_and_score)
-    assert not hasattr(pipeline, "_pool")
+    monkeypatch.setattr(pipeline, "run_pooling", fake_run_pooling)
+    return pool_calls
 
+
+def test_pipeline_with_one_user_model_does_not_pool(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+) -> None:
+    """One evaluation is already the headline score; there is nothing to pool."""
+    pool_calls = _fake_stages(monkeypatch)
     parser = vera.build_parser()
-    asyncio.run(pipeline._execute(pipeline.resolve_configs(parser.parse_args(_cli()))))
-    single = capsys.readouterr().out
-    # One evaluation has nothing to pool, so nothing is reported.
-    assert "folders to pool" not in single
 
-    both = pipeline.resolve_configs(
+    asyncio.run(pipeline._execute(pipeline.resolve_configs(parser.parse_args(_cli()))))
+
+    assert pool_calls == []
+    assert "pooled" not in capsys.readouterr().out.lower()
+
+
+def test_pipeline_pools_the_evaluations_of_several_user_models(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+) -> None:
+    """The per-model scores are not the headline; the pooled score across them is."""
+    pool_calls = _fake_stages(monkeypatch)
+    parser = vera.build_parser()
+    (run,) = pipeline.resolve_configs(
         parser.parse_args(
             [
                 "pipeline",
@@ -333,8 +346,41 @@ def test_pipeline_runs_three_stages_and_never_pools(
             ]
         )
     )
-    asyncio.run(pipeline._execute(both))
+
+    asyncio.run(pipeline._execute([run]))
+
+    assert run.generation.generation is not None
+    assert pool_calls == [
+        {
+            "evaluations": ["run_0/evaluations/j_x", "run_1/evaluations/j_x"],
+            "output_parent": run.generation.generation.output,
+            "personas_tsv": None,
+            "skip_risk_analysis": False,
+        }
+    ]
     reported = capsys.readouterr().out
-    assert "folders to pool" in reported
     assert "run_0/evaluations/j_x" in reported
     assert "run_1/evaluations/j_x" in reported
+    assert "Headline (pooled) score: pooled/j_pooled" in reported
+
+
+def test_pipeline_pooling_uses_the_scoring_settings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The shipped profile's personas file reaches pooling's risk breakdown."""
+    pool_calls = _fake_stages(monkeypatch)
+    data = json.loads(
+        (Path(__file__).resolve().parents[2] / "configs/recommended-SI.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    data["generation"]["chatbot"]["name"] = "claude-sonnet-5"
+    monkeypatch.setenv(cli_config.VERA_RUN_CONFIG_ENV, json.dumps(data))
+    (run,) = pipeline.resolve_configs(vera.build_parser().parse_args(["pipeline"]))
+
+    asyncio.run(pipeline._execute([run]))
+
+    (call,) = pool_calls
+    assert call["personas_tsv"] == run.scoring.personas
+    assert call["personas_tsv"].endswith("data/SI/personas.tsv")
+    assert call["skip_risk_analysis"] is False

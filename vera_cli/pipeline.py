@@ -1,21 +1,20 @@
-"""The ``vera pipeline`` command: generate, then judge, then score.
+"""The ``vera pipeline`` command: generate, judge, score, then pool.
 
-A **shim**, deliberately. It owns no generation, judging, or scoring logic and
-no defaults of its own: it resolves input with the same helpers the three
+A **shim**, deliberately. It owns no generation, judging, scoring, or pooling
+logic and no defaults of its own: it resolves input with the same helpers the
 single-stage commands use, then calls `vera_cli.generate._execute`,
-`judge.run.run_judging`, and `score.run_scoring` in order, passing each
-stage's output to the next.
+`judge.run.run_judging`, `score.run_scoring`, and `score.run_pooling` in order,
+passing each stage's output to the next.
 
-It is exactly those three stages and no more. `docs/architecture.md` defines
-this command as "Full workflow for one chatbot; passes paths between steps", and
-lists `vera pool` as its own subcommand owned by `score.pool` — the same doc
-states the principle directly: "Judge never auto-scores — `vera score`/`vera
-pool` are separate subcommands." An earlier revision of this module pooled
-implicitly whenever a run used more than one `-u` model, which contradicted
-that and quietly produced an artifact the naming scheme had no home for.
-Pooling the per-user-model evaluations into the headline score is therefore a
-second, explicit command; `_execute` prints the evaluation folders so it needs
-no log-scraping.
+A run with more than one `-u` model produces one evaluation per user model,
+and the headline number is the pooled score across them, so the pipeline ends
+by pooling those evaluations (with one user model there is nothing to pool).
+This does not contradict "judge never auto-scores" in `docs/architecture.md`:
+that rule keeps `vera judge` non-scoring, while `pipeline` exists to run every
+stage. `vera pool` remains its own command for pooling evaluations judged
+separately. Until the Traceability phase (`docs/roadmap.md`) builds the
+target-rooted layout, the pooled folder is written under the generation
+output folder, where `vera pool` writes by default.
 
 That chaining is the entire reason the command exists. Running the three
 commands by hand works, but the caller has to copy the generation run folder
@@ -69,7 +68,7 @@ from pathlib import Path
 from typing import Any
 
 from judge import run_judging
-from score import run_scoring
+from score import run_pooling, run_scoring
 from utils.config_schema import (
     InvocationConfig,
     JudgingSpec,
@@ -358,10 +357,10 @@ async def _execute(runs: list[PipelineRun]) -> None:
 
     A run with more than one `-u` model produces one generation run, one
     evaluation and one score *per user model*, and the per-model scores are not
-    the headline number — the pooled score across them is. Pooling is a
-    separate command by design (see the module docstring), so this ends by
-    naming the evaluation folders it produced, which is what that command needs
-    as input.
+    the headline number — the pooled score across them is. So it ends by
+    pooling them, per `PipelineRun` and so never across targets, whose rubrics
+    differ. The evaluation folders are printed before pooling, so they are known
+    even if pooling fails; a failure propagates like any other stage's.
     """
     for pipeline_run in runs:
         run_folders = await generate_command._execute([pipeline_run.generation])
@@ -370,12 +369,18 @@ async def _execute(runs: list[PipelineRun]) -> None:
             for run_folder in run_folders
         ]
         if len(evaluations) > 1:
-            print(
-                f"\n{len(evaluations)} evaluations written. The headline score "
-                "pools them; these are the folders to pool:"
-            )
+            print(f"\n{len(evaluations)} evaluations written:")
             for evaluation in evaluations:
                 print(f"  {evaluation}")
+            generation = pipeline_run.generation.generation
+            assert generation is not None  # generate.resolve_configs always sets it
+            pooled = run_pooling(
+                evaluations=evaluations,
+                output_parent=generation.output,
+                personas_tsv=pipeline_run.scoring.personas,
+                skip_risk_analysis=pipeline_run.scoring.skip_risk_analysis,
+            )
+            print(f"\nHeadline (pooled) score: {pooled}")
 
 
 def _persona_annotation(generation_run: RunConfig) -> tuple[list[str], list[str]]:

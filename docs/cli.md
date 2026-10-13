@@ -177,7 +177,7 @@ The risk-level breakdown currently works only with SI personas. What each output
 
 Merges two or more judge evaluations into one `results.csv` and scores it, typically the two user-model evaluations of the recommended profile. Each evaluation is a `j_*` folder or the `results.csv` inside it.
 
-Most users won't run this directly: it's for combining evaluations you judged separately, such as the two user-model runs of the recommended profile, into the headline score.
+Used behind the scenes by `vera pipeline`, so most users won't run it directly. Run it yourself to pool evaluations judged separately, across runs, or re-pooled later.
 
 ```bash
 uv run python vera.py pool --personas data/SI/personas.tsv \
@@ -196,7 +196,7 @@ The config section is `pooling` with the same four fields (`evaluations`, `outpu
 
 ## `vera pipeline`
 
-Runs generate, judge, and score in sequence. Its flag form accepts only the three model roles and the target:
+Runs generate, judge, and score in sequence, then pools the evaluations when there is more than one user model. Its flag form accepts only the three model roles and the target:
 
 ```bash
 uv run python vera.py pipeline \
@@ -217,7 +217,7 @@ uv run python vera.py pipeline \
 
 Anything stage-specific—output directory, concurrency, turns, the scoring personas file—comes from `--config`, because a flag like `--max-concurrent` would mean different things to generation and judging. A pipeline config has `generation`, `judging`, and `scoring` sections, and omits `judging.conversations` because generation supplies it. The flag form skips the risk-level breakdown; set `scoring.personas` in a config to get it.
 
-Each user model produces its own generation and evaluation run, and the command prints the evaluation folders at the end. To combine them into one score, see [pooling](scoring.md#pooling-several-evaluations). How the command resolves its input is explained in [pipeline.md](pipeline.md).
+Each user model produces its own generation and evaluation run. With two or more, the command then pools them with [`vera pool`](#vera-pool)'s logic and prints the pooled folder as the headline score; it is written under `generation.output` and uses the `scoring` section's `personas` and `skip_risk_analysis`. How the command resolves its input is explained in [pipeline.md](pipeline.md).
 
 ## Continuing an interrupted run: `--into`
 

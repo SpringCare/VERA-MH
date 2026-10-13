@@ -9,7 +9,8 @@ Structured like `vera_cli/score.py`, which follows the command contract in
 4. `register` declares the flags and attaches `run` as the subparser's handler.
 
 Pooling merges two or more judge evaluations into one ``results.csv`` and
-scores it. It is a separate command from `score` (and `judge` never pools),
+scores it. It is a separate command from `score` (`judge` never pools, and
+`pipeline` calls the same `run_pooling` as its last stage),
 per `docs/architecture.md`. Like `score`, it calls no model, so `_execute` is
 synchronous, and a missing `--personas` skips the risk-level breakdown rather
 than defaulting to `data/SI/personas.tsv` as the legacy script does.

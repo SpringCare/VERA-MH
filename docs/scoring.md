@@ -39,7 +39,7 @@ The two risk files are written only when a personas file is given (`--personas`,
 
 ## Pooling several evaluations
 
-The published VERA-MH score pools two evaluations of the same chatbot, one per user model. Merge them with [`vera pool`](cli.md#vera-pool):
+The published VERA-MH score pools two evaluations of the same chatbot, one per user model. `vera pipeline` does this automatically when it runs more than one user model. To pool evaluations yourself, use [`vera pool`](cli.md#vera-pool):
 
 ```bash
 uv run python vera.py pool -o <pool-parent-dir> --personas data/SI/personas.tsv \
@@ -47,7 +47,7 @@ uv run python vera.py pool -o <pool-parent-dir> --personas data/SI/personas.tsv 
                output/<generation-run-B>/evaluations/<evaluation-run-B>
 ```
 
-This creates one pooled folder (named like `j_gpt-5.4x1__p_gpt_5_2+claude_opus_4_5__a_.../`) with a merged `results.csv`, `pool_metadata.json` recording the sources, and the usual `scores/`. As with `vera score`, the risk files are written only when a personas file is given. Use that pooled folder for headline numbers.
+This creates one pooled folder (named like `j_gpt-5.4x1__p_gpt_5_2+claude_opus_4_5__a_.../`) with a merged `results.csv`, `pool_metadata.json` recording the sources, and the usual `scores/`. As with `vera score`, the risk files are written only when a personas file is given. Use that pooled folder for headline numbers. Pooling refuses evaluations whose dimensions differ, since scores from different rubrics aren't comparable.
 
 ## Comparing chatbots
 

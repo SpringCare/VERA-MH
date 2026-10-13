@@ -1,7 +1,8 @@
 # How `vera pipeline` resolves its input
 
 `vera pipeline` runs generation, then judging, then scoring, feeding each
-stage's output into the next. That one property—the stages are
+stage's output into the next, and with more than one user model it ends by
+pooling the per-model evaluations into the headline score. That one property—the stages are
 chained—makes its input different from every other command's, and this
 document explains the difference, because it looks like a schema
 inconsistency when you meet it in the code or in a config file.
@@ -9,7 +10,7 @@ inconsistency when you meet it in the code or in a config file.
 For what the command is and how to run it, see
 [`vera_cli/README.md`](../vera_cli/README.md) and
 [`vera-cli-use-cases.md`](./vera-cli-use-cases.md). For the layering rule this
-command follows (three stages, pooling is its own subcommand), see
+command follows (`vera judge` never scores; `pipeline` runs every stage), see
 [`architecture.md`](./architecture.md).
 
 ## The stages are chained, so some values cannot exist yet
@@ -26,6 +27,7 @@ For a pipeline, the two bold values are produced *by the run itself*:
 
 ```
 generate ──▶ <run>/conversations ──▶ judge ──▶ <evaluation>/results.csv ──▶ score
+                                                    (one per user model) ──▶ pool
 ```
 
 Nobody can state `judging.conversations` before the pipeline starts, because
