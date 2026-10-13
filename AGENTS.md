@@ -20,6 +20,7 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 - **Check for existing code first** — before adding a function or helper, search the repo for something that already does the job; extend or reuse it when possible
 - **Don't add abstractions unless asked** — avoid new base classes, wrappers, or indirection layers unless the task explicitly calls for them
 - Keep changes **small and understandable** — one logical change per edit; avoid drive-by refactors or unrelated cleanup in the same diff
+- **Don't change public signatures or unrelated files unless the task asks for it** — no renamed or removed parameters, changed defaults, or edits outside the task's scope. If one is unavoidable, say so in the PR description
 - When replacing behavior, **delete the old code** — don't leave dead paths, commented-out blocks, or "just in case" fallbacks behind
 - Don't create example files unless asked
 - Use `python3` or `uv run python` explicitly
