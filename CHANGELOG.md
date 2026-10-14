@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Breaking / migration
 
+- **`utils.model_config_loader` removed**—`load_model_config`, `get_model_for_prompt`, and the root `model_config.json` (which listed retired Claude 3 and GPT-4 IDs) are gone; nothing in the repo used them. Model defaults live in `llm_clients/config.py`.
 - **Pool script moved to [`legacy/`](legacy/)**—`scripts/pool_vera_scores.py` is now `legacy/pool_vera_scores.py`; run it as `uv run python -m legacy.pool_vera_scores`. Its flags and defaults are unchanged. Prefer `vera pool`.
 - **`generate.main` is now `generate.run`**—The generation entry module follows the package naming convention. `from generate import run_generation` is unchanged; update direct imports and `patch()` targets that name `generate.main`.
 
@@ -17,10 +18,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Testing and CI
 
+- **Cheap-tier models on `Config`**—The live end-to-end test reads its models from `Config.CHEAP_*`, and `test_model_availability.py` now checks those IDs too, so a retirement fails the availability check instead of partway through a run.
 - **Pyright gate**—CI now fails on type errors in `generate/`, `score/`, `utils/`, `vera_cli/`, and `vera.py`, which have none today. The full-repo pyright run still reports without failing.
 
 ### Documentation and development workflow
 
+- **Current model IDs in examples**—README, AGENTS.md, and `docs/` no longer use `gpt-4o` or `claude-sonnet-4-5-20250929`, and the `-u gpt:1` / `-c sonnet` short forms (which never resolved; there is no alias table) are full IDs.
 - **Wider maintainer review**—[`.github/CODEOWNERS`](.github/CODEOWNERS) now also covers `score/`, `vera_cli/`, `vera.py`, `utils/`, `scripts/`, `.github/`, and `docs/roadmap.md`, and [`AGENTS.md`](AGENTS.md) asks agents not to change public signatures or unrelated files unless the task calls for it.
 
 ### Fixed

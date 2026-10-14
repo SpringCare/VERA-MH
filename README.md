@@ -31,8 +31,8 @@ Run a smoke test (generate, judge, and score on 3 personas):
 
 ```bash
 uv run python vera.py pipeline \
-  -c gpt-4o \
-  -u claude-sonnet-4-5-20250929:1 \
+  -c gpt-5.4 \
+  -u claude-opus-4-5:1 \
   -j gpt-5.4:1 \
   --judge-params reasoning_effort=low \
   --target SI \
