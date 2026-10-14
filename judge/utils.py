@@ -1,11 +1,16 @@
 """Utility functions for the judge module."""
 
 import os
-import re
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional, Sequence
 
+import pandas as pd
+
+from utils.judge_results import (
+    extract_persona_name_from_filename,
+    load_persona_column,
+)
 from utils.logging_utils import (
     extract_last_response_metadata,
     log_llm_failure_metadata,
@@ -134,59 +139,6 @@ def build_judge_task_log_path(
     return str(Path(root) / run_key / f"{stem}.log")
 
 
-def extract_model_names_from_path(path_input: str) -> Dict[str, str]:
-    """
-    Extract all three model names from the evaluation directory path.
-
-    Directory format:
-        j_{judge}__p_{persona}__a_{agent}__t{max_turns}__r{runs}__{timestamp}
-
-    Args:
-        path_input: Path to results.csv file or evaluation directory
-
-    Returns:
-        Dictionary with 'judge', 'persona', and 'agent' keys, or 'Unknown' if not found
-    """
-    path = Path(path_input)
-
-    # If it's a file (e.g., results.csv), get the parent directory name
-    # If it's a directory, use the directory name directly
-    if path.is_file():
-        dir_name = path.parent.name
-    else:
-        dir_name = path.name
-
-    result = {"judge": "Unknown", "persona": "Unknown", "agent": "Unknown"}
-
-    # Extract judge model: j_{judge}__p_...
-    # Note: judge name may include a timestamp like _20251112_171754_380
-    if dir_name.startswith("j_"):
-        parts = dir_name.split("__p_", 1)
-        if len(parts) > 0:
-            judge_part = parts[0][2:]  # Remove 'j_' prefix
-            # Remove timestamp pattern (YYYYMMDD_HHMMSS_milliseconds or similar)
-            # Look for pattern starting with underscore followed by 8 digits (date)
-            # Remove timestamp: _YYYYMMDD_HHMMSS_... or _YYYYMMDD_...
-            judge_part = re.sub(r"_\d{8}.*$", "", judge_part)
-            result["judge"] = judge_part.replace("_", " ").strip()
-
-    # Extract persona model: ...__p_{persona}__a_...
-    if "__p_" in dir_name:
-        parts = dir_name.split("__p_")
-        if len(parts) > 1:
-            persona_part = parts[1].split("__a_")[0]
-            result["persona"] = persona_part.replace("_", " ").strip()
-
-    # Extract agent model: ...__a_{agent}__t...
-    if "__a_" in dir_name:
-        parts = dir_name.split("__a_")
-        if len(parts) > 1:
-            agent_part = parts[1].split("__t")[0]
-            result["agent"] = agent_part.replace("_", " ").strip()
-
-    return result
-
-
 def default_adhoc_parent() -> str:
     """
     Parent directory for single-file judge runs and unscoped LLMJudge log dirs.
@@ -194,3 +146,58 @@ def default_adhoc_parent() -> str:
     Set VERA_ADHOC_PARENT to override (tests use a temp directory).
     """
     return os.environ.get("VERA_ADHOC_PARENT") or os.path.join("output", "adhoc")
+
+
+def add_persona_columns_to_dataframe(
+    df: pd.DataFrame, personas_tsv_path: Path, columns: Sequence[str]
+) -> pd.DataFrame:
+    """
+    Annotate evaluation rows with persona columns, joined on the persona name.
+
+    The persona name is recovered from each row's conversation filename, the
+    same join `add_risk_levels_to_dataframe` performs, but the columns carried
+    over are named by the caller (ultimately by the target manifest) instead of
+    fixed to SI's risk level.
+
+    Annotation columns are placed directly after `persona_name` so the
+    identifying fields stay together at the left edge of `results.csv`.
+
+    Args:
+        df: DataFrame with a 'filename' column
+        personas_tsv_path: Path to the personas TSV
+        columns: Persona column names to add, in order
+
+    Returns:
+        DataFrame with `persona_name` and the requested columns added. Existing
+        columns are left untouched, so re-annotating is a no-op.
+    """
+    if not columns:
+        return df
+
+    persona_names = df["filename"].apply(
+        lambda filename: extract_persona_name_from_filename(str(filename)) or "Unknown"
+    )
+
+    if "persona_name" not in df.columns:
+        df = df.copy()
+        df["persona_name"] = persona_names
+        cols: list[str] = list(df.columns)
+        cols.remove("persona_name")
+        cols.insert(2 if "run_id" in cols else 1, "persona_name")
+        df = pd.DataFrame(df[cols])
+
+    # Offset grows per inserted column so several annotations keep the order the
+    # caller asked for; inserting each one directly after `persona_name` would
+    # reverse them.
+    for offset, column in enumerate(columns, start=1):
+        if column in df.columns:
+            continue
+        value_map = load_persona_column(personas_tsv_path, column)
+        df = df.copy()
+        df[column] = persona_names.map(lambda name: value_map.get(name, "Unknown"))
+        cols = list(df.columns)
+        cols.remove(column)
+        cols.insert(cols.index("persona_name") + offset, column)
+        df = pd.DataFrame(df[cols])
+
+    return df
