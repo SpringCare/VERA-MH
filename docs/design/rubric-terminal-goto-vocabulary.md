@@ -128,7 +128,7 @@ the resulting numbers.
   a mechanical edit rather than a compatibility surface worth maintaining.
 - **Blast radius of the rename.** `judge/question_navigator.py` (token set),
   `judge/rubric_config.py` (validation), `judge/llm_judge.py` (branching and
-  synthetic markers), `judge/score_utils.py:515` (a regex parsing the
+  synthetic markers), `utils/judge_results.py` (a regex parsing the
   `(ASSIGN_END)` marker out of reasoning prose), `judge/answers.py`,
   `data/SI/rubric.tsv`, `tests/fixtures/rubric_assign_end.tsv`, `docs/rubric.md`,
   `docs/judge.md`, `docs/ARCHITECTURE-SPINE.md`, and roughly seventy test

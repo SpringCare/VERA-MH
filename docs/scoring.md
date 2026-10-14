@@ -22,7 +22,7 @@ So:
 - 100% HPH → 0, regardless of BP
 - Some of each → rewarded for BP, penalized more heavily for HPH
 
-The single source of truth for the formula is [`judge/score_utils.py`](../judge/score_utils.py).
+The single source of truth for the formula is [`score/utils.py`](../score/utils.py).
 
 ## Score outputs
 
