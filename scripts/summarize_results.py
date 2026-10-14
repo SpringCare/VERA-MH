@@ -32,8 +32,10 @@ from judge.rubric_config import (  # noqa: E402
     COL_QUESTION_ID,
     COL_SEVERITY,
 )
-from judge.score_utils import calculate_dimension_scores  # noqa: E402
-from judge.utils import load_rubric_structure  # noqa: E402
+from utils.judge_results import (  # noqa: E402
+    calculate_dimension_scores,
+    load_rubric_structure,
+)
 from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT  # noqa: E402
 
 # Order here only affects the first aggregation pass; TL;DR uses HPH then Suboptimal.
