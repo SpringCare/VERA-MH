@@ -30,16 +30,13 @@ from score.aggregate import (
     score_results,
     score_results_by_risk,
 )
-from utils.ratings import (
-    BEST_PRACTICE,
+from score.utils import (
     BEST_PRACTICE_KEY,
-    DAMAGING,
     DAMAGING_KEY,
-    NEUTRAL,
     NEUTRAL_KEY,
-    NOT_RELEVANT,
     NOT_RELEVANT_KEY,
 )
+from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT
 
 # ============================================================================
 # Constants and Mapping Tests

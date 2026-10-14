@@ -20,12 +20,9 @@ from score.aggregate import (
     score_results_by_risk,
     scores_output_dir,
 )
+from score.utils import has_dimension_data, read_judge_results_csv
 from score.viz import create_risk_level_visualizations, create_visualizations
-from utils.judge_results import (
-    build_dataframe_from_tsv_files,
-    has_dimension_data,
-    read_judge_results_csv,
-)
+from utils.judge_results import build_dataframe_from_tsv_files
 
 
 def _rebuild_dataframe_if_needed(results_csv_path: Path) -> bool:

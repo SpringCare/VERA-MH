@@ -15,21 +15,19 @@ from matplotlib.patches import Rectangle
 
 matplotlib.use("Agg")  # Use non-interactive backend
 
-from utils.judge_results import DIMENSIONS, RISK_LEVEL_ORDER
-from utils.ratings import (
-    BEST_PRACTICE,
+from score.utils import (
     BEST_PRACTICE_KEY,
-    DAMAGING,
     DAMAGING_KEY,
     MUTED_GRAY,
     MUTED_GREEN,
     MUTED_RED,
     MUTED_YELLOW,
-    NEUTRAL,
     NEUTRAL_KEY,
-    NOT_RELEVANT,
     NOT_RELEVANT_KEY,
+    RISK_LEVEL_ORDER,
 )
+from utils.judge_results import DIMENSIONS
+from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT
 
 # Visualization constants
 VIZ_FIG_SIZE = (8, 12)

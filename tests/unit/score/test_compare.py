@@ -18,6 +18,9 @@ import pytest
 
 from judge.rubric_config import CONFIRMS_RISK, DETECTS_POTENTIAL_RISK
 from score.compare import (
+    COLOR_GREEN,
+    COLOR_ORANGE,
+    COLOR_RED,
     LayoutConfig,
     _calculate_layout,
     _calculate_model_scores,
@@ -26,7 +29,13 @@ from score.compare import (
     _get_dimension_score,
     _load_dataframes_from_paths,
     _save_comparison_csv,
+    calculate_scores_from_df,
+    get_color_for_score,
+    hex_to_rgb,
+    interpolate_color,
     load_evaluation_data,
+    rgb_to_hex,
+    save_detailed_breakdown_csv,
 )
 from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL
 
@@ -396,3 +405,122 @@ def test_save_comparison_csv_empty_data(tmp_path):
     csv_path = tmp_path / "comparison.csv"
     # Should create file even if empty
     assert csv_path.exists()
+
+
+# ============================================================================
+# Color Utility Tests
+# ============================================================================
+
+
+@pytest.mark.unit
+def test_hex_to_rgb():
+    """Test hex color to RGB conversion."""
+    assert hex_to_rgb("#000000") == (0, 0, 0)
+    assert hex_to_rgb("#FFFFFF") == (255, 255, 255)
+    assert hex_to_rgb("#DA4D2C") == (218, 77, 44)
+    assert hex_to_rgb("DA4D2C") == (218, 77, 44)  # Works without #
+
+
+@pytest.mark.unit
+def test_rgb_to_hex():
+    """Test RGB to hex color conversion."""
+    assert rgb_to_hex((0, 0, 0)) == "#000000"
+    assert rgb_to_hex((255, 255, 255)) == "#ffffff"
+    assert rgb_to_hex((218, 77, 44)) == "#da4d2c"
+
+
+@pytest.mark.unit
+def test_interpolate_color():
+    """Test color interpolation."""
+    # At t=0, should return color1
+    assert interpolate_color("#000000", "#FFFFFF", 0.0) == "#000000"
+    # At t=1, should return color2
+    assert interpolate_color("#000000", "#FFFFFF", 1.0) == "#ffffff"
+    # At t=0.5, should return midpoint (may vary slightly due to rounding)
+    mid = interpolate_color("#000000", "#FFFFFF", 0.5)
+    assert mid in ["#7f7f7f", "#808080"]  # Midpoint gray (rounding can vary)
+    # Clamping: t < 0 should clamp to 0
+    assert interpolate_color("#000000", "#FFFFFF", -0.5) == "#000000"
+    # Clamping: t > 1 should clamp to 1
+    assert interpolate_color("#000000", "#FFFFFF", 1.5) == "#ffffff"
+
+
+@pytest.mark.unit
+def test_get_color_for_score():
+    """Test color assignment for VERA scores."""
+    # Score 0 should be COLOR_RED (case-insensitive comparison)
+    assert get_color_for_score(0).lower() == COLOR_RED.lower()
+    # Score 50 should be COLOR_ORANGE
+    assert get_color_for_score(50).lower() == COLOR_ORANGE.lower()
+    # Score 100 should be COLOR_GREEN
+    assert get_color_for_score(100).lower() == COLOR_GREEN.lower()
+    # Score 25 should be between red and orange
+    color_25 = get_color_for_score(25)
+    assert (
+        color_25.lower() != COLOR_RED.lower()
+        and color_25.lower() != COLOR_ORANGE.lower()
+    )
+    # Score 75 should be between orange and green
+    color_75 = get_color_for_score(75)
+    assert (
+        color_75.lower() != COLOR_ORANGE.lower()
+        and color_75.lower() != COLOR_GREEN.lower()
+    )
+
+
+# ============================================================================
+# Score Summary and Detailed CSV Tests
+# ============================================================================
+
+
+@pytest.mark.unit
+def test_calculate_scores_from_df():
+    """Test calculate_scores_from_df returns complete score structure."""
+    df = pd.DataFrame(
+        {
+            DETECTS_POTENTIAL_RISK: [BEST_PRACTICE, BEST_PRACTICE, DAMAGING],
+            CONFIRMS_RISK: [NEUTRAL, NEUTRAL, NEUTRAL],
+        }
+    )
+
+    result = calculate_scores_from_df(df)
+
+    assert "overall_score" in result
+    assert "dimension_scores" in result
+    assert "overall_counts" in result
+    assert "overall_percentages" in result
+    assert result["overall_score"] > 0
+    assert DETECTS_POTENTIAL_RISK in result["dimension_scores"]
+
+
+@pytest.mark.unit
+def test_save_detailed_breakdown_csv(tmp_path):
+    """Test saving detailed breakdown CSV."""
+    output_path = tmp_path / "comparison.png"
+    sorted_data = [
+        {
+            "model_name": "Model1",
+            "vera_score": 85.5,
+            "overall_bp_pct": 80.0,
+            "overall_hph_pct": 5.0,
+            "dimensions": {
+                DETECTS_POTENTIAL_RISK: {
+                    "vera_score": 90.0,
+                    "hph_pct": 0.0,
+                    "bp_pct": 100.0,
+                }
+            },
+        }
+    ]
+
+    save_detailed_breakdown_csv(sorted_data, output_path)
+
+    detailed_csv = tmp_path / "comparison_detailed.csv"
+    assert detailed_csv.exists()
+
+    df = pd.read_csv(detailed_csv)
+    assert len(df) == 1
+    assert "Model" in df.columns
+    assert (
+        "Overall VERA-MH v1.2 Score" in df.columns
+    )  # Function uses hardcoded "VERA-MH v1.2 Score"

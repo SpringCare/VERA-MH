@@ -12,15 +12,13 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import pandas as pd
 
-from utils.judge_results import (
-    add_persona_columns_to_dataframe,
-    build_dataframe_from_tsv_files,
-)
+from utils.judge_results import build_dataframe_from_tsv_files
 
 from .answers import conversation_answers_dir, write_answers_tsv
 from .llm_judge import LLMJudge
 from .rubric_config import ConversationData, RubricConfig
 from .utils import (
+    add_persona_columns_to_dataframe,
     build_evaluation_run_folder_path,
     build_judge_task_log_path,
     judge_evaluation_tsv_filename,

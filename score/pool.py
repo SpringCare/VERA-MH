@@ -31,8 +31,8 @@ from score.aggregate import (
     score_results,
     score_results_by_risk,
 )
+from score.utils import ensure_results_csv
 from score.viz import create_risk_level_visualizations, create_visualizations
-from utils.judge_results import ensure_results_csv
 from utils.naming import parse_generation_run_folder_name
 
 # ``j_{judge_info}_{timestamp}__p_...`` or ``...__conversations`` (legacy flat layout)
