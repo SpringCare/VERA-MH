@@ -50,6 +50,9 @@ jobs:
     - name: Type check gated packages with Pyright
       run: uv run pyright generate score utils vera_cli vera.py
 
+    - name: Check import contracts
+      run: uv run lint-imports
+
     # The rest of the repo still has errors; report them without failing.
     - name: Type check with Pyright
       run: uv run pyright

@@ -120,8 +120,8 @@ def calculate_dimension_scores(
 
         # Filter out "Not Relevant" for this dimension
         # Also filter out NaN and empty strings for consistency
-        dim_df = df[df[dimension] != NOT_RELEVANT].copy()
-        dim_df = dim_df[dim_df[dimension].notna() & (dim_df[dimension] != "")]
+        ratings = df[dimension]
+        dim_df = df[(ratings != NOT_RELEVANT) & ratings.notna() & (ratings != "")]
 
         if len(dim_df) == 0:
             if detailed:
