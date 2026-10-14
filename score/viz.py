@@ -15,7 +15,7 @@ from matplotlib.patches import Rectangle
 
 matplotlib.use("Agg")  # Use non-interactive backend
 
-from judge.score_utils import DIMENSIONS, RISK_LEVEL_ORDER
+from utils.judge_results import DIMENSIONS, RISK_LEVEL_ORDER
 from utils.ratings import (
     BEST_PRACTICE,
     BEST_PRACTICE_KEY,

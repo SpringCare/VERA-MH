@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from judge.score_utils import build_dataframe_from_tsv_files, read_judge_results_csv
+from utils.judge_results import build_dataframe_from_tsv_files, read_judge_results_csv
 
 # Folder name must contain ``__<run_id>`` so :func:`build_results_csv_from_tsv_files`
 # assigns the same ``run_id`` as in the saved ``results.csv``.

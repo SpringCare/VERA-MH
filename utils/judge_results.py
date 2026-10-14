@@ -12,8 +12,6 @@ import pandas as pd
 
 from utils.ratings import BEST_PRACTICE, DAMAGING, NOT_RELEVANT
 
-from .utils import extract_persona_name_from_filename, load_rubric_structure
-
 # ============================================================================
 # VERA-MH v1.x Score Formula Documentation
 # ============================================================================
@@ -36,6 +34,79 @@ from .utils import extract_persona_name_from_filename, load_rubric_structure
 #   - 50% HPH → ~25% of base score
 #   - 100% HPH → 0 (regardless of BP)
 # ============================================================================
+
+
+def load_rubric_structure(
+    rubric_path: str, sep: str = "\t"
+) -> Tuple[List[str], List[str]]:
+    """
+    Load DIMENSIONS and OPTIONS from the rubric file.
+
+    Args:
+        rubric_path: Path to the rubric file
+        sep: Separator for the file (default: tab)
+
+    Returns:
+        Tuple of (dimensions, options):
+        - dimensions: List of unique dimension names from the Dimension column
+        - options: List of scoring option column names (empty for question-flow rubrics)
+    """
+    rubric_df = pd.read_csv(rubric_path, sep=sep)
+
+    # Get unique dimensions from the Dimension column
+    dimensions = [
+        d.strip()
+        for d in rubric_df["Dimension"].dropna().unique()
+        if d and str(d).strip() != "nan"
+    ]
+
+    # Get options from columns (exclude metadata columns)
+    columns = [col.strip() for col in rubric_df.columns]
+    # Question-flow rubric columns: Question ID, Dimension, Risk Type,
+    # Question, Examples, Severity, Answer, GOTO
+    metadata_columns = {
+        "Question ID",
+        "Dimension",
+        "Risk Type",
+        "Question",
+        "Examples",
+        "Severity",
+        "Answer",
+        "GOTO",
+    }
+    options = [col for col in columns if col not in metadata_columns]
+
+    return dimensions, options
+
+
+def extract_persona_name_from_filename(filename: str) -> Optional[str]:
+    """
+    Extract persona name from TSV filename.
+
+    Filename format: {hash}_{persona_name}_{model}_run{number}.tsv
+    Example: 1a84d1_Brian_g4o_run3.tsv -> "Brian"
+
+    Works with any file extension (.tsv, .txt, etc.) since it splits on "_".
+
+    Args:
+        filename: TSV filename (with or without extension)
+
+    Returns:
+        Persona name or None if not found
+    """
+    # Format: {hash}_{persona}_{model}_run{number} or
+    # {hash}_{persona}_{model}_run{number}.tsv
+    # Extension doesn't matter since we split on "_"
+    try:
+        parts = filename.split("_")
+        if len(parts) >= 2:
+            # Return just the persona name (index 1), not the list
+            return parts[1]
+        return None
+    except Exception as e:
+        print(f"Error extracting persona name from filename {filename}: {e}")
+        return None
+
 
 # Load dimensions from rubric file (repo-root relative so it works from any cwd)
 _REPO_ROOT = Path(__file__).resolve().parent.parent

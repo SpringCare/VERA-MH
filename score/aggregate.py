@@ -12,7 +12,8 @@ from typing import Any, Dict, Optional, Tuple
 
 import pandas as pd
 
-from judge.score_utils import (
+from judge.utils import extract_model_names_from_path
+from utils.judge_results import (
     DIMENSIONS,
     RISK_LEVEL_ORDER,
     add_risk_levels_to_dataframe,
@@ -23,7 +24,6 @@ from judge.score_utils import (
     pct_of_total,
     read_judge_results_csv,
 )
-from judge.utils import extract_model_names_from_path
 from utils.ratings import (
     BEST_PRACTICE,
     BEST_PRACTICE_KEY,

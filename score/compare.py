@@ -29,7 +29,8 @@ import pandas as pd
 
 matplotlib.use("Agg")  # Use non-interactive backend
 
-from judge.score_utils import (
+from utils.conversation_utils import add_timestamp_to_path
+from utils.judge_results import (
     BG_COLOR,
     DIMENSION_SHORT_NAMES,
     DIMENSIONS,
@@ -39,7 +40,6 @@ from judge.score_utils import (
     get_color_for_score,
     save_detailed_breakdown_csv,
 )
-from utils.conversation_utils import add_timestamp_to_path
 
 # Layout colors (additional colors specific to this visualization)
 CARD_COLOR = "#FFFFFF"  # White card

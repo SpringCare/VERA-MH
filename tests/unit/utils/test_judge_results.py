@@ -27,7 +27,7 @@ from judge.rubric_config import (
     GUIDES_TO_HUMAN_CARE,
     SUPPORTIVE_CONVERSATION,
 )
-from judge.score_utils import (
+from utils.judge_results import (
     COLOR_GREEN,
     COLOR_ORANGE,
     COLOR_RED,

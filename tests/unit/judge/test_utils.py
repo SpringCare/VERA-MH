@@ -9,9 +9,11 @@ import pytest
 from judge.utils import (
     build_single_conversation_judge_run_key,
     extract_model_names_from_path,
+    parse_judge_models,
+)
+from utils.judge_results import (
     extract_persona_name_from_filename,
     load_rubric_structure,
-    parse_judge_models,
 )
 
 
