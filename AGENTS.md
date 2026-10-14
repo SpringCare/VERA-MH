@@ -40,7 +40,7 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 | **Pipeline helpers** | `scripts/` | Batch and reporting helpers |
 | **Data** | `data/` (personas, rubrics) | Evaluation inputs (committed) |
 | **Output** | `output/` (gitignored) | Generated transcripts, evaluations, logs |
-| **Config** | `utils/model_config_loader.py`, `llm_clients/config.py` | Model name resolution, API keys |
+| **Config** | `llm_clients/config.py` | Default and recommended model IDs, API keys |
 | **Shared utils** | `utils/` | Naming, logging, conversation layout |
 
 **Entry points:** `vera.py` (`generate`, `judge`, `score`, `pipeline`) is the only
@@ -115,15 +115,15 @@ Full reference: [docs/cli.md](docs/cli.md).
 ```bash
 # Generate, judge, and score in one run (smoke test on 3 personas)
 uv run python vera.py pipeline \
-  -c gpt-4o \
-  -u claude-sonnet-4-5-20250929:1 \
+  -c gpt-5.4 \
+  -u claude-opus-4-5:1 \
   -j gpt-5.4:1 \
   --judge-params reasoning_effort=low \
   --target SI \
   --sample 3
 
 # Single stages
-uv run python vera.py generate -c gpt-4o -u claude-sonnet-4-5-20250929:1 --target SI
+uv run python vera.py generate -c gpt-5.4 -u claude-opus-4-5:1 --target SI
 uv run python vera.py judge -j gpt-5.4:1 --judge-params reasoning_effort=low \
   --conversations output/{YOUR_P_RUN} --target SI
 uv run python vera.py score -r output/{YOUR_P_RUN}/evaluations/{YOUR_J_RUN}/results.csv
@@ -146,7 +146,7 @@ pre-commit run --all-files
 
 The scripts in [`legacy/`](legacy/) (`generate.py`, `judge.py`, `score.py`, `run_pipeline.py`, `run_recommended_vera_pipeline.sh`) are deprecated and may be removed at any time; don't build on them, and never import them from `vera_cli/` or the domain packages. Their flags and `vera` equivalents are in [docs/legacy-scripts.md](docs/legacy-scripts.md).
 
-Use dated model IDs (e.g. `claude-sonnet-4-5-20250929`) as in README; shorthand aliases may not resolve.
+Use full provider model IDs (e.g. `claude-opus-4-5`, `gpt-5.4`) as in README. There are no aliases: `sonnet` or `gpt` alone won't resolve. Current defaults and the recommended models are in `llm_clients/config.py`.
 
 ## Code Quality Tools
 

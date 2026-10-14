@@ -197,7 +197,6 @@ Coverage Report (Current: 65%, Quality Target: 75%):
 
 🟢 Good Coverage:
   utils/prompt_loader.py: 88%
-  utils/model_config_loader.py: 100%
 
 Create tests for which modules?
 (all-critical/all-below-target/select/cancel)
@@ -309,8 +308,8 @@ from vera_mh.models import ConversationConfig
 def test_pydantic_model_validation():
     """Test Pydantic model validation"""
     # Valid case
-    config = ConversationConfig(model="claude-3-7-sonnet", turns=5)
-    assert config.model == "claude-3-7-sonnet"
+    config = ConversationConfig(model="claude-sonnet-5", turns=5)
+    assert config.model == "claude-sonnet-5"
 
     # Invalid case
     with pytest.raises(ValidationError):

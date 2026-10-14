@@ -26,24 +26,16 @@ import pytest
 
 import vera
 from llm_clients import Role
+from llm_clients.config import Config
 from llm_clients.llm_factory import LLMFactory
 from tests.mocks.mock_llm import MockLLM
 from vera_cli import config as cli_config
 
-# Cheap models the team's gateway serves. That catalog, not the provider's,
-# decides what is usable here: it has no Haiku, so the Claude model is the
-# cheapest it does list. Claude is a user-side model only. As a judge through
-# the gateway it answers the rubric prompt in plain text instead of the JSON
-# schema, which fails every question; that is a judging issue independent of
-# `vera pipeline`, so both judges are OpenAI models.
-#
-# Pinned here, in one place, rather than read from `llm_clients.config.Config`:
-# that class has no cheap-tier constants on this branch. Once #223 lands
-# (`Config.DEFAULT_*` plus a live availability check), these belong on `Config`
-# so a retirement is caught there instead of failing this run.
-USER_MODELS = ["gpt-5.4-nano", "claude-sonnet-4-5"]
-JUDGE_MODELS = ["gpt-5.4-nano", "gpt-5.6-luna"]
-CHATBOT_MODEL = "gpt-5.4-nano"
+# Read from Config so tests/integration/test_model_availability.py catches a
+# retired model there, instead of this run failing partway.
+USER_MODELS = list(Config.CHEAP_USER_MODELS)
+JUDGE_MODELS = list(Config.CHEAP_JUDGE_MODELS)
+CHATBOT_MODEL = Config.CHEAP_CHATBOT_MODEL
 TIMEOUT_SECONDS = 600
 TURNS = 4
 
