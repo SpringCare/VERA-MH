@@ -25,6 +25,7 @@ class Config:
 
     # API Keys
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+    FABLE_ANTHROPIC_API_KEY = os.getenv("FABLE_ANTHROPIC_API_KEY")
 
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 

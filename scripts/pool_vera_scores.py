@@ -53,6 +53,13 @@ _JUDGE_EVAL_DIR_HEAD = re.compile(
 )
 _JUDGE_SPEC_TOKEN = re.compile(r"([^_]+x\d+)")
 
+# Persona/agent/turns/runs embedded in a j_* eval dir's own basename, e.g.
+# ``j_gpt-5.4x1_..._p_claude_opus_4_5__a_gemini_3_5_flash__t30__r1__20260603_144216``.
+_EVAL_DIR_OWN_NAME_TAIL = re.compile(
+    r"__p_(?P<persona>.+?)__a_(?P<agent>.+?)__t(?P<turns>\d+)__r(?P<runs>\d+)__"
+    r"\d{8}_\d{6}$"
+)
+
 
 def extract_last_evaluation_dir_from_pipeline_log(text: str) -> str:
     """
@@ -135,9 +142,39 @@ def _generation_folder_for_eval(eval_dir: Path) -> Path | None:
     return None
 
 
+def _parse_eval_dir_own_name(dir_name: str) -> dict[str, Any] | None:
+    """
+    Parse persona/agent/turns/runs directly from a ``j_*`` eval folder's own basename.
+
+    Evaluation folders embed the source generation run's
+    ``p_*__a_*__t*__r*__timestamp`` segment in their own name (see ``judge.py``
+    naming), independent of whether the folder happens to be nested under a matching
+    ``p_*`` generation folder on disk. This lets pooling infer descriptive names even
+    for flat layouts (e.g. ``j_*`` dirs collected directly under a shared
+    ``evaluations/`` folder, as produced by batch-copy scripts).
+
+    Returns:
+        Dict with ``persona``/``agent`` (str) and ``turns``/``runs`` (int), or None if
+        *dir_name* does not end with the expected ``__p_..__a_..__t..__r..__ts`` tail.
+    """
+    m = _EVAL_DIR_OWN_NAME_TAIL.search(dir_name)
+    if not m:
+        return None
+    return {
+        "persona": m.group("persona"),
+        "agent": m.group("agent"),
+        "turns": int(m.group("turns")),
+        "runs": int(m.group("runs")),
+    }
+
+
 def _persona_slug_for_pool(source_eval_dirs: list[Path]) -> str:
     """
     Build a short ``p_*`` path segment from each source generation folder basename.
+
+    Falls back to parsing the eval dir's own basename (see
+    :func:`_parse_eval_dir_own_name`) when it is not nested under a matching ``p_*``
+    generation folder.
 
     Returns one persona model slug, or sorted unique names joined by ``+`` when
     multiple user models are merged (order-independent, stable across runs).
@@ -145,14 +182,15 @@ def _persona_slug_for_pool(source_eval_dirs: list[Path]) -> str:
     persona_names: list[str] = []
     for d in source_eval_dirs:
         gen = _generation_folder_for_eval(d)
-        if gen is None:
-            persona_names.append("unknown")
-            continue
-        try:
-            meta = parse_generation_run_folder_name(gen.name)
-            persona_names.append(str(meta["persona"]))
-        except ValueError:
-            persona_names.append("unknown")
+        if gen is not None:
+            try:
+                meta = parse_generation_run_folder_name(gen.name)
+                persona_names.append(str(meta["persona"]))
+                continue
+            except ValueError:
+                pass
+        parsed = _parse_eval_dir_own_name(d.name)
+        persona_names.append(str(parsed["persona"]) if parsed else "unknown")
     return "+".join(sorted(set(persona_names)))
 
 
@@ -245,8 +283,11 @@ def _synthetic_pooled_folder_basename(
     judges), aligned with ``judge.py`` batch folder naming. The ``p_*`` segment lists
     user/persona models inferred from every source's sibling ``p_*`` folder (sorted,
     ``+``-joined when more than one). Provider agent, turn count, and runs-per-prompt
-    reuse the first source's generation folder when parsable; otherwise falls back to
-    ``t30__r1`` and ``a_unknown``. A timestamp suffix keeps same-day batches distinct.
+    reuse the first source's generation folder when parsable, falling back to parsing
+    the first source's own basename (see :func:`_parse_eval_dir_own_name`), and finally
+    to ``t30__r1`` and ``a_unknown``. A millisecond-precision timestamp suffix keeps
+    same-second batches (e.g. a fast loop pooling several groups back-to-back) from
+    colliding and silently overwriting one another.
 
     Args:
         source_eval_dirs: Non-empty list of resolved evaluation directories.
@@ -255,9 +296,9 @@ def _synthetic_pooled_folder_basename(
 
     Returns:
         Directory basename (no path separators), e.g.
-        ``j_gpt-5.4x1__p_claude_opus_4_5+gpt_5_2__a_gpt_5_4_nano__t30__r1__20260422_153000``.
+        ``j_gpt-5.4x1__p_claude_opus_4_5+gpt_5_2__a_gpt_5_4_nano__t30__r1__20260422_153000_123``.
     """
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
     judge = _judge_slug_for_pool(combined, source_eval_dirs, judge_slug=judge_slug)
     persona_slug = _persona_slug_for_pool(source_eval_dirs)
     gen = _generation_folder_for_eval(source_eval_dirs[0])
@@ -270,6 +311,12 @@ def _synthetic_pooled_folder_basename(
             return f"j_{judge}__p_{persona_slug}__a_{agent}__t{t}__r{r}__{ts}"
         except ValueError:
             pass
+    parsed = _parse_eval_dir_own_name(source_eval_dirs[0].name)
+    if parsed is not None:
+        return (
+            f"j_{judge}__p_{persona_slug}__a_{parsed['agent']}"
+            f"__t{parsed['turns']}__r{parsed['runs']}__{ts}"
+        )
     return f"j_{judge}__p_{persona_slug}__a_unknown__t30__r1__{ts}"
 
 
@@ -374,18 +421,22 @@ def pool_evaluation_directories(
     if len(combined) == 0:
         raise ValueError("Combined results dataframe is empty.")
 
-    missing_gen = [d for d in eval_dirs if _generation_folder_for_eval(d) is None]
-    if missing_gen:
-        preview = "; ".join(str(p) for p in missing_gen[:3])
-        if len(missing_gen) > 3:
-            preview += f"; ... and {len(missing_gen) - 3} more"
+    unnamed = [
+        d
+        for d in eval_dirs
+        if _generation_folder_for_eval(d) is None
+        and _parse_eval_dir_own_name(d.name) is None
+    ]
+    if unnamed:
+        preview = "; ".join(str(p) for p in unnamed[:3])
+        if len(unnamed) > 3:
+            preview += f"; ... and {len(unnamed) - 3} more"
         print(
-            "Warning: some evaluation paths are not under .../p_*/evaluations/j_* "
-            f"({preview}). "
+            "Warning: could not infer persona/agent/turns/runs for some evaluation "
+            f"paths ({preview}); they are neither under .../p_*/evaluations/j_* nor "
+            "named j_*__p_*__a_*__t*__r*__<timestamp>. "
             "Merged results and scores are unchanged; the new merged j_* folder name "
-            "may use unknown placeholders for persona/agent/turns/runs. "
-            "Use nested paths from generate.py / run_pipeline.py for descriptive "
-            "names.",
+            "may use unknown placeholders for those fields.",
             file=sys.stderr,
         )
 

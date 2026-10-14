@@ -17,6 +17,7 @@ from .rubric_config import ConversationData, RubricConfig
 from .score_utils import build_dataframe_from_tsv_files
 from .utils import (
     build_evaluation_run_folder_path,
+    build_judge_info,
     build_judge_task_log_path,
     judge_evaluation_tsv_filename,
 )
@@ -541,24 +542,7 @@ async def judge_conversations(
     """
     if output_folder is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
-        judges_str = "_".join(
-            f"{model}x{count}" for model, count in judge_models.items()
-        )
-
-        # Build judge info string with extra parameters
-        judge_info = judges_str
-        if judge_model_extra_params:
-            # Add temperature if present
-            if "temperature" in judge_model_extra_params:
-                judge_info += f"_temp{judge_model_extra_params['temperature']}"
-            # Add max_tokens if present
-            if "max_tokens" in judge_model_extra_params:
-                judge_info += f"_maxtok{judge_model_extra_params['max_tokens']}"
-            # Add other extra params
-            for k, v in judge_model_extra_params.items():
-                if k not in ["temperature", "max_tokens"]:
-                    judge_info += f"_{k}{v}"
-
+        judge_info = build_judge_info(judge_models, judge_model_extra_params)
         folder_name = conversation_folder_name or "conversations"
         output_folder = build_evaluation_run_folder_path(
             output_root, judge_info, timestamp, folder_name

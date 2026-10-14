@@ -4,7 +4,7 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
@@ -42,6 +42,43 @@ def parse_judge_models(model_arg):
             judge_models[model_spec] = 1
 
     return judge_models
+
+
+def build_judge_info(
+    judge_models: Dict[str, int],
+    judge_model_extra_params: Optional[Dict[str, Any]] = None,
+) -> str:
+    """Build the judge info string embedded in evaluation run folder names."""
+    judges_str = "_".join(f"{model}x{count}" for model, count in judge_models.items())
+    judge_info = judges_str
+    if judge_model_extra_params:
+        if "temperature" in judge_model_extra_params:
+            judge_info += f"_temp{judge_model_extra_params['temperature']}"
+        if "max_tokens" in judge_model_extra_params:
+            judge_info += f"_maxtok{judge_model_extra_params['max_tokens']}"
+        for k, v in judge_model_extra_params.items():
+            if k not in ["temperature", "max_tokens"]:
+                judge_info += f"_{k}{v}"
+    return judge_info
+
+
+def parse_judge_info_from_run_folder(folder_basename: str) -> Optional[str]:
+    """
+    Extract the judge_info segment from a j_* evaluation run folder basename.
+
+    Folder format: j_{judge_info}_{YYYYMMDD}_{HHMMSS}_{mmm}__{conv_basename}
+    Returns None if the basename doesn't match the expected pattern.
+    """
+    if not folder_basename.startswith("j_"):
+        return None
+    rest = folder_basename[2:]  # strip 'j_'
+    double_sep = rest.find("__")
+    if double_sep == -1:
+        return None
+    front = rest[:double_sep]  # '{judge_info}_{YYYYMMDD}_{HHMMSS}_{mmm}'
+    # Strip the trailing timestamp: _YYYYMMDD_HHMMSS_mmm
+    stripped = re.sub(r"_\d{8}_\d{6}_\d{3}$", "", front)
+    return stripped if stripped != front else None
 
 
 def build_evaluation_run_folder_path(
@@ -227,7 +264,7 @@ def extract_model_names_from_path(path_input: str) -> Dict[str, str]:
         parts = dir_name.split("__a_")
         if len(parts) > 1:
             agent_part = parts[1].split("__t")[0]
-            result["agent"] = agent_part.replace("_", " ").strip()
+            result["agent"] = agent_part.replace("_", " ").strip().title()
 
     return result
 

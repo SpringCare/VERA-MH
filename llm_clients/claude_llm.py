@@ -173,15 +173,30 @@ class ClaudeLLM(JudgeLLM):
         self.model_name = model_name or Config.get_claude_config()["model"]
 
         # Get default config and allow kwargs to override
+        use_fable_api_key = "fable" in self.model_name
+        print(
+            "~USING FABLE API KEY~"
+            if use_fable_api_key
+            else "~USING DEFAULT ANTHROPIC API KEY~"
+        )
         llm_params = {
-            "anthropic_api_key": Config.ANTHROPIC_API_KEY,
+            "anthropic_api_key": Config.FABLE_ANTHROPIC_API_KEY
+            if use_fable_api_key
+            else Config.ANTHROPIC_API_KEY,
             "model": self.model_name,
         }
 
-        # Only set base_url when overridden, so ChatAnthropic keeps its own default
-        base_url = Config.get_base_url("anthropic")
-        if base_url:
-            llm_params["base_url"] = base_url
+        # ChatAnthropic falls back to the ANTHROPIC_BASE_URL env var whenever
+        # `base_url` isn't passed explicitly, so leaving it unset for the fable
+        # key isn't enough to keep it off a LiteLLM base URL configured for the
+        # non-fable key - force Anthropic's default explicitly instead.
+        if use_fable_api_key:
+            llm_params["base_url"] = "https://api.anthropic.com"
+        else:
+            base_url = Config.get_base_url("anthropic")
+            if base_url:
+                print(f"~Overriding base_url for Claude LLM: {base_url}~")
+                llm_params["base_url"] = base_url
 
         # Override with any provided kwargs
         llm_params.update(kwargs)

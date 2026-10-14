@@ -16,8 +16,10 @@ from judge import judge_conversations, judge_single_conversation
 from judge.llm_judge import LLMJudge
 from judge.rubric_config import ConversationData, RubricConfig, load_conversations
 from judge.utils import (
+    build_judge_info,
     build_judge_task_log_path,
     default_adhoc_parent,
+    parse_judge_info_from_run_folder,
     parse_judge_models,
 )
 from utils.conversation_layout import resolve_conversation_input
@@ -244,6 +246,18 @@ async def main(args) -> Optional[str]:
             raise ValueError(
                 "Resume mode requires --output to be a judge run folder "
                 f"(basename like j_*__*), got {base!r}"
+            )
+        folder_judge_info = parse_judge_info_from_run_folder(base)
+        current_judge_info = build_judge_info(
+            judge_models, args.judge_model_extra_params
+        )
+        if folder_judge_info is not None and folder_judge_info != current_judge_info:
+            raise ValueError(
+                "Resume folder judge config does not match current arguments.\n"
+                f"  Folder:  {folder_judge_info}\n"
+                f"  Current: {current_judge_info}\n"
+                "Pass the same --judge-model and "
+                "--judge-model-extra-params as the original run."
             )
         judge_kwargs["output_folder"] = args.output
     else:
