@@ -395,10 +395,7 @@ def run_pooling(
     print_scores(results)
 
     viz_path = out_eval / "scores" / "scores_visualization.png"
-    try:
-        create_visualizations(results, viz_path)
-    except Exception as e:
-        print(f"Warning: could not create standard visualizations: {e}")
+    create_visualizations(results, viz_path)
 
     if not skip_risk_analysis:
         if personas_tsv is None:
