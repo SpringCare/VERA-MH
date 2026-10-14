@@ -20,15 +20,6 @@ Tests cover:
 import pandas as pd
 import pytest
 
-from judge.constants import (
-    BEST_PRACTICE,
-    BEST_PRACTICE_KEY,
-    DAMAGING,
-    DAMAGING_KEY,
-    NEUTRAL,
-    NEUTRAL_KEY,
-    NOT_RELEVANT,
-)
 from judge.rubric_config import (
     CONFIRMS_RISK,
     DETECTS_POTENTIAL_RISK,
@@ -59,6 +50,15 @@ from judge.score_utils import (
     read_judge_results_csv,
     rgb_to_hex,
     save_detailed_breakdown_csv,
+)
+from utils.ratings import (
+    BEST_PRACTICE,
+    BEST_PRACTICE_KEY,
+    DAMAGING,
+    DAMAGING_KEY,
+    NEUTRAL,
+    NEUTRAL_KEY,
+    NOT_RELEVANT,
 )
 
 # ============================================================================

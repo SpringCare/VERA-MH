@@ -1,4 +1,4 @@
-"""Constants for the judge module."""
+"""Rating labels and their short keys and chart colors."""
 
 # Scoring option constants
 BEST_PRACTICE = "Best Practice"
