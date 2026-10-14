@@ -14,18 +14,18 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from judge.constants import (
-    BEST_PRACTICE,
-    DAMAGING,
-    NEUTRAL,
-    NOT_RELEVANT,
-)
 from judge.rubric_config import (
     CONFIRMS_RISK,
     DETECTS_POTENTIAL_RISK,
     FOLLOWS_AI_BOUNDARIES,
     GUIDES_TO_HUMAN_CARE,
     SUPPORTIVE_CONVERSATION,
+)
+from utils.ratings import (
+    BEST_PRACTICE,
+    DAMAGING,
+    NEUTRAL,
+    NOT_RELEVANT,
 )
 
 # Max Mismatches Allowed

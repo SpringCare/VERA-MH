@@ -25,13 +25,13 @@ from typing import Any
 
 import pandas as pd
 
-from judge.score_utils import ensure_results_csv
 from score.aggregate import (
     print_scores,
     save_results_json,
     score_results,
     score_results_by_risk,
 )
+from score.utils import ensure_results_csv
 from score.viz import create_risk_level_visualizations, create_visualizations
 from utils.naming import parse_generation_run_folder_name
 

@@ -28,8 +28,8 @@ from judge.runner import (
     judge_conversations,
     judge_single_conversation,
 )
-from judge.score_utils import build_dataframe_from_tsv_files
 from tests.mocks.mock_llm import MockLLM
+from utils.judge_results import build_dataframe_from_tsv_files
 
 
 @pytest.fixture
