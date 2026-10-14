@@ -18,6 +18,7 @@ Usage:
 """
 
 import argparse
+import textwrap
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
@@ -30,6 +31,7 @@ import pandas as pd
 matplotlib.use("Agg")  # Use non-interactive backend
 
 from score.utils import (
+    SCORE_NAME,
     calculate_dimension_scores,
     calculate_overall_percentages,
     calculate_vera_score,
@@ -37,15 +39,6 @@ from score.utils import (
 )
 from utils.conversation_utils import add_timestamp_to_path
 from utils.judge_results import DIMENSIONS
-
-# Short dimension names for column headers
-DIMENSION_SHORT_NAMES = {
-    "Detects Risk": "Detects potential risk",
-    "Clarifies Risk": "Confirms risk",
-    "Guides to Human Support": "Guides to human care",
-    "Collaborates and Validates Appropriately": "Supportive conversation",
-    "Maintains Safe Boundaries": "Follows AI boundaries",
-}
 
 # Color scale for VERA scores (gradient)
 COLOR_RED = "#DA4D2C"
@@ -156,18 +149,15 @@ def save_detailed_breakdown_csv(
     for model in sorted_data:
         row = {
             "Model": model["model_name"],
-            "Overall VERA-MH v1.2 Score": round(model["vera_score"], 1),
+            f"Overall {SCORE_NAME} Score": round(model["vera_score"], 1),
             "Overall %HPH": round(model.get("overall_hph_pct", 0.0), 1),
             "Overall %BP": round(model.get("overall_bp_pct", 0.0), 1),
         }
         for dim in DIMENSIONS:
-            short_name = DIMENSION_SHORT_NAMES.get(dim, dim)
             dim_data = model["dimensions"].get(dim, {})
-            row[f"{short_name} VERA-MH v1.2 Score"] = round(
-                dim_data.get("vera_score", 0.0), 1
-            )
-            row[f"{short_name} %HPH"] = round(dim_data.get("hph_pct", 0.0), 1)
-            row[f"{short_name} %BP"] = round(dim_data.get("bp_pct", 0.0), 1)
+            row[f"{dim} {SCORE_NAME} Score"] = round(dim_data.get("vera_score", 0.0), 1)
+            row[f"{dim} %HPH"] = round(dim_data.get("hph_pct", 0.0), 1)
+            row[f"{dim} %BP"] = round(dim_data.get("bp_pct", 0.0), 1)
         detailed_rows.append(row)
 
     detailed_df = pd.DataFrame(detailed_rows)
@@ -192,6 +182,7 @@ LAYOUT_SCORE_COL_WIDTH = 1.8
 LAYOUT_COL_SPACING = 0.3
 LAYOUT_HEADER_ROW_HEIGHT = 0.7
 LAYOUT_DIM_HEADER_BAR_HEIGHT = 0.45
+LAYOUT_DIM_HEADER_WRAP = 14  # characters per line in a dimension column header
 LAYOUT_CARD_BOTTOM_OFFSET = 0.6
 LAYOUT_CIRCLE_RADIUS = 0.11
 LAYOUT_LEGEND_BAR_HEIGHT = 0.35
@@ -298,16 +289,6 @@ def _calculate_model_scores(df: pd.DataFrame, model_name: str) -> Dict[str, Any]
     }
 
 
-def _get_dimension_headers() -> List[str]:
-    """Get dimension short names in order, avoiding duplicates."""
-    dim_headers = []
-    for dim in DIMENSIONS:
-        short_name = DIMENSION_SHORT_NAMES.get(dim, dim)
-        if short_name not in dim_headers:
-            dim_headers.append(short_name)
-    return dim_headers
-
-
 def _calculate_layout(n_models: int, n_dims: int) -> LayoutConfig:
     """Calculate layout configuration for the graphic."""
     fig_width = LAYOUT_FIG_WIDTH
@@ -366,7 +347,7 @@ def _draw_header(ax, layout: LayoutConfig):
     ax.text(
         LAYOUT_MARGIN,
         layout.fig_height - 0.4,
-        "AI safety score rankings by VERA-MH v1.2",
+        f"AI safety score rankings by {SCORE_NAME}",
         fontsize=22,
         fontweight="bold",
         color=TEXT_COLOR,
@@ -378,7 +359,7 @@ def _draw_header(ax, layout: LayoutConfig):
     ax.text(
         LAYOUT_MARGIN,
         layout.fig_height - 0.95,
-        "Scores indicate how well models detect and respond to suicide risk",
+        "Scores indicate how well models detect and respond to risk",
         fontsize=11,
         color=SUBTLE_TEXT,
         va="top",
@@ -514,7 +495,7 @@ def _draw_card_and_headers(ax, layout: LayoutConfig, dim_headers: List[str]):
     ax.text(
         layout.dim_section_left + dim_section_width / 2,
         dim_bar_y - LAYOUT_DIM_HEADER_BAR_HEIGHT / 2,
-        "Safety measures: Suicide risk",
+        "Safety measures",
         fontsize=10,
         fontweight="bold",
         color=TEXT_COLOR,
@@ -533,21 +514,13 @@ def _draw_card_and_headers(ax, layout: LayoutConfig, dim_headers: List[str]):
         va="top",
     )
 
-    dim_header_wrapped = {
-        "Detects potential risk": "Detects\npotential risk",
-        "Confirms risk": "Confirms\nrisk",
-        "Guides to human care": "Guides to\nhuman care",
-        "Supportive conversation": "Supportive\nconversation",
-        "Follows AI boundaries": "Follows AI\nboundaries",
-    }
-
     for i, dim_name in enumerate(dim_headers):
         dim_x = (
             layout.dim_section_left
             + i * layout.dim_col_width
             + layout.dim_col_width / 2
         )
-        wrapped_name = dim_header_wrapped.get(dim_name, dim_name)
+        wrapped_name = textwrap.fill(dim_name, width=LAYOUT_DIM_HEADER_WRAP)
         ax.text(
             dim_x,
             layout.col_header_y,
@@ -603,8 +576,7 @@ def _draw_data_rows(
 
         # Dimension circles
         for dim_idx, dim_name in enumerate(dim_headers):
-            actual_dim = _find_dimension_key(dim_name)
-            dim_score = _get_dimension_score(model, actual_dim)
+            dim_score = _get_dimension_score(model, dim_name)
             dim_color = get_color_for_score(dim_score)
             dim_x = (
                 layout.dim_section_left
@@ -673,14 +645,6 @@ def _draw_data_rows(
         )
 
 
-def _find_dimension_key(dim_name: str) -> str:
-    """Find the actual dimension key from short name."""
-    for d in DIMENSIONS:
-        if DIMENSION_SHORT_NAMES.get(d, d) == dim_name:
-            return d
-    return ""
-
-
 def _get_dimension_score(model: Dict, actual_dim: str) -> float:
     """Get dimension score for a model."""
     if actual_dim and actual_dim in model["dimensions"]:
@@ -694,23 +658,20 @@ def _save_comparison_csv(sorted_data: List[Dict], output_path: Path):
     for model in sorted_data:
         row = {"Model": model["model_name"]}
         for dim in DIMENSIONS:
-            short_name = DIMENSION_SHORT_NAMES.get(dim, dim)
             vera_dim = model["dimensions"].get(dim, {}).get("vera_score", 0.0)
-            col_name = f"{short_name}"
-            if col_name not in row:
-                row[col_name] = round(vera_dim, 1)
-        row["VERA-MH v1.2 Score"] = round(model["vera_score"], 1)
+            row[dim] = round(vera_dim, 1)
+        row[f"{SCORE_NAME} Score"] = round(model["vera_score"], 1)
         row["Overall HPH%"] = round(model.get("overall_hph_pct", 0), 1)
         row["Overall BP%"] = round(model["overall_bp_pct"], 1)
         rows.append(row)
 
-    column_order = ["Model"]
-    for dim in DIMENSIONS:
-        short_name = DIMENSION_SHORT_NAMES.get(dim, dim)
-        col_name = f"{short_name}"
-        if col_name not in column_order:
-            column_order.append(col_name)
-    column_order.extend(["VERA-MH v1.2 Score", "Overall HPH%", "Overall BP%"])
+    column_order = [
+        "Model",
+        *DIMENSIONS,
+        f"{SCORE_NAME} Score",
+        "Overall HPH%",
+        "Overall BP%",
+    ]
 
     display_df = pd.DataFrame(rows)
     display_df = display_df[[col for col in column_order if col in display_df.columns]]
@@ -722,7 +683,7 @@ def _save_comparison_csv(sorted_data: List[Dict], output_path: Path):
     save_detailed_breakdown_csv(sorted_data, output_path)
 
     print("\n" + "=" * 80)
-    print("VERA-MH v1.2 SCORE COMPARISON DATA (squared penalty)")
+    print(f"{SCORE_NAME} SCORE COMPARISON DATA (squared penalty)")
     print("=" * 80)
     print(display_df.to_string(index=False))
     print("=" * 80)
@@ -746,7 +707,7 @@ def create_comparison_graphic(
         return None
 
     sorted_data = sorted(model_data, key=lambda m: m["vera_score"], reverse=True)
-    dim_headers = _get_dimension_headers()
+    dim_headers = list(DIMENSIONS)
 
     n_models = len(sorted_data)
     n_dims = len(dim_headers)
