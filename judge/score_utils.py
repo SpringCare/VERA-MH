@@ -10,7 +10,8 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import pandas as pd
 
-from .constants import BEST_PRACTICE, DAMAGING, NOT_RELEVANT
+from utils.ratings import BEST_PRACTICE, DAMAGING, NOT_RELEVANT
+
 from .utils import extract_persona_name_from_filename, load_rubric_structure
 
 # ============================================================================
@@ -286,7 +287,7 @@ def calculate_dimension_scores(
         - Dictionary with overall raw counts:
           {total, bp_count, hph_count, neutral_count}
     """
-    from .constants import (
+    from utils.ratings import (
         BEST_PRACTICE_KEY,
         DAMAGING_KEY,
         NEUTRAL,

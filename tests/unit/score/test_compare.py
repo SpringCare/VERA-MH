@@ -16,7 +16,6 @@ Visualization functions (_draw_*) are not tested as they are low-value for unit 
 import pandas as pd
 import pytest
 
-from judge.constants import BEST_PRACTICE, DAMAGING, NEUTRAL
 from judge.rubric_config import CONFIRMS_RISK, DETECTS_POTENTIAL_RISK
 from score.compare import (
     LayoutConfig,
@@ -29,6 +28,7 @@ from score.compare import (
     _save_comparison_csv,
     load_evaluation_data,
 )
+from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL
 
 # ============================================================================
 # Data Loading Tests
