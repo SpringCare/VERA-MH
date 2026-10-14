@@ -1,5 +1,5 @@
 """
-Unit tests for judge/score_comparison.py comparison functions.
+Unit tests for score/compare.py comparison functions.
 
 Tests cover:
 - Data loading (load_evaluation_data, _load_dataframes_from_paths)
@@ -18,7 +18,7 @@ import pytest
 
 from judge.constants import BEST_PRACTICE, DAMAGING, NEUTRAL
 from judge.rubric_config import CONFIRMS_RISK, DETECTS_POTENTIAL_RISK
-from judge.score_comparison import (
+from score.compare import (
     LayoutConfig,
     _calculate_layout,
     _calculate_model_scores,

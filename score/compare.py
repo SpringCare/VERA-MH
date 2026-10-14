@@ -12,9 +12,9 @@ Modern card-based visualization showing:
 - Horizontal legend at top right
 
 Usage:
-    python -m judge.score_comparison
-    python -m judge.score_comparison --input evaluations_to_compare.csv
-    python -m judge.score_comparison -i my_evaluations.csv -o output.png
+    python -m score.compare
+    python -m score.compare --input evaluations_to_compare.csv
+    python -m score.compare -i my_evaluations.csv -o output.png
 """
 
 import argparse
@@ -29,9 +29,7 @@ import pandas as pd
 
 matplotlib.use("Agg")  # Use non-interactive backend
 
-from utils.conversation_utils import add_timestamp_to_path
-
-from .score_utils import (
+from judge.score_utils import (
     BG_COLOR,
     DIMENSION_SHORT_NAMES,
     DIMENSIONS,
@@ -41,6 +39,7 @@ from .score_utils import (
     get_color_for_score,
     save_detailed_breakdown_csv,
 )
+from utils.conversation_utils import add_timestamp_to_path
 
 # Layout colors (additional colors specific to this visualization)
 CARD_COLOR = "#FFFFFF"  # White card
