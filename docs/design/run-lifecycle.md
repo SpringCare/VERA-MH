@@ -23,7 +23,7 @@
 | `scores.json` keys | `persona_model`, `agent_model` | `user_model`, `chatbot_model` |
 | Charts, console | "Judge \| Persona \| Agent", "Agent Model:" | "Judge \| User \| Chatbot" |
 | Generation logs | "LLM1 Configuration", "LLM2 Configuration" | "User model", "Chatbot model" |
-| Conversation files | `{tag}_{persona}_{user_model}_run{N}.txt` plus a separate log; no chatbot, turns, or run in the file | one self-contained `.jsonl` per session (see [Conversation files](#conversation-files)) |
+| Conversation files | `{tag}_{persona}_{user_model}_run{N}.txt`; no chatbot, turns, or run in the file | one self-contained `.jsonl` per session (see [Conversation files](#conversation-files)) |
 | `--into` errors | name legacy flags `--user-agent`, `--provider-agent`, `--runs` | name `-u`, `-c`, `--repeats` |
 
 **Old run folders are deprecated.** For one release, `vera judge --conversations <old p_ folder>` and `vera score -r <old results.csv>` still work and print a deprecation warning naming the release that removes them. Support goes in the same tagged release that removes `legacy/` (roadmap, Deferred). No migration script. This changes AD-23, which today promises old layouts stay readable; the spine and roadmap get updated with the first implementing PR.
@@ -45,19 +45,18 @@ The internal renames are mechanical but wide (about 400 `Role.*` uses in tests a
 
 Today each session produces two files with overlapping content: the transcript (`<stem>.txt`, the turns only, written at the end) and a log (`logs/<stem>.log`, LLM configuration and calls, written as the session runs). Neither says on its own which chatbot, turns, repeat, or run it belongs to; that is recovered from the folder name.
 
-Proposal: **one file per session, JSON Lines, appended as the session runs.**
+Proposal: **the conversation file becomes self-contained JSON Lines, appended as the session runs.** Debug logging is a separate concern and stays in its own file.
 
 ```jsonl
 {"type": "header", "run_id": "u_gpt-5.2_3f9a1c_20261015_101500", "config_sha": "3f9a1c…", "target": "SI", "persona": "Brian", "persona_file": "data/SI/personas.tsv", "user_model": "gpt-5.2", "chatbot_model": "claude-opus-4-5", "turns": 30, "repeat": 1, "session": 1, "first_speaker": "user", "started_at": "…"}
 {"type": "turn", "n": 1, "speaker": "user", "text": "…"}
-{"type": "call", "n": 1, "model": "gpt-5.2", "latency_ms": 2140, "tokens": {"in": 812, "out": 96}}
 {"type": "turn", "n": 2, "speaker": "chatbot", "text": "…"}
 {"type": "end", "reason": "max_turns", "finished_at": "…"}
 ```
 
 - **Self-contained.** The header carries everything the folder name carries today, plus what it never did (chatbot, persona file, session). A file copied elsewhere still says what it is, and readers stop parsing folder names.
-- **Crash-safe.** Lines are appended as they happen, so a session that dies at turn 17 leaves 17 turns and the error, which also replaces the log's role in diagnosing hangs. `done()` for resume is "the last line is an `end` record".
-- **One file instead of two.** The judge reads the `turn` lines; debugging reads everything. `logs/` goes away for generation.
+- **Crash-safe.** Lines are appended as they happen, so a session that dies at turn 17 leaves 17 turns and an `end` record with the error. `done()` for resume is "the last line is an `end` record without an error".
+- **Debug logs stay separate.** LLM configuration, raw calls, and timings remain in `logs/`; the conversation file holds only what the conversation is and who had it.
 - **The judge's input changes** from `*.txt` to `*.jsonl`. Old `.txt` transcripts follow the same deprecation as old folders.
 
 ## Hashing before naming
@@ -170,5 +169,4 @@ Import-linter can't see calls, which is why these are AST tests rather than cont
 
 ## Open questions
 
-1. **Header only, or calls too?** The `call` records make the file a full debug log. Keep them (one file answers everything) or write only `header`, `turn`, and `end` (smaller files, raw calls lost)?
-2. **Deprecation window.** One release with a warning, then removal together with `legacy/`, or remove old-folder support in the same release that ships the new layout?
+1. **Deprecation window.** One release with a warning, then removal together with `legacy/`, or remove old-folder support in the same release that ships the new layout?
