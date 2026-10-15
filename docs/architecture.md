@@ -171,7 +171,7 @@ does not inherit or merge CLI defaults. Both input forms resolve to a complete
 defines no behavioral defaults of its own.
 
 Consequently, config-driven generation explicitly provides `turns`, `output`,
-`max_concurrent`, `max_total_words`, `persona_speaks_first`, `sessions`, and
+`max_concurrent`, `max_total_words`, `persona_speaks_first`, `user_language`, `sessions`, and
 `persona_context_template`, using `null` where the schema allows no limit or no
 session list.
 

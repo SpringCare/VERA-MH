@@ -6,6 +6,8 @@ from pathlib import Path
 from string import Formatter
 from typing import List, Optional
 
+DEFAULT_USER_LANGUAGE = "English"
+
 
 # TODO: hardcoded names
 def load_prompts_from_csv(
@@ -15,6 +17,7 @@ def load_prompts_from_csv(
     *,
     persona_context_template_path: str,
     max_personas: Optional[int] = None,
+    user_language: str = DEFAULT_USER_LANGUAGE,
 ) -> List[dict[str, str]]:
     """Load prompts from personas.csv file and return them as a list.
 
@@ -24,6 +27,8 @@ def load_prompts_from_csv(
         prompt_template_path: Path to the template file for formatting prompts
         persona_context_template_path: Required schema-specific context template.
         max_personas: Optional maximum number of personas to load
+        user_language: Language the user-side LLM writes in. English adds
+            nothing to the prompt, so English runs are unchanged.
     """
 
     csv_path = Path(prompt_path)
@@ -93,6 +98,11 @@ def load_prompts_from_csv(
 
             persona_context = context_template.format(**row)
             row["prompt"] = template.format(persona_context=persona_context)
+            if user_language != DEFAULT_USER_LANGUAGE:
+                row["prompt"] += (
+                    f"\n- Write every message in {user_language}, "
+                    "as a native speaker would\n"
+                )
             data.append(row)
 
     return data
