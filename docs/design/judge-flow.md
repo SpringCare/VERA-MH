@@ -25,13 +25,41 @@ Knock-on effects:
 
 Interpret GOTO **once**, when the rubric loads, into a typed route. The walk acts on routes; scoring reads a plain record.
 
+### The rubric as data
+
+Load the rubric once into its own structure, with every navigation decision already resolved, and walk that. Today the parsed rubric is a dict of dicts plus an ordered ID list, and `QuestionNavigator` re-derives "next row" and "next dimension" on every step.
+
 ```python
-# Parsed from the rubric's GOTO column at load time (judge/rubric_config.py)
-GoTo(next_id)             # a question ID, or blank = next row
-NotRelevantThen(next_id)  # today's NOT_RELEVANT>>{ID}
-StopAndScore()            # today's ASSIGN_END, and END after the last question
-StopNotRelevant()         # today's END at a screening gate
+@dataclass(frozen=True)
+class Question:
+    id: str
+    dimension: str
+    text: str
+    severity: str | None
+    routes: dict[str, Route]        # answer option -> where it leads, resolved at load
+
+@dataclass(frozen=True)
+class Rubric:
+    questions: dict[str, Question]
+    first_question: Question
+    dimensions: list[str]           # in rubric order
 ```
+
+At load, `RubricConfig` turns every answer option into a `Route`: a blank GOTO becomes `GoTo(<next row>)`, an implicit Yes becomes `GoTo(<first question of the next dimension>)`, and so on. Validation runs on the same structure: every target exists, no cycles, every stop rule from [rubric-terminal-goto-vocabulary.md](./rubric-terminal-goto-vocabulary.md). `QuestionNavigator` goes away; navigating is `question.routes[answer]`. Routes are plain data, so the rubric stays free of behavior.
+
+### What in the rubric produces each route
+
+| Route | Rubric today (GOTO column) | Rubric after step 3 | What the walk does |
+|---|---|---|---|
+| `GoTo(id)` | a question ID; blank (next row); empty Answer column: `No` → next row, `Yes` → next dimension | unchanged | ask question `id` |
+| `SkipDimension(id)` | `NOT_RELEVANT>>{ID}` | `SKIP_DIMENSION>>{ID}` | this dimension is Not Relevant; ask question `id` |
+| `StopAssign()` | `ASSIGN_END` (only on a `Yes`) | `STOP_ASSIGN` | stop; this answer's severity counts; unvisited dimensions are Not Relevant |
+| `StopScore()` | `END` reached with every dimension visited; blank GOTO on the last row | `STOP_SCORE` | stop; score what was collected |
+| `StopNotRelevant()` | `END` reached with a dimension still unvisited | `STOP_NOT_RELEVANT` | stop; every dimension is Not Relevant |
+
+Today's `END` can't be mapped at load: whether every dimension was visited depends on the path taken. Until step 3, `END` loads as a transitional `StopEnd()` route that applies today's rule when the walk reaches it, and step 3 deletes it.
+
+### The walk
 
 ```python
 async def walk(self) -> Walk:
@@ -40,13 +68,13 @@ async def walk(self) -> Walk:
     while question:
         answer = await self.ask(question)
         answers.append(answer)                       # one record, append-only
-        match question.route_for(answer):
+        match question.routes[answer.option]:
             case GoTo(next_id):
-                question = self.rubric[next_id]
-            case NotRelevantThen(next_id):
+                question = self.rubric.questions[next_id]
+            case SkipDimension(next_id):
                 verdicts[question.dimension] = NOT_RELEVANT
-                question = self.rubric[next_id]
-            case StopAndScore():
+                question = self.rubric.questions[next_id]
+            case StopAssign() | StopScore():
                 verdicts |= {d: NOT_RELEVANT for d in self.unvisited(answers)}
                 break
             case StopNotRelevant():
@@ -61,18 +89,20 @@ def score(walk: Walk, dimension: str) -> Result:      # pure: no LLM, no rubric 
     return score_from_severity(walk.answers_for(dimension))
 ```
 
+`StopAssign` and `StopScore` do the same thing in the walk; they stay separate routes because the rubric rules differ (`STOP_ASSIGN` only on a `Yes`, `STOP_SCORE` only where the questionnaire can end).
+
 What this gives:
 
 - **Each outcome is decided once**, in the `case` that handles it. No re-reading the rubric, no visited-dimensions heuristic, no substring search.
 - **One answer list**, append-only. `question_log` goes away; `answers.tsv` and `yes_question_id` come straight from it.
 - **Scoring is a pure function**, which is what [architecture.md](../architecture.md) already asks of `judge/` ("pure core; handler owns I/O") and isn't true today.
-- **The stop-token rename becomes small.** Each explicit token (`STOP_SCORE`, `STOP_NOT_RELEVANT`, …) is one route type. Today's guess between a gate END and a final END becomes something the rubric states.
+- **The stop-token rename becomes small.** Each explicit token is one route type (table above). Today's guess between a gate END and a final END becomes something the rubric states.
 
 ## Plan
 
 Three PRs, each behavior-preserving until the last:
 
-1. **Typed routes parsed at load.** `RubricConfig` turns the GOTO column into routes; the navigator shrinks to a lookup. Still reads today's `END` / `ASSIGN_END` / `NOT_RELEVANT>>`, mapping `END` to `StopAndScore` or `StopNotRelevant` by today's rule. No behavior change.
+1. **The rubric as data, with routes resolved at load.** `RubricConfig` builds `Rubric` / `Question` / `Route`; `QuestionNavigator` goes away. Still reads today's `END` / `ASSIGN_END` / `NOT_RELEVANT>>`, with `END` as the transitional `StopEnd`. No behavior change.
 2. **The walk loop and verdicts.** Replace `_ask_all_questions`, `_calculate_results`, the two handlers, and the marker matching with the walk above and a pure `score`. No behavior change; about 10 tests that assert on marker strings, and the fixture under `tests/fixtures/eval_tsv_rebuild__20260415_140037/`, are rewritten to assert on verdicts.
 3. **Explicit stop tokens and validator rules.** Migrate `data/SI/rubric.tsv`, `data/HFO/rubric_HFO.tsv`, and the test rubrics; every terminating row must name its stop. This is the only PR that changes rubric files.
 
@@ -80,6 +110,5 @@ The guard for 1 and 2 is that scores don't move: the SI and HFO rubric integrati
 
 ## Open questions
 
-1. **HFO Q11.** "No Danger" routes to `END` before the last two dimensions are asked, so today all five become Not Relevant and earlier ratings are discarded. The row's note asks to keep earlier ratings and mark the rest Not Relevant, which is `StopAndScore` here. Needs the HFO rubric authors' confirmation; it can ship ahead of step 3 if they pick an existing token.
-2. **Blank GOTO on a final row.** Today it means "next row", which on the last row means "finish and score". Make it an error once explicit stop tokens exist, or keep it as shorthand for `StopAndScore`?
-3. **Where routes live.** On the question (`question.route_for(answer)`), or in a separate table the walk consults? The first reads better; the second keeps rubric data free of behavior.
+1. **HFO Q11.** "No Danger" routes to `END` before the last two dimensions are asked, so today all five become Not Relevant and earlier ratings are discarded. The row's note asks to keep earlier ratings and mark the rest Not Relevant, which is what `StopScore` does here. Needs the HFO rubric authors' confirmation; it can ship ahead of step 3 if they pick an existing token.
+2. **Blank GOTO on a final row.** Today it means "next row", which on the last row means "finish and score". Make it an error once explicit stop tokens exist, or keep it as shorthand for `StopScore`?
