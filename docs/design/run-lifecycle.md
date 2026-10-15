@@ -51,20 +51,20 @@ sequenceDiagram
     participant Run as generate/run.py
     participant Runner as generate/runner.py
     participant Disk
-    CLI->>CLI: resolve settings (paths checked; --into only "is a dir")
-    CLI->>CLI: echo settings (nothing persisted)
+    CLI->>CLI: resolve settings: paths checked, --into only checked to be a folder
+    CLI->>CLI: echo settings, nothing persisted
     loop each -u model
-        Run->>Run: --into? check p_/a_/t/r name against flags
-        Run->>Run: datetime.now() (one per model)
-        Run->>Disk: mkdir p_…__<ts> (exist_ok=True)
-        Runner->>Disk: read personas (failure leaves an empty folder)
-        Runner->>Runner: max_concurrent check (also after mkdir)
+        Run->>Run: with --into, check the p_/a_/t/r name against the flags
+        Run->>Run: datetime.now(), once per model
+        Run->>Disk: mkdir p_…__ts with exist_ok=True
+        Runner->>Disk: read personas, a failure leaves an empty folder
+        Runner->>Runner: max_concurrent check, also after mkdir
         loop each conversation
-            Runner->>Disk: mkdir run folder again, conversations/, logs/
-            Runner->>Runner: chatbot setup() call — no log open yet
-            Runner->>Disk: open log (makedirs again)
+            Runner->>Disk: mkdir run folder again, plus conversations/ and logs/
+            Runner->>Runner: chatbot setup() call, no log open yet
+            Runner->>Disk: open log, makedirs again
             Runner->>Runner: turns
-            Runner->>Disk: write transcript (makedirs again)
+            Runner->>Disk: write transcript, makedirs again
         end
     end
 ```
@@ -82,13 +82,13 @@ Problems this shows, all from the current code:
 
 ```mermaid
 flowchart TD
-    A[1 Resolve settings<br/>all paths, models, flags] --> B[2 Validate everything<br/>inputs exist, --into matches this config]
-    B --> C[3 Write config.json in memory<br/>hash it once → sha]
-    C --> D[4 Mint run name<br/>utils/naming.py, one clock read]
-    D --> E[5 Create run root<br/>one function: collision check, mkdir,<br/>write config.json + .sha256]
-    E --> F[6 Per job: open log<br/>before the first model call]
-    F --> G[7 Per job: write its output<br/>transcript / TSV]
-    G --> H[8 Run-level outputs<br/>results.csv, answers.tsv, scores/]
+    A["1 Resolve settings<br/>all paths, models, flags"] --> B["2 Validate everything<br/>inputs exist, --into matches this config"]
+    B --> C["3 Build config.json in memory<br/>hash it once → sha"]
+    C --> D["4 Mint run name<br/>utils/naming.py, one clock read"]
+    D --> E["5 Create run root<br/>one function: collision check, mkdir,<br/>write config.json + .sha256"]
+    E --> F["6 Per job: open log<br/>before the first model call"]
+    F --> G["7 Per job: write its output<br/>transcript or TSV"]
+    G --> H["8 Run-level outputs<br/>results.csv, answers.tsv, scores/"]
 ```
 
 Rules that make this hold:
