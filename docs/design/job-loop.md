@@ -92,6 +92,25 @@ write_results_csv(run_dir)
 
 `Session.run()` is today's per-session body of `run_single_conversation`; `Evaluation.run()` is today's `_evaluate_single_conversation_with_judge`. A semaphore plus `gather` replaces both queue-and-worker pools: no worker IDs, no `get_nowait` loop, no shared results list.
 
+### The pipeline: one job list
+
+Today `vera pipeline` runs a generation pool for one user model, then a judging pool for its run, then the next user model, then pools the results: one pool after another, with idle capacity in between. With the loop it becomes one call:
+
+```python
+# vera_cli/pipeline.py, after creating every run root up front (run-lifecycle.md, step 5)
+jobs = [first_unfinished_session(persona, repeat, run_dir_for(user_model))
+        for user_model in user_models for persona in personas for repeat in repeats]
+report(await run_jobs(jobs, max_concurrent, attempts=config.attempts))
+for run_dir in run_dirs:
+    write_results_csv(evaluation_dir_for(run_dir))
+    score(evaluation_dir_for(run_dir))
+pool(run_dirs)
+```
+
+A conversation's last session returns that conversation's `Evaluation` jobs as follow-ups, so it is judged as soon as it exists, while other conversations are still being generated. Every user model shares one concurrency cap, and the slowest persona no longer holds up the next model's start. Run-level steps (`results.csv`, scores, pooling) still wait for every job, because they need all the rows.
+
+What this needs: the judge's run folder and rubric must exist before generation starts, which the run-lifecycle order already gives (all run roots are created before any job runs).
+
 ## Decisions from review
 
 1. **A job is one session.** Sessions must run in order, so session *k* is a follow-up of session *k − 1*: its `run()` returns the next session's job. Generation lists only the first unfinished session of each conversation. `done()` stays a single file check, and resume restarts exactly at the first missing session.
@@ -102,7 +121,7 @@ write_results_csv(run_dir)
 
 ## Open questions
 
-1. **Stream generation into judging?** Today a pipeline judges only after every conversation is generated. With follow-ups, a finished session could return its `Evaluation` jobs, so judging starts while generation continues. Gains: wall-clock time, and a broken judge setup fails in minutes instead of after generation. Costs: generation and judging compete for the concurrency cap, and the judge needs its run folder and rubric ready before generation starts. Proposal: keep the stage barrier in the first version; the follow-up mechanism makes streaming a later, local change.
+1. **One cap or two?** In the pipeline, generation and judging jobs share one concurrency cap. Judging calls are short and many, generation calls long and few, so one cap can let a burst of evaluations delay generation. Start with one cap and split it per job kind only if runs show the problem.
 2. **External queue.** Jobs are plain data (paths, model names, indices), not closures, so they can be serialized as JSON. A closure would carry live state with it (an LLM client's HTTP session, its API key), which can't or shouldn't travel; instead each job names its `kind`, and the worker looks up the code to run and builds its own clients. That keeps an external queue (a cloud task queue, a cluster scheduler) possible: `run_jobs` becomes one implementation of an executor interface, and a remote one would submit serialized jobs instead. Proposal: don't build the interface until there's a concrete need, same rule as the roadmap's Storage phase; just keep jobs serializable.
 
 ## What this removes
