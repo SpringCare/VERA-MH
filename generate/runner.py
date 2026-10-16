@@ -33,7 +33,7 @@ from utils.naming import (
 )
 
 from .conversation_simulator import ConversationSimulator
-from .utils import load_prompts_from_csv
+from .utils import DEFAULT_USER_LANGUAGE, load_prompts_from_csv
 
 
 class ConversationRunner:
@@ -49,6 +49,7 @@ class ConversationRunner:
         folder_name: str = "conversations",
         max_concurrent: Optional[int] = None,
         max_total_words: Optional[int] = None,
+        user_language: str = DEFAULT_USER_LANGUAGE,
         max_personas: Optional[int] = None,
         persona_speaks_first: bool = True,
         session_types: Optional[List[str]] = None,
@@ -67,6 +68,7 @@ class ConversationRunner:
         # Default: None - run all conversations concurrently
         self.max_concurrent = max_concurrent
         self.max_total_words = max_total_words
+        self.user_language = user_language
         self.max_personas = max_personas
         self.persona_speaks_first = persona_speaks_first
         self.session_types = session_types
@@ -268,6 +270,7 @@ class ConversationRunner:
             persona_names,
             prompt_path=self.persona_prompt_path,
             persona_context_template_path=self.persona_context_template_path,
+            user_language=self.user_language,
             max_personas=self.max_personas,
         )
         jobs: List[Tuple[dict, int, int, int]] = []
@@ -670,6 +673,7 @@ class ConversationRunner:
             persona_names,
             prompt_path=self.persona_prompt_path,
             persona_context_template_path=self.persona_context_template_path,
+            user_language=self.user_language,
             max_personas=self.max_personas,
         )
         persona_safe_names = {

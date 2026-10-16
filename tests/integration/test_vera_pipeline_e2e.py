@@ -62,6 +62,7 @@ def _config(
             "max_concurrent": 2,
             "max_total_words": None,
             "persona_speaks_first": True,
+            "user_language": "English",
             "sessions": None,
         },
         "judging": {
