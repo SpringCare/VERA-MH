@@ -116,7 +116,7 @@ uv run python vera.py generate \
 | `--max-concurrent` | Maximum concurrent conversations; set this if the chatbot times out or rate-limits | unlimited |
 | `--max-total-words` | Cap on total response words per conversation | unlimited |
 | `--provider-speaks-first` | Chatbot speaks first | persona speaks first |
-| `--user-language` | Language the user-side LLM writes in. Non-English adds one line to the persona prompt | English |
+| `--user-language` | Language the user-side LLM writes in, e.g. `"Mexican Spanish"`; see [user-language.md](user-language.md) | English |
 | `--sessions` | Comma-separated session types run in order per persona (e.g. `intake,coaching`) | one session |
 | `--user-params` | `k=v,...` provider parameters for every `-u` model | none |
 | `--chatbot-params` | `k=v,...` provider parameters for the `-c` model | none |

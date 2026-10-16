@@ -24,8 +24,9 @@ def _first_prompt(**kwargs) -> str:
 
 
 @pytest.mark.unit
-def test_english_leaves_the_prompt_unchanged() -> None:
-    assert _first_prompt(user_language="English") == _first_prompt()
+@pytest.mark.parametrize("english", ["English", "english", " English "])
+def test_english_leaves_the_prompt_unchanged(english: str) -> None:
+    assert _first_prompt(user_language=english) == _first_prompt()
 
 
 @pytest.mark.unit
@@ -36,4 +37,13 @@ def test_other_language_adds_one_instruction_line() -> None:
     assert spanish.startswith(english)
     assert spanish[len(english) :] == (
         "\n- Write every message in Spanish, as a native speaker would\n"
+    )
+
+
+@pytest.mark.unit
+def test_a_regional_variant_is_passed_through_as_written() -> None:
+    prompt = _first_prompt(user_language="Mexican Spanish")
+
+    assert prompt.endswith(
+        "\n- Write every message in Mexican Spanish, as a native speaker would\n"
     )

@@ -404,7 +404,10 @@ def register(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--user-language",
         default=argparse.SUPPRESS,
-        help="Language the user-side LLM writes in (default: English)",
+        help=(
+            'Language the user-side LLM writes in, e.g. "Mexican Spanish" '
+            "(default: English; see docs/user-language.md)"
+        ),
     )
     parser.add_argument(
         "--sessions",

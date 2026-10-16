@@ -98,9 +98,10 @@ def load_prompts_from_csv(
 
             persona_context = context_template.format(**row)
             row["prompt"] = template.format(persona_context=persona_context)
-            if user_language != DEFAULT_USER_LANGUAGE:
+            # Case and spacing don't matter: "english" must not add a line.
+            if user_language.strip().lower() != DEFAULT_USER_LANGUAGE.lower():
                 row["prompt"] += (
-                    f"\n- Write every message in {user_language}, "
+                    f"\n- Write every message in {user_language.strip()}, "
                     "as a native speaker would\n"
                 )
             data.append(row)
