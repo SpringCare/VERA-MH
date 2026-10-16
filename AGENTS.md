@@ -71,6 +71,8 @@ consequences without duplicating that contract.
 
 The project uses [pytest](https://docs.pytest.org/) with unit and integration tests under `tests/`. Coverage is enforced (`--cov-fail-under=68` in `pyproject.toml`, set for the unit layer alone).
 
+**Changes that must not move scores.** Before changing `generate/`, `judge/`, or `score/`, read [docs/safe-changes.md](./docs/safe-changes.md). Three unit tests pin results with fixed inputs: golden scoring files, scripted judge answers, and a recorded pipeline run. A refactor must pass them unchanged; regenerating their expected data is only for changes meant to alter results, explained in the PR and the CHANGELOG.
+
 **Layout:**
 - `tests/unit/` — fast, isolated tests
 - `tests/integration/` — component interactions and CLI flows
@@ -192,6 +194,7 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 | [docs/architecture.md](./docs/architecture.md) | Humans and agents | Target architecture, invariants, layer model |
 | [docs/roadmap.md](./docs/roadmap.md) | Humans and agents | Remaining structural work, in phase order; update when a phase lands |
 | [docs/design/](./docs/design/) | Humans and agents | Historical design decisions, rationale, and compatibility consequences |
+| [docs/safe-changes.md](./docs/safe-changes.md) | Humans and agents | The tests that keep code changes from moving scores, and what to do when they fail |
 | [CHANGELOG.md](./CHANGELOG.md) | Humans and agents | Record of notable changes; every PR adds its entry under `[Unreleased]` |
 | **AGENTS.md** (this file) | All coding agents | Style, architecture map, testing, key commands, git conventions |
 | [CLAUDE.md](./CLAUDE.md) | Claude Code only | Slash commands, `.claude/` maintenance |

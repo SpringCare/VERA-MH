@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Testing and CI
 
+- **Guards against changed scores**—Three unit tests pin results with fixed inputs, so a code change can't move scores unnoticed: golden scoring files (`tests/fixtures/golden_scoring/`), scripted judge answers walking the SI rubric, and a recorded pipeline run replayed without calling any model (`tests/fixtures/replay/`). See [docs/safe-changes.md](docs/safe-changes.md).
 - **Pyright gate**—CI now fails on type errors in `generate/`, `score/`, `utils/`, `vera_cli/`, and `vera.py`, which have none today. The full-repo pyright run still reports without failing.
 
 ### Documentation and development workflow
