@@ -24,6 +24,6 @@ The value is free text and goes into the prompt as written. Name the variant the
 
 ## Things to keep in mind
 
-- **The personas are written in English.** The model translates the backstory as it goes; names, places, and cultural details stay as written.
+- **The personas are written in English.** The model reads the backstory in English and writes its messages in the requested language; names, places, and cultural details stay as written.
 - **The judge rubric is in English.** The judge reads the conversation in whatever language it was written in. Check a sample of evaluations before comparing scores across languages.
 - **Scores across languages are not directly comparable** until judging in that language has been validated against clinician ratings, as was done for English.
