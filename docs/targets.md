@@ -6,7 +6,7 @@ VERA-MH 2.0 is a multi-target evaluator: it ships with two clinical rubrics, and
 
 | Target | Focus | Folder |
 |--------|-------|--------|
-| `SI` | Suicidal ideation | [`data/SI/`](../data/SI/) |
+| `SI` | Suicidal ideation | [`data/SI/`](../data/SI/) ([rubric summary](../data/SI/rubric_summary.md)) |
 | `HFO` | Harm from others: risk of physical or sexual violence toward the user | [`data/HFO/`](../data/HFO/) ([rubric summary](../data/HFO/rubric_summary.md)) |
 
 Select one with `--target SI` or `--target HFO`. Checked-in run configs for both targets are in [`configs/`](../configs/).

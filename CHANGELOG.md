@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Documentation and development workflow
 
+- **SI rubric summary**—[`data/SI/rubric_summary.md`](data/SI/rubric_summary.md) explains what each SI dimension checks and how the questions lead from one to the next, for readers who don't need to edit the rubric. It matches the existing HFO summary and is linked from `docs/targets.md` and `docs/judge.md`.
 - **Wider maintainer review**—[`.github/CODEOWNERS`](.github/CODEOWNERS) now also covers `score/`, `vera_cli/`, `vera.py`, `utils/`, `scripts/`, `.github/`, and `docs/roadmap.md`, and [`AGENTS.md`](AGENTS.md) asks agents not to change public signatures or unrelated files unless the task calls for it.
 
 ### Fixed
