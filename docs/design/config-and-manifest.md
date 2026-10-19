@@ -52,7 +52,7 @@ The first two exist today and have grown separately; the third is planned in run
 ```
 
 - **Rubric fields required; persona fields required only to generate.** `vera judge` accepts a manifest without personas; `vera generate` and `vera pipeline` say which field is missing.
-- **Scoring knobs move here from code:** the risk-level column and its order. (The roadmap's [Rubric-agnostic scoring](../roadmap.md#rubric-agnostic-scoring) later replaces the persona column with a rubric question; the manifest is where that pointer lives either way.)
+- **Scoring knobs move here from code:** the risk-level column and its order, and the label charts and CSV headers put on scores (today the constant `SCORE_NAME = "VERA-MH v1.2"` in `score/utils.py`), which becomes the manifest's `name` and `version`. Scoring reads them from the run record, which names the target that produced the results. (The roadmap's [Rubric-agnostic scoring](../roadmap.md#rubric-agnostic-scoring) later replaces the persona column with a rubric question; the manifest is where that pointer lives either way.)
 - **`name`, `description`, `version`** identify the evaluation for people. `version` is free text set by the rubric's authors ("1.2"); it is helpful but not trusted. The run record adds what is: the checksum of every file and the git commit the target folder was last changed in (see below), so a score always says exactly which edition of a rubric produced it.
 - `rubric_manifest.json` is removed with the legacy scripts.
 
