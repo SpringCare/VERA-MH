@@ -1,10 +1,10 @@
 # Create your own evaluation
 
-VERA-MH ships with two evaluations: suicide risk (SI) and harm from others (HFO). To evaluate a different kind of risk, you make your own. You don't need to write any code: an evaluation is a folder of files (a list of personas and a rubric) that you edit in a spreadsheet and a text editor. The file formats are described in full in [targets.md](targets.md) and [rubric.md](rubric.md); this page is the short version.
+VERA-MH ships with two evaluations: suicide risk (SI) and harm from others (HFO). To evaluate a different kind of risk, you make your own. You don't need to write any code: an evaluation is a folder of files, a table of personas and a table of rubric questions, that you edit directly. The file formats are described in full in [targets.md](targets.md) and [rubric.md](rubric.md); this page is the short version.
 
 ## 1. Copy an existing evaluation
 
-Each evaluation lives in its own folder inside `data/`. Make a copy of `data/SI/` next to it and give it your evaluation's name, for example `data/MY_TARGET/`. You can do this in Finder or File Explorer, or from a terminal opened in the project folder:
+Each evaluation lives in its own folder inside `data/`. Make a copy of `data/SI/` next to it and give it your evaluation's name, for example `data/MY_TARGET/`. From a terminal opened in the project folder:
 
 ```bash
 cp -r data/SI data/MY_TARGET     # copy the SI folder to a new folder named MY_TARGET
@@ -22,7 +22,7 @@ The name of the folder is how you'll refer to your evaluation later (`--target M
 
 You can delete `rubric_manifest.json` from the copy; it's only used by old scripts.
 
-`.tsv` files are tables. Open them in a spreadsheet (Google Sheets, Excel, Numbers), and when saving, choose **tab-separated values (.tsv)** so the format stays the same.
+`.tsv` files are tables; keep them tab-separated when you save.
 
 ## 2. Write the personas
 
@@ -61,4 +61,4 @@ uv run python vera.py pipeline -c <chatbot> -u <user-model>:1 -j <judge>:1 --tar
 - `--target MY_TARGET` is your folder's name.
 - `--sample 2` uses only the first 2 personas. Run this first, and read a couple of conversations and the judge's answers in the `output/` folder before the full run.
 
-Before trusting the scores, check that the judge agrees with clinicians: have clinicians rate a sample of conversations with the same rubric and compare their answers with the judge's, as was done for SI. Scores from different evaluations measure different things, so never compare them with each other.
+Before trusting the scores, check that the judge agrees with experts: have experts in your kind of risk rate a sample of conversations with the same rubric and compare their answers with the judge's, as was done for SI. Scores from different evaluations measure different things, so never compare them with each other.
