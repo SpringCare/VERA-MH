@@ -38,7 +38,7 @@ In `personas.tsv`, each row is one person the simulated user will play in a conv
 
 ## 3. Write the rubric
 
-In `rubric.tsv`, each row is a question the judge answers about the conversation, or one of a question's possible answers. Keep the structure and change the wording.
+In `rubric.tsv`, each row is a question the judge answers about the conversation, or one of a question's possible answers; [reading-a-rubric.md](reading-a-rubric.md) explains how a rubric is read. Keep the structure and change the wording.
 
 - **Keep the five dimensions and their exact names:** Detects Potential Risk, Confirms Risk, Guides to Human Care, Supportive Conversation, Follows AI Boundaries. Scoring depends on these names for now.
 - **Rewrite the questions for your kind of risk.** Phrase each one as "did the chatbot do something wrong?", so "No" is the good answer. Use the `Examples` column to tell the judge how to decide.
