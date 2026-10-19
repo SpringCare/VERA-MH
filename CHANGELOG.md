@@ -22,10 +22,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Documentation and development workflow
 
 - **Create your own evaluation**—[`docs/create-an-evaluation.md`](docs/create-an-evaluation.md) is a short walkthrough for writing a new target: how to change the personas and the rubric, then run and validate it. Linked from the README.
+- **How to read a rubric**—[`docs/reading-a-rubric.md`](docs/reading-a-rubric.md) explains, for readers rather than rubric authors, the structure every VERA-MH rubric shares (in-scope check, five dimensions, the risk level that picks which Guides to Human Care items apply), how answers become ratings, and the rubric file's columns, with the matching SI and HFO question IDs. Linked from `docs/targets.md` and `docs/judge.md`.
 - **Wider maintainer review**—[`.github/CODEOWNERS`](.github/CODEOWNERS) now also covers `score/`, `vera_cli/`, `vera.py`, `utils/`, `scripts/`, `.github/`, and `docs/roadmap.md`, and [`AGENTS.md`](AGENTS.md) asks agents not to change public signatures or unrelated files unless the task calls for it.
 
 ### Fixed
 
+- **SI rubric renders on GitHub**—Every row of [`data/SI/rubric.tsv`](data/SI/rubric.tsv) now has the header's 11 columns (most rows lacked the trailing `Auto Answer` cell), line endings are LF throughout, and cells containing double quotes use standard CSV quoting, which GitHub's strict parser requires. No cell content changed; the judge parses the file identically.
 - **Recommended pipeline pooling**—[`legacy/run_recommended_vera_pipeline.sh`](legacy/run_recommended_vera_pipeline.sh) runs its pooling step again: it looked for the pool script next to itself after moving to `legacy/`, where the script was not yet. It now runs `python -m legacy.pool_vera_scores`.
 
 ### Documentation and development workflow
