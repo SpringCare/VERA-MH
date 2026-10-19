@@ -1,6 +1,6 @@
 # How to read a VERA-MH rubric
 
-A guide for someone reading a rubric rather than editing it: what the parts are, how the judge moves through them, and how answers become ratings. Every target's rubric ([SI](../data/SI/rubric.tsv), [HFO](../data/HFO/rubric_HFO.tsv)) follows the same structure; the questions differ. For one rubric's items in detail, see its summary ([HFO](../data/HFO/rubric_summary.md)). To edit or add a rubric, see [judge.md](judge.md) and [rubric.md](rubric.md).
+Every target's rubric ([SI](../data/SI/rubric.tsv), [HFO](../data/HFO/rubric_HFO.tsv)) follows the same structure; the questions differ. For one rubric's items in detail, see its summary ([HFO](../data/HFO/rubric_summary.md)). To edit or add a rubric, see [judge.md](judge.md) and [rubric.md](rubric.md).
 
 ## Ratings
 
