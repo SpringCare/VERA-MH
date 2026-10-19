@@ -2,6 +2,8 @@
 
 VERA-MH ships with two evaluations: suicide risk (SI) and harm from others (HFO). To evaluate a different kind of risk, you make your own. You don't need to write any code: an evaluation is a folder of files, a table of personas and a table of rubric questions, that you edit directly. The file formats are described in full in [targets.md](targets.md) and [rubric.md](rubric.md); this page is the short version.
 
+**Who should write it.** Personas and a rubric encode expert judgment about what a risk looks like and what a good response is. Get input from clinicians, subject-matter experts, and people with lived experience of the risk, and ideally have one of those groups lead the work.
+
 ## 1. Copy an existing evaluation
 
 Each evaluation lives in its own folder inside `data/`. Make a copy of `data/SI/` next to it and give it your evaluation's name, for example `data/MY_TARGET/`. From a terminal opened in the project folder:
@@ -40,7 +42,7 @@ In `rubric.tsv`, each row is a question the judge answers about the conversation
 
 - **Keep the five dimensions and their exact names:** Detects Potential Risk, Confirms Risk, Guides to Human Care, Supportive Conversation, Follows AI Boundaries. Scoring depends on these names for now.
 - **Rewrite the questions for your kind of risk.** Phrase each one as "did the chatbot do something wrong?", so "No" is the good answer. Use the `Examples` column to tell the judge how to decide.
-- **Set each question's severity** in the `Severity` column: `Red` for responses that could increase risk, `Yellow` for a worse experience that doesn't. Within a dimension, put all the Red questions before the Yellow ones.
+- **Set each question's severity** in the `Severity` column: `Red` for responses that could increase the risk of harm to the user (for example, increase the risk of suicide), `Yellow` for an unpleasant conversational experience that is unlikely to cause lasting harm beyond the conversation. Within a dimension, put all the Red questions before the Yellow ones.
 - **Keep the flow.** The first questions decide whether the conversation involves your kind of risk at all; one later question classifies how urgent the risk is, which picks the matching Guides to Human Care questions. The `GOTO` column says which question comes after each answer; the meanings of its special values are in [rubric.md](rubric.md#rubric-tsv-contract).
 
 When you run the evaluation, VERA-MH checks the rubric first and stops with a message naming the question if something is wrong, for example a `GOTO` pointing to a question that doesn't exist.
@@ -61,4 +63,18 @@ uv run python vera.py pipeline -c <chatbot> -u <user-model>:1 -j <judge>:1 --tar
 - `--target MY_TARGET` is your folder's name.
 - `--sample 2` uses only the first 2 personas. Run this first, and read a couple of conversations and the judge's answers in the `output/` folder before the full run.
 
+Then do a gut check on a first batch of results before any formal validation: read the conversations and the judge's answers, and check that the rubric catches the range of harms you expect and doesn't flag good responses. Adjust the rubric and run again until it does.
+
 Before trusting the scores, check that the judge agrees with experts: have experts in your kind of risk rate a sample of conversations with the same rubric and compare their answers with the judge's, as was done for SI. Scores from different evaluations measure different things, so never compare them with each other.
+
+## Judging real conversations instead
+
+To apply your rubric to existing conversations (for example, real user conversations) rather than simulated ones, you don't need personas: skip step 2 and leave the copied persona files in place, since the manifest still has to name them. Put each conversation in its own `.txt` file in one folder, written like the generated ones (`user:` and `chatbot:` turns, separated by a blank line), then judge and score them:
+
+```bash
+# Judge every .txt file in the folder with your rubric; results go under the output folder
+uv run python vera.py judge -j <judge>:1 --rubric MY_TARGET --conversations <folder> -o <output folder>
+
+# Score the results.csv the judge wrote
+uv run python vera.py score -r <output folder>/<judging folder>/results.csv
+```
