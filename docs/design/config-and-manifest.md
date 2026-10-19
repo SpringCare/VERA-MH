@@ -53,7 +53,7 @@ The first two exist today and have grown separately; the third is planned in run
 
 - **Rubric fields required; persona fields required only to generate.** `vera judge` accepts a manifest without personas; `vera generate` and `vera pipeline` say which field is missing.
 - **Scoring knobs move here from code:** the risk-level column and its order. (The roadmap's [Rubric-agnostic scoring](../roadmap.md#rubric-agnostic-scoring) later replaces the persona column with a rubric question; the manifest is where that pointer lives either way.)
-- **`name`, `description`, `version`** identify the evaluation. The run record copies them, so a score always says which edition of a rubric produced it.
+- **`name`, `description`, `version`** identify the evaluation for people. `version` is free text set by the rubric's authors ("1.2"); it is helpful but not trusted. The run record adds what is: the checksum of every file and the git commit the target folder was last changed in (see below), so a score always says exactly which edition of a rubric produced it.
 - `rubric_manifest.json` is removed with the legacy scripts.
 
 ### Run config: how to run it
@@ -71,9 +71,9 @@ The first two exist today and have grown separately; the third is planned in run
 }
 ```
 
-- **Defaults allowed.** A config states what differs from the defaults. Reproducibility comes from the run record, which writes every value out, not from forcing every config file to.
-- **Execution settings in their own section:** `max_concurrent`, `debug`, `sample`, `into`. They are excluded from the run's hash, because they don't change the result.
-- **Placeholders rejected at load.** A model name that no provider recognizes fails before anything runs, naming the field.
+- **Defaults allowed.** A config states what differs from the defaults, and the run record writes every value out explicitly, defaults included. Reproducibility comes from the run record, not from forcing every config file to be complete.
+- **Execution settings in their own section:** `max_concurrent`, `debug`, `sample`, `into`. The run record writes them out like everything else, in case they're useful later, but they are excluded from the run's hash, because they don't change the result.
+- **Model names checked at load.** Every model name is looked up with its provider before anything runs, so a placeholder or a typo fails in seconds, naming the field, instead of in every conversation. This needs network and keys when a run starts, which every real run needs anyway; `--print` skips the check.
 - **One path rule:** paths in a config file resolve against the config file's own folder, like the manifest's.
 
 ### Run record: what ran
@@ -83,7 +83,11 @@ The run record is the run config **resolved**: every default filled in, every pa
 ```json
 {
   "format_version": 1,
-  "target": {"name": "SI", "version": "1.2", "files": {"rubric.tsv": "sha256:…", "personas.tsv": "sha256:…"}},
+  "target": {
+    "name": "SI", "version": "1.2",
+    "git_commit": "65566744…", "uncommitted_changes": false,
+    "files": {"rubric.tsv": "sha256:…", "personas.tsv": "sha256:…"}
+  },
   "generation": {"…": "every field, with defaults written out"},
   "judging": {"…": "…"},
   "provenance": {"vera_version": "2.1.0", "git_commit": "…", "started_at": "…", "models_resolved": {"gpt-5.4": "gpt-5.4-2026-08-01"}}
@@ -91,14 +95,18 @@ The run record is the run config **resolved**: every default filled in, every pa
 ```
 
 - **Hashed:** everything except `provenance` and the execution section. Same hash, same experiment (run-lifecycle.md).
-- **Input files by checksum.** Editing a rubric or personas file changes the hash, so two runs are never mistaken for the same experiment when their inputs differed.
+- **Input files by checksum, plus the commit.** Each file's checksum is the source of truth: editing a rubric or personas file changes the hash, so two runs are never mistaken for the same experiment when their inputs differed. Next to it, `git_commit` is the last commit that changed the target folder, so a reader can open that exact rubric on GitHub, and `uncommitted_changes` says whether the files on disk differed from that commit. The checksums are hashed; the commit is provenance and isn't.
 - **Code version recorded, not hashed,** so a docs-only commit doesn't make every run look like a different experiment.
 - **Requested vs. resolved model:** the requested ID is part of the settings (hashed); what the provider reports back goes in `provenance` (not hashed). This settles the disagreement run-lifecycle.md found between architecture.md and the use-cases doc.
 - **`--config <run>/config.json` re-runs it.** A run record is a valid run config, so reproducing a run is one command.
 
+## Decisions from review
+
+1. **Defaults are allowed in config files,** and the run record writes every value out explicitly.
+2. **Execution settings are recorded but not hashed,** in their own section.
+3. **The manifest `version` is human text, and checksums are the source of truth.** The run record holds both, plus the git commit of the target folder.
+4. **Model names are validated with the provider at load,** to catch problems before a run spends anything.
+
 ## Open questions
 
-1. **Defaults in config files.** The current rule (every field required) was chosen so a config file alone describes a run. With a run record that does that job, are defaults acceptable, or should configs stay complete?
-2. **Where execution settings go.** A separate `execution` section, or keep `max_concurrent` per stage and only exclude it from the hash?
-3. **Manifest `version`.** Free text set by the rubric's authors, or derived from the files' checksums?
-4. **Validating model names at load.** A provider lookup needs network and keys at resolve time; acceptable, or check only for obvious placeholders?
+1. **Uncommitted rubric edits.** When the target's files differ from their last commit, record `uncommitted_changes: true` and run anyway, or refuse to run unless an explicit flag allows it? Recording is enough for experiments; refusing protects published numbers.
