@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Documentation and development workflow
 
+- **Create your own evaluation**—[`docs/create-an-evaluation.md`](docs/create-an-evaluation.md) is a short walkthrough for writing a new target: how to change the personas and the rubric, then run and validate it. Linked from the README.
 - **Wider maintainer review**—[`.github/CODEOWNERS`](.github/CODEOWNERS) now also covers `score/`, `vera_cli/`, `vera.py`, `utils/`, `scripts/`, `.github/`, and `docs/roadmap.md`, and [`AGENTS.md`](AGENTS.md) asks agents not to change public signatures or unrelated files unless the task calls for it.
 
 ### Fixed
