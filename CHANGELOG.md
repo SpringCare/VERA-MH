@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Testing and CI
 
-- **Import contract**—CI runs `lint-imports` and fails if `judge/` and `score/` import each other (`[tool.importlinter]` in `pyproject.toml`).
+- **Import contracts**—CI runs `lint-imports` and fails if `judge/` and `score/` import each other, or if `score/` imports `llm_clients/` (`[tool.importlinter]` in `pyproject.toml`). `utils/__init__.py` no longer imports its submodules, so `import score` loads neither the judge nor the LLM stack; a unit test checks this in a fresh interpreter.
 - **Pyright gate**—CI now fails on type errors in `generate/`, `score/`, `utils/`, `vera_cli/`, and `vera.py`, which have none today. The full-repo pyright run still reports without failing.
 
 ### Documentation and development workflow
