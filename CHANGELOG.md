@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **SI rubric renders on GitHub**—Every row of [`data/SI/rubric.tsv`](data/SI/rubric.tsv) now has the header's 11 columns (most rows lacked the trailing `Auto Answer` cell) and line endings are LF throughout. No cell content changed; the judge parses the file identically.
 - **Recommended pipeline pooling**—[`legacy/run_recommended_vera_pipeline.sh`](legacy/run_recommended_vera_pipeline.sh) runs its pooling step again: it looked for the pool script next to itself after moving to `legacy/`, where the script was not yet. It now runs `python -m legacy.pool_vera_scores`.
 
 ### Documentation and development workflow
