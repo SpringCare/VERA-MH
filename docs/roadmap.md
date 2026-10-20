@@ -45,7 +45,10 @@ Scoring today assumes the SI rubric in several places.
 - **Run metadata from records, not folder names.** Pooling (`score/pool.py`) works out persona, agent, turns, and judge by parsing `p_*`/`j_*` names and folder nesting, so runs outside that layout become `unknown`. Read them from each run's `config.json` instead.
 - **Target-rooted output.** New runs write under `output/<target>/`, with pooled results under `c_<chatbot>/pooled/` (see [Data flow and artifacts](./architecture.md#data-flow-and-artifacts)). The target root attributes judging output on its own, which unblocks `vera judge --target all`: its only blocker was output attribution.
 - **Resume.** `--into` already resumes a run folder. Decide whether a `state.json`-backed `vera resume` still adds enough to build.
-- **Import-linter:** `utils/` is a leaf.
+- **Make `utils/` a real leaf, and enforce it.** [architecture.md](./architecture.md) says `utils/` imports no other project package, but `utils/conversation_utils.py` (for `Role`) and `utils/logging_utils.py` (for `LLMInterface`) import `llm_clients/`. Because importing any `utils` submodule runs `utils/__init__.py`, that coupling once made `import score` load the whole LLM stack; the Scoring split fixed the symptom with an empty `utils/__init__.py` and a narrower contract (`score` may not import `llm_clients`), not the cause. To discuss:
+  - where the two modules go: transcript writing to `generate/`, LLM response logging to `llm_clients/`, or `Role` moved into `utils/` so they can stay;
+  - the import-linter contract that `utils/` imports no project package, which then replaces the narrower `score` one;
+  - keeping a fresh-interpreter test of what each package actually loads (`tests/unit/score/test_import_isolation.py`), since import-linter reads import statements and can't see what an `__init__.py` pulls in.
 - **Acknowledged compatibility break.** Anything outside `vera.py` that parses `p_*`/`j_*` names directly (`spring_scripts/`, `distribute_files.py`, `score/compare.py`, notebooks, human-review tooling) stops auto-discovering new runs. Reading old data keeps working: `vera judge --conversations <old p_* folder>` and `vera score -r <old results.csv>` take explicit paths and never derive meaning from folder names. Existing `output/` folders are left alone; there is no migration script.
 
 ### Model spec boundary

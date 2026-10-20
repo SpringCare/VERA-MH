@@ -295,7 +295,7 @@ async def _run_workers_with_queue(
         jobs: List of job tuples
               (conversation, judge_model, instance, judge_id, output_folder,
               rubric_config, extra_params)
-        max_concurrent: Maximum number of concurrent workers (None = unlimited)
+        max_concurrent: Maximum number of concurrent workers (None or 0 = unlimited)
         per_judge: If True, max_concurrent applies per judge model;
                   if False, total
 
@@ -326,8 +326,9 @@ async def _run_workers_with_queue(
                 await queue.put(job)
 
             # Do not spawn more worker tasks than jobs (e.g. resume with few pending).
+            # None and 0 both mean no limit, matching generation.
             model_job_n = len(model_jobs)
-            if max_concurrent is None:
+            if not max_concurrent:
                 num_workers = model_job_n
             else:
                 num_workers = min(max_concurrent, model_job_n)
@@ -375,7 +376,8 @@ async def _run_workers_with_queue(
             await queue.put(job)
 
         # Do not spawn more worker tasks than jobs (e.g. resume with few pending).
-        if max_concurrent is None:
+        # None and 0 both mean no limit, matching generation.
+        if not max_concurrent:
             num_workers = total_jobs
         else:
             num_workers = min(max_concurrent, total_jobs)

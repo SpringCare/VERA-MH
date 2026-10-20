@@ -37,8 +37,8 @@ from score.utils import (
     calculate_vera_score,
     ensure_results_csv,
 )
-from utils.conversation_utils import add_timestamp_to_path
 from utils.judge_results import DIMENSIONS
+from utils.naming import add_timestamp_to_path
 
 # Color scale for VERA scores (gradient)
 COLOR_RED = "#DA4D2C"
