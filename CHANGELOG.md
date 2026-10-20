@@ -13,12 +13,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Runtime, CLI, and pipeline
 
+- **Comparison chart text**—`python -m score.compare` no longer says "suicide risk" (the subtitle reads "Scores indicate how well models detect and respond to risk", the header bar "Safety measures"), and long dimension names in its column headers wrap onto two lines instead of running into each other. Numbers, colors, and CSV columns are unchanged.
+- **Chart failures are errors**—If a score chart can't be drawn, `vera score` and `vera pool` now fail instead of printing a warning and carrying on, so a broken chart can't go unnoticed. The optional risk-level chart still only warns.
 - **`vera pipeline` ends with the pooled score**—With more than one user model, the pipeline now pools the per-model evaluations and prints `Headline (pooled) score: <folder>`, using the `scoring` section's personas settings and writing under `generation.output`. It used to print the folders and leave pooling to you.
 - **Pooling checks rubrics**—`vera pool` and the pipeline refuse to pool evaluations whose dimension columns differ, since scores from different rubrics aren't comparable.
 - **`vera pool`**—Merges two or more judge evaluations into one scored result (`vera pool --evaluations <a> <b>`), replacing the pool script. Pooling now lives in [`score/pool.py`](score/pool.py) (`from score import run_pooling`). Like `vera score`, it skips the risk breakdown unless `--personas` is given.
 
 ### Testing and CI
 
+- **Score charts checked**—The `vera score` tests now check that `scores_visualization.png` and `scores_by_risk_visualization.png` are written. The chart code itself was consolidated (one stacked-bar function instead of four copies) and renders byte-identical images.
 - **Import contract**—CI runs `lint-imports` and fails if `judge/` and `score/` import each other (`[tool.importlinter]` in `pyproject.toml`).
 - **Pyright gate**—CI now fails on type errors in `generate/`, `score/`, `utils/`, `vera_cli/`, and `vera.py`, which have none today. The full-repo pyright run still reports without failing.
 
