@@ -4,6 +4,25 @@ Future structural work, in order. [architecture.md](./architecture.md) describes
 
 Smaller items that belong to no phase are in the [Backlog](#backlog).
 
+## Release 2.1 plan
+
+2.1 lands everything below, then is tagged once. Each step merges into `main` as it's ready, so `main` is "2.1 in progress" and [`v2.0.4`](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.4) is the release to fall back to; a 2.0.x fix, if one is needed, goes on a branch cut from that tag. The steps are in dependency order. Each design PR is a draft for discussion, and its code follows in separate PRs.
+
+| Step | What | PRs | Phase |
+|---|---|---|---|
+| 1. Safety net | Tests that prove a change didn't move scores: golden scoring, scripted judge, replay of a recorded run | [#270](https://github.com/SpringCare/VERA-MH/pull/270) (needs the replay recording) | |
+| 2. Data contracts | What a run records (manifest, run config, run record), then naming, order of events, and folder layout, decided together | [#277](https://github.com/SpringCare/VERA-MH/pull/277), then [#268](https://github.com/SpringCare/VERA-MH/pull/268) + [#276](https://github.com/SpringCare/VERA-MH/pull/276) | [Traceability](#traceability) |
+| 3. Engine | One job loop for generation and judging; the pipeline as a single job list | [#266](https://github.com/SpringCare/VERA-MH/pull/266) | [Shared engine](#shared-engine) |
+| 4. Terminal output | Plain event lines, fail-fast, end summary, and prints moved to logs (any time); the live display (after step 3) | [#271](https://github.com/SpringCare/VERA-MH/pull/271) | [Backlog](#cli-and-run-experience) |
+| 5. Remove `legacy/` | Delete the scripts, their parity tests, and [legacy-scripts.md](./legacy-scripts.md), as announced in v2.0.4 | — | [Deferred](#deferred) |
+| In parallel | A judge flow that decides each outcome once; needs the HFO rubric authors' answer on Q11 | [#267](https://github.com/SpringCare/VERA-MH/pull/267) (after step 1) | [Rubric-agnostic scoring](#rubric-agnostic-scoring) |
+
+- **Why this order.** Step 1 comes first because every later step is meant to leave scores unchanged, and it's what proves that. Step 2 defines the files and folders the job loop in step 3 reads and writes (its resume checks, the run roots it needs up front). Step 4's live display needs the events step 3 emits; its other half needs nothing.
+- **Inside step 2:** first one function that creates run roots, one clock read per run, and the tests that enforce both, still writing today's folder names; then the run record; then the new layout and conversation files. #276 replaces #268's layout section, so the two are settled as one decision.
+- **Removing `legacy/` last** keeps the legacy scripts working through the other steps. Until then the [phase rules](#how-phases-work) still apply: legacy adapts and the domain doesn't bend.
+- **Smaller PRs fit anywhere:** [#278](https://github.com/SpringCare/VERA-MH/pull/278) (`vera` command), [#269](https://github.com/SpringCare/VERA-MH/pull/269) (user-side language), [#274](https://github.com/SpringCare/VERA-MH/pull/274) (creating an evaluation).
+- **When every step has merged,** move `[Unreleased]` to `v2.1.0` in the CHANGELOG and tag it.
+
 ## How phases work
 
 - **Phases have names, not numbers.** Code comments and docs cite them by name ("Traceability"), so reordering or inserting a phase never changes what an old reference means.
@@ -131,7 +150,7 @@ Smaller items that belong to no phase. Each can ship as its own PR whenever it's
 
 ## Deferred
 
-- **Removing `legacy/`.** Triggered by a tagged release whose CHANGELOG announces the removal. Then delete `legacy/`, the legacy side of the parity tests, and [legacy-scripts.md](./legacy-scripts.md).
+- **Removing `legacy/`.** Triggered by a tagged release whose CHANGELOG announces the removal; [v2.0.4](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.4) did. Then delete `legacy/`, the legacy side of the parity tests, and [legacy-scripts.md](./legacy-scripts.md). Scheduled as the last step of the [Release 2.1 plan](#release-21-plan).
 - **Per-persona system prompts.** Personas may need their own system prompts rather than one global prompt. The mechanism (a `system_prompt` field, a `system_prompt_file` pointer, or something else) is undecided; revisit when the persona schema is formalized, likely in [Traceability](#traceability).
 
 ## Completed
