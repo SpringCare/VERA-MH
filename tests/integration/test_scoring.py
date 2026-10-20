@@ -117,7 +117,6 @@ class TestVERAMHPipeline:
             "uv",
             "run",
             "python3",
-            "python",
             "-m",
             "legacy.generate",
             "--user-agent",
@@ -217,7 +216,6 @@ class TestVERAMHPipeline:
             "uv",
             "run",
             "python3",
-            "python",
             "-m",
             "legacy.judge",
             "--folder",
@@ -330,7 +328,6 @@ class TestVERAMHPipeline:
             "uv",
             "run",
             "python3",
-            "python",
             "-m",
             "legacy.run_pipeline",
             "--user-agent",
@@ -757,9 +754,7 @@ class TestVERAMHPipeline:
         # Create test arguments for first persona (Omar) with minimal configuration
         timestamp = int(time.time())
         test_args = [
-            "python",
-            "-m",
-            "legacy.run_pipeline",
+            "legacy/run_pipeline.py",  # argv[0]: the program name, not an argument
             "--user-agent",
             TEST_CONFIG["USER_MODEL"],
             "--provider-agent",
@@ -785,7 +780,7 @@ class TestVERAMHPipeline:
 
         # Mock sys.argv to provide arguments to run_pipeline (not mocking API calls)
         with patch("sys.argv", test_args):
-            from run_pipeline import main as pipeline_main
+            from legacy.run_pipeline import main as pipeline_main
 
             # Change to the repo directory for proper relative paths
             original_cwd = os.getcwd()
@@ -942,9 +937,7 @@ class TestVERAMHPipeline:
         # Test 2: Run integrated pipeline
         timestamp = int(time.time())
         test_args = [
-            "python",
-            "-m",
-            "legacy.run_pipeline",
+            "legacy/run_pipeline.py",  # argv[0]: the program name, not an argument
             "--user-agent",
             TEST_CONFIG["USER_MODEL"],
             "--provider-agent",
@@ -969,7 +962,7 @@ class TestVERAMHPipeline:
         created_dirs = []
 
         with patch("sys.argv", test_args):
-            from run_pipeline import main as pipeline_main
+            from legacy.run_pipeline import main as pipeline_main
 
             original_cwd = os.getcwd()
             os.chdir(repo_root)

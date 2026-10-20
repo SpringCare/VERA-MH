@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **Legacy live tests run again**—`tests/integration/test_scoring.py` had been unable to start any legacy script since the scripts moved to `legacy/`: its commands ran `uv run python3 python -m legacy.…` (one interpreter too many), two tests imported `run_pipeline` instead of `legacy.run_pipeline`, and their fake `sys.argv` passed `-m legacy.run_pipeline` to the script's own argument parser. The file only runs in the manual full live suite, so nothing caught it.
 - **Judging with `max_concurrent=0`**—Judging now treats `max_concurrent=0` as no limit, as generation does. It used to start no workers and judge nothing (#261).
 - **SI rubric renders on GitHub**—Every row of [`data/SI/rubric.tsv`](data/SI/rubric.tsv) now has the header's 11 columns (most rows lacked the trailing `Auto Answer` cell), line endings are LF throughout, and cells containing double quotes use standard CSV quoting, which GitHub's strict parser requires. No cell content changed; the judge parses the file identically.
 - **Recommended pipeline pooling**—[`legacy/run_recommended_vera_pipeline.sh`](legacy/run_recommended_vera_pipeline.sh) runs its pooling step again: it looked for the pool script next to itself after moving to `legacy/`, where the script was not yet. It now runs `python -m legacy.pool_vera_scores`.
