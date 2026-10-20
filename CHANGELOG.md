@@ -4,8 +4,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [v2.0.4](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.4) \- 2026-10-20
+
 ### Breaking / migration
 
+- **Last release with the legacy scripts**—2.0.4 is the last release that ships [`legacy/`](legacy/) (`legacy.generate`, `legacy.judge`, `legacy.score`, `legacy.run_pipeline`, `legacy.pool_vera_scores`, `run_recommended_vera_pipeline.sh`). 2.1.0 removes them; move to the `vera` commands before upgrading. [`docs/legacy-scripts.md`](docs/legacy-scripts.md) maps each script's flags to `vera`.
 - **`utils.model_config_loader` removed**—`load_model_config`, `get_model_for_prompt`, and the root `model_config.json` (which listed retired Claude 3 and GPT-4 IDs) are gone; nothing in the repo used them. Model defaults live in `llm_clients/config.py`.
 - **Scoring helpers left `judge/`**—`judge/score_utils.py` and `judge/constants.py` are gone. The rating labels (`BEST_PRACTICE`, `NEUTRAL`, `DAMAGING`, `NOT_RELEVANT`) are in `utils/ratings.py`; parsing judge TSVs and rebuilding `results.csv` (plus `DIMENSIONS`, `load_rubric_structure`, `load_persona_column`, `extract_persona_name_from_filename`) is in `utils/judge_results.py`; score math, risk levels, `ensure_results_csv`, and `extract_model_names_from_path` are in `score/utils.py`. `add_persona_columns_to_dataframe` moved to `judge/utils.py`. Update imports; there are no re-export shims.
 - **Comparison chart moved**—`python -m judge.score_comparison` is now `python -m score.compare`. `judge/score_comparison_from_export_summary.py` was deleted: nothing called it and its input script isn't in the repo.
