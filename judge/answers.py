@@ -28,11 +28,11 @@ from typing import Any, Dict, List, Sequence
 
 import pandas as pd
 
-from .score_utils import (
+from utils.judge_results import (
     extract_conversation_filename_from_tsv,
+    extract_persona_name_from_filename,
     parse_judge_metadata_from_evaluation_tsv_filename,
 )
-from .utils import extract_persona_name_from_filename
 
 ANSWERS_DIR_NAME = "answers"
 # Named for the rows it holds rather than the files: both artifacts are per

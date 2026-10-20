@@ -291,7 +291,7 @@ orthogonal.
 | `vera_cli/` | One cohesive adapter per command plus shared config/target helpers | `generate.py`, `judge.py`, `config.py`, `targets.py` |
 | `generate/` | Simulation, turns, batch runner (pure core; handler owns I/O) | `conversation_simulator.py`, `runner.py` |
 | `judge/` | Rubric navigation, LLM judge, improvement reporting (pure core; handler owns I/O) | `question_navigator.py`, `llm_judge.py`, `scripts/summarize_results.py` |
-| `score/` | Aggregation, visualization, pooling — split out of `judge/` | `run.py`, `aggregate.py`, `viz.py`, `pool.py` |
+| `score/` | Aggregation, visualization, pooling, chatbot comparison — split out of `judge/` | `run.py`, `aggregate.py`, `viz.py`, `pool.py`, `compare.py`, `utils.py` |
 | `workers/` | Shared queue protocol, worker pool, job dispatch | `queue.py`, `job_context.py` |
 | `llm_clients/` | Provider plugin registry; providers self-register, factory resolves by prefix | `llm_interface.py`, `llm_factory.py` |
 | `storage/` | Storage backend abstraction; raw bytes+keys, knows nothing about run semantics | `storage_backend.py`, `local_filesystem_storage.py` |
@@ -434,7 +434,7 @@ Target state for automated checks:
 | `uv run pyright` | Type checking — blocking per package as each reaches zero errors ([Quality gates](./roadmap.md#quality-gates)) |
 | Pre-commit | Ruff format/lint |
 | CI | Ruff, pyright, `pytest -m "not live"` — coverage gate set in `pyproject.toml` |
-| import-linter | Declarative layer contracts (`pyproject.toml`) — added incrementally as each new boundary is created (`judge/` ⊥ `score/` in [Scoring split](./roadmap.md#scoring-split), `utils/` leaf in [Traceability](./roadmap.md#traceability)), completed with the full contract (all [Layer model](#layer-model) boundaries) in [Quality gates](./roadmap.md#quality-gates) |
+| import-linter | Declarative layer contracts (`pyproject.toml`) — added incrementally as each new boundary is created (`judge/` ⊥ `score/`, in place since the Scoring split, `utils/` leaf in [Traceability](./roadmap.md#traceability)), completed with the full contract (all [Layer model](#layer-model) boundaries) in [Quality gates](./roadmap.md#quality-gates) |
 | grimp | Custom import-graph assertions — added in [Quality gates](./roadmap.md#quality-gates) |
 | `.github/CODEOWNERS` | Human review on `vera.py`, import boundaries, domain packages |
 | CI (design-doc gate) | Required status check on `pull_request`: fails if the diff touches a [stable interface](#stable-interfaces-agent-coding-optimization) and the PR description has no design-doc link — not yet built |

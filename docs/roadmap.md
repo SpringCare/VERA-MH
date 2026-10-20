@@ -17,7 +17,6 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
 
 | Phase | Goal | Done when |
 |-------|------|-----------|
-| [Scoring split](#scoring-split) | `score/` owns pooling and stops importing `judge/` | import-linter `judge/` ⊥ `score/` passes in CI |
 | [Rubric-agnostic scoring](#rubric-agnostic-scoring) | Scoring works for any rubric, with unambiguous stop tokens | A non-SI target scores and groups by risk with no SI assumptions; every terminating rubric row uses an explicit stop token |
 | [Traceability](#traceability) | Every run records what produced it, under the target-rooted layout | New runs write `config.json`, `state.json`, and checksums under `output/<target>/`; `vera judge --target all` works; `utils/` leaf contract passes |
 | [Model spec boundary](#model-spec-boundary) | Domains take `ModelSpec` directly | `run_for_user_models` and `_legacy_model_config` are gone; per-model judge parameters work |
@@ -25,12 +24,6 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
 | [Quality gates](#quality-gates) | Static checks block the build | Pyright blocks on every package; full import-linter and grimp contracts pass |
 | [Storage](#storage) *(independent)* | Persistence goes through a backend interface | No domain or `workers/` code writes run artifacts directly |
 | [OpenSpec](#openspec) *(independent)* | OpenSpec is a real practice, not scaffolding | A qualifying feature has shipped with an OpenSpec change |
-
-### Scoring split
-
-- **Shared helpers leave `judge/`.** `score/` still imports `judge.score_utils`, `judge.constants`, and `judge.utils` (`score/pool.py` included), and `judge/runner.py` and `judge/answers.py` also use `score_utils`. Split it: what only scoring needs moves to `score/utils.py`, what both need moves to `utils/`.
-- **Import-linter contract** for `judge/` ⊥ `score/`, the first contract in `pyproject.toml`.
-- **Decide where `judge/score_comparison*.py` live** (likely `score/`), and where `score_comparisons/` output goes.
 
 ### Rubric-agnostic scoring
 
@@ -42,7 +35,7 @@ Scoring today assumes the SI rubric in several places.
 
   Design record: [rubric-terminal-goto-vocabulary.md](./design/rubric-terminal-goto-vocabulary.md).
 - **Explicit `dimension_verdicts`.** Replace the `ASSIGN_END` / `NOT_RELEVANT>>` marker strings in `dimension_answers` with a verdict map: handlers record a verdict instead of overwriting a dimension's answers with a synthetic record, and `_determine_dimension_scores` reads it instead of substring-matching question text. `dimension_answers` becomes append-only and truthful, `yes_question_id` can be computed rather than regexed out of prose, and `answers.tsv` can source from `dimension_answers` directly. Rewrites about 10 tests that assert on marker strings, plus the fixture under `tests/fixtures/eval_tsv_rebuild__20260415_140037/`. Land it before or alongside the vocabulary migration above, since the verdict map replaces the marker matching that migration would otherwise carry forward.
-- **`risk_level` from the judge, not persona metadata.** Today `add_risk_levels_to_dataframe` / `load_personas_risk_levels` (`judge/score_utils.py`), called from `score_results_by_risk`, join a personas TSV column literally named "Short Current Suicide Risk Level" on a persona name parsed from the filename. Any rubric whose personas file lacks that column silently yields "Unknown" for every row, and `scores_by_risk.json` comes back empty. Instead: declare `risk_level_question_id` in the rubric manifest, read that column from `answers/answers.tsv`, and take the grouping order from the question's answer options rather than the hardcoded `RISK_LEVEL_ORDER`. Retire the persona lookup and its `--personas-tsv` wiring, and relabel the "Persona Risk Level" chart axis. Existing `results.csv` files predate the column, so consumers must tolerate it being blank.
+- **`risk_level` from the judge, not persona metadata.** Today `add_risk_levels_to_dataframe` / `load_personas_risk_levels` (`score/utils.py`), called from `score_results_by_risk`, join a personas TSV column literally named "Short Current Suicide Risk Level" on a persona name parsed from the filename. Any rubric whose personas file lacks that column silently yields "Unknown" for every row, and `scores_by_risk.json` comes back empty. Instead: declare `risk_level_question_id` in the rubric manifest, read that column from `answers/answers.tsv`, and take the grouping order from the question's answer options rather than the hardcoded `RISK_LEVEL_ORDER`. Retire the persona lookup and its `--personas-tsv` wiring, and relabel the "Persona Risk Level" chart axis. Existing `results.csv` files predate the column, so consumers must tolerate it being blank.
 - **No SI-derived global dimensions.** Remove them from scoring and visualization; persist the rubric's dimensions and a rubric fingerprint with evaluation outputs, so later scoring and comparison use the rubric the run was judged with. Pooling should then compare fingerprints instead of today's dimension-column check.
 
 ### Traceability
@@ -52,8 +45,11 @@ Scoring today assumes the SI rubric in several places.
 - **Run metadata from records, not folder names.** Pooling (`score/pool.py`) works out persona, agent, turns, and judge by parsing `p_*`/`j_*` names and folder nesting, so runs outside that layout become `unknown`. Read them from each run's `config.json` instead.
 - **Target-rooted output.** New runs write under `output/<target>/`, with pooled results under `c_<chatbot>/pooled/` (see [Data flow and artifacts](./architecture.md#data-flow-and-artifacts)). The target root attributes judging output on its own, which unblocks `vera judge --target all`: its only blocker was output attribution.
 - **Resume.** `--into` already resumes a run folder. Decide whether a `state.json`-backed `vera resume` still adds enough to build.
-- **Import-linter:** `utils/` is a leaf.
-- **Acknowledged compatibility break.** Anything outside `vera.py` that parses `p_*`/`j_*` names directly (`spring_scripts/`, `distribute_files.py`, `score_comparison.py`, notebooks, human-review tooling) stops auto-discovering new runs. Reading old data keeps working: `vera judge --conversations <old p_* folder>` and `vera score -r <old results.csv>` take explicit paths and never derive meaning from folder names. Existing `output/` folders are left alone; there is no migration script.
+- **Make `utils/` a real leaf, and enforce it.** [architecture.md](./architecture.md) says `utils/` imports no other project package, but `utils/conversation_utils.py` (for `Role`) and `utils/logging_utils.py` (for `LLMInterface`) import `llm_clients/`. Because importing any `utils` submodule runs `utils/__init__.py`, that coupling once made `import score` load the whole LLM stack; the Scoring split fixed the symptom with an empty `utils/__init__.py` and a narrower contract (`score` may not import `llm_clients`), not the cause. To discuss:
+  - where the two modules go: transcript writing to `generate/`, LLM response logging to `llm_clients/`, or `Role` moved into `utils/` so they can stay;
+  - the import-linter contract that `utils/` imports no project package, which then replaces the narrower `score` one;
+  - keeping a fresh-interpreter test of what each package actually loads (`tests/unit/score/test_import_isolation.py`), since import-linter reads import statements and can't see what an `__init__.py` pulls in.
+- **Acknowledged compatibility break.** Anything outside `vera.py` that parses `p_*`/`j_*` names directly (`spring_scripts/`, `distribute_files.py`, `score/compare.py`, notebooks, human-review tooling) stops auto-discovering new runs. Reading old data keeps working: `vera judge --conversations <old p_* folder>` and `vera score -r <old results.csv>` take explicit paths and never derive meaning from folder names. Existing `output/` folders are left alone; there is no migration script.
 
 ### Model spec boundary
 
@@ -88,7 +84,6 @@ The engine rewrite can change concurrency, timing, and error handling even when 
 - **Import contracts.** Full import-linter contract (all [Layer model](./architecture.md#layer-model) boundaries) plus grimp import-graph assertions.
 - **Root-clutter cleanup:**
   - delete `logging/`, `logs/`, root `conversations/`, `human_validation/` (old generated dumps, already gitignored)
-  - `score_comparisons/`: keep the directory, stop committing generated CSV/PNG output
   - move `distribute_files.py` into `scripts/`
   - fix stale `docker-compose.yml` volume mounts (`./evaluations` doesn't exist, `./logs` is missing)
   - `spring_scripts/`, `openspec/`, `alba.md`, `Untitled.ipynb`: untracked scratch, out of scope
@@ -141,6 +136,7 @@ Smaller items that belong to no phase. Each can ship as its own PR whenever it's
 
 ## Completed
 
+- **Scoring split.** `judge/` and `score/` no longer import each other, and an import-linter contract in `pyproject.toml` enforces it in CI. Helpers both need live in `utils/` (`judge_results.py`, `ratings.py`); scoring-only helpers in `score/utils.py`. The comparison chart moved to `score/compare.py` (`python -m score.compare`), and its unused export-summary copy was deleted. `score_comparisons/` keeps only the example input; generated output is no longer committed.
 - **Target manifests.** One complete fixture target drives both generation and judging; explicit `--personas` / `--rubric` selection is preserved.
 - **`vera` CLI and config.** `vera.py` (`generate`, `judge`, `score`, `pipeline`) with `--config`, `--target`, `--personas`, `--rubric`, `-u`, `-j`, `--sample`, and `--into` resume. The old root scripts moved to `legacy/` (#243) instead of being deleted; see [Deferred](#deferred).
 - **Multi-rubric evaluation, through targets.** This is the intended end state, not a stopgap. Evaluating the same conversations with several evaluators (rubrics) means one target per rubric: each target bundles its rubric with its personas and prompts, and each is judged separately with `vera judge --target <name>`, writing its own results. Keeping rubrics separate is deliberate, because scores from different rubrics aren't comparable and must never be merged. The earlier plan for several rubrics inside one run (`judging.rubrics` with length > 1, per-rubric judge-model overrides) is dropped. `judging.rubrics` keeps its list shape with a length-1 check, so revisiting it later wouldn't break the schema. What remains is convenience, not capability: `vera judge --target all` comes with [Traceability](#traceability), once the output path attributes each target.

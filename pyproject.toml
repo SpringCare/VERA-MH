@@ -29,6 +29,7 @@ dev = [
     "pytest-socket>=0.7.0",
     "pytest-timeout>=2.2.0",
     "freezegun>=1.4.0",
+    "import-linter>=2.0",
     "pre-commit>=3.0.0",
 ]
 
@@ -43,6 +44,7 @@ dev = [
     "pytest-socket>=0.7.0",
     "pytest-timeout>=2.2.0",
     "freezegun>=1.4.0",
+    "import-linter>=2.0",
     "pre-commit>=3.0.0",
 ]
 
@@ -57,6 +59,23 @@ constraint-dependencies = [
     "filelock>=3.20.3",
     "virtualenv>=20.36.1",
 ]
+
+[tool.importlinter]
+root_packages = ["judge", "score", "utils", "llm_clients"]
+
+# docs/architecture.md, Layer model: judging and scoring never import each other.
+# What both need lives in utils/.
+[[tool.importlinter.contracts]]
+name = "judge and score are independent"
+type = "independence"
+modules = ["judge", "score"]
+
+# Scoring is arithmetic over results.csv; it has no reason to load LLM clients.
+[[tool.importlinter.contracts]]
+name = "score does not import llm_clients"
+type = "forbidden"
+source_modules = ["score"]
+forbidden_modules = ["llm_clients"]
 
 [tool.pyright]
 typeCheckingMode = "basic"
