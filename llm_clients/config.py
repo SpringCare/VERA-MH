@@ -108,6 +108,14 @@ class Config:
     RECOMMENDED_USER_MODELS = ("gpt-5.2", "claude-opus-4-5")
     RECOMMENDED_JUDGE_MODEL = "gpt-5.4"
 
+    # Cheapest models the live end-to-end test can run on
+    # (tests/integration/test_vera_pipeline_e2e.py). Not for real evaluations.
+    # Claude is user-side only: as a judge it answers the rubric prompt in plain
+    # text instead of the JSON schema, so both judges are OpenAI models.
+    CHEAP_CHATBOT_MODEL = "gpt-5.4-nano"
+    CHEAP_USER_MODELS = ("gpt-5.4-nano", "claude-sonnet-4-5")
+    CHEAP_JUDGE_MODELS = ("gpt-5.4-nano", "gpt-5.6-luna")
+
     @classmethod
     def get_recommended_models(cls) -> Dict[str, str]:
         """Get the recommended profile's user and judge models.

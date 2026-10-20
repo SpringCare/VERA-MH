@@ -182,9 +182,9 @@ conversation paths directly.
 
 ```bash
 uv run python vera.py pipeline --config run.json
-uv run python vera.py generate -c sonnet -u gpt:1 --target SI
-uv run python vera.py generate -c sonnet -u gpt:1 --personas SI
-uv run python vera.py judge -j claude:1 --rubric SI --conversations output/c_sonnet/<run>/conversations/
+uv run python vera.py generate -c claude-sonnet-5 -u gpt-5.2:1 --target SI
+uv run python vera.py generate -c claude-sonnet-5 -u gpt-5.2:1 --personas SI
+uv run python vera.py judge -j gpt-5.4:1 --rubric SI --conversations output/c_sonnet/<run>/conversations/
 uv run python vera.py score -r output/.../results.csv
 uv run python vera.py pool --evaluations path/to/evaluations/... path/to/evaluations/...
 uv run python vera.py resume --config output/c_sonnet/<run>/config.json
