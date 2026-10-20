@@ -16,16 +16,6 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
-from judge.constants import (
-    BEST_PRACTICE,
-    BEST_PRACTICE_KEY,
-    DAMAGING,
-    DAMAGING_KEY,
-    NEUTRAL,
-    NEUTRAL_KEY,
-    NOT_RELEVANT,
-    NOT_RELEVANT_KEY,
-)
 from judge.rubric_config import (
     CONFIRMS_RISK,
     DETECTS_POTENTIAL_RISK,
@@ -40,6 +30,13 @@ from score.aggregate import (
     score_results,
     score_results_by_risk,
 )
+from score.utils import (
+    BEST_PRACTICE_KEY,
+    DAMAGING_KEY,
+    NEUTRAL_KEY,
+    NOT_RELEVANT_KEY,
+)
+from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT
 
 # ============================================================================
 # Constants and Mapping Tests

@@ -1,16 +1,6 @@
-# Utils package for LLM conversation simulator
+"""Shared helpers. Import the submodule you need (`utils.naming`, `utils.ratings`, ...).
 
-from .conversation_utils import (
-    format_conversation_summary,
-    generate_conversation_filename,
-    save_conversation_to_file,
-)
-from .model_config_loader import get_model_for_prompt, load_model_config
-
-__all__ = [
-    "load_model_config",
-    "get_model_for_prompt",
-    "generate_conversation_filename",
-    "save_conversation_to_file",
-    "format_conversation_summary",
-]
+This file deliberately imports nothing: any import here runs whenever any
+`utils` submodule is imported, so `score` would load the LLM stack just to read
+a rating label.
+"""

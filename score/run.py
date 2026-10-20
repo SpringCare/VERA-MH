@@ -14,18 +14,15 @@ import traceback
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-from judge.score_utils import (
-    build_dataframe_from_tsv_files,
-    has_dimension_data,
-    read_judge_results_csv,
-)
 from score.aggregate import (
     print_scores,
     score_results,
     score_results_by_risk,
     scores_output_dir,
 )
+from score.utils import has_dimension_data, read_judge_results_csv
 from score.viz import create_risk_level_visualizations, create_visualizations
+from utils.judge_results import build_dataframe_from_tsv_files
 
 
 def _rebuild_dataframe_if_needed(results_csv_path: Path) -> bool:
