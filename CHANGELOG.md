@@ -13,12 +13,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Runtime, CLI, and pipeline
 
+- **Comparison chart text**—`python -m score.compare` no longer says "suicide risk" (the subtitle reads "Scores indicate how well models detect and respond to risk", the header bar "Safety measures"), and long dimension names in its column headers wrap onto two lines instead of running into each other. Numbers, colors, and CSV columns are unchanged.
+- **Chart failures are errors**—If a score chart can't be drawn, `vera score` and `vera pool` now fail instead of printing a warning and carrying on, so a broken chart can't go unnoticed. The optional risk-level chart still only warns.
 - **`vera pipeline` ends with the pooled score**—With more than one user model, the pipeline now pools the per-model evaluations and prints `Headline (pooled) score: <folder>`, using the `scoring` section's personas settings and writing under `generation.output`. It used to print the folders and leave pooling to you.
 - **Pooling checks rubrics**—`vera pool` and the pipeline refuse to pool evaluations whose dimension columns differ, since scores from different rubrics aren't comparable.
 - **`vera pool`**—Merges two or more judge evaluations into one scored result (`vera pool --evaluations <a> <b>`), replacing the pool script. Pooling now lives in [`score/pool.py`](score/pool.py) (`from score import run_pooling`). Like `vera score`, it skips the risk breakdown unless `--personas` is given.
 
 ### Testing and CI
 
+- **Score charts checked**—The `vera score` tests now check that `scores_visualization.png` and `scores_by_risk_visualization.png` are written. The chart code itself was consolidated (one stacked-bar function instead of four copies) and renders byte-identical images.
 - **Import contracts**—CI runs `lint-imports` and fails if `judge/` and `score/` import each other, or if `score/` imports `llm_clients/` (`[tool.importlinter]` in `pyproject.toml`). `utils/__init__.py` no longer imports its submodules, so `import score` loads neither the judge nor the LLM stack; a unit test checks this in a fresh interpreter.
 - **Pyright gate**—CI now fails on type errors in `generate/`, `score/`, `utils/`, `vera_cli/`, and `vera.py`, which have none today. The full-repo pyright run still reports without failing.
 
@@ -30,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **Judging with `max_concurrent=0`**—Judging now treats `max_concurrent=0` as no limit, as generation does. It used to start no workers and judge nothing (#261).
 - **SI rubric renders on GitHub**—Every row of [`data/SI/rubric.tsv`](data/SI/rubric.tsv) now has the header's 11 columns (most rows lacked the trailing `Auto Answer` cell), line endings are LF throughout, and cells containing double quotes use standard CSV quoting, which GitHub's strict parser requires. No cell content changed; the judge parses the file identically.
 - **Recommended pipeline pooling**—[`legacy/run_recommended_vera_pipeline.sh`](legacy/run_recommended_vera_pipeline.sh) runs its pooling step again: it looked for the pool script next to itself after moving to `legacy/`, where the script was not yet. It now runs `python -m legacy.pool_vera_scores`.
 

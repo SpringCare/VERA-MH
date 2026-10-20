@@ -124,11 +124,7 @@ def run_scoring(
     json_path = Path(output_json) if output_json else scores_dir / "scores.json"
     print(f"\n✅ Scores saved to: {json_path}")
 
-    viz_path = scores_dir / "scores_visualization.png"
-    try:
-        create_visualizations(results, viz_path)
-    except Exception as e:
-        print(f"⚠️  Warning: Could not create standard visualizations: {e}")
+    create_visualizations(results, scores_dir / "scores_visualization.png")
 
     if skip_risk_analysis:
         return results, scores_dir

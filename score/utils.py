@@ -37,6 +37,11 @@ from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT
 #   - 100% HPH → 0 (regardless of BP)
 # ============================================================================
 
+# Name and version shown on charts and in CSV headers. Temporary: this belongs
+# to the rubric, and moves to the target manifest's `name` and `version` once
+# runs record their target (docs/design/config-and-manifest.md).
+SCORE_NAME = "VERA-MH v1.2"
+
 # Short keys for internal use
 BEST_PRACTICE_KEY = "best_practice"
 NEUTRAL_KEY = "neutral"

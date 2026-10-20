@@ -6,7 +6,7 @@ charts and graphs from scoring results.
 """
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, NamedTuple, Sequence
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -25,8 +25,8 @@ from score.utils import (
     NEUTRAL_KEY,
     NOT_RELEVANT_KEY,
     RISK_LEVEL_ORDER,
+    SCORE_NAME,
 )
-from utils.judge_results import DIMENSIONS
 from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT
 
 # Visualization constants
@@ -35,6 +35,37 @@ VIZ_PIE_HEIGHT_RATIO = 1
 VIZ_BAR_HEIGHT_RATIO = 2
 VIZ_BAR_HEIGHT = 0.6
 VIZ_MIN_LABEL_PCT = 5.0
+
+
+class Segment(NamedTuple):
+    """One rating's slice of a pie or stacked bar."""
+
+    label: str
+    key: str
+    color: str
+
+
+# Stacking order, from the bottom (or left) of a bar up.
+RATED_SEGMENTS = [
+    Segment(DAMAGING, DAMAGING_KEY, MUTED_RED),
+    Segment(NEUTRAL, NEUTRAL_KEY, MUTED_YELLOW),
+    Segment(BEST_PRACTICE, BEST_PRACTICE_KEY, MUTED_GREEN),
+]
+# The risk-level charts also show how often a dimension was Not Relevant.
+ALL_SEGMENTS = [*RATED_SEGMENTS, Segment(NOT_RELEVANT, NOT_RELEVANT_KEY, MUTED_GRAY)]
+
+
+def _models_title(results: Dict[str, Any]) -> str:
+    judge_model = results.get("judge_model", "Unknown")
+    persona_model = results.get("persona_model", "Unknown")
+    agent_model = results.get("agent_model", "Unknown")
+    return f"Judge: {judge_model} | Persona: {persona_model} | Agent: {agent_model}"
+
+
+def _save_figure(output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
 
 
 def _safe_pie_value(value: Any) -> float:
@@ -48,16 +79,69 @@ def _safe_pie_value(value: Any) -> float:
     return v
 
 
+def _draw_stacked_bars(
+    ax,
+    positions: Sequence[int],
+    segments: Sequence[Segment],
+    percentages: Dict[str, list],
+    *,
+    horizontal: bool,
+    bar_width: float,
+    label_size: int,
+) -> None:
+    """Draw one stacked bar per position, labeling each segment with its percent.
+
+    `percentages` maps a segment key to one value per position. Segments under
+    `VIZ_MIN_LABEL_PCT` are left unlabeled so the text doesn't overflow them.
+    """
+    offsets = [0.0] * len(positions)
+    for segment in segments:
+        values = percentages[segment.key]
+        if horizontal:
+            ax.barh(
+                positions,
+                values,
+                bar_width,
+                left=offsets,
+                label=segment.label,
+                color=segment.color,
+            )
+        else:
+            ax.bar(
+                positions,
+                values,
+                bar_width,
+                bottom=offsets,
+                label=segment.label,
+                color=segment.color,
+            )
+
+        for position, offset, value in zip(positions, offsets, values):
+            if value <= VIZ_MIN_LABEL_PCT:
+                continue
+            middle = offset + value / 2
+            x, y = (middle, position) if horizontal else (position, middle)
+            ax.text(
+                x,
+                y,
+                f"{value:.1f}%",
+                ha="center",
+                va="center",
+                fontsize=label_size,
+                fontweight="bold",
+                color="white",
+            )
+
+        offsets = [offset + value for offset, value in zip(offsets, values)]
+
+
 def _create_pie_chart(ax, results: Dict[str, Any]):
     """Create pie chart for overall percentages."""
     agg = results["aggregates"]
-    pie_labels = [DAMAGING, NEUTRAL, BEST_PRACTICE]
     pie_sizes = [
-        _safe_pie_value(agg.get("overall_damaging_pct")),
-        _safe_pie_value(agg.get("overall_neutral_pct")),
-        _safe_pie_value(agg.get("overall_best_practice_pct")),
+        _safe_pie_value(agg.get(f"overall_{segment.key}_pct"))
+        for segment in RATED_SEGMENTS
     ]
-    colors = [MUTED_RED, MUTED_YELLOW, MUTED_GREEN]
 
     overall_vera_score = agg.get("vera_score", 0.0)
     try:
@@ -67,7 +151,7 @@ def _create_pie_chart(ax, results: Dict[str, Any]):
     except TypeError, ValueError:
         score_display = 0.0
     pie_title = (
-        f"Overall VERA-MH v1.2 Score: {score_display:.1f}\n\nRating Distribution"
+        f"Overall {SCORE_NAME} Score: {score_display:.1f}\n\nRating Distribution"
     )
 
     # Matplotlib pie fails (NaN wedge angles) when every slice is zero.
@@ -88,8 +172,8 @@ def _create_pie_chart(ax, results: Dict[str, Any]):
 
     _, _, autotexts = ax.pie(
         pie_sizes,
-        labels=pie_labels,
-        colors=colors,
+        labels=[segment.label for segment in RATED_SEGMENTS],
+        colors=[segment.color for segment in RATED_SEGMENTS],
         autopct="%1.1f%%",
         startangle=90,
         textprops={"fontsize": 10},
@@ -104,35 +188,22 @@ def _create_pie_chart(ax, results: Dict[str, Any]):
 def _create_stacked_bar_chart(ax, results: Dict[str, Any]):
     """Create stacked bar chart for dimension breakdown."""
     dimensions = list(results["dimensions"].keys())[::-1]  # Reverse order
-    best_practice_pcts = [
-        results["dimensions"][dim][BEST_PRACTICE_KEY + "_pct"] for dim in dimensions
-    ]
-    neutral_pcts = [
-        results["dimensions"][dim][NEUTRAL_KEY + "_pct"] for dim in dimensions
-    ]
-    damaging_pcts = [
-        results["dimensions"][dim][DAMAGING_KEY + "_pct"] for dim in dimensions
-    ]
+    percentages = {
+        segment.key: [
+            results["dimensions"][dim][segment.key + "_pct"] for dim in dimensions
+        ]
+        for segment in RATED_SEGMENTS
+    }
 
     y_pos = range(len(dimensions))
-    ax.barh(
-        y_pos, damaging_pcts, VIZ_BAR_HEIGHT, label=DAMAGING, color=MUTED_RED, left=0
-    )
-    ax.barh(
+    _draw_stacked_bars(
+        ax,
         y_pos,
-        neutral_pcts,
-        VIZ_BAR_HEIGHT,
-        left=damaging_pcts,
-        label=NEUTRAL,
-        color=MUTED_YELLOW,
-    )
-    ax.barh(
-        y_pos,
-        best_practice_pcts,
-        VIZ_BAR_HEIGHT,
-        left=[d + n for d, n in zip(damaging_pcts, neutral_pcts)],
-        label=BEST_PRACTICE,
-        color=MUTED_GREEN,
+        RATED_SEGMENTS,
+        percentages,
+        horizontal=True,
+        bar_width=VIZ_BAR_HEIGHT,
+        label_size=8,
     )
 
     ax.set_xlabel("Percentage (%)", fontsize=12, fontweight="bold")
@@ -146,50 +217,6 @@ def _create_stacked_bar_chart(ax, results: Dict[str, Any]):
     ax.legend(loc="lower left", bbox_to_anchor=(-0.55, 1.02), fontsize=10, frameon=True)
     ax.grid(axis="x", alpha=0.3, linestyle="--")
 
-    _add_bar_labels(ax, best_practice_pcts, neutral_pcts, damaging_pcts)
-
-
-def _add_bar_labels(
-    ax, best_practice_pcts: list, neutral_pcts: list, damaging_pcts: list
-):
-    """Add percentage labels to stacked bar chart."""
-    for i, (bp, neu, dmg) in enumerate(
-        zip(best_practice_pcts, neutral_pcts, damaging_pcts)
-    ):
-        if dmg > VIZ_MIN_LABEL_PCT:
-            ax.text(
-                dmg / 2,
-                i,
-                f"{dmg:.1f}%",
-                ha="center",
-                va="center",
-                fontsize=8,
-                fontweight="bold",
-                color="white",
-            )
-        if neu > VIZ_MIN_LABEL_PCT:
-            ax.text(
-                dmg + neu / 2,
-                i,
-                f"{neu:.1f}%",
-                ha="center",
-                va="center",
-                fontsize=8,
-                fontweight="bold",
-                color="white",
-            )
-        if bp > VIZ_MIN_LABEL_PCT:
-            ax.text(
-                dmg + neu + bp / 2,
-                i,
-                f"{bp:.1f}%",
-                ha="center",
-                va="center",
-                fontsize=8,
-                fontweight="bold",
-                color="white",
-            )
-
 
 def create_visualizations(results: Dict[str, Any], output_path: Path):
     """
@@ -200,13 +227,8 @@ def create_visualizations(results: Dict[str, Any], output_path: Path):
         results: Dictionary containing all scores
         output_path: Path to save the visualization (PDF or PNG)
     """
-    judge_model = results.get("judge_model", "Unknown")
-    persona_model = results.get("persona_model", "Unknown")
-    agent_model = results.get("agent_model", "Unknown")
-    title = f"Judge: {judge_model} | Persona: {persona_model} | Agent: {agent_model}"
-
     fig = plt.figure(figsize=VIZ_FIG_SIZE)
-    fig.suptitle(title, fontsize=14, fontweight="bold", y=0.98)
+    fig.suptitle(_models_title(results), fontsize=14, fontweight="bold", y=0.98)
     gs = gridspec.GridSpec(
         2, 1, height_ratios=[VIZ_PIE_HEIGHT_RATIO, VIZ_BAR_HEIGHT_RATIO], hspace=0.3
     )
@@ -217,9 +239,7 @@ def create_visualizations(results: Dict[str, Any], output_path: Path):
     _create_stacked_bar_chart(ax2, results)
 
     plt.tight_layout(rect=(0.18, 0, 1, 1))
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=300, bbox_inches="tight")
-    plt.close()
+    _save_figure(output_path)
 
     print(f"📊 Visualizations saved to: {output_path}")
 
@@ -227,10 +247,7 @@ def create_visualizations(results: Dict[str, Any], output_path: Path):
 def _create_risk_dimension_chart(ax, dimension: str, risk_level_scores: Dict):
     """Create stacked bar chart for a single dimension across risk levels."""
     risk_levels = []
-    best_practice_pcts = []
-    neutral_pcts = []
-    damaging_pcts = []
-    not_relevant_pcts = []
+    percentages: Dict[str, list] = {segment.key: [] for segment in ALL_SEGMENTS}
 
     for risk_level in RISK_LEVEL_ORDER:
         if risk_level not in risk_level_scores:
@@ -241,10 +258,8 @@ def _create_risk_dimension_chart(ax, dimension: str, risk_level_scores: Dict):
             continue
 
         risk_levels.append(risk_level)
-        best_practice_pcts.append(dim_scores[BEST_PRACTICE_KEY + "_pct"])
-        neutral_pcts.append(dim_scores[NEUTRAL_KEY + "_pct"])
-        damaging_pcts.append(dim_scores[DAMAGING_KEY + "_pct"])
-        not_relevant_pcts.append(dim_scores[NOT_RELEVANT_KEY + "_pct"])
+        for segment in ALL_SEGMENTS:
+            percentages[segment.key].append(dim_scores[segment.key + "_pct"])
 
     if not risk_levels:
         ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
@@ -252,39 +267,14 @@ def _create_risk_dimension_chart(ax, dimension: str, risk_level_scores: Dict):
         return
 
     x_pos = range(len(risk_levels))
-    width = 0.7
-
-    ax.bar(x_pos, damaging_pcts, width, label=DAMAGING, color=MUTED_RED, bottom=0)
-    ax.bar(
+    _draw_stacked_bars(
+        ax,
         x_pos,
-        neutral_pcts,
-        width,
-        bottom=damaging_pcts,
-        label=NEUTRAL,
-        color=MUTED_YELLOW,
-    )
-    ax.bar(
-        x_pos,
-        best_practice_pcts,
-        width,
-        bottom=[d + n for d, n in zip(damaging_pcts, neutral_pcts)],
-        label=BEST_PRACTICE,
-        color=MUTED_GREEN,
-    )
-    ax.bar(
-        x_pos,
-        not_relevant_pcts,
-        width,
-        bottom=[
-            d + n + bp
-            for d, n, bp in zip(damaging_pcts, neutral_pcts, best_practice_pcts)
-        ],
-        label=NOT_RELEVANT,
-        color=MUTED_GRAY,
-    )
-
-    _add_risk_bar_labels(
-        ax, damaging_pcts, neutral_pcts, best_practice_pcts, not_relevant_pcts
+        ALL_SEGMENTS,
+        percentages,
+        horizontal=False,
+        bar_width=0.7,
+        label_size=7,
     )
 
     ax.set_xlabel("Persona Risk Level", fontsize=10, fontweight="bold")
@@ -296,63 +286,6 @@ def _create_risk_dimension_chart(ax, dimension: str, risk_level_scores: Dict):
     ax.grid(axis="y", alpha=0.3, linestyle="--")
 
 
-def _add_risk_bar_labels(
-    ax,
-    damaging_pcts: list,
-    neutral_pcts: list,
-    best_practice_pcts: list,
-    not_relevant_pcts: list,
-):
-    """Add percentage labels to risk level bars."""
-    for i, (dmg, neu, bp, nr) in enumerate(
-        zip(damaging_pcts, neutral_pcts, best_practice_pcts, not_relevant_pcts)
-    ):
-        if dmg > VIZ_MIN_LABEL_PCT:
-            ax.text(
-                i,
-                dmg / 2,
-                f"{dmg:.1f}%",
-                ha="center",
-                va="center",
-                fontsize=7,
-                fontweight="bold",
-                color="white",
-            )
-        if neu > VIZ_MIN_LABEL_PCT:
-            ax.text(
-                i,
-                dmg + neu / 2,
-                f"{neu:.1f}%",
-                ha="center",
-                va="center",
-                fontsize=7,
-                fontweight="bold",
-                color="white",
-            )
-        if bp > VIZ_MIN_LABEL_PCT:
-            ax.text(
-                i,
-                dmg + neu + bp / 2,
-                f"{bp:.1f}%",
-                ha="center",
-                va="center",
-                fontsize=7,
-                fontweight="bold",
-                color="white",
-            )
-        if nr > VIZ_MIN_LABEL_PCT:
-            ax.text(
-                i,
-                dmg + neu + bp + nr / 2,
-                f"{nr:.1f}%",
-                ha="center",
-                va="center",
-                fontsize=7,
-                fontweight="bold",
-                color="white",
-            )
-
-
 def _add_risk_legend(fig, gs, n_dims: int, n_rows: int, n_cols: int):
     """Add legend to risk level visualization."""
     if n_dims < n_rows * n_cols:
@@ -362,13 +295,21 @@ def _add_risk_legend(fig, gs, n_dims: int, n_rows: int, n_cols: int):
         ax_legend.axis("off")
 
         handles = [
-            Rectangle((0, 0), 1, 1, facecolor=MUTED_RED, edgecolor="black"),
-            Rectangle((0, 0), 1, 1, facecolor=MUTED_YELLOW, edgecolor="black"),
-            Rectangle((0, 0), 1, 1, facecolor=MUTED_GREEN, edgecolor="black"),
-            Rectangle((0, 0), 1, 1, facecolor=MUTED_GRAY, edgecolor="black"),
+            Rectangle((0, 0), 1, 1, facecolor=segment.color, edgecolor="black")
+            for segment in ALL_SEGMENTS
         ]
-        labels = [DAMAGING, NEUTRAL, BEST_PRACTICE, NOT_RELEVANT]
+        labels = [segment.label for segment in ALL_SEGMENTS]
         ax_legend.legend(handles, labels, loc="center", fontsize=10, frameon=True)
+
+
+def _dimensions_in(risk_level_scores: Dict) -> list[str]:
+    """Every dimension scored at any risk level, in first-seen order."""
+    dimensions: list[str] = []
+    for level_scores in risk_level_scores.values():
+        for dimension in level_scores.get("dimensions", {}):
+            if dimension not in dimensions:
+                dimensions.append(dimension)
+    return dimensions
 
 
 def create_risk_level_visualizations(results: Dict[str, Any], output_path: Path):
@@ -385,20 +326,20 @@ def create_risk_level_visualizations(results: Dict[str, Any], output_path: Path)
         print("⚠️  No risk level data to visualize")
         return
 
-    judge_model = results.get("judge_model", "Unknown")
-    persona_model = results.get("persona_model", "Unknown")
-    agent_model = results.get("agent_model", "Unknown")
-    title = f"Judge: {judge_model} | Persona: {persona_model} | Agent: {agent_model}"
+    dimensions = _dimensions_in(risk_level_scores)
+    if not dimensions:
+        print("⚠️  No risk level data to visualize")
+        return
 
-    n_dims = len(DIMENSIONS)
+    n_dims = len(dimensions)
     n_cols = 3
     n_rows = (n_dims + n_cols - 1) // n_cols
 
     fig = plt.figure(figsize=(18, 6 * n_rows))
-    fig.suptitle(title, fontsize=14, fontweight="bold", y=0.995)
+    fig.suptitle(_models_title(results), fontsize=14, fontweight="bold", y=0.995)
     gs = gridspec.GridSpec(n_rows, n_cols, hspace=0.4, wspace=0.3)
 
-    for dim_idx, dimension in enumerate(DIMENSIONS):
+    for dim_idx, dimension in enumerate(dimensions):
         row = dim_idx // n_cols
         col = dim_idx % n_cols
         ax = fig.add_subplot(gs[row, col])
@@ -407,8 +348,6 @@ def create_risk_level_visualizations(results: Dict[str, Any], output_path: Path)
     _add_risk_legend(fig, gs, n_dims, n_rows, n_cols)
 
     plt.tight_layout(rect=(0, 0, 1, 0.98))
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=300, bbox_inches="tight")
-    plt.close()
+    _save_figure(output_path)
 
     print(f"📊 Risk level visualizations saved to: {output_path}")

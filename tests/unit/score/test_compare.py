@@ -4,9 +4,7 @@ Unit tests for score/compare.py comparison functions.
 Tests cover:
 - Data loading (load_evaluation_data, _load_dataframes_from_paths)
 - Model score calculation (_calculate_model_scores)
-- Dimension header extraction (_get_dimension_headers)
 - Layout calculation (_calculate_layout)
-- Dimension key finding (_find_dimension_key)
 - Dimension score extraction (_get_dimension_score)
 - CSV saving (_save_comparison_csv)
 
@@ -24,8 +22,6 @@ from score.compare import (
     LayoutConfig,
     _calculate_layout,
     _calculate_model_scores,
-    _find_dimension_key,
-    _get_dimension_headers,
     _get_dimension_score,
     _load_dataframes_from_paths,
     _save_comparison_csv,
@@ -236,22 +232,6 @@ def test_calculate_model_scores_dimension_scores():
 
 
 # ============================================================================
-# Dimension Header Tests
-# ============================================================================
-
-
-@pytest.mark.unit
-def test_get_dimension_headers():
-    """Test getting dimension headers."""
-    headers = _get_dimension_headers()
-
-    assert isinstance(headers, list)
-    assert len(headers) > 0
-    # Should include common dimensions
-    assert any("Detects" in h or "Risk" in h for h in headers)
-
-
-# ============================================================================
 # Layout Calculation Tests
 # ============================================================================
 
@@ -288,28 +268,6 @@ def test_calculate_layout_many_dimensions():
     # More dimensions should decrease column width (same section, more columns)
     layout_few = _calculate_layout(n_models=3, n_dims=3)
     assert layout.dim_col_width < layout_few.dim_col_width
-
-
-# ============================================================================
-# Dimension Key Finding Tests
-# ============================================================================
-
-
-@pytest.mark.unit
-def test_find_dimension_key_exact_match():
-    """Test finding dimension key from full dimension name."""
-    # _find_dimension_key returns the dimension key when given the full name
-    key = _find_dimension_key(DETECTS_POTENTIAL_RISK)
-    assert key == DETECTS_POTENTIAL_RISK
-
-
-@pytest.mark.unit
-def test_find_dimension_key_partial_match():
-    """Test finding dimension key with partial match."""
-    # Should handle variations
-    key = _find_dimension_key("Detects")
-    # Should return something (either exact or closest match)
-    assert key is not None
 
 
 # ============================================================================
