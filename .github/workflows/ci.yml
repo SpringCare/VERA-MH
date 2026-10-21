@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, release/2.1 ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, release/2.1 ]
   workflow_dispatch:
 
 # A new push to a PR cancels that PR's in-flight run; runs on main always finish.
