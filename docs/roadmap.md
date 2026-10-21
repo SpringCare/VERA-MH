@@ -4,6 +4,30 @@ Future structural work, in order. [architecture.md](./architecture.md) describes
 
 Smaller items that belong to no phase are in the [Backlog](#backlog).
 
+## Release 2.1 plan
+
+2.1 is built on the **`release/2.1`** branch, so `main` stays releasable, legacy scripts included, until 2.1 ships.
+
+- **PRs for the steps below target `release/2.1`.** It merges into `main` once, when every step is done, and that merge is tagged `v2.1.0`.
+- **Fixes, docs, and changes that break nothing still go to `main`,** so 2.0.x users get them; `main` is merged into `release/2.1` regularly so the two don't drift. A 2.0.x release, if one is needed, is tagged from `main`. [`v2.0.4`](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.4) is the latest.
+- **CI runs on both branches:** pull requests into either, and pushes to either (which also run the integration layer and the live smoke test).
+- The steps are in dependency order. Each design PR is a draft for discussion and can merge to `main` (docs only); its code follows in separate PRs into `release/2.1`.
+
+| Step | What | PRs | Phase |
+|---|---|---|---|
+| 1. Safety net | Tests that prove a change didn't move scores: golden scoring, scripted judge, replay of a recorded run | [#270](https://github.com/SpringCare/VERA-MH/pull/270) (needs the replay recording) | |
+| 2. Data contracts | What a run records (manifest, run config, run record), then naming, order of events, and folder layout, decided together | [#277](https://github.com/SpringCare/VERA-MH/pull/277), then [#268](https://github.com/SpringCare/VERA-MH/pull/268) + [#276](https://github.com/SpringCare/VERA-MH/pull/276) | [Traceability](#traceability) |
+| 3. Engine | One job loop for generation and judging; the pipeline as a single job list | [#266](https://github.com/SpringCare/VERA-MH/pull/266) | [Shared engine](#shared-engine) |
+| 4. Terminal output | Plain event lines, fail-fast, end summary, and prints moved to logs (any time); the live display (after step 3) | [#271](https://github.com/SpringCare/VERA-MH/pull/271) | [Backlog](#cli-and-run-experience) |
+| 5. Remove `legacy/` | Delete the scripts, their parity tests, and [legacy-scripts.md](./legacy-scripts.md), as announced in v2.0.4 | — | [Deferred](#deferred) |
+| In parallel | A judge flow that decides each outcome once; needs the HFO rubric authors' answer on Q11 | [#267](https://github.com/SpringCare/VERA-MH/pull/267) (after step 1) | [Rubric-agnostic scoring](#rubric-agnostic-scoring) |
+
+- **Why this order.** Step 1 comes first because every later step is meant to leave scores unchanged, and it's what proves that. Step 2 defines the files and folders the job loop in step 3 reads and writes (its resume checks, the run roots it needs up front). Step 4's live display needs the events step 3 emits; its other half needs nothing.
+- **Inside step 2:** first one function that creates run roots, one clock read per run, and the tests that enforce both, still writing today's folder names; then the run record; then the new layout and conversation files. #276 replaces #268's layout section, so the two are settled as one decision.
+- **Removing `legacy/` last** keeps the legacy scripts working through the other steps on `release/2.1` too. Until then the [phase rules](#how-phases-work) still apply: legacy adapts and the domain doesn't bend.
+- **Smaller PRs go to `main`:** [#270](https://github.com/SpringCare/VERA-MH/pull/270) (tests only), [#278](https://github.com/SpringCare/VERA-MH/pull/278) (`vera` command), [#269](https://github.com/SpringCare/VERA-MH/pull/269) (user-side language).
+- **When every step has merged into `release/2.1`:** merge `main` into it one last time, move `[Unreleased]` to `v2.1.0` in the CHANGELOG, merge `release/2.1` into `main`, and tag that merge commit `v2.1.0`.
+
 ## How phases work
 
 - **Phases have names, not numbers.** Code comments and docs cite them by name ("Traceability"), so reordering or inserting a phase never changes what an old reference means.
@@ -17,7 +41,6 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
 
 | Phase | Goal | Done when |
 |-------|------|-----------|
-| [Scoring split](#scoring-split) | `score/` owns pooling and stops importing `judge/` | import-linter `judge/` ⊥ `score/` passes in CI |
 | [Rubric-agnostic scoring](#rubric-agnostic-scoring) | Scoring works for any rubric, with unambiguous stop tokens | A non-SI target scores and groups by risk with no SI assumptions; every terminating rubric row uses an explicit stop token |
 | [Traceability](#traceability) | Every run records what produced it, under the target-rooted layout | New runs write `config.json`, `state.json`, and checksums under `output/<target>/`; `vera judge --target all` works; `utils/` leaf contract passes |
 | [Model spec boundary](#model-spec-boundary) | Domains take `ModelSpec` directly | `run_for_user_models` and `_legacy_model_config` are gone; per-model judge parameters work |
@@ -25,12 +48,6 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
 | [Quality gates](#quality-gates) | Static checks block the build | Pyright blocks on every package; full import-linter and grimp contracts pass |
 | [Storage](#storage) *(independent)* | Persistence goes through a backend interface | No domain or `workers/` code writes run artifacts directly |
 | [OpenSpec](#openspec) *(independent)* | OpenSpec is a real practice, not scaffolding | A qualifying feature has shipped with an OpenSpec change |
-
-### Scoring split
-
-- **Shared helpers leave `judge/`.** `score/` still imports `judge.score_utils`, `judge.constants`, and `judge.utils` (`score/pool.py` included), and `judge/runner.py` and `judge/answers.py` also use `score_utils`. Split it: what only scoring needs moves to `score/utils.py`, what both need moves to `utils/`.
-- **Import-linter contract** for `judge/` ⊥ `score/`, the first contract in `pyproject.toml`.
-- **Decide where `judge/score_comparison*.py` live** (likely `score/`), and where `score_comparisons/` output goes.
 
 ### Rubric-agnostic scoring
 
@@ -42,7 +59,7 @@ Scoring today assumes the SI rubric in several places.
 
   Design record: [rubric-terminal-goto-vocabulary.md](./design/rubric-terminal-goto-vocabulary.md).
 - **Explicit `dimension_verdicts`.** Replace the `ASSIGN_END` / `NOT_RELEVANT>>` marker strings in `dimension_answers` with a verdict map: handlers record a verdict instead of overwriting a dimension's answers with a synthetic record, and `_determine_dimension_scores` reads it instead of substring-matching question text. `dimension_answers` becomes append-only and truthful, `yes_question_id` can be computed rather than regexed out of prose, and `answers.tsv` can source from `dimension_answers` directly. Rewrites about 10 tests that assert on marker strings, plus the fixture under `tests/fixtures/eval_tsv_rebuild__20260415_140037/`. Land it before or alongside the vocabulary migration above, since the verdict map replaces the marker matching that migration would otherwise carry forward.
-- **`risk_level` from the judge, not persona metadata.** Today `add_risk_levels_to_dataframe` / `load_personas_risk_levels` (`judge/score_utils.py`), called from `score_results_by_risk`, join a personas TSV column literally named "Short Current Suicide Risk Level" on a persona name parsed from the filename. Any rubric whose personas file lacks that column silently yields "Unknown" for every row, and `scores_by_risk.json` comes back empty. Instead: declare `risk_level_question_id` in the rubric manifest, read that column from `answers/answers.tsv`, and take the grouping order from the question's answer options rather than the hardcoded `RISK_LEVEL_ORDER`. Retire the persona lookup and its `--personas-tsv` wiring, and relabel the "Persona Risk Level" chart axis. Existing `results.csv` files predate the column, so consumers must tolerate it being blank.
+- **`risk_level` from the judge, not persona metadata.** Today `add_risk_levels_to_dataframe` / `load_personas_risk_levels` (`score/utils.py`), called from `score_results_by_risk`, join a personas TSV column literally named "Short Current Suicide Risk Level" on a persona name parsed from the filename. Any rubric whose personas file lacks that column silently yields "Unknown" for every row, and `scores_by_risk.json` comes back empty. Instead: declare `risk_level_question_id` in the rubric manifest, read that column from `answers/answers.tsv`, and take the grouping order from the question's answer options rather than the hardcoded `RISK_LEVEL_ORDER`. Retire the persona lookup and its `--personas-tsv` wiring, and relabel the "Persona Risk Level" chart axis. Existing `results.csv` files predate the column, so consumers must tolerate it being blank.
 - **No SI-derived global dimensions.** Remove them from scoring and visualization; persist the rubric's dimensions and a rubric fingerprint with evaluation outputs, so later scoring and comparison use the rubric the run was judged with. Pooling should then compare fingerprints instead of today's dimension-column check.
 
 ### Traceability
@@ -52,8 +69,11 @@ Scoring today assumes the SI rubric in several places.
 - **Run metadata from records, not folder names.** Pooling (`score/pool.py`) works out persona, agent, turns, and judge by parsing `p_*`/`j_*` names and folder nesting, so runs outside that layout become `unknown`. Read them from each run's `config.json` instead.
 - **Target-rooted output.** New runs write under `output/<target>/`, with pooled results under `c_<chatbot>/pooled/` (see [Data flow and artifacts](./architecture.md#data-flow-and-artifacts)). The target root attributes judging output on its own, which unblocks `vera judge --target all`: its only blocker was output attribution.
 - **Resume.** `--into` already resumes a run folder. Decide whether a `state.json`-backed `vera resume` still adds enough to build.
-- **Import-linter:** `utils/` is a leaf.
-- **Acknowledged compatibility break.** Anything outside `vera.py` that parses `p_*`/`j_*` names directly (`spring_scripts/`, `distribute_files.py`, `score_comparison.py`, notebooks, human-review tooling) stops auto-discovering new runs. Reading old data keeps working: `vera judge --conversations <old p_* folder>` and `vera score -r <old results.csv>` take explicit paths and never derive meaning from folder names. Existing `output/` folders are left alone; there is no migration script.
+- **Make `utils/` a real leaf, and enforce it.** [architecture.md](./architecture.md) says `utils/` imports no other project package, but `utils/conversation_utils.py` (for `Role`) and `utils/logging_utils.py` (for `LLMInterface`) import `llm_clients/`. Because importing any `utils` submodule runs `utils/__init__.py`, that coupling once made `import score` load the whole LLM stack; the Scoring split fixed the symptom with an empty `utils/__init__.py` and a narrower contract (`score` may not import `llm_clients`), not the cause. To discuss:
+  - where the two modules go: transcript writing to `generate/`, LLM response logging to `llm_clients/`, or `Role` moved into `utils/` so they can stay;
+  - the import-linter contract that `utils/` imports no project package, which then replaces the narrower `score` one;
+  - keeping a fresh-interpreter test of what each package actually loads (`tests/unit/score/test_import_isolation.py`), since import-linter reads import statements and can't see what an `__init__.py` pulls in.
+- **Acknowledged compatibility break.** Anything outside `vera.py` that parses `p_*`/`j_*` names directly (`spring_scripts/`, `distribute_files.py`, `score/compare.py`, notebooks, human-review tooling) stops auto-discovering new runs. Reading old data keeps working: `vera judge --conversations <old p_* folder>` and `vera score -r <old results.csv>` take explicit paths and never derive meaning from folder names. Existing `output/` folders are left alone; there is no migration script.
 
 ### Model spec boundary
 
@@ -64,7 +84,7 @@ Scoring today assumes the SI rubric in several places.
 ### Shared engine
 
 - `workers/` pool used by both `generate/runner.py` and `judge/runner.py`, which today each hand-roll the same asyncio-queue pattern.
-- **Per-provider concurrency cap** in `llm_clients/`. The shared pool can fan out many parallel jobs (e.g. `-u gpt:5 sonnet:5`); `llm_clients/` has per-call retry and backoff but nothing caps concurrency per provider. Done when a test fans out more jobs than the cap allows and the cap holds.
+- **Per-provider concurrency cap** in `llm_clients/`. The shared pool can fan out many parallel jobs (e.g. `-u gpt-5.2:5 claude-opus-4-5:5`); `llm_clients/` has per-call retry and backoff but nothing caps concurrency per provider. Done when a test fans out more jobs than the cap allows and the cap holds.
 - `llm_clients/` plugin-registry formalization.
 - This is the riskiest phase: the first one that rewrites the engine instead of the CLI in front of it. It needs all four tiers below.
 
@@ -88,7 +108,6 @@ The engine rewrite can change concurrency, timing, and error handling even when 
 - **Import contracts.** Full import-linter contract (all [Layer model](./architecture.md#layer-model) boundaries) plus grimp import-graph assertions.
 - **Root-clutter cleanup:**
   - delete `logging/`, `logs/`, root `conversations/`, `human_validation/` (old generated dumps, already gitignored)
-  - `score_comparisons/`: keep the directory, stop committing generated CSV/PNG output
   - move `distribute_files.py` into `scripts/`
   - fix stale `docker-compose.yml` volume mounts (`./evaluations` doesn't exist, `./logs` is missing)
   - `spring_scripts/`, `openspec/`, `alba.md`, `Untitled.ipynb`: untracked scratch, out of scope
@@ -128,7 +147,6 @@ Smaller items that belong to no phase. Each can ship as its own PR whenever it's
 
 - Consolidate the live tests: one small live end-to-end run, mocked tests per stage, no live test per stage. The `vera` CLI already has that shape -- `tests/unit/test_vera_cli.py` / `test_vera_judge.py` / `test_vera_score.py` / `test_vera_pipeline.py` mock the stages, and `tests/integration/test_vera_pipeline_e2e.py` runs all three for real on cheap models, 4 turns (next to a mocked run of the same pipeline). The expensive live suite is `tests/integration/test_scoring.py`, which drives the deprecated legacy scripts (`generate.py`, `judge.py`, `run_pipeline.py`; see docs/legacy-scripts.md) with 7 tests on reasoning models (`Config.DEFAULT_*`: `gpt-5.4`, `claude-sonnet-5`) at 6 turns, each generating its own conversations. Generation dominates: one run measured 58.6 s generating vs 5.3 s judging, about 10 s per turn, and `temperature=0.0` is dropped as unsupported by both models so it buys no determinism. Now: delete `test_run_pipeline_vs_individual_calls`, which runs the full pipeline twice (separate commands, then `run_pipeline.main()`) and only asserts each result's percentages are in range and `worst_band` is set -- it passed with 0 relevant conversations, duplicates `test_complete_pipeline_single_persona` plus `test_run_pipeline_integration`, and its `"Omar"` persona is ignored because `run_generate_cli` never passes it; and cut `TEST_CONFIG["TURNS"]` from 6 to 4 to match the `vera` live test. When the legacy scripts are removed: delete `test_scoring.py` with them, first moving `test_pipeline_error_handling`'s intent (a failed CLI run reports a readable cause, #218) to a mocked `vera` test, since the `vera` live test covers only the success path.
 - Replace the class-name -> test-file mapping in `tests/unit/llm_clients/test_coverage.py` with a declared one. Each `TestLLMBase` subclass sets `llm_class = OpenAILLM` (required by the base), and the coverage checks compare the set of declared classes against `get_all_llm_classes()`, then run the per-class checks on the test class that declares it. That deletes `implementation_to_test_file_stem` (#240), the AST parsing in `get_test_class_inheritance`, and the `if test_file_path.exists()` guards that let a wrong mapping skip a class silently. It also makes `test_all_test_classes_inherit_from_appropriate_base` a hard requirement for free (a test class that doesn't inherit the base can't declare coverage), so that test's "informational for now" warning goes away. Upstream cost: about 1-2 hours, one line in each of the 6 provider test classes plus the coverage rewrite and `tests/unit/llm_clients/README.md`. Downstream cost: any fork client whose tests don't subclass `TestLLMBase` fails CI after sync until it implements `create_llm` / `get_provider_name` / `get_mock_patches` and passes the shared contract tests, so give forks notice before landing it.
-- Once #223 lands (`Config.DEFAULT_*` model constants plus `tests/integration/test_model_availability.py`), add cheap-tier constants to `Config` and have `tests/integration/test_vera_pipeline_e2e.py` read its model lists from them, so the availability check also covers the models that test uses.
 
 ### Other
 
@@ -137,11 +155,12 @@ Smaller items that belong to no phase. Each can ship as its own PR whenever it's
 
 ## Deferred
 
-- **Removing `legacy/`.** Triggered by a tagged release whose CHANGELOG announces the removal. Then delete `legacy/`, the legacy side of the parity tests, and [legacy-scripts.md](./legacy-scripts.md).
+- **Removing `legacy/`.** Triggered by a tagged release whose CHANGELOG announces the removal; [v2.0.4](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.4) did. Then delete `legacy/`, the legacy side of the parity tests, and [legacy-scripts.md](./legacy-scripts.md). Scheduled as the last step of the [Release 2.1 plan](#release-21-plan).
 - **Per-persona system prompts.** Personas may need their own system prompts rather than one global prompt. The mechanism (a `system_prompt` field, a `system_prompt_file` pointer, or something else) is undecided; revisit when the persona schema is formalized, likely in [Traceability](#traceability).
 
 ## Completed
 
+- **Scoring split.** `judge/` and `score/` no longer import each other, and an import-linter contract in `pyproject.toml` enforces it in CI. Helpers both need live in `utils/` (`judge_results.py`, `ratings.py`); scoring-only helpers in `score/utils.py`. The comparison chart moved to `score/compare.py` (`python -m score.compare`), and its unused export-summary copy was deleted. `score_comparisons/` keeps only the example input; generated output is no longer committed.
 - **Target manifests.** One complete fixture target drives both generation and judging; explicit `--personas` / `--rubric` selection is preserved.
 - **`vera` CLI and config.** `vera.py` (`generate`, `judge`, `score`, `pipeline`) with `--config`, `--target`, `--personas`, `--rubric`, `-u`, `-j`, `--sample`, and `--into` resume. The old root scripts moved to `legacy/` (#243) instead of being deleted; see [Deferred](#deferred).
 - **Multi-rubric evaluation, through targets.** This is the intended end state, not a stopgap. Evaluating the same conversations with several evaluators (rubrics) means one target per rubric: each target bundles its rubric with its personas and prompts, and each is judged separately with `vera judge --target <name>`, writing its own results. Keeping rubrics separate is deliberate, because scores from different rubrics aren't comparable and must never be merged. The earlier plan for several rubrics inside one run (`judging.rubrics` with length > 1, per-rubric judge-model overrides) is dropped. `judging.rubrics` keeps its list shape with a length-1 check, so revisiting it later wouldn't break the schema. What remains is convenience, not capability: `vera judge --target all` comes with [Traceability](#traceability), once the output path attributes each target.

@@ -5,7 +5,7 @@ name: Live Tests
 # PR run would bill every push.
 on:
   push:
-    branches: [ main ]
+    branches: [ main, release/2.1 ]
   schedule:
     # Weekly, Monday 06:00 UTC: catches a provider retiring a model during
     # weeks with no merge to main.
