@@ -6,7 +6,12 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
 
 ## Release 2.1 plan
 
-2.1 lands everything below, then is tagged once. Each step merges into `main` as it's ready, so `main` is "2.1 in progress" and [`v2.0.4`](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.4) is the release to fall back to; a 2.0.x fix, if one is needed, goes on a branch cut from that tag. The steps are in dependency order. Each design PR is a draft for discussion, and its code follows in separate PRs.
+2.1 is built on the **`release/2.1`** branch, so `main` stays releasable, legacy scripts included, until 2.1 ships.
+
+- **PRs for the steps below target `release/2.1`.** It merges into `main` once, when every step is done, and that merge is tagged `v2.1.0`.
+- **Fixes, docs, and changes that break nothing still go to `main`,** so 2.0.x users get them; `main` is merged into `release/2.1` regularly so the two don't drift. A 2.0.x release, if one is needed, is tagged from `main`. [`v2.0.4`](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.4) is the latest.
+- **CI runs on both branches:** pull requests into either, and pushes to either (which also run the integration layer and the live smoke test).
+- The steps are in dependency order. Each design PR is a draft for discussion and can merge to `main` (docs only); its code follows in separate PRs into `release/2.1`.
 
 | Step | What | PRs | Phase |
 |---|---|---|---|
@@ -19,9 +24,9 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
 
 - **Why this order.** Step 1 comes first because every later step is meant to leave scores unchanged, and it's what proves that. Step 2 defines the files and folders the job loop in step 3 reads and writes (its resume checks, the run roots it needs up front). Step 4's live display needs the events step 3 emits; its other half needs nothing.
 - **Inside step 2:** first one function that creates run roots, one clock read per run, and the tests that enforce both, still writing today's folder names; then the run record; then the new layout and conversation files. #276 replaces #268's layout section, so the two are settled as one decision.
-- **Removing `legacy/` last** keeps the legacy scripts working through the other steps. Until then the [phase rules](#how-phases-work) still apply: legacy adapts and the domain doesn't bend.
-- **Smaller PRs fit anywhere:** [#278](https://github.com/SpringCare/VERA-MH/pull/278) (`vera` command), [#269](https://github.com/SpringCare/VERA-MH/pull/269) (user-side language), [#274](https://github.com/SpringCare/VERA-MH/pull/274) (creating an evaluation).
-- **When every step has merged,** move `[Unreleased]` to `v2.1.0` in the CHANGELOG and tag it.
+- **Removing `legacy/` last** keeps the legacy scripts working through the other steps on `release/2.1` too. Until then the [phase rules](#how-phases-work) still apply: legacy adapts and the domain doesn't bend.
+- **Smaller PRs go to `main`:** [#270](https://github.com/SpringCare/VERA-MH/pull/270) (tests only), [#278](https://github.com/SpringCare/VERA-MH/pull/278) (`vera` command), [#269](https://github.com/SpringCare/VERA-MH/pull/269) (user-side language).
+- **When every step has merged into `release/2.1`:** merge `main` into it one last time, move `[Unreleased]` to `v2.1.0` in the CHANGELOG, merge `release/2.1` into `main`, and tag that merge commit `v2.1.0`.
 
 ## How phases work
 
