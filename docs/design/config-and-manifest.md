@@ -107,3 +107,20 @@ The run record is the run config **resolved**: every default filled in, every pa
 3. **The manifest `version` is human text, and checksums are the source of truth.** The run record holds both, plus the git commit of the target folder.
 4. **Model names are validated with the provider at load,** to catch problems before a run spends anything.
 5. **Uncommitted rubric edits stop a run.** If the target's files differ from their last commit, `vera` refuses to start and names the changed files, unless `--allow-uncommitted` is given. That flag is an execution setting: recorded, not hashed. The run record then has `uncommitted_changes: true`, so a run made that way is always identifiable. This protects published numbers from coming from a rubric nobody can look up.
+
+## Implementation plan
+
+Each step is its own PR into `release/2.1`. None changes scores, so the [safety net](../safe-changes.md) stays green throughout.
+
+| | PR | What changes | Depends on |
+|---|---|---|---|
+| A | Manifest: judge-only targets and identity | Rubric fields stay required; persona fields are required only to generate. Optional `name`, `description`, `version`, validated. | — |
+| B | Config defaults allowed | Config files may leave out behavior fields, which take the CLI defaults. | — |
+| C | The run record | Each run folder gets `config.json`: the resolved config with every default written out, input-file checksums, and `provenance`; plus its `.sha256`. Written into today's run folders; [run-lifecycle.md](./run-lifecycle.md) later moves where it lives. | B |
+| D | Uncommitted rubric edits stop a run | Refuse to start unless `--allow-uncommitted`; the record then says `uncommitted_changes: true`. | C |
+| E | Execution section | `max_concurrent`, `debug`, `sample`, `into`, `allow_uncommitted` move to `execution`, outside the hash. The old `generation.max_concurrent` keeps working with a deprecation warning. | C |
+| F | Scoring knobs from the manifest | The risk-level column and order, and the chart label (`SCORE_NAME`), come from the manifest, found through the run record. | C |
+| G | Model names checked at load | Each model name is looked up with its provider before anything runs; `--print` skips it. | — |
+
+A and B first (independent), then C, then D, E, F. G can land any time.
+
