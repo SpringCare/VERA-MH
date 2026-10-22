@@ -5,10 +5,13 @@ WORKDIR /app
 # Install uv
 RUN pip install --no-cache-dir uv
 
-# Copy dependency files and install dependencies
+# Dependencies first, so this layer is cached until uv.lock changes
 COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project
+
+# Then the project itself, which installs the `vera` command
+COPY . .
 RUN uv sync --frozen
 
-COPY . .
-
-CMD ["python", "vera.py", "--help"]
+ENV PATH="/app/.venv/bin:$PATH"
+CMD ["vera", "--help"]

@@ -6,26 +6,29 @@ from pathlib import Path
 from string import Formatter
 from typing import List, Optional
 
+SHARED_PROMPT_TEMPLATE = (
+    Path(__file__).resolve().parents[1] / "data/persona_prompt_template.txt"
+)
 DEFAULT_USER_LANGUAGE = "English"
 
 
-# TODO: hardcoded names
 def load_prompts_from_csv(
     name_list: Optional[List[str]] = None,
-    prompt_path="data/SI/personas.tsv",
-    prompt_template_path="data/persona_prompt_template.txt",
     *,
+    prompt_path: str,
     persona_context_template_path: str,
+    prompt_template_path=SHARED_PROMPT_TEMPLATE,
     max_personas: Optional[int] = None,
     user_language: str = DEFAULT_USER_LANGUAGE,
 ) -> List[dict[str, str]]:
-    """Load prompts from personas.csv file and return them as a list.
+    """Load prompts from a personas TSV file and return them as a list.
 
     Args:
         name_list: Optional list of names to filter by. If None, returns all prompts.
-        prompt_path: Path to the CSV file containing persona data
-        prompt_template_path: Path to the template file for formatting prompts
-        persona_context_template_path: Required schema-specific context template.
+        prompt_path: The target's personas TSV (from its manifest)
+        persona_context_template_path: The target's persona context template
+        prompt_template_path: The shared prompt template; defaults to the one in
+            the repository's data/ folder
         max_personas: Optional maximum number of personas to load
         user_language: Language the user-side LLM writes in. English adds
             nothing to the prompt, so English runs are unchanged.
