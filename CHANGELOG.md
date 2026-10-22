@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Testing and CI
 
-- **Guards against changed scores**—Three unit tests pin results with fixed inputs, so a code change can't move scores unnoticed: golden scoring files (`tests/fixtures/golden_scoring/`), scripted judge answers walking the SI rubric, and a recorded pipeline run replayed without calling any model (`tests/fixtures/replay/`). See [docs/safe-changes.md](docs/safe-changes.md).
+- **Guards against changed scores**—Unit tests pin results with fixed inputs, so a code change can't move scores unnoticed. One per stage: golden persona prompts and a replay of recorded user and chatbot replies (generate), scripted answers walking the SI rubric (judge), and golden `scores.json` files (score); plus a replay of the whole recorded pipeline. None calls a model. See [docs/safe-changes.md](docs/safe-changes.md).
 
 ### Documentation and development workflow
 

@@ -148,9 +148,18 @@ class Replayer:
             raise NotInRecording(message)
         return replies.pop(0)
 
-    def unused_replies(self) -> int:
-        """Recorded calls the code never made: it made fewer calls than recorded."""
-        return sum(len(replies) for replies in self.replies.values())
+    def unused_replies(self, kind: Optional[str] = None) -> int:
+        """Recorded calls the code never made, optionally only of one kind.
+
+        A leftover reply means the code made fewer calls than when recorded.
+        `kind="text"` counts only user and chatbot turns, for a run that
+        generates without judging.
+        """
+        return sum(
+            len(replies)
+            for key, replies in self.replies.items()
+            if kind is None or json.loads(key)["kind"] == kind
+        )
 
 
 class ReplayLLM(JudgeLLM):
@@ -232,23 +241,36 @@ def pipeline_config(output: Path) -> dict[str, Any]:
     }
 
 
-def run_pipeline(work: Path, create_llm: Callable[..., Any]) -> Path:
-    """Run `vera pipeline` with `create_llm` in place of the LLM factory.
+def run_vera(command: str, work: Path, create_llm: Callable[..., Any]) -> Path:
+    """Run `vera <command>` on the recorded run's config, with `create_llm` in
+    place of the LLM factory. Returns the generation run folder.
 
-    Returns the generation run folder.
+    `command` is "pipeline" (generate, judge, score) or "generate" (only the
+    conversations, from the same recording).
     """
+    config = pipeline_config(work / "output")
+    if command == "generate":
+        config = {"target": config["target"], "generation": config["generation"]}
     work.mkdir(parents=True, exist_ok=True)
-    config = work / "pipeline.json"
-    config.write_text(json.dumps(pipeline_config(work / "output")), encoding="utf-8")
+    config_file = work / f"{command}.json"
+    config_file.write_text(json.dumps(config), encoding="utf-8")
     os.environ.pop(cli_config.VERA_RUN_CONFIG_ENV, None)
     with patch.object(LLMFactory, "create_llm", side_effect=create_llm):
         exit_code = vera.main(
-            ["pipeline", "--config", str(config), "--sample", str(PERSONAS)]
+            [command, "--config", str(config_file), "--sample", str(PERSONAS)]
         )
     if exit_code != 0:
-        raise RuntimeError(f"vera pipeline exited with {exit_code}")
+        raise RuntimeError(f"vera {command} exited with {exit_code}")
     (run_folder,) = (work / "output").iterdir()
     return run_folder
+
+
+def run_pipeline(work: Path, create_llm: Callable[..., Any]) -> Path:
+    return run_vera("pipeline", work, create_llm)
+
+
+def run_generate(work: Path, create_llm: Callable[..., Any]) -> Path:
+    return run_vera("generate", work, create_llm)
 
 
 # Each conversation file starts with a random 6-character tag.
@@ -261,10 +283,7 @@ def outputs(run_folder: Path) -> dict[str, str]:
     Random tags, timestamps, and folder names differ on every run; everything
     else must match exactly.
     """
-    found = {}
-    for transcript in sorted((run_folder / "conversations").glob("*.txt")):
-        name = RANDOM_TAG.sub("", transcript.name)
-        found[f"transcripts/{name}"] = transcript.read_text(encoding="utf-8")
+    found = transcripts(run_folder)
 
     (evaluation,) = (run_folder / "evaluations").iterdir()
     with open(evaluation / "results.csv", newline="", encoding="utf-8") as f:
@@ -282,6 +301,14 @@ def outputs(run_folder: Path) -> dict[str, str]:
     scores = evaluation / "scores" / "scores.json"
     found["scores.json"] = scores.read_text(encoding="utf-8")
     return found
+
+
+def transcripts(run_folder: Path) -> dict[str, str]:
+    """The run's conversations, keyed like the recording's expected/ folder."""
+    return {
+        f"transcripts/{RANDOM_TAG.sub('', path.name)}": path.read_text(encoding="utf-8")
+        for path in sorted((run_folder / "conversations").glob("*.txt"))
+    }
 
 
 def expected_outputs() -> dict[str, str]:

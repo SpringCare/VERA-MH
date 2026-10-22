@@ -71,7 +71,7 @@ consequences without duplicating that contract.
 
 The project uses [pytest](https://docs.pytest.org/) with unit and integration tests under `tests/`. Coverage is enforced (`--cov-fail-under=68` in `pyproject.toml`, set for the unit layer alone).
 
-**Changes that must not move scores.** Before changing `generate/`, `judge/`, or `score/`, read [docs/safe-changes.md](./docs/safe-changes.md). Three unit tests pin results with fixed inputs: golden scoring files, scripted judge answers, and a recorded pipeline run. A refactor must pass them unchanged; regenerating their expected data is only for changes meant to alter results, explained in the PR and the CHANGELOG.
+**Changes that must not move scores.** Before changing `generate/`, `judge/`, or `score/`, read [docs/safe-changes.md](./docs/safe-changes.md). Unit tests pin results with fixed inputs, one per stage (golden persona prompts and a generation replay, scripted judge answers, golden scoring files) plus a replay of the whole recorded pipeline. A refactor must pass them unchanged; regenerating their expected data is only for changes meant to alter results, explained in the PR and the CHANGELOG.
 
 **Layout:**
 - `tests/unit/` — fast, isolated tests
