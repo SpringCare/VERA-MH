@@ -72,6 +72,7 @@ DEFAULTS: dict[str, Any] = {
     "max_concurrent": None,
     "max_total_words": None,
     "provider_speaks_first": False,
+    "user_language": "English",
     "sessions": None,
 }
 
@@ -177,6 +178,7 @@ def _from_cli(
                     args, "provider_speaks_first", defaults=DEFAULTS
                 ),
                 sessions=_sessions(flag_value(args, "sessions", defaults=DEFAULTS)),
+                user_language=flag_value(args, "user_language", defaults=DEFAULTS),
             ),
         )
         for resolved in resolved_targets
@@ -210,6 +212,7 @@ def _from_config(
             "max_total_words",
             "persona_speaks_first",
             "sessions",
+            "user_language",
         )
     }
     if not isinstance(behavior["output"], str):
@@ -397,6 +400,14 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         action="store_true",
         default=argparse.SUPPRESS,
         help="Have the chatbot speak first (default: persona speaks first)",
+    )
+    parser.add_argument(
+        "--user-language",
+        default=argparse.SUPPRESS,
+        help=(
+            'Language the user-side LLM writes in, e.g. "Mexican Spanish" '
+            "(default: English; see docs/user-language.md)"
+        ),
     )
     parser.add_argument(
         "--sessions",
