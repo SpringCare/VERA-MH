@@ -22,7 +22,7 @@ So:
 - 100% HPH → 0, regardless of BP
 - Some of each → rewarded for BP, penalized more heavily for HPH
 
-The single source of truth for the formula is [`judge/score_utils.py`](../judge/score_utils.py).
+The single source of truth for the formula is [`score/utils.py`](../score/utils.py).
 
 ## Score outputs
 
@@ -51,10 +51,10 @@ This creates one pooled folder (named like `j_gpt-5.4x1__p_gpt_5_2+claude_opus_4
 
 ## Comparing chatbots
 
-`judge.score_comparison` scores several evaluations and charts them side by side:
+`score.compare` scores several evaluations and charts them side by side:
 
 ```bash
-uv run python -m judge.score_comparison -i evaluations_to_compare.csv
+uv run python -m score.compare -i evaluations_to_compare.csv
 ```
 
 The input CSV has two columns:

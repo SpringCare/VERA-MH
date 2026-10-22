@@ -8,7 +8,7 @@ VERA-MH (Validation of Ethical and Responsible AI in Mental Health) is a framewo
 
 - **Multi-turn**—an LLM role-plays a clinically developed persona in a full conversation with the chatbot under test (30 turns by default), so the evaluation covers how the chatbot handles risk as it unfolds, not a single prompt and reply. An LLM judge then rates the whole transcript against a clinical rubric.
 - **Multi-target**—each **target** is a self-contained bundle of personas, prompts, and a clinical rubric, selected with `--target`. Two clinical rubrics ship by default: `SI` (suicidal ideation) and `HFO` (harm from others).
-- **Bring your own rubric**—anyone can add a target by dropping a folder with a `manifest.json` into `data/`; `vera` picks it up by name with no code changes. See [docs/targets.md](docs/targets.md#adding-personas-or-a-target) for the bundle layout and [docs/rubric.md](docs/rubric.md) for the rubric format and the current compatibility requirements (for now, scoring expects the same five dimensions the shipped rubrics use).
+- **Bring your own rubric**—anyone can add a target by dropping a folder with a `manifest.json` into `data/`; `vera` picks it up by name with no code changes. Start with [docs/create-an-evaluation.md](docs/create-an-evaluation.md); see [docs/targets.md](docs/targets.md#adding-personas-or-a-target) for the bundle layout and [docs/rubric.md](docs/rubric.md) for the rubric format and the current compatibility requirements (for now, scoring expects the same five dimensions the shipped rubrics use).
 
 2.0 also adds:
 
@@ -31,8 +31,8 @@ Run a smoke test (generate, judge, and score on 3 personas):
 
 ```bash
 uv run python vera.py pipeline \
-  -c gpt-4o \
-  -u claude-sonnet-4-5-20250929:1 \
+  -c gpt-5.4 \
+  -u claude-opus-4-5:1 \
   -j gpt-5.4:1 \
   --judge-params reasoning_effort=low \
   --target SI \
@@ -65,6 +65,7 @@ This produces one evaluation per user model, then pools them: the headline score
 | Doc | What's in it |
 |-----|--------------|
 | [docs/cli.md](docs/cli.md) | Full `vera` CLI reference: every command and flag, config files, `--into`, model parameters, output layout |
+| [docs/create-an-evaluation.md](docs/create-an-evaluation.md) | Create your own evaluation: write personas and a rubric for a new kind of risk |
 | [docs/targets.md](docs/targets.md) | Targets, personas, and prompts: what ships, how they're structured, how to customize them |
 | [docs/evaluating.md](docs/evaluating.md) | Connecting your own LLM, agent, or API as the chatbot under test |
 | [docs/judge.md](docs/judge.md), [docs/rubric.md](docs/rubric.md) | How the rubric-driven judge works; adding a compatible rubric |

@@ -136,7 +136,7 @@ vera generate --config run.json
 
 **Option B — CLI shorthand:**
 ```
-vera generate -c sonnet -u gpt:1 sonnet:2 --personas SI
+vera generate -c claude-sonnet-5 -u gpt-5.2:1 claude-opus-4-5:2 --personas SI
 ```
 Bare-minimum required flags for Option B: `-c <chatbot>` (the chatbot under
 test — no default), `-u <model:repeats...>` (at least one user-side model), and
@@ -154,10 +154,10 @@ rubric side. The generation runner itself has no parameter defaults.
 Or, using `--target` to select the complete target manifest instead of naming
 the generation inputs explicitly:
 ```
-vera generate -c sonnet -u gpt:1 --target SI
+vera generate -c claude-sonnet-5 -u gpt-5.2:1 --target SI
 ```
 
-`-u <model>:<repeats> ...` selects the user-side LLM(s) and how many full passes over the configured persona set to run with each. With 10 personas configured, `-u gpt:1 sonnet:2` means 10 conversations with gpt, 20 with sonnet (2 full passes). Each `(model, repeat)` pass gets its own run under that model's persistent output directory (see Naming below).
+`-u <model>:<repeats> ...` selects the user-side LLM(s) and how many full passes over the configured persona set to run with each. With 10 personas configured, `-u gpt-5.2:1 claude-opus-4-5:2` means 10 conversations with gpt-5.2, 20 with claude-opus-4-5 (2 full passes). Each `(model, repeat)` pass gets its own run under that model's persistent output directory (see Naming below).
 
 Comparing across *chatbots* is done by looping this invocation externally, once per chatbot — not a built-in cross-product flag.
 
@@ -172,8 +172,8 @@ decoupled from generation.
 
 ```
 vera judge --config run.json
-vera judge -j claude:1 --conversations output/c_sonnet/<run>/conversations/ --target SI
-vera judge -j claude:1 gpt:2 --conversations output/c_sonnet/<run>/conversations/ --rubric SI
+vera judge -j gpt-5.4:1 --conversations output/c_sonnet/<run>/conversations/ --target SI
+vera judge -j gpt-5.4:1 claude-sonnet-5:2 --conversations output/c_sonnet/<run>/conversations/ --rubric SI
 ```
 
 No `-c` here: judging is decoupled from chatbot selection by design (see the orthogonality invariant above) — the chatbot is already implicit in whichever `--conversations` folder is passed in.
@@ -263,7 +263,7 @@ Reads the immutable `config.json` (verifying its `.sha256` sidecar first) plus t
 today is `--into <run folder>` on `vera generate` and `vera judge`:
 
 ```
-vera generate -c gpt-4o -u sonnet:1 --target SI --into output/c_gpt-4o/<run>
+vera generate -c gpt-5.4 -u claude-opus-4-5:1 --target SI --into output/c_gpt-5.4/<run>
 ```
 
 It solves the expensive half of the problem — finished work is not redone — but

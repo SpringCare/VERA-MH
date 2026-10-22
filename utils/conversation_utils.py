@@ -1,6 +1,5 @@
 """Utilities for conversation management and file operations."""
 
-from datetime import datetime
 from functools import cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -8,6 +7,7 @@ from typing import Any, Dict, List, Optional
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
 from llm_clients.llm_interface import Role
+from utils.naming import add_timestamp_to_path
 
 from .debug import debug_print
 
@@ -37,22 +37,6 @@ def ensure_provider_has_last_turn(max_turns: int, persona_speaks_first: bool) ->
         )
         return max_turns + 1
     return max_turns
-
-
-def add_timestamp_to_path(path: Path) -> Path:
-    """
-    Add timestamp to filename before extension.
-
-    Args:
-        path: Original path
-
-    Returns:
-        Path with timestamp inserted before extension (format: YYYYMMDD_HHMMSS)
-    """
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    stem = path.stem
-    suffix = path.suffix
-    return path.parent / f"{stem}_{timestamp}{suffix}"
 
 
 def generate_conversation_filename(prefix: str = "conversation") -> str:

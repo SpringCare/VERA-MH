@@ -19,7 +19,7 @@ The scripts also take rubric bundles only as full manifest paths (`data/SI/rubri
 ## `legacy/generate.py`
 
 ```bash
-uv run python -m legacy.generate -u gpt-4o -p gpt-4o -t 6 -r 1
+uv run python -m legacy.generate -u gpt-5.4 -p gpt-5.4 -t 6 -r 1
 ```
 
 | Flag | `vera generate` equivalent | Description |
@@ -87,8 +87,8 @@ Runs the generation, judging, and scoring scripts in sequence:
 
 ```bash
 uv run python -m legacy.run_pipeline \
-  --user-agent claude-sonnet-4-5-20250929 \
-  --provider-agent gpt-4o \
+  --user-agent claude-opus-4-5 \
+  --provider-agent gpt-5.4 \
   --runs 2 \
   --turns 10 \
   --judge-model gpt-5.4 \

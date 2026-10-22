@@ -23,7 +23,7 @@ class LLMFactory:
 
         Args:
             model_name: The model identifier
-                (e.g., "claude-sonnet-4-5-20250929", "gpt-4o")
+                (e.g., "claude-sonnet-5", "gpt-5.4")
             name: Display name for this LLM instance
             system_prompt: Optional system prompt
             role: Role of the LLM (Role.PERSONA, Role.PROVIDER)
@@ -89,7 +89,7 @@ class LLMFactory:
 
         Args:
             model_name: The model identifier
-                (e.g., "claude-sonnet-4-5-20250929", "gpt-4o")
+                (e.g., "claude-sonnet-5", "gpt-5.4")
             name: Display name for this LLM instance
             system_prompt: Optional system prompt
             **kwargs: Additional model-specific parameters
