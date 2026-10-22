@@ -9,6 +9,7 @@ from typing import List, Optional
 SHARED_PROMPT_TEMPLATE = (
     Path(__file__).resolve().parents[1] / "data/persona_prompt_template.txt"
 )
+DEFAULT_USER_LANGUAGE = "English"
 
 
 def load_prompts_from_csv(
@@ -18,6 +19,7 @@ def load_prompts_from_csv(
     persona_context_template_path: str,
     prompt_template_path=SHARED_PROMPT_TEMPLATE,
     max_personas: Optional[int] = None,
+    user_language: str = DEFAULT_USER_LANGUAGE,
 ) -> List[dict[str, str]]:
     """Load prompts from a personas TSV file and return them as a list.
 
@@ -28,6 +30,8 @@ def load_prompts_from_csv(
         prompt_template_path: The shared prompt template; defaults to the one in
             the repository's data/ folder
         max_personas: Optional maximum number of personas to load
+        user_language: Language the user-side LLM writes in. English adds
+            nothing to the prompt, so English runs are unchanged.
     """
 
     csv_path = Path(prompt_path)
@@ -97,6 +101,12 @@ def load_prompts_from_csv(
 
             persona_context = context_template.format(**row)
             row["prompt"] = template.format(persona_context=persona_context)
+            # Case and spacing don't matter: "english" must not add a line.
+            if user_language.strip().lower() != DEFAULT_USER_LANGUAGE.lower():
+                row["prompt"] += (
+                    f"\n- Write every message in {user_language.strip()}, "
+                    "as a native speaker would\n"
+                )
             data.append(row)
 
     return data

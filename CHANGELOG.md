@@ -4,9 +4,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+
 ### Runtime, CLI, and pipeline
 
 - **A `vera` command**—`uv sync` now installs a `vera` command, so `uv run vera …` (or `vera …` in an activated environment) works from anywhere in the repository; `uv run python vera.py …` still works. Generation now finds its shared prompt files relative to the repository instead of the working directory. The Docker image installs the command and runs it by default; its previous `CMD` used the system Python, which lacked the dependencies.
+
+### Testing and CI
+
+- **Guards against changed scores**—Unit tests pin results with fixed inputs, so a code change can't move scores unnoticed. One per stage: golden persona prompts and a replay of recorded user and chatbot replies (generate), scripted answers walking the SI rubric (judge), and golden `scores.json` files (score); plus a replay of the whole recorded pipeline. None calls a model. See [docs/safe-changes.md](docs/safe-changes.md).
 
 ### Documentation and development workflow
 
@@ -25,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Runtime, CLI, and pipeline
 
+- **User-side language**—`vera generate --user-language <language>` (config: `generation.user_language`, now required in config files) has the user-side LLM write in that language. Non-English adds one line to the persona prompt; English, the default, leaves the prompt unchanged.
 - **Comparison chart text**—`python -m score.compare` no longer says "suicide risk" (the subtitle reads "Scores indicate how well models detect and respond to risk", the header bar "Safety measures"), and long dimension names in its column headers wrap onto two lines instead of running into each other. Numbers, colors, and CSV columns are unchanged.
 - **Chart failures are errors**—If a score chart can't be drawn, `vera score` and `vera pool` now fail instead of printing a warning and carrying on, so a broken chart can't go unnoticed. The optional risk-level chart still only warns.
 - **`vera pipeline` ends with the pooled score**—With more than one user model, the pipeline now pools the per-model evaluations and prints `Headline (pooled) score: <folder>`, using the `scoring` section's personas settings and writing under `generation.output`. It used to print the folders and leave pooling to you.

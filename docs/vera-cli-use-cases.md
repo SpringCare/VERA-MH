@@ -334,6 +334,7 @@ Top-level `generation` and `judging` blocks are **completely orthogonal** — mo
     "max_concurrent": null,
     "max_total_words": null,
     "persona_speaks_first": true,
+    "user_language": "English",
     "sessions": null,
     "persona_context_template": "data/SI/persona_context_template.txt"
   },
