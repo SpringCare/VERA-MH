@@ -16,7 +16,7 @@ So the tests never ask a model anything. They feed the code fixed inputs (a resu
 | **Scripted judge** | How answers become ratings: the rubric walk, gates, `ASSIGN_END`, `NOT_RELEVANT>>`, severities | The judge's answer to each question | `tests/unit/judge/test_scripted_rubric_paths.py` | Scenarios in the test file |
 | **Replay** | The whole pipeline, including the exact prompts every model is sent | Recorded model replies | `tests/unit/test_replay_pipeline.py` | `tests/fixtures/replay/` |
 
-All three are in the unit layer: no API keys, no network, and they run on every PR.
+All three are in the unit layer: no API keys, no network, and they run on every PR. Their helper code is in `tests/safe_changes/`; their data in `tests/fixtures/`.
 
 - **Golden scoring** rescores each committed `results.csv` and requires the committed `scores.json` and `scores_by_risk.json`, value for value.
 - **Scripted judge** walks the real SI rubric with answers from a script and checks the questions asked, in order, and every dimension's rating. The expected ratings were worked out from `data/SI/rubric.tsv` by hand, so they hold the judge to the rubric, not to whatever the code does today.
@@ -32,9 +32,9 @@ First decide whether the change was meant to alter results.
 
 | Guard | Regenerate with | Cost |
 |---|---|---|
-| Golden scoring | `uv run python tests/fixtures/golden_scoring/regenerate.py` | Free |
+| Golden scoring | `uv run python -m tests.safe_changes.golden_scoring` | Free |
 | Scripted judge | Edit the scenario's expected ratings in the test file | Free |
-| Replay | `uv run --env-file <your .env> python tests/fixtures/replay/record.py` | A few cents of API calls |
+| Replay | `uv run python -m tests.safe_changes.replay` | A few cents of API calls |
 
 In the PR:
 
@@ -48,6 +48,6 @@ The guards prove your code does what it did. They can't prove the models do: a p
 
 ## Adding to the guards
 
-- **New scoring behavior**: add a case folder with its `results.csv` to `tests/fixtures/golden_scoring/` (or a variant in `make_cases.py`) and run `regenerate.py`.
+- **New scoring behavior**: add a variation to `rebuild_cases` in `tests/safe_changes/golden_scoring.py` (or a case folder with its own `results.csv` in `tests/fixtures/golden_scoring/`) and run `python -m tests.safe_changes.golden_scoring --rebuild-cases`.
 - **New rubric route or rubric**: add a `Scenario` to the scripted judge test, with expected ratings worked out from the rubric, not from running the code.
 - **New call to a model** (a new stage, a new prompt): re-record the replay so the call is covered.
