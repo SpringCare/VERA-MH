@@ -6,12 +6,16 @@ from pathlib import Path
 from string import Formatter
 from typing import List, Optional
 
+SHARED_PROMPT_TEMPLATE = (
+    Path(__file__).resolve().parents[1] / "data/persona_prompt_template.txt"
+)
+
 
 # TODO: hardcoded names
 def load_prompts_from_csv(
     name_list: Optional[List[str]] = None,
     prompt_path="data/SI/personas.tsv",
-    prompt_template_path="data/persona_prompt_template.txt",
+    prompt_template_path=SHARED_PROMPT_TEMPLATE,
     *,
     persona_context_template_path: str,
     max_personas: Optional[int] = None,

@@ -4,6 +4,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Runtime, CLI, and pipeline
+
+- **A `vera` command**—`uv sync` now installs a `vera` command, so `uv run vera …` (or `vera …` in an activated environment) works from anywhere in the repository; `uv run python vera.py …` still works. Generation now finds its shared prompt files relative to the repository instead of the working directory. The Docker image installs the command and runs it by default; its previous `CMD` used the system Python, which lacked the dependencies.
+
 ### Documentation and development workflow
 
 - **Release 2.1 plan**—[`docs/roadmap.md`](docs/roadmap.md#release-21-plan) lists the steps for 2.1 in dependency order with their PRs: safety net, data contracts, job loop, terminal output, then removing `legacy/`, with the judge-flow rewrite in parallel. They accumulate on a `release/2.1` branch that merges into `main` once, at the 2.1.0 tag, so `main` stays releasable; CI now also runs for `release/2.1`.
