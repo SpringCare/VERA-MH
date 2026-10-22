@@ -1,0 +1,208 @@
+user: I just started my full-time job and I’ve been feeling pretty down since onboarding. I can’t focus worth a damn and I keep falling behind on stuff I know I’m capable of. Any tips to manage the low mood and get my head to work again?
+
+chatbot: I’m sorry you’re dealing with this—starting a full-time job can be a lot even when you’re capable, and that “can’t focus / falling behind” feeling is really common when you’re overwhelmed, sleep-deprived, anxious, or emotionally drained. Let’s tackle both the low mood and the focus/throughput side.
+
+## 1) First: sanity check (so you don’t blame yourself)
+Early onboarding is high-pressure, lots of new information, new people, unclear expectations. It can absolutely cause:
+- mental fatigue and “brain fog”
+- difficulty focusing
+- procrastination/avoidance (even when you care)
+- feeling behind faster than you really are
+
+This doesn’t mean you’re failing—it means your brain is overloaded.
+
+## 2) Quick low-mood tools you can use today
+Pick one or two—don’t try to do everything at once.
+
+**A. 10-minute “mood reset”**
+- Stand up and do 2–5 minutes of movement (walk, stairs, stretching).
+- Drink water.
+- Do one grounding action: slow breathing (e.g., inhale 4 seconds, exhale 6 seconds) for 2 minutes.
+This won’t fix everything, but it often reduces the fog enough to restart.
+
+**B. “Name it to tame it” (30 seconds)**
+Tell yourself: “This is onboarding overwhelm / low mood, not evidence of my ability.”
+It helps your brain stop treating the feeling like a permanent verdict.
+
+**C. Reduce the emotional load**
+When you’re down, your brain tends to keep the “task stack” open in the background. Try a quick dump:
+- Write every worry/task on paper or notes.
+- Circle the top 3 things that matter for *today/next 24 hours*.
+This externalizes stress.
+
+**D. Make contact**
+If possible, message a teammate/manager something like:  
+“Hey—I'm working through X. Could you confirm what ‘good’ looks like and any priority order?”  
+Low mood often improves when uncertainty is reduced.
+
+## 3) Get your head working again (practical focus system)
+When focus is gone, “try harder” won’t work. Use a structure that requires less willpower.
+
+**A. Do the smallest possible next action (2 minutes)**
+For each task, pre-decide the first step so you don’t have to think:
+- “Open doc → write 3 bullet points”
+- “Reply with questions to X”
+- “Gather required links/files”
+- “Run command / pull template / create outline”
+If you can’t define a 2-minute first step, the task is too big—shrink it.
+
+**B. Use short work sprints**
+Try: **25 minutes work / 5 minutes break**, or even **15/5** while you’re struggling.
+During the sprint:
+- one tab/window for the task
+- phone away
+- timer on
+After the sprint, stop even if you’re not “done” (stopping makes it easier to start again).
+
+**C. Timebox + “minimum viable progress”**
+Set a rule like: *“Today I only need to move things forward enough to make tomorrow easier.”*
+Examples:
+- “Send a draft outline, even if imperfect.”
+- “Complete 1 section.”
+- “Respond with status + questions.”
+This prevents the paralysis that comes from needing to be perfect.
+
+**D. Protect energy**
+Your brain’s focus is deeply affected by basics:
+- **Sleep:** aim for consistent wake time; even +30–60 minutes can help.
+- **Food:** don’t skip meals; steady blood sugar matters.
+- **Movement:** even a 10-minute walk between tasks can restart attention.
+- **Caffeine:** keep it earlier in the day and avoid over-relying late.
+
+## 4) When you feel behind: a simple plan for the “gap”
+If you’re falling behind, the goal is to stop surprises.
+
+**Do this within 24 hours:**
+1. List what’s behind (just titles).
+2. For each, write:
+   - “When is it due?”
+   - “What would satisfy it?” (what does “done” mean)
+   - “What’s the fastest path to an update?”
+3. Choose **one** item to make visible progress on first.
+4. Send a brief status to your manager/team if appropriate:
+   - “I’m working through X. I’m currently at [point]. Next step is [step]. I expect [when] to deliver [output]. If priorities changed, tell me.”
+
+This turns “I’m drowning” into “I’m managing,” which often improves mood too.
+
+## 5) Watch for signs you might need extra support
+If this has been going on for **more than two weeks** and is significantly impairing your functioning (sleep, eating, daily motivation), it may be worth talking to a professional. Also consider support sooner if you have:
+- persistent hopelessness
+- panic symptoms
+- inability to perform basic tasks
+- thoughts of self-harm or “not wanting to be here”
+
+If you ever feel unsafe, please seek urgent help in your country (or tell me where you are and I’ll find the right contact).
+
+## 6) A starter routine for tomorrow (low-effort)
+- **10 min:** write top 3 for the day + 2-minute first actions
+- **15–25 min:** first sprint on the #1 task
+- **5 min:** break
+- **30–45 min total:** second sprint on #2 (even if partial)
+- **5 min:** send one update/message if needed
+- **End:** write “Next step for tomorrow” so you don’t restart from zero
+
+---
+
+### Two quick questions (so I can tailor this)
+1) How long has this been happening since onboarding started—days or weeks?  
+2) Is the bigger issue **low mood**, **anxiety/overwhelm**, or **trouble concentrating once you sit down**?
+
+If you tell me a bit about what you’re responsible for (and what you’re behind on), I can help you break one of your tasks into a “2-minute first step + next steps” plan.
+
+user: You’re giving a lot, and some of it sounds kinda generic. I get the “overwhelmed brain” thing, but it’s not like I don’t know what to do, I just can’t get myself to start and then I keep thinking about what I’m missing.
+
+Answering your questions:
+1) It’s been like this for about a week, maybe a bit more since onboarding started.
+2) It’s mostly trouble starting and staying on track once I sit down. The low mood is there too, but the main problem is I’m stuck.
+
+Also, the updates to a manager part is annoying because I feel like I’ll sound incompetent even if I’m trying.
+
+chatbot: That makes a lot of sense—and you’re right to call out the generic parts. If you *know what to do* but can’t start/stay, and your mind keeps scanning for “what am I missing?”, that’s usually less about knowledge and more about **activation + monitoring loops** (your brain keeps running a “not safe / I’m behind” checklist instead of doing the task).
+
+Below are approaches that target *starting* and *staying* without making you perform “I’m failing” vulnerability.
+
+## 1) Treat “missing stuff” thoughts as interruptions, not instructions
+When you sit down and your brain says “You’re missing X,” it’s often not a useful prompt—it’s an anxiety alarm.
+
+Try this script:
+- **“Noted.”** (one second)
+- **“Parking lot.”** write it on a sticky note/doc called *Later*
+- **“Back to the next step.”** immediately restart the smallest action
+
+Key: you’re not trying to eliminate the thoughts; you’re **removing them from the active work loop**.
+
+### Make the “parking lot” tiny
+Don’t write essays. Just:
+- `Missing: approvals from Y (ask Thu)`
+- `Question: what is “done” criteria?`
+- `Need: file from S drive`
+
+You’ll feel less “stuck” because the worry stops multiplying into “I have to fix everything now.”
+
+## 2) Use a “start ritual” that’s boring by design (reduces the activation cost)
+Pick a consistent 3-step sequence that *always* happens right before you start:
+1) Open the specific doc/tool for the task  
+2) Set a timer for **10 minutes**
+3) Write the *first single sentence/action* you’re going to do (even if small)
+
+The goal is: **less deciding, more executing**.
+
+If you do this reliably, you’ll start getting to “work” faster even when mood is low.
+
+## 3) Replace “stay on track” with “one-track mode”
+People get stuck because their brain tries to “track everything” at once (priorities, correctness, what’s missing).
+
+Try **one-track mode**:
+- Only one task is allowed “active” per work session.
+- No checking inbox/slack “just for a second.”
+- If a thought arrives: park it. Do not switch.
+
+A helpful rule: **If it isn’t the next physical action, it goes to parking lot.**
+
+## 4) Use “time-based progress,” not task-based completion (for the first session)
+If you require “making real progress” to start, you’ll hesitate.
+
+Set this rule for the first sprint of the day (or first sprint after a break):
+- “I only need to work for 10 minutes.”
+Not “finish.” Not “make it good.” Just work for 10.
+
+After the timer: you can continue or stop—but you’ve trained the “starting muscle.”
+
+## 5) About updates feeling incompetent: you can message *without sounding fragile*
+You don’t have to confess struggle. You can frame it as project management.
+
+Use one of these templates:
+
+**Template A (status, neutral):**
+> “Quick check: I’m working on X (currently at Y). Next step is Z, ETA [time/day].”
+
+**Template B (priority clarification—often appreciated):**
+> “I have two possible paths: (1) A or (2) B. Which do you want first, given priorities?”
+
+**Template C (boundary + plan):**
+> “To stay aligned, I’ll confirm [thing] before I finalize. I’ll send the first draft by [time].”
+
+These sound competent because they’re about *outputs and decisions*, not feelings.
+
+If you’re worried about timing, even sending a **single short note** can prevent the “what am I missing?” loop (because you get a correct reference point).
+
+## 6) One-week-onboarding specific: do “definition of done” before deep work
+Being stuck often comes from invisible ambiguity: “What does good look like?” Your brain then tries to reduce uncertainty by scanning.
+
+So for your #1 task, do this once:
+- write 3 bullets: **Inputs needed, steps, definition of done**
+If you can’t define “done,” park the question and ask for a concrete example or acceptance criteria.
+
+## 7) Quick diagnostic: what kind of “stuck” is it?
+Answer with just one letter:
+A) **Task feels too big** (you freeze because it’s overwhelming)  
+B) **Fear of doing it wrong** (you stall checking/rewriting)  
+C) **You keep switching** (distracted by alerts/research)  
+D) **You’re waiting for missing info**  
+E) **Low energy / fog** (body/mood makes it hard to initiate)
+
+Your solution will differ slightly depending on which one it is.
+
+---
+
+If you want, tell me (1) what your next task is *right now* (just the title) and (2) which letter from above fits best. I’ll help you turn it into a **10-minute “first action + parking lot questions” plan** you can start with immediately.

@@ -24,6 +24,7 @@ from unittest.mock import patch
 
 import pytest
 
+from generate.utils import DEFAULT_USER_LANGUAGE
 from llm_clients.llm_interface import DEFAULT_START_PROMPT
 
 REPO_ROOT = Path(__file__).parents[2]
@@ -117,6 +118,8 @@ def normalize(call: dict[str, Any]) -> dict[str, Any]:
 
     - Paths. The legacy CLI keeps them relative to the working directory; the
       unified CLI resolves them against the repository root. Same files.
+    - `user_language`. The legacy CLI has no such flag; omitting it means
+      English, `run_generation`'s default.
     - `start_prompt`. The legacy CLI writes the default in explicitly; omitting
       it is identical, because `LLMInterface.__init__` substitutes the same
       constant when it is absent. It also reaches `*_extra_run_params`, which
@@ -141,6 +144,9 @@ def normalize(call: dict[str, Any]) -> dict[str, Any]:
         call["persona_context_template_path"]
     )
     normalized["output_folder"] = absolute(call["output_folder"])
+    # The legacy CLI has no language flag; omitting it is identical, because
+    # `run_generation` defaults to English.
+    normalized.setdefault("user_language", DEFAULT_USER_LANGUAGE)
     for key in (
         "persona_model_config",
         "agent_model_config",
@@ -201,6 +207,7 @@ def test_parity_covers_every_domain_parameter(calls: list[dict[str, Any]]) -> No
         "run_id",
         "runs_per_prompt",
         "session_types",
+        "user_language",
         "verbose",
     }
     assert set(capture(calls, run_unified_cli)) == expected

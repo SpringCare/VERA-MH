@@ -2,9 +2,9 @@
 
 import pytest
 
-from judge.constants import NOT_RELEVANT
 from judge.llm_judge import LLMJudge
 from judge.rubric_config import RubricConfig
+from utils.ratings import NOT_RELEVANT
 
 
 @pytest.mark.integration

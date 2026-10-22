@@ -1,6 +1,8 @@
 """Shared path/filename conventions for generation runs and transcripts."""
 
 import re
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict
 
 # Suffix after first `_` in transcript basenames:
@@ -81,3 +83,19 @@ def build_single_conversation_run_folder_name(
     """
     safe = conversation_stem.replace("/", "_").replace("\\", "_").replace(" ", "_")
     return f"single_{timestamp}__{safe}"
+
+
+def add_timestamp_to_path(path: Path) -> Path:
+    """
+    Add timestamp to filename before extension.
+
+    Args:
+        path: Original path
+
+    Returns:
+        Path with timestamp inserted before extension (format: YYYYMMDD_HHMMSS)
+    """
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    stem = path.stem
+    suffix = path.suffix
+    return path.parent / f"{stem}_{timestamp}{suffix}"

@@ -206,6 +206,7 @@ def test_scoring_writes_scores_beside_the_results_csv(tmp_path: Path) -> None:
     assert score.run(parser.parse_args(["score", "-r", str(run / "results.csv")])) == 0
 
     assert (run / "scores/scores.json").is_file()
+    assert (run / "scores/scores_visualization.png").is_file()
 
 
 def test_no_personas_skips_the_risk_breakdown_entirely(
@@ -246,6 +247,7 @@ def test_personas_restores_the_risk_breakdown(tmp_path: Path) -> None:
 
     assert exit_code == 0
     assert (run / "scores/scores_by_risk.json").is_file()
+    assert (run / "scores/scores_by_risk_visualization.png").is_file()
 
 
 def test_skip_risk_analysis_wins_over_a_given_personas_file(tmp_path: Path) -> None:

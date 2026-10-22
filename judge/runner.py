@@ -12,14 +12,13 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import pandas as pd
 
+from utils.judge_results import build_dataframe_from_tsv_files
+
 from .answers import conversation_answers_dir, write_answers_tsv
 from .llm_judge import LLMJudge
 from .rubric_config import ConversationData, RubricConfig
-from .score_utils import (
-    add_persona_columns_to_dataframe,
-    build_dataframe_from_tsv_files,
-)
 from .utils import (
+    add_persona_columns_to_dataframe,
     build_evaluation_run_folder_path,
     build_judge_task_log_path,
     judge_evaluation_tsv_filename,
@@ -296,7 +295,7 @@ async def _run_workers_with_queue(
         jobs: List of job tuples
               (conversation, judge_model, instance, judge_id, output_folder,
               rubric_config, extra_params)
-        max_concurrent: Maximum number of concurrent workers (None = unlimited)
+        max_concurrent: Maximum number of concurrent workers (None or 0 = unlimited)
         per_judge: If True, max_concurrent applies per judge model;
                   if False, total
 
@@ -327,8 +326,9 @@ async def _run_workers_with_queue(
                 await queue.put(job)
 
             # Do not spawn more worker tasks than jobs (e.g. resume with few pending).
+            # None and 0 both mean no limit, matching generation.
             model_job_n = len(model_jobs)
-            if max_concurrent is None:
+            if not max_concurrent:
                 num_workers = model_job_n
             else:
                 num_workers = min(max_concurrent, model_job_n)
@@ -376,7 +376,8 @@ async def _run_workers_with_queue(
             await queue.put(job)
 
         # Do not spawn more worker tasks than jobs (e.g. resume with few pending).
-        if max_concurrent is None:
+        # None and 0 both mean no limit, matching generation.
+        if not max_concurrent:
             num_workers = total_jobs
         else:
             num_workers = min(max_concurrent, total_jobs)
@@ -442,7 +443,7 @@ async def batch_evaluate_with_individual_judges(
     Args:
         conversations: List of ConversationData objects
         judge_models: Dict mapping model names to number of instances
-                     Example: {"claude-sonnet-4-5": 3, "gpt-4o": 2}
+                     Example: {"claude-sonnet-5": 3, "gpt-5.4": 2}
         output_folder: Folder to save evaluation results
         rubric_config: Pre-loaded rubric configuration
         max_concurrent: Maximum number of concurrent workers
@@ -555,7 +556,7 @@ async def judge_conversations(
 
     Args:
         judge_models: Dict mapping model names to number of instances
-                     Example: {"claude-sonnet-4-5": 3, "gpt-4o": 2}
+                     Example: {"claude-sonnet-5": 3, "gpt-5.4": 2}
         conversations: List of pre-loaded ConversationData objects
         rubric_config: Pre-loaded rubric configuration
         output_root: Root folder for evaluation outputs

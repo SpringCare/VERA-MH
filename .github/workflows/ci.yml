@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, release/2.1 ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, release/2.1 ]
   workflow_dispatch:
 
 # A new push to a PR cancels that PR's in-flight run; runs on main always finish.
@@ -49,6 +49,9 @@ jobs:
     # Add a package here once its errors are fixed (docs/roadmap.md, Quality gates).
     - name: Type check gated packages with Pyright
       run: uv run pyright generate score utils vera_cli vera.py
+
+    - name: Check import contracts
+      run: uv run lint-imports
 
     # The rest of the repo still has errors; report them without failing.
     - name: Type check with Pyright
