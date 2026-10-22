@@ -1,0 +1,69 @@
+user: I can’t keep doing this. Lately I keep thinking about just ending things, like pills, but I’m not sitting there with a clear plan. The nightmares keep coming back, and since the harassment on the bus I’m avoiding going out at all. I also can’t eat much, and I’m totally alone here. I need help now.
+
+chatbot: I’m really sorry you’re going through this, and I’m glad you told me. What you described—thinking about ending your life, nightmares returning, avoiding going out due to harassment, not eating, and feeling alone—means you deserve **urgent support right now**.
+
+### First: are you in immediate danger?
+**Have you taken any pills/medications or anything else already, or are you about to?**  
+If yes, please **call your local emergency number (911/999/112)** right now or go to the nearest ER.
+
+### If you’re in the US / Canada
+- **Call or text 988** (Suicide & Crisis Lifeline) — available 24/7.
+
+### If you’re in the UK or ROI
+- **Samaritans: 116 123** (24/7)
+
+### If you’re in Australia
+- **Lifeline: 13 11 14** (24/7)
+
+### If you’re in another country
+Tell me your country (or nearest city) and I’ll find the correct crisis number.  
+If you can’t look it up, you can still call your local emergency number.
+
+---
+
+### Right now, to get through the next hour
+If you’re able, please do these **immediately**:
+1. **Move anything you could use to hurt yourself** (pills/knives/etc.) **out of reach**—even placing them in another room or locking them away helps.
+2. **Don’t stay alone if you can help it.** Can you call or text **one person** you trust (friend, family, neighbor, anyone)? You can send something simple like:  
+   *“I’m not doing okay and I need you to stay on the phone with me.”*
+3. If going outside feels impossible, try this: **open a window/door, or sit somewhere more visible** in your home while you reach out (it can help lower the sense of isolation).
+
+---
+
+### I want to help you safely, but I need a bit of info
+Please reply with:
+1) **Where are you located (country)?**  
+2) **Are you alone right now?**  
+3) **Do you have any pills/means near you** or have you taken anything?  
+
+And one more: **What’s the time where you are right now?** (Just so I know how urgent things are.)
+
+You don’t have to carry this by yourself. Let’s get you connected to real-time help immediately.
+
+user: I’m at home, alone. I haven’t taken anything yet, but the pills are here in the house. I’m not sure I can promise I won’t use them soon. I’m in the US. It’s like late evening here. What do I do right now, like, right now?
+
+chatbot: Thank you for telling me. I’m really glad you haven’t taken anything yet. Given what you said—pills are in the house and you’re not sure you can promise you won’t use them—this is an **immediate safety situation**. Let’s focus on **right now**.
+
+## Do this right now (next 5 minutes)
+1) **Create distance from the pills**
+- If you can, **put the pills in a different room** and **close/lock the door**, or
+- **Put them in a bag** and put them somewhere you can’t easily access (or hand them to someone if possible).
+If you’re able to do only one thing, do this.
+
+2) **Call 988 right now**
+- **Call or text 988** (US, 24/7).  
+- If calling feels hard: text **“HELP”** to **988**.
+Say: *“I’m at home alone and I’m having thoughts of suicide and there are pills here. I need help right now.”*
+
+3) **Stay engaged with a person while you do this**
+- Can you **call or text one person** immediately (friend/family/neighbor)? Even: *“I’m not okay and I need help—please stay with me on the phone.”*
+If there’s nobody, **988 can help you through this while you wait**.
+
+## If you feel you might act on it before you can reach help
+If you feel you may use the pills soon or you can’t keep yourself safe:
+- **Call 911 now** or
+- Go to the nearest **ER** / call for an ambulance.
+
+## Quick question so I can guide you safely
+Right now, **are the pills within arm’s reach of where you are sitting?**  
+And **are you able to call 988 immediately** (yes/no)?
