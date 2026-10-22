@@ -230,6 +230,7 @@ def pipeline_config(output: Path) -> dict[str, Any]:
             "max_concurrent": 1,
             "max_total_words": None,
             "persona_speaks_first": True,
+            "user_language": "English",
             "sessions": None,
         },
         "judging": {
