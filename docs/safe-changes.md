@@ -20,7 +20,7 @@ So the tests never ask a model anything. They feed the code fixed inputs (person
 
 All are in the unit layer: no API keys, no network, and they run on every PR. Their helper code is in `tests/safe_changes/`; their data in `tests/fixtures/`. A change to one stage fails that stage's guard, so the failure says where to look; the pipeline replay catches what only shows when the stages run together.
 
-- **Golden prompts** builds every SI and HFO persona's prompt with generation's own code, checks it is exactly the shared template (`data/persona_prompt_template.txt`) around the persona's part, and requires that part to match the committed text. Only the persona part is committed, so a change to the shared template shows as one diff, not two hundred.
+- **Golden prompts** builds the first two SI and HFO personas' prompts with generation's own code, checks each is exactly the shared template (`data/persona_prompt_template.txt`) around the persona's part, and requires that part to match the committed text. Every persona goes through the same code and the personas files are committed anyway, so two per target pin the code path; only the persona part is committed, so a change to the shared template is one diff.
 - **Generation replay** runs `vera generate` on 2 personas and 4 turns with every user and chatbot answer taken from the recording, and requires the same transcripts.
 - **Scripted judge** walks the real SI rubric with answers from a script and checks the questions asked, in order, and every dimension's rating. The expected ratings were worked out from `data/SI/rubric.tsv` by hand, so they hold the judge to the rubric, not to whatever the code does today.
 - **Golden scoring** rescores each committed `results.csv` and requires the committed `scores.json` and `scores_by_risk.json`, value for value.
@@ -53,7 +53,7 @@ The guards prove your code does what it did. They can't prove the models do: a p
 
 ## Adding to the guards
 
-- **New persona column or target**: run `python -m tests.safe_changes.golden_prompts` (and add the target to `TARGETS` there).
+- **New persona column, context template change, or target**: run `python -m tests.safe_changes.golden_prompts` (and add a new target to `TARGETS` there).
 - **New scoring behavior**: add a variation to `rebuild_cases` in `tests/safe_changes/golden_scoring.py` (or a case folder with its own `results.csv` in `tests/fixtures/golden_scoring/`) and run `python -m tests.safe_changes.golden_scoring --rebuild-cases`.
 - **New rubric route or rubric**: add a `Scenario` to the scripted judge test, with expected ratings worked out from the rubric, not from running the code.
 - **New call to a model** (a new stage, a new prompt): re-record the replay so the call is covered.

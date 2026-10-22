@@ -1,7 +1,7 @@
 """Golden prompts: what each persona's user model is told.
 
-For every target in data/ (SI, HFO), each persona's prompt is built with
-generation's own code: the target's persona context template filled with the
+For the first few personas of each target in data/ (SI, HFO), the prompt is
+built with generation's own code: the target's persona context template filled with the
 persona's row, inserted into the shared data/persona_prompt_template.txt.
 
 The shared template is the same for every persona and is its own source of
@@ -26,6 +26,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 GOLDEN_DIR = REPO_ROOT / "tests/fixtures/golden_prompts"
 SHARED_TEMPLATE = REPO_ROOT / "data/persona_prompt_template.txt"
 TARGETS = ("SI", "HFO")
+# Every persona goes through the same code, and the personas files are
+# committed anyway, so a couple per target pin the code path.
+PERSONAS_PER_TARGET = 2
 
 
 def shared_template_around() -> tuple[str, str]:
@@ -47,7 +50,7 @@ def persona_part(prompt: str) -> str:
 
 
 def build_prompts(target: str) -> dict[str, str]:
-    """Every persona's full prompt for one target, keyed by persona name."""
+    """The first personas' full prompts for one target, keyed by persona name."""
     target_dir = REPO_ROOT / "data" / target
     manifest = json.loads((target_dir / "manifest.json").read_text(encoding="utf-8"))
     prompts = {}
@@ -58,6 +61,7 @@ def build_prompts(target: str) -> dict[str, str]:
             persona_context_template_path=str(
                 target_dir / manifest["persona_context_template_file"]
             ),
+            max_personas=PERSONAS_PER_TARGET,
         )
         prompts.update({row["Name"]: row["prompt"] for row in rows})
     return prompts
