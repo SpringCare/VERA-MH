@@ -72,7 +72,7 @@ The first two exist today and have grown separately; the third is planned in run
 ```
 
 - **Defaults allowed.** A config states what differs from the defaults, and the run record writes every value out explicitly, defaults included. Reproducibility comes from the run record, not from forcing every config file to be complete.
-- **Execution settings in their own section:** `max_concurrent`, `debug`, `sample`, `into`. The run record writes them out like everything else, in case they're useful later, but they are excluded from the run's hash, because they don't change the result.
+- **Execution settings in their own section:** `max_concurrent`, `debug`, `sample`, `into`, `allow_uncommitted`. The run record writes them out like everything else, in case they're useful later, but they are excluded from the run's hash, because they don't change the result.
 - **Model names checked at load.** Every model name is looked up with its provider before anything runs, so a placeholder or a typo fails in seconds, naming the field, instead of in every conversation. This needs network and keys when a run starts, which every real run needs anyway; `--print` skips the check.
 - **One path rule:** paths in a config file resolve against the config file's own folder, like the manifest's.
 
@@ -95,7 +95,7 @@ The run record is the run config **resolved**: every default filled in, every pa
 ```
 
 - **Hashed:** everything except `provenance` and the execution section. Same hash, same experiment (run-lifecycle.md).
-- **Input files by checksum, plus the commit.** Each file's checksum is the source of truth: editing a rubric or personas file changes the hash, so two runs are never mistaken for the same experiment when their inputs differed. Next to it, `git_commit` is the last commit that changed the target folder, so a reader can open that exact rubric on GitHub, and `uncommitted_changes` says whether the files on disk differed from that commit. The checksums are hashed; the commit is provenance and isn't.
+- **Input files by checksum, plus the commit.** Each file's checksum is the source of truth: editing a rubric or personas file changes the hash, so two runs are never mistaken for the same experiment when their inputs differed. Next to it, `git_commit` is the last commit that changed the target folder, so a reader can open that exact rubric on GitHub, and `uncommitted_changes` says whether the files on disk differed from that commit; a run only starts with it `true` when `--allow-uncommitted` was given (decision 5). The checksums are hashed; the commit is provenance and isn't.
 - **Code version recorded, not hashed,** so a docs-only commit doesn't make every run look like a different experiment.
 - **Requested vs. resolved model:** the requested ID is part of the settings (hashed); what the provider reports back goes in `provenance` (not hashed). This settles the disagreement run-lifecycle.md found between architecture.md and the use-cases doc.
 - **`--config <run>/config.json` re-runs it.** A run record is a valid run config, so reproducing a run is one command.
@@ -106,7 +106,4 @@ The run record is the run config **resolved**: every default filled in, every pa
 2. **Execution settings are recorded but not hashed,** in their own section.
 3. **The manifest `version` is human text, and checksums are the source of truth.** The run record holds both, plus the git commit of the target folder.
 4. **Model names are validated with the provider at load,** to catch problems before a run spends anything.
-
-## Open questions
-
-1. **Uncommitted rubric edits.** When the target's files differ from their last commit, record `uncommitted_changes: true` and run anyway, or refuse to run unless an explicit flag allows it? Recording is enough for experiments; refusing protects published numbers.
+5. **Uncommitted rubric edits stop a run.** If the target's files differ from their last commit, `vera` refuses to start and names the changed files, unless `--allow-uncommitted` is given. That flag is an execution setting: recorded, not hashed. The run record then has `uncommitted_changes: true`, so a run made that way is always identifiable. This protects published numbers from coming from a rubric nobody can look up.
