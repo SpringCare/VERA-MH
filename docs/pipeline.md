@@ -8,7 +8,7 @@ document explains the difference, because it looks like a schema
 inconsistency when you meet it in the code or in a config file.
 
 For what the command is and how to run it, see
-[`vera_cli/README.md`](../vera_cli/README.md) and
+[`vera_cli/README.md`](../src/vera_mh/vera_cli/README.md) and
 [`vera-cli-use-cases.md`](./vera-cli-use-cases.md). For the layering rule this
 command follows (`vera judge` never scores; `pipeline` runs every stage), see
 [`architecture.md`](./architecture.md).

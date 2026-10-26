@@ -24,7 +24,7 @@ reasoning = response.reasoning  # Guaranteed to exist
 
 ## Architecture
 
-### 1. Pydantic Models ([judge/response_models.py](../judge/response_models.py))
+### 1. Pydantic Models ([judge/response_models.py](../src/vera_mh/judge/response_models.py))
 
 Defines the structure of expected responses:
 
@@ -40,7 +40,7 @@ class QuestionResponse(BaseModel):
     )
 ```
 
-### 2. LLM Interface ([llm_clients/llm_interface.py](../llm_clients/llm_interface.py))
+### 2. LLM Interface ([llm_clients/llm_interface.py](../src/vera_mh/llm_clients/llm_interface.py))
 
 Abstract method that all LLM clients must implement:
 
@@ -65,7 +65,7 @@ async def generate_structured_response(
 
 Each LLM client implements structured output using LangChain's `with_structured_output()`:
 
-#### Claude ([llm_clients/claude_llm.py](../llm_clients/claude_llm.py))
+#### Claude ([llm_clients/claude_llm.py](../src/vera_mh/llm_clients/claude_llm.py))
 ```python
 async def generate_structured_response(
     self, message: Optional[str], response_model: Type[T]
@@ -81,16 +81,16 @@ async def generate_structured_response(
     return response
 ```
 
-#### OpenAI ([llm_clients/openai_llm.py](../llm_clients/openai_llm.py))
+#### OpenAI ([llm_clients/openai_llm.py](../src/vera_mh/llm_clients/openai_llm.py))
 Same implementation as Claude - uses native function calling.
 
-#### Gemini ([llm_clients/gemini_llm.py](../llm_clients/gemini_llm.py))
+#### Gemini ([llm_clients/gemini_llm.py](../src/vera_mh/llm_clients/gemini_llm.py))
 Same implementation as Claude - uses native structured output.
 
-#### Llama ([llm_clients/llama_llm.py](../llm_clients/llama_llm.py))
+#### Llama ([llm_clients/llama_llm.py](../src/vera_mh/llm_clients/llama_llm.py))
 Limited support - may raise `NotImplementedError` if Ollama doesn't support structured output.
 
-### 4. Judge Integration ([judge/llm_judge.py](../judge/llm_judge.py))
+### 4. Judge Integration ([judge/llm_judge.py](../src/vera_mh/judge/llm_judge.py))
 
 The judge uses structured output when asking rubric questions:
 
@@ -136,7 +136,7 @@ async def _ask_single_question(self, question_id, question_data, verbose):
 
 ### Basic Usage
 ```python
-from judge.response_models import QuestionResponse
+from vera_mh.judge.response_models import QuestionResponse
 
 # Create structured response
 response = await llm.generate_structured_response(

@@ -124,7 +124,7 @@ uv run python vera.py generate \
 
 **Conversation ending.** A conversation stops at `--turns`, or earlier when the persona emits the end-of-conversation signal defined in the persona prompt. Custom chatbot clients can define their own termination signals.
 
-**Multi-session conversations.** With `--sessions`, each persona runs the listed session types in sequence, each with its own transcript (`..._run1_s1_intake.txt`, `..._run1_s2_coaching.txt`). A chatbot client can implement `prepare_sessions()`, `enter_session()`, and `first_speaker` on [`LLMInterface`](../llm_clients/llm_interface.py) to set up sessions or control who speaks first; see [evaluating.md](evaluating.md).
+**Multi-session conversations.** With `--sessions`, each persona runs the listed session types in sequence, each with its own transcript (`..._run1_s1_intake.txt`, `..._run1_s2_coaching.txt`). A chatbot client can implement `prepare_sessions()`, `enter_session()`, and `first_speaker` on [`LLMInterface`](../src/vera_mh/llm_clients/llm_interface.py) to set up sessions or control who speaks first; see [evaluating.md](evaluating.md).
 
 ## `vera judge`
 
@@ -268,7 +268,7 @@ Reasoning-capable models each take a different parameter:
 | Gemini 3 | `thinking_level` | `low`, `high` |
 | Gemini 2.5 | `thinking_budget` | integer token budget |
 
-`thinking_effort` is VERA-MH shorthand, not a native Anthropic field: it is translated into the right `thinking`/`effort`/`budget_tokens` combination for each model in [`llm_clients/claude_llm.py`](../llm_clients/claude_llm.py). Claude forces `temperature=1` whenever thinking is on. The other three pass straight through. Per-provider details are in [evaluating.md](evaluating.md#reasoning--extended-thinking-by-provider).
+`thinking_effort` is VERA-MH shorthand, not a native Anthropic field: it is translated into the right `thinking`/`effort`/`budget_tokens` combination for each model in [`llm_clients/claude_llm.py`](../src/vera_mh/llm_clients/claude_llm.py). Claude forces `temperature=1` whenever thinking is on. The other three pass straight through. Per-provider details are in [evaluating.md](evaluating.md#reasoning--extended-thinking-by-provider).
 
 To route Claude, OpenAI, or Gemini calls through a gateway such as LiteLLM, set `API_BASE_URL` (or the per-provider `ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL` / `GOOGLE_BASE_URL`) in `.env`. The matching `*_API_KEY` must then be a key the gateway accepts.
 

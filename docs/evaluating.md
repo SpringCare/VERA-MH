@@ -1,9 +1,9 @@
 # Evaluate your own model or service
 
 VERA-MH is ready to be used to evaluate any chat-based interface.
-[This](../llm_clients/llm_interface.py) Abstract Base Class (ABC) represents the interface to be implemented.
+[This](../src/vera_mh/llm_clients/llm_interface.py) Abstract Base Class (ABC) represents the interface to be implemented.
 Four concrete implementations of that class are provided for the APIs of ChatGPT, Claude, Gemini, Azure, and Llama (via Ollama).
-For developers who wish to use their own API as the provider agent, [EndpointLLM](../llm_clients/endpoint_llm.py) serves as a working example (currently chat-only; no judge support).
+For developers who wish to use their own API as the provider agent, [EndpointLLM](../src/vera_mh/llm_clients/endpoint_llm.py) serves as a working example (currently chat-only; no judge support).
 
 To test your service, you need to instantiate a concrete class and implement these key methods:
 - `start_conversation()`: Async method that returns the first conversational turn as a string. For raw LLM APIs you can call `generate_response(self.get_initial_prompt_turns())`; for service-based APIs you may call your own start endpoint (e.g. POST /start_conversation) and return the message.
@@ -19,7 +19,7 @@ Follow these steps to add a new LLM provider:
 **For conversation generation only:**
 ```python
 from datetime import datetime
-from llm_clients.llm_interface import LLMInterface
+from vera_mh.llm_clients.llm_interface import LLMInterface
 from typing import Any, Dict, List, Optional
 
 class YourLLM(LLMInterface):
@@ -42,7 +42,7 @@ class YourLLM(LLMInterface):
 **For judge evaluation (structured output support):**
 ```python
 from datetime import datetime
-from llm_clients.llm_interface import JudgeLLM
+from vera_mh.llm_clients.llm_interface import JudgeLLM
 from typing import Any, Dict, List, Optional, Type, TypeVar
 from pydantic import BaseModel
 
@@ -89,7 +89,7 @@ Used for turns 1+ when called from the simulator (conversation_history is non-em
 
 ```python
 from langchain_core.messages import SystemMessage
-from utils.conversation_utils import build_langchain_messages
+from vera_mh.utils.conversation_utils import build_langchain_messages
 
 async def generate_response(
     self,
@@ -221,7 +221,7 @@ Set in `__init__` (base sets it to `{}`). Update it in `generate_response()`: as
 
 ### 3. Add the new LLM client to the factory
 
-Update [llm_factory.py](../llm_clients/llm_factory.py):
+Update [llm_factory.py](../src/vera_mh/llm_clients/llm_factory.py):
 
 ```python
 from .your_llm import YourLLM
@@ -237,7 +237,7 @@ class LLMFactory:
 
 ### 4. Update configuration (if needed)
 
-Add configuration to [config.py](../llm_clients/config.py) if your LLM requires API keys or special settings.
+Add configuration to [config.py](../src/vera_mh/llm_clients/config.py) if your LLM requires API keys or special settings.
 
 ### 5. Use the new LLM in your simulations
 
@@ -269,7 +269,7 @@ See [cli.md](cli.md#model-parameters-and-reasoning-effort) for the user-facing `
 
 ### Claude per-model quirks
 
-`ClaudeLLM` keys additional per-model special-casing off substring markers matched against `model_name` (`_MODEL_QUIRKS` in [`claude_llm.py`](../llm_clients/claude_llm.py)), rather than adding another `is_x` branch per model:
+`ClaudeLLM` keys additional per-model special-casing off substring markers matched against `model_name` (`_MODEL_QUIRKS` in [`claude_llm.py`](../src/vera_mh/llm_clients/claude_llm.py)), rather than adding another `is_x` branch per model:
 
 | Quirk | Applies to | Effect |
 |-------|------------|--------|
@@ -320,4 +320,4 @@ If your LLM doesn't support native structured output (like Llama/Ollama), you ca
 1. Raise a `NotImplementedError` and recommend using a different model for judging
 2. Implement prompt-based parsing (less reliable)
 
-See [llama_llm.py](../llm_clients/llama_llm.py) for an example of limited structured output support.
+See [llama_llm.py](../src/vera_mh/llm_clients/llama_llm.py) for an example of limited structured output support.

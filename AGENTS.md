@@ -30,6 +30,8 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 
 ## Architecture Map
 
+The Python packages live in one package, `src/vera_mh/`; import them as `vera_mh.judge`, `vera_mh.utils`, and so on. Package paths in the docs (`judge/runner.py`) are relative to `src/vera_mh/`. `vera.py` at the root is a shim for `src/vera_mh/cli.py`.
+
 | Area | Key paths | When to edit |
 |------|-----------|--------------|
 | **CLI** | `vera.py`, `vera_cli/`, `utils/config_schema.py` | Thin entry point, command adapters, and shared command/config wiring |

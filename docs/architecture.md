@@ -112,7 +112,7 @@ The CLI layer has two levels of responsibility:
   `vera_cli/config.py` and `vera_cli/targets.py`. Command adapters never invoke
   another CLI parser or subprocess. The contract a command must satisfy, and
   what registering one means, are in
-  [../vera_cli/README.md](../vera_cli/README.md).
+  [../vera_cli/README.md](../src/vera_mh/vera_cli/README.md).
 
 `utils/config_schema.py` owns schema validation and canonical serialization. It
 does not parse CLI arguments, read config or manifest files, resolve paths, or
@@ -285,6 +285,8 @@ orthogonal.
 
 ## Package responsibilities
 
+The Python packages live in one package, `src/vera_mh/`; import them as `vera_mh.judge`, `vera_mh.utils`, and so on. Package paths in the docs (`judge/runner.py`) are relative to `src/vera_mh/`. `vera.py` at the root is a shim for `src/vera_mh/cli.py`.
+
 | Package / path | Owns | Key modules |
 |----------------|------|-------------|
 | `vera_cli/` | One cohesive adapter per command plus shared config/target helpers | `generate.py`, `judge.py`, `config.py`, `targets.py` |
@@ -365,7 +367,7 @@ Agents and contributors must comply. Import boundaries are documented in the [La
 - **Config vs CLI:** `--config` and run-defining CLI flags are strictly either/or for a given run. `--sample <N>`, `--debug`, and `--print` may accompany either form; executed runs record `sample` and `debug` as invocation metadata in their immutable `config.json`, while `--print` creates no run. `generation` and `judging` blocks in `config.json` are completely orthogonal; model selection for one must never influence the other.
 - **Naming/layout:** all folder/file naming logic (the `c_`/`u_`/`j_` scheme) lives in one `utils/` module — never duplicated across handlers.
 - **Traceability:** every run writes an immutable `config.json` (+ `.sha256` sidecar) and a separate, mutable `state.json`. `state.json` records both the requested and actual-resolved model identifier.
-- **LLM providers:** new providers implement [llm_clients/llm_interface.py](../llm_clients/llm_interface.py) and register in [llm_clients/llm_factory.py](../llm_clients/llm_factory.py). Every model-list entry's `name` in config is always a specific model identifier, never a bare provider name.
+- **LLM providers:** new providers implement [llm_clients/llm_interface.py](../src/vera_mh/llm_clients/llm_interface.py) and register in [llm_clients/llm_factory.py](../src/vera_mh/llm_clients/llm_factory.py). Every model-list entry's `name` in config is always a specific model identifier, never a bare provider name.
 - **Shared types:** cross-layer enums (e.g. `Role`) live in `utils/` — not duplicated in domain packages.
 - **Data:** committed evaluation inputs in `data/`; runtime artifacts in `output/` (gitignored). Rubric and persona content (dimensions, question flows, prompt text, persona definitions) MUST live in `data/`, never embedded in code — VERA-MH must be usable by non-developers who add or edit rubrics and personas without touching Python. No domain package may hardcode rubric/persona content as an alternative to reading it from `data/`.
 - **Tests:** permanent tests in `tests/`; one-off experiments in `tmp_tests/` (not committed).
