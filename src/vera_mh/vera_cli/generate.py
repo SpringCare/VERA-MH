@@ -64,6 +64,10 @@ from .targets import (
 # The other fields change the conversations, so a config must state them (see
 # `RESULT_FIELDS`).
 #
+# The defaults for `RESULT_FIELDS` decide what every CLI run produces, so they
+# are part of the methodology: changing one is a breaking change, and goes
+# under "Breaking" in the CHANGELOG.
+#
 # Every default here is discoverable via `vera generate -h`: each flag's help
 # text states it. Keep that true when adding a flag — a default a user cannot
 # see is a value they cannot predict.
