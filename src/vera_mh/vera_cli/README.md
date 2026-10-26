@@ -1,6 +1,6 @@
 # `vera_cli` — how the unified CLI fits together
 
-This package is the argument-and-config layer behind `vera.py`. It resolves user
+This package is the argument-and-config layer behind `cli.py`. It resolves user
 input into canonical values and then calls domain functions. It contains no
 generation, judging, or scoring logic.
 
@@ -12,7 +12,7 @@ not built yet.
 
 | Module | Responsibility |
 |---|---|
-| `../vera.py` | Root parser and dispatcher. Registers each command, routes to its handler, turns `ConfigError` into a standard CLI error. |
+| `../cli.py` | Root parser and dispatcher. Registers each command, routes to its handler, turns `ConfigError` into a standard CLI error. |
 | `generate.py` | The `generate` command: flags, input resolution, and the call into the generation domain. The reference implementation for new commands. |
 | `judge.py` | The `judge` command, same five steps. Differs from the pre-2.0 `judge.py` in two ways, both recorded in [../docs/vera-cli-use-cases.md](../../../docs/vera-cli-use-cases.md): no single-conversation mode, and no implicit working-directory output. |
 | `score.py` | The `score` command, same five steps. Two structural differences, both following from scoring calling no model: no `--target` (it reads a `results.csv` judging already wrote), and a synchronous `_execute`. Differs from the pre-2.0 `score.py` in one way, recorded in [../CHANGELOG.md](../../../CHANGELOG.md): omitting `--personas` skips the risk-level breakdown instead of defaulting to an SI personas file. |
@@ -33,7 +33,7 @@ Flags belong to that sub-parser rather than the root one, which is why `-c` is
 free to mean something different under each command.
 `parser.set_defaults(handler=run)` attaches the handler by putting a `handler`
 attribute on the parsed namespace, so the namespace carries its own destination
-and `vera.py` dispatches with `args.handler(args)` instead of comparing command
+and `cli.py` dispatches with `args.handler(args)` instead of comparing command
 names. Those two dispatch-added attributes, `command` and `handler`, are what
 `config.DISPATCH_ATTRIBUTES` exists to filter out — see the flag-presence rule
 below, which infers user input from what is present on the namespace.
@@ -48,7 +48,7 @@ steps:
    `add_common_flags(parser, handler=run, ...)` (from `config.py`), which adds
    `--config`, `-d/--debug`, `--print`, and optionally `--sample`/`--into`, and
    calls `parser.set_defaults(handler=run)` so the dispatcher knows what to call.
-2. In `vera.py`, import that `register` and call it inside `build_parser`.
+2. In `cli.py`, import that `register` and call it inside `build_parser`.
 
 Your handler receives the parsed `argparse.Namespace` and returns an exit code.
 

@@ -3,7 +3,7 @@
 By default the user-side LLM (the one playing the persona) writes in English. `--user-language` makes it write in another language:
 
 ```bash
-uv run python vera.py generate -c gpt-5.4 -u gpt-5.2:1 --target SI --user-language "Mexican Spanish"
+uv run vera generate -c gpt-5.4 -u gpt-5.2:1 --target SI --user-language "Mexican Spanish"
 ```
 
 In a config file the key is `generation.user_language`. Config files state it explicitly, `"English"` included.

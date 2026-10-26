@@ -4,7 +4,7 @@ Structured exactly like `vera_cli/judge.py` and `vera_cli/generate.py`, which
 are the reference implementations of the command contract in
 `vera_cli/README.md`:
 
-1. `run` is the entry point `vera.py` dispatches to.
+1. `run` is the entry point `cli.py` dispatches to.
 2. `resolve_configs` picks one input form and produces canonical `RunConfig`s.
 3. `_execute` hands the resolved run to the scoring domain.
 4. `register` declares the flags and attaches `run` as the subparser's handler.
@@ -183,7 +183,7 @@ def _execute(run_configs: list[RunConfig]) -> int:
 
     `run_scoring` raises when there is nothing scoreable. That is a property of
     the input rather than of the command line, so it is translated to the same
-    `ConfigError` every other bad input produces and `vera.py` presents it as a
+    `ConfigError` every other bad input produces and `cli.py` presents it as a
     standard CLI error.
     """
     for run_config in run_configs:

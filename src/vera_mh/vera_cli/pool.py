@@ -3,7 +3,7 @@
 Structured like `vera_cli/score.py`, which follows the command contract in
 `vera_cli/README.md`:
 
-1. `run` is the entry point `vera.py` dispatches to.
+1. `run` is the entry point `cli.py` dispatches to.
 2. `resolve_configs` picks one input form and produces canonical `RunConfig`s.
 3. `_execute` hands the resolved run to the scoring domain's `run_pooling`.
 4. `register` declares the flags and attaches `run` as the subparser's handler.

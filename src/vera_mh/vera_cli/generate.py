@@ -3,7 +3,7 @@
 Read this module top-down. It is the reference implementation of the command
 contract described in `vera_cli/README.md`:
 
-1. `run` is the entry point `vera.py` dispatches to.
+1. `run` is the entry point `cli.py` dispatches to.
 2. `resolve_configs` picks one input form and produces canonical `RunConfig`s.
 3. `_execute` hands each resolved run to the generation domain.
 4. `register` declares the flags and attaches `run` as the subparser's handler.
@@ -13,7 +13,7 @@ contract described in `vera_cli/README.md`:
 this module supplies only what is specific to the command.
 
 Steps 1-3 are the path one run takes, in the order it takes them. `register`
-comes last because it is a declaration rather than a step: `vera.py` calls it
+comes last because it is a declaration rather than a step: `cli.py` calls it
 once at startup, and its ~100 lines of flag definitions sit between the reader
 and the logic if they come first. See `vera_cli/README.md` for what registering
 a command means and why a command does not exist until it happens.

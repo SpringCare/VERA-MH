@@ -190,7 +190,7 @@ def test_print_round_trips_through_the_environment(
 
     assert score.run(args) == 0
     printed = capsys.readouterr().out.strip()
-    assert printed.endswith("uv run python vera.py score")
+    assert printed.endswith("uv run vera score")
 
     payload = printed.split("=", 1)[1].rsplit(" uv run", 1)[0].strip("'")
     monkeypatch.setenv(cli_config.VERA_RUN_CONFIG_ENV, payload)

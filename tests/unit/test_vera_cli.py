@@ -400,7 +400,7 @@ def test_config_allows_debug_sample_and_print_controls(
     assert rendered.startswith(cli_config.VERA_RUN_CONFIG_ENV)
     assert '"debug":true' in rendered
     assert '"sample":1' in rendered
-    assert rendered.rstrip().endswith("uv run python vera.py generate")
+    assert rendered.rstrip().endswith("uv run vera generate")
 
 
 def test_persisted_invocation_metadata_is_accepted(tmp_path: Path) -> None:

@@ -193,8 +193,7 @@ class TestJudgeAgainstClinicianRatings:
         cmd = [
             "uv",
             "run",
-            "python",
-            "vera.py",
+            "vera",
             "judge",
             "--conversations",
             str(conversations_dir),

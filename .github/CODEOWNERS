@@ -8,7 +8,6 @@
 /pyproject.toml @SpringCare/vera-mh-maintainers
 /src/vera_mh/score/ @SpringCare/vera-mh-maintainers
 /src/vera_mh/vera_cli/ @SpringCare/vera-mh-maintainers
-/vera.py @SpringCare/vera-mh-maintainers
 /src/vera_mh/cli.py @SpringCare/vera-mh-maintainers
 /src/vera_mh/utils/ @SpringCare/vera-mh-maintainers
 /scripts/ @SpringCare/vera-mh-maintainers

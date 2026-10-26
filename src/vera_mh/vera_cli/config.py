@@ -39,7 +39,7 @@ VERA_RUN_CONFIG_ENV = "VERA_RUN_CONFIG"
 
 # Not every attribute on the parsed namespace came from a flag the user typed.
 # Dispatch adds two of its own: `command` (from `add_subparsers(dest="command")`
-# in `vera.py`) and `handler` (from each command's `set_defaults(handler=...)`).
+# in `cli.py`) and `handler` (from each command's `set_defaults(handler=...)`).
 #
 # `resolve_input` decides which run-defining flags the user supplied by looking
 # at what is present on the namespace, so these two must be excluded or they
@@ -394,9 +394,7 @@ def render_invocation(run_config: _Renderable, *, command: str) -> str:
     self-contained line.
     """
     compact = json.dumps(run_config.to_dict(), sort_keys=True, separators=(",", ":"))
-    return (
-        f"{VERA_RUN_CONFIG_ENV}={shlex.quote(compact)} uv run python vera.py {command}"
-    )
+    return f"{VERA_RUN_CONFIG_ENV}={shlex.quote(compact)} uv run vera {command}"
 
 
 # --- The command skeleton -------------------------------------------------
@@ -467,7 +465,7 @@ def resolve_with(
     is itself a `ValueError` and would otherwise be wrapped a second time.
     Anything else a section's validation raises (`TypeError`/`ValueError` from
     a dataclass `__post_init__`) is wrapped as
-    `invalid <label> config: ...`, so every bad input reaches `vera.py` as the
+    `invalid <label> config: ...`, so every bad input reaches `cli.py` as the
     same kind of error.
     """
     try:
@@ -531,5 +529,5 @@ def add_common_flags(
         dest="print_only",
         help="Print the resolved invocation without executing it",
     )
-    # `vera.py` dispatches with `args.handler(args)`.
+    # `cli.py` dispatches with `args.handler(args)`.
     parser.set_defaults(handler=handler)

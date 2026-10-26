@@ -42,7 +42,7 @@ The two risk files are written only when a personas file is given (`--personas`,
 The published VERA-MH score pools two evaluations of the same chatbot, one per user model. `vera pipeline` does this automatically when it runs more than one user model. To pool evaluations yourself, use [`vera pool`](cli.md#vera-pool):
 
 ```bash
-uv run python vera.py pool -o <pool-parent-dir> --personas data/SI/personas.tsv \
+uv run vera pool -o <pool-parent-dir> --personas data/SI/personas.tsv \
   --evaluations output/<generation-run-A>/evaluations/<evaluation-run-A> \
                output/<generation-run-B>/evaluations/<evaluation-run-B>
 ```

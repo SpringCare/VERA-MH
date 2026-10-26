@@ -48,7 +48,7 @@ jobs:
     # Packages with zero pyright errors are gated: a new error fails the build.
     # Add a package here once its errors are fixed (docs/roadmap.md, Quality gates).
     - name: Type check gated packages with Pyright
-      run: uv run pyright src/vera_mh/generate src/vera_mh/score src/vera_mh/utils src/vera_mh/vera_cli src/vera_mh/cli.py vera.py
+      run: uv run pyright src/vera_mh/generate src/vera_mh/score src/vera_mh/utils src/vera_mh/vera_cli src/vera_mh/cli.py
 
     - name: Check import contracts
       run: uv run lint-imports

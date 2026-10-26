@@ -19,7 +19,7 @@ Two independent pipelines share infrastructure only:
 
 They never import each other. A full workflow runs generation, judging, score, and optional pooling in sequence.
 
-All user-facing operations go through **`vera.py`** subcommands. Domain packages are libraries; they are not invoked directly as scripts.
+All user-facing operations go through **`vera`** subcommands. Domain packages are libraries; they are not invoked directly as scripts.
 
 ```text
 data/<target>/manifest.json ──► generate ──► <target>/c_<chatbot>/u_*/conversations/*.json
@@ -53,7 +53,7 @@ Deep dives: [judge.md](./judge.md) (question flow and rubric navigation), [struc
 
 ```text
 CLI layer
-├── vera.py — sole executable; builds the root parser and dispatches
+├── cli.py — the `vera` command; builds the root parser and dispatches
 └── vera_cli/
     ├── <command>.py — flags, defaults, resolution, and thin adapter
     ├── config.py — shared config input helpers
@@ -70,7 +70,7 @@ Shared utilities (utils/) — leaf layer
 
 **Import rules:**
 
-- `vera.py` owns only the root parser, explicit subcommand registration, and
+- `cli.py` owns only the root parser, explicit subcommand registration, and
   dispatch. It contains no command-specific flags, defaults, or business logic.
 - `vera_cli/` may import domain packages and `utils/`. Domain packages never
   import `vera_cli/`.
@@ -94,7 +94,7 @@ Shared utilities (utils/) — leaf layer
 
 ## CLI surface
 
-Exactly **one** root-level executable: **`vera.py`**. It loads the CLI arguments,
+Exactly **one** executable: the **`vera`** command (`cli.py`). It loads the CLI arguments,
 requests a fully resolved invocation from `vera_cli/`, dispatches the selected
 command, and renders CLI errors. Full flag/config reference:
 [vera-cli-use-cases.md](./vera-cli-use-cases.md).
@@ -103,7 +103,7 @@ command, and renders CLI errors. Full flag/config reference:
 
 The CLI layer has two levels of responsibility:
 
-- `vera.py` builds the root parser, explicitly registers each supported
+- `cli.py` builds the root parser, explicitly registers each supported
   subcommand, parses once, and dispatches. It contains no command-specific
   flags, defaults, resolution, or business logic.
 - One `vera_cli/<command>.py` adapter per subcommand keeps that command's flags,
@@ -180,13 +180,13 @@ config may omit it because the generation stage supplies the resolved
 conversation paths directly.
 
 ```bash
-uv run python vera.py pipeline --config run.json
-uv run python vera.py generate -c claude-sonnet-5 -u gpt-5.2:1 --target SI
-uv run python vera.py generate -c claude-sonnet-5 -u gpt-5.2:1 --personas SI
-uv run python vera.py judge -j gpt-5.4:1 --rubric SI --conversations output/c_sonnet/<run>/conversations/
-uv run python vera.py score -r output/.../results.csv
-uv run python vera.py pool --evaluations path/to/evaluations/... path/to/evaluations/...
-uv run python vera.py resume --config output/c_sonnet/<run>/config.json
+uv run vera pipeline --config run.json
+uv run vera generate -c claude-sonnet-5 -u gpt-5.2:1 --target SI
+uv run vera generate -c claude-sonnet-5 -u gpt-5.2:1 --personas SI
+uv run vera judge -j gpt-5.4:1 --rubric SI --conversations output/c_sonnet/<run>/conversations/
+uv run vera score -r output/.../results.csv
+uv run vera pool --evaluations path/to/evaluations/... path/to/evaluations/...
+uv run vera resume --config output/c_sonnet/<run>/config.json
 ```
 
 `vera judge` never takes `-c`: judging is decoupled from chatbot selection by design (the `generation`/`judging` orthogonality invariant, below) — the chatbot is already implicit in whichever `--conversations` folder is passed in.
@@ -215,15 +215,14 @@ that does not make the remaining fields optional: `generate` uses the personas
 and persona prompt, while `judge` uses the rubric and judging prompts.
 
 Paths are relative to the manifest's own folder — distinct from `config.json`,
-whose paths resolve relative to `$ROOT` (the directory containing `vera.py`),
+whose paths resolve relative to `$ROOT` (the repository root),
 never to the manifest, the config file's own location, or the CLI's working
 directory (see [Config mechanism](./vera-cli-use-cases.md#config-mechanism)).
 
 **Example — two path fields, two different anchors:**
 
 ```text
-project-root/                         ← $ROOT (contains vera.py)
-├── vera.py
+project-root/                         ← $ROOT
 ├── configs/
 │   └── run.json                      ← config.json
 └── data/
@@ -236,7 +235,7 @@ project-root/                         ← $ROOT (contains vera.py)
         └── question_prompt.txt
 ```
 
-- `configs/run.json`'s `generation.personas: ["data/SI/personas.tsv"]` always means `project-root/data/SI/personas.tsv` — resolved against `$ROOT`, no matter where you run `vera.py` from or where `run.json` itself lives.
+- `configs/run.json`'s `generation.personas: ["data/SI/personas.tsv"]` always means `project-root/data/SI/personas.tsv` — resolved against `$ROOT`, no matter where you run `vera` from or where `run.json` itself lives.
 - `data/SI/manifest.json`'s `personas: ["personas.tsv"]` always means `data/SI/personas.tsv` — resolved against the manifest's own folder, so the whole target directory stays portable if copied into a different checkout, independent of `$ROOT`.
 
 Same shape of field, same-looking relative string, two different rules — hence calling both out explicitly here rather than leaving it implicit.
@@ -285,7 +284,7 @@ orthogonal.
 
 ## Package responsibilities
 
-The Python packages live in one package, `src/vera_mh/`; import them as `vera_mh.judge`, `vera_mh.utils`, and so on. Package paths in the docs (`judge/runner.py`) are relative to `src/vera_mh/`. `vera.py` at the root is a shim for `src/vera_mh/cli.py`.
+The Python packages live in one package, `src/vera_mh/`; import them as `vera_mh.judge`, `vera_mh.utils`, and so on. Package paths in the docs (`judge/runner.py`) are relative to `src/vera_mh/`. `uv sync` installs the `vera` command, which runs `src/vera_mh/cli.py`.
 
 | Package / path | Owns | Key modules |
 |----------------|------|-------------|
@@ -351,7 +350,7 @@ Agents and contributors must comply. Import boundaries are documented in the [La
 
 ### MUST
 
-- **Single CLI:** `vera.py` is the sole executable; CLI support code lives in
+- **Single CLI:** `vera` is the sole executable; CLI support code lives in
   `vera_cli/`, and domain behavior remains in domain packages.
 - **Subcommands:** `generate`, `judge`, `score`, `pool`, `pipeline`, `resume` (add or remove only via [ESCALATE](#escalate-stop-and-ask)).
 - **Resolved boundary:** flags, config, paths, and targets resolve to canonical
@@ -380,7 +379,7 @@ Agents and contributors must comply. Import boundaries are documented in the [La
 - Import domain packages or `workers/` from `llm_clients/` or `storage/`.
 - Import domain packages, `workers/`, `llm_clients/`, or `storage/` from `utils/`.
 - Add root-level Python scripts (including keeping `generate.py`, `judge.py`, or `run_pipeline.py` as entry points after migration).
-- Put domain logic in `vera.py` — keep the CLI layer thin.
+- Put domain logic in `cli.py` — keep the CLI layer thin.
 - Commit generated output under `output/` or secrets in `.env`.
 - Overwrite an existing run's output folder silently — collision on an already-existing folder errors out (no overwrite, no auto-suffix).
 - Bypass architecture checks (pyright, required CI) to merge structural changes.
@@ -419,7 +418,7 @@ Stop work and request maintainer approval before proceeding when a task would:
 - Change any [stable interface](#stable-interfaces-agent-coding-optimization) — requires a design doc first.
 - Add a new runtime dependency or raise minimum Python version.
 - Change judge rubric/score contracts, pipeline output layout, naming scheme, or CLI flags affecting run folders.
-- Add or remove a `vera.py` subcommand.
+- Add or remove a `vera` subcommand.
 - Refactor across multiple domain packages in one change without maintainer review.
 
 **Documenting a phase in the [roadmap](./roadmap.md) does not pre-clear its ESCALATE requirements.** Every phase — even one that matches this plan exactly — still needs fresh maintainer sign-off before starting, not just at the planning stage. This is deliberate: it ensures a human is actually looking at the moment of highest-risk change (e.g. the [Shared engine](./roadmap.md#shared-engine) phase's `workers/` rewrite), not just at whenever this doc was written.
@@ -437,7 +436,7 @@ Target state for automated checks:
 | CI | Ruff, pyright, `pytest -m "not live"` — coverage gate set in `pyproject.toml` |
 | import-linter | Declarative layer contracts (`pyproject.toml`) — added incrementally as each new boundary is created (`judge/` ⊥ `score/`, in place since the Scoring split, `utils/` leaf in [Traceability](./roadmap.md#traceability)), completed with the full contract (all [Layer model](#layer-model) boundaries) in [Quality gates](./roadmap.md#quality-gates) |
 | grimp | Custom import-graph assertions — added in [Quality gates](./roadmap.md#quality-gates) |
-| `.github/CODEOWNERS` | Human review on `vera.py`, import boundaries, domain packages |
+| `.github/CODEOWNERS` | Human review on `cli.py`, import boundaries, domain packages |
 | CI (design-doc gate) | Required status check on `pull_request`: fails if the diff touches a [stable interface](#stable-interfaces-agent-coding-optimization) and the PR description has no design-doc link — not yet built |
 
 Run before pushing structural changes:

@@ -3,7 +3,7 @@
 Structured exactly like `vera_cli/generate.py`, which is the reference
 implementation of the command contract in `vera_cli/README.md`:
 
-1. `run` is the entry point `vera.py` dispatches to.
+1. `run` is the entry point `cli.py` dispatches to.
 2. `resolve_configs` picks one input form and produces canonical `RunConfig`s.
 3. `_execute` hands each resolved run to the judging domain.
 4. `register` declares the flags and attaches `run` as the subparser's handler.
