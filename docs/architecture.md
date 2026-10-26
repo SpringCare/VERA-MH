@@ -163,16 +163,31 @@ rubrics are evaluated as one target per rubric, by design; see
 [roadmap.md](./roadmap.md#completed)). `-c` is required for `generate`/`pipeline` whenever `--config` isn't
 used — there is no default chatbot.
 
-Generation behavior defaults are defined only at the CLI flag boundary. A
-config-driven run provides the corresponding generation fields explicitly; it
-does not inherit or merge CLI defaults. Both input forms resolve to a complete
-`RunConfig`, and the generation runner receives every parameter explicitly and
-defines no behavioral defaults of its own.
+Behavior defaults are defined in one place per command, the `DEFAULTS` beside
+its flags in `vera_cli/<command>.py`. Both input forms resolve to a complete
+`RunConfig`, and the domain receives every parameter explicitly and defines no
+behavioral defaults of its own.
 
-Consequently, config-driven generation explicitly provides `turns`, `output`,
-`max_concurrent`, `max_total_words`, `persona_speaks_first`, `user_language`, `sessions`, and
-`persona_context_template`, using `null` where the schema allows no limit or no
-session list.
+The two input forms use those defaults differently, split by whether a field
+changes what a run produces:
+
+- **Fields that change the results** (for `generate`: `turns`, `user_language`,
+  `persona_speaks_first`, `sessions`, `max_total_words`; for `score` and `pool`:
+  `personas`, `skip_risk_analysis`) are required in a config file, using `null`
+  where the schema allows no limit or no session list. The CLI defaults them.
+- **Fields that change only where output goes or how fast a run goes**
+  (`output`, `max_concurrent`, `per_judge`) may be left out of a config file and
+  take the same defaults as the flags.
+
+The asymmetry is deliberate. A config file is durable: it is committed, shared,
+and run again months later, so the file alone must say what a run produces, and
+a default that changes later must not quietly change what an old config does. A
+CLI invocation is one-off, and the run record (`config.json` in the run folder)
+writes down every value it used, defaults included.
+
+Because the CLI defaults for result fields decide what every CLI run produces,
+they are part of the methodology: changing one is a breaking change, recorded
+as such in the CHANGELOG.
 
 Standalone judging follows the same rule: `JudgingConfig.conversations` mirrors
 `--conversations`. A standalone `judge` config must provide it; a `pipeline`
