@@ -59,6 +59,8 @@ A config file must state every field that changes what a run produces: the model
 
 Every command prints its resolved config when it starts, so the log of a run shows exactly what it did.
 
+Each new run folder also gets a **run record**, `config.json`: the resolved config with every default written out, a sha256 checksum of each input file it read (personas, context template, rubric files), and `provenance` (`vera_version`, the code's `git_commit`, and `started_at`). `config.json.sha256` beside it hashes everything except `provenance` and `invocation`, so two runs with the same hash used the same settings and inputs. A run record is itself a valid config: `vera generate --config <run>/config.json` runs the same thing again, into a new folder, and stops if an input file changed since. A `generate` run with several `-u` models writes one folder per model, and each folder's record names only its own model. `--into` continues a run and leaves its record alone.
+
 Paths inside a config resolve against the repository root, not the working directory, so checked-in configs work from anywhere. Paths given as flags resolve against the working directory.
 
 `--print` is the easiest way to get a starting config: build the run with flags, add `--print`, and copy the JSON. Checked-in examples live in [`configs/`](../configs/):

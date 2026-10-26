@@ -39,6 +39,7 @@ from vera_mh.utils.config_schema import (
     RunConfig,
 )
 from vera_mh.utils.conversation_layout import resolve_conversation_input
+from vera_mh.utils.run_record import build_run_record
 from vera_mh.utils.utils import parse_key_value_list
 
 from .config import (
@@ -362,6 +363,8 @@ async def _execute(run_configs: list[RunConfig]) -> None:
             resume=into is not None,
             personas=list(judging.personas),
             persona_annotation_columns=list(judging.persona_annotation_columns),
+            # A continued run keeps the record it started with.
+            run_record=build_run_record(run_config) if into is None else None,
         )
 
 
