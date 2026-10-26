@@ -44,21 +44,7 @@ data/NEW_TARGET/
 ```
 
 `manifest.json` is the target manifest, and the only manifest the unified CLI
-reads. It carries no compatibility fallback: the new CLI does not look for
-`rubric_manifest.json`.
-
-The deprecated [legacy scripts](legacy-scripts.md) still read
-`rubric_manifest.json`. In `data/SI/` that name is a **symlink** to
-`manifest.json`, not a second file: the two describe the same bundle, so a copy
-could drift and let `vera generate` and `run_pipeline.py` run against different
-personas. The symlink exists only to keep those scripts working and is deleted
-with them.
-
-Add it to a new bundle only if you need to run the legacy scripts against it:
-
-```bash
-ln -s manifest.json data/NEW_TARGET/rubric_manifest.json
-```
+reads.
 
 `personas.tsv` and `persona_context_template.txt` are needed for conversation
 generation. Judging existing conversations only requires the rubric and judge
@@ -164,10 +150,6 @@ uv run python scripts/summarize_results.py \
   --results output/my-run/evaluations/my-evaluation/results.csv \
   --rubric data/NEW_TARGET/rubric.tsv
 ```
-
-The deprecated legacy scripts take the bundle only as a manifest path
-(`--rubrics` / `--rubric-manifest data/NEW_TARGET/rubric_manifest.json`) and
-need the symlink described above; see [legacy-scripts.md](legacy-scripts.md).
 
 ## Current limitation
 

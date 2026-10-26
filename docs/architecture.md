@@ -123,8 +123,7 @@ namespaces, input config files, or target manifests. They define no CLI behavior
 defaults. Pooling likewise delegates to the function owned by the scoring domain
 rather than to a script entry point.
 
-Legacy scripts live in `legacy/` until they are removed, and nothing outside
-`legacy/` and its tests imports them. For generation, the flow is
+For generation, the flow is
 `vera_cli.generate` → `generate.run_for_user_models` →
 `generate.run_generation`.
 

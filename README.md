@@ -71,7 +71,6 @@ This produces one evaluation per user model, then pools them: the headline score
 | [docs/judge.md](docs/judge.md), [docs/rubric.md](docs/rubric.md) | How the rubric-driven judge works; adding a compatible rubric |
 | [docs/scoring.md](docs/scoring.md) | The VERA-MH score formula, score outputs, pooling, cross-model comparison, improvement reports |
 | [docs/architecture.md](docs/architecture.md) | Target architecture and design invariants |
-| [docs/legacy-scripts.md](docs/legacy-scripts.md) | The pre-2.0 scripts (deprecated) |
 
 ## Contributing
 
@@ -84,7 +83,7 @@ pre-commit install             # optional: format and lint on commit
 
 ## Legacy scripts
 
-The pre-2.0 entry points live in [`legacy/`](legacy/) and run as modules, for example `uv run python -m legacy.generate`. They still work, but they are **deprecated and may be removed at any time**. Their flags differ from the `vera` CLI (for example `-c` means `--max-concurrent` in `legacy/generate.py`). Use `vera` for new work; if you still depend on a script, see [docs/legacy-scripts.md](docs/legacy-scripts.md) for its options and the `vera` equivalent.
+The pre-2.0 scripts (`generate.py`, `judge.py`, `score.py`, `run_pipeline.py`, and `run_recommended_vera_pipeline.sh`) were removed in 2.1. If you still depend on one, use [v2.0.4](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.4), whose [docs/legacy-scripts.md](https://github.com/SpringCare/VERA-MH/blob/v2.0.4/docs/legacy-scripts.md) maps each script's flags to the `vera` equivalent.
 
 ## License
 

@@ -15,30 +15,9 @@ Three entities, each with a single-letter prefix used throughout the CLI, config
 - **`c` — chatbot**: the provider/agent LLM under test (previously called "provider" or "agent" inconsistently — `chatbot` is now the standard term).
 - **`j` — judge**: the LLM evaluating a transcript against a rubric.
 
-**These letters are `vera.py`-only and are not the same flags as the legacy
-scripts.** `generate.py`, `judge.py`, and `run_pipeline.py` are legacy entry
-points in the process of being removed: each is deleted once its replacement
-`vera.py` command ships, and they exist only to keep unmigrated workflows
-running in the meantime. Do not build on them.
-
-No legacy script is exempt, including `judge.py`. Neither `vera generate` nor
-`vera judge` exposes the legacy `--resume` yet, but that is a gap to close
-before the scripts are deleted, not a reason to keep one of them alive: both
-domains already accept the flag, so what is missing is CLI surface. Keeping a
-script as a sanctioned back door would make "each is deleted once its
-replacement ships" untrue for the one case that most needs it.
-
-Note this is a different feature from `vera resume` below. The legacy flag is a
-stateless per-stage skip that re-derives progress from the files already on
-disk; `vera resume` reads `state.json` after verifying `config.json`, works
-across stages, and is deferred to a later phase.
-
-They already use `-c`/`-r` for unrelated things (`-c` is `--max-concurrent` in
-`generate.py` and `--conversation` in `judge.py`; `-r` is `--runs` in
-`generate.py` and `--rubrics` in `judge.py`). `vera.py` intentionally repurposes
-them for the `u`/`c`/`j` vocabulary above. The two meanings never need to be
-told apart at runtime, because you invoke either `vera.py` or a legacy script
-explicitly.
+The pre-2.0 scripts used `-c` and `-r` for other things (`-c` was
+`--max-concurrent` in `generate.py`); they were removed in 2.1, so these
+letters now mean only `u`/`c`/`j`.
 
 A **target** is separate from the u/c/j entities: it is a reusable evaluation
 bundle containing a rubric, personas, and all generation/judging prompts. A

@@ -22,8 +22,6 @@ The name of the folder is how you'll refer to your evaluation later (`--target M
 | `rubric_prompt_beginning.txt`, `question_prompt.txt` | The judge's instructions. These are generic and usually don't need changes |
 | `manifest.json` | The list of the files above. Leave it as is unless you rename a file |
 
-You can delete `rubric_manifest.json` from the copy; it's only used by old scripts.
-
 `.tsv` files are tables; keep them tab-separated when you save.
 
 ## 2. Write the personas
