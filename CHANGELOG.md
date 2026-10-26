@@ -11,8 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Runtime, CLI, and pipeline
 
+- **Config files may leave out behavior fields**—A `--config` file now states only what defines the run (the models, and the personas, conversations, rubric, results, or evaluations it works on, or a `target`). Behavior fields it leaves out (`turns`, `output`, `max_concurrent`, `persona_speaks_first`, `user_language`, `per_judge`, `skip_risk_analysis`, ...) take the same defaults as the CLI flags, so adding an option no longer breaks existing configs. `vera judge`'s config `output` now defaults beside the conversations, as `--output` does. Configs that state every field work unchanged.
 - **A `vera` command**—`uv sync` now installs a `vera` command, so `uv run vera …` (or `vera …` in an activated environment) works from anywhere in the repository; `uv run python vera.py …` still works. Generation now finds its shared prompt files relative to the repository instead of the working directory. The Docker image installs the command and runs it by default; its previous `CMD` used the system Python, which lacked the dependencies.
-- **User-side language**—`vera generate --user-language <language>` (config: `generation.user_language`, now required in config files) has the user-side LLM write in that language. Non-English adds one line to the persona prompt; English, the default, leaves the prompt unchanged.
+- **User-side language**—`vera generate --user-language <language>` (config: `generation.user_language`) has the user-side LLM write in that language. Non-English adds one line to the persona prompt; English, the default, leaves the prompt unchanged.
 
 ### Testing and CI
 

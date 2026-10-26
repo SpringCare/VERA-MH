@@ -339,9 +339,9 @@ each entry identifies a target name or manifest and consumes only its rubric and
 judging prompts. In the persisted canonical config, those entries contain the
 resolved concrete paths rather than a manifest reference.
 
-These generation behavior fields are required in config mode, including
-explicit `null` where no limit or session list is intended. Config mode never
-inherits the CLI defaults. Top-level `target` expands a complete manifest into
+These generation behavior fields are optional in config mode: a field left out
+gets the same default as its CLI flag, and `--print` writes every value out.
+Top-level `target` expands a complete manifest into
 the concrete generation and judging fields before the canonical config is
 printed or persisted. Explicit `generation.personas` and `judging.rubrics`
 remain supported when no top-level target is set.

@@ -15,8 +15,8 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
 
 | Step | What | PRs | Phase |
 |---|---|---|---|
-| 1. Remove `legacy/` | Delete the scripts, their tests, `legacy-scripts.md`, and the `rubric_manifest.json` symlinks, as announced in v2.0.4 | [#287](https://github.com/SpringCare/VERA-MH/pull/287) | |
-| 2. Safety net | Tests that prove a change didn't move scores: golden scoring, scripted judge, replay of a recorded run | [#270](https://github.com/SpringCare/VERA-MH/pull/270) (needs the replay recording) | |
+| 1. Remove `legacy/` | Delete the scripts, their tests, `legacy-scripts.md`, and the `rubric_manifest.json` symlinks, as announced in v2.0.4 | [#287](https://github.com/SpringCare/VERA-MH/pull/287) (done) | |
+| 2. Safety net | Tests that prove a change didn't move scores: golden scoring, scripted judge, replay of a recorded run | [#270](https://github.com/SpringCare/VERA-MH/pull/270) (done, with the replay recording) | |
 | 3. Data contracts | What a run records (manifest, run config, run record), then naming, order of events, and folder layout, decided together | [#277](https://github.com/SpringCare/VERA-MH/pull/277), then [#268](https://github.com/SpringCare/VERA-MH/pull/268) + [#276](https://github.com/SpringCare/VERA-MH/pull/276) | [Traceability](#traceability) |
 | 4. Engine | One job loop for generation and judging; the pipeline as a single job list | [#266](https://github.com/SpringCare/VERA-MH/pull/266) | [Shared engine](#shared-engine) |
 | 5. Terminal output | Plain event lines, fail-fast, end summary, and prints moved to logs (any time); the live display (after step 4) | [#271](https://github.com/SpringCare/VERA-MH/pull/271) | [Backlog](#cli-and-run-experience) |

@@ -79,10 +79,11 @@ the command's invocation-only flags, rather than each command maintaining a
 second list. A flag added to a command's parser is covered by the rule
 automatically.
 
-**Config-driven runs state every behavior field.** Defaults are a CLI
-convenience; a stored config is meant to be a complete, reproducible
-description, so a missing field is an error rather than something the code
-fills in.
+**Config files may leave out behavior fields.** A field left out gets the
+same default as its CLI flag, from the command's `DEFAULTS`, so adding an
+option does not break existing configs. Only what defines the run is required
+(the models, and what to generate from, judge, score, or pool). `--print`
+writes every value out.
 
 **Unknown config fields are rejected, not ignored.** A typo, or a section
 belonging to a command that does not exist yet, fails loudly.
