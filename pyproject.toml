@@ -18,6 +18,17 @@ dependencies = [
     "aiofiles>=25.1.0",
 ]
 
+[project.scripts]
+vera = "vera:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# `uv sync` installs the project in editable mode, so `vera` runs this checkout.
+[tool.hatch.build.targets.wheel]
+only-include = ["vera.py", "generate", "judge", "score", "llm_clients", "utils", "vera_cli"]
+
 [project.optional-dependencies]
 dev = [
     "pyright>=1.1.0",
