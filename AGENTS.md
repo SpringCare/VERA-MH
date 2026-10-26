@@ -45,15 +45,11 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 
 **Entry points:** `vera.py` (`generate`, `judge`, `score`, `pipeline`) is the only
 supported entry point. The old scripts live in [`legacy/`](legacy/); they are
-deprecated but kept for now, and their removal is deferred (see
-[docs/roadmap.md](docs/roadmap.md#deferred)).
+no longer supported, and removing them is the first step of the 2.1 release
+(see [docs/roadmap.md](docs/roadmap.md#release-21-plan)).
 
-**Legacy adapts; the domain doesn't bend.** `legacy/` may import domain packages
-and `utils/`, never the reverse. When a change alters a domain signature or a
-`utils/` helper that a legacy script uses, put the old-shape adapter in `legacy/`
-rather than keeping a compatibility stopgap in the domain. The parity tests
-(`tests/integration/test_cli_parity.py`, `tests/integration/test_score_parity.py`)
-must stay green.
+**Don't keep legacy working.** Don't add adapters or compatibility stopgaps for
+the legacy scripts, and don't shape a domain change around them.
 
 **Temporary experiments:** `tmp_tests/` (not committed). **Permanent tests:** `tests/`.
 
@@ -146,7 +142,7 @@ uv run pyright
 pre-commit run --all-files
 ```
 
-The scripts in [`legacy/`](legacy/) (`generate.py`, `judge.py`, `score.py`, `run_pipeline.py`, `run_recommended_vera_pipeline.sh`) are deprecated and may be removed at any time; don't build on them, and never import them from `vera_cli/` or the domain packages. Their flags and `vera` equivalents are in [docs/legacy-scripts.md](docs/legacy-scripts.md).
+The scripts in [`legacy/`](legacy/) (`generate.py`, `judge.py`, `score.py`, `run_pipeline.py`, `run_recommended_vera_pipeline.sh`) are no longer supported and are removed in 2.1; don't build on them, and never import them from `vera_cli/` or the domain packages. Their flags and `vera` equivalents are in [docs/legacy-scripts.md](docs/legacy-scripts.md).
 
 Use full provider model IDs (e.g. `claude-opus-4-5`, `gpt-5.4`) as in README. There are no aliases: `sonnet` or `gpt` alone won't resolve. Current defaults and the recommended models are in `llm_clients/config.py`.
 
