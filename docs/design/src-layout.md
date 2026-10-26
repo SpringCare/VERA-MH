@@ -38,8 +38,13 @@ src/
     utils/
     llm_clients/
     vera_cli/
-vera.py               # two-line shim: from vera_mh.cli import main
 ```
+
+`vera.py` leaves the root with no shim in its place. `uv sync` installs the
+`vera` command, which runs from any folder, so `vera generate …` replaces
+`python vera.py generate …` everywhere: docs, scripts, tests, and the command
+`--print` shows. Libraries with a src layout, scikit-learn for one, keep no
+script at the root either.
 
 Imports gain the `vera_mh.` prefix: `from judge.runner import X` becomes
 `from vera_mh.judge.runner import X`.
@@ -71,6 +76,7 @@ that, so it never touches the legacy scripts or their tests.
 | Dotted names in strings | About 400, mostly `mock.patch("judge.x.y")` targets in tests |
 | `pyproject.toml` | `[project.scripts] vera = "vera_mh.cli:main"`; hatch builds `src/vera_mh`; `--cov=src/vera_mh`; import-linter `root_packages = ["vera_mh"]`, contracts renamed to `vera_mh.judge` etc. |
 | CI | The pyright gate lists `src/vera_mh/{generate,score,utils,vera_cli}` |
+| `python vera.py` | Becomes `vera` in about 30 files, including the command `--print` renders and the tests that check it |
 | Docs and agent files | About 25 files name package paths: `AGENTS.md`, `README.md`, `docs/*.md`, `.claude/commands/*.md`, `.github/CODEOWNERS` |
 | Dockerfile | Still `COPY . .`; check `vera --help` runs in the image |
 
@@ -94,8 +100,7 @@ that, so it never touches the legacy scripts or their tests.
 
 One PR, three commits so each is easy to review:
 
-1. `git mv` only, plus the `vera.py` shim. Nothing else changes, so Git keeps
-   each file's history.
+1. `git mv` only. Nothing else changes, so Git keeps each file's history.
 2. Rewrite imports and dotted strings with a script, kept in the PR
    description so reviewers can rerun it.
 3. Config, CI, docs, and agent files.
@@ -103,8 +108,8 @@ One PR, three commits so each is easy to review:
 ### How we check it
 
 1. `uv run pytest -m "not live"`: catches broken imports and patch targets.
-2. A clean `uv sync`, then `vera --help` and `python vera.py --help` from
-   outside the repo: the package installs and both entry points work.
+2. A clean `uv sync`, then `vera --help` from outside the repo: the package
+   installs and the command works.
 3. A small `vera pipeline` run (two personas, one run each) on the branch and
    on `main`: same files written, scores within normal LLM noise. The
    score-guard tests from #270 cover the arithmetic.
