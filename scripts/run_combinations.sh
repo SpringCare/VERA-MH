@@ -25,7 +25,7 @@ failed=()
 for user in "${users[@]}"; do
     for provider in "${providers[@]}"; do
         cmd=(
-            uv run vera generate
+            uv run python vera.py generate
             --user "$user:$RUNS"
             --chatbot "$provider"
             --turns "$TURNS"

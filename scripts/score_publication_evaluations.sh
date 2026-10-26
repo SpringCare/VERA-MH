@@ -51,7 +51,7 @@ while IFS= read -r eval_folder; do
     echo "[$count/$total] 📈 Scoring: $eval_folder"
     
     # Pass the SI personas so the risk-level breakdown runs, as legacy score.py did by default
-    if uv run vera score -r "$results_csv" --personas data/SI/personas.tsv 2>&1; then
+    if uv run python vera.py score -r "$results_csv" --personas data/SI/personas.tsv 2>&1; then
         success=$((success + 1))
         echo "   ✅ Success"
     else
