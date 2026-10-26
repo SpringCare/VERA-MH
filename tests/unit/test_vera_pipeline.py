@@ -389,7 +389,7 @@ def test_pipeline_pooling_uses_the_scoring_settings(
 def test_config_without_behavior_fields_gets_the_cli_defaults(
     tmp_path: Path,
 ) -> None:
-    """A config that states only the models and target matches the same flags."""
+    """A config without output, speed, or judging behavior fields matches the flags."""
     config = _write_config(
         tmp_path,
         {
@@ -397,6 +397,11 @@ def test_config_without_behavior_fields_gets_the_cli_defaults(
             "generation": {
                 "chatbot": {"name": "claude-sonnet-5", "repeats": 1},
                 "user": [{"name": "gpt-5.2", "repeats": 1}],
+                "turns": 30,
+                "user_language": "English",
+                "persona_speaks_first": True,
+                "sessions": None,
+                "max_total_words": None,
             },
             "judging": {"models": [{"name": "gpt-5.4", "repeats": 1}]},
         },
