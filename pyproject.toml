@@ -149,7 +149,7 @@ norecursedirs = [".venv", ".git", "__pycache__", "tmp_tests"]
 timeout = 30
 
 [tool.coverage.run]
-omit = ["*/tests/*", "*/.venv/*", "*/tmp_tests/*", "distribute_files.py"]
+omit = ["*/tests/*", "*/.venv/*", "*/tmp_tests/*"]
 
 [tool.coverage.report]
 exclude_lines = [

@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Breaking / migration
 
-- **Legacy scripts removed**—`legacy/` is gone (`legacy.generate`, `legacy.judge`, `legacy.score`, `legacy.run_pipeline`, `legacy.pool_vera_scores`, `run_recommended_vera_pipeline.sh`), as announced in v2.0.4, along with `docs/legacy-scripts.md`, the tests that drove the scripts, and the `data/SI/rubric_manifest.json` and `data/HFO/rubric_manifest.json` symlinks only they read. Use the `vera` commands; the flag mapping is in [v2.0.4's `docs/legacy-scripts.md`](https://github.com/SpringCare/VERA-MH/blob/v2.0.4/docs/legacy-scripts.md). `scripts/run_combinations.sh` and `scripts/score_publication_evaluations.sh` now call `vera generate` and `vera score`; `run_combinations.sh` takes `TARGET` (default `HFO`) instead of `RUBRIC_MANIFEST` and no longer has `MAX_PERSONAS`.
+- **Legacy scripts removed**—`legacy/` is gone (`legacy.generate`, `legacy.judge`, `legacy.score`, `legacy.run_pipeline`, `legacy.pool_vera_scores`, `run_recommended_vera_pipeline.sh`), as announced in v2.0.4, along with `docs/legacy-scripts.md`, the tests that drove the scripts, and the `data/SI/rubric_manifest.json` and `data/HFO/rubric_manifest.json` symlinks only they read. Use the `vera` commands; the flag mapping is in [v2.0.4's `docs/legacy-scripts.md`](https://github.com/SpringCare/VERA-MH/blob/v2.0.4/docs/legacy-scripts.md). `distribute_files.py`, `scripts/run_combinations.sh`, and `scripts/score_publication_evaluations.sh` are removed too. To run several chatbots, loop over `vera generate --chatbot`; `--user` already takes several models.
 
 ### Runtime, CLI, and pipeline
 

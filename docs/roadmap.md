@@ -73,7 +73,7 @@ Scoring today assumes the SI rubric in several places.
   - where the two modules go: transcript writing to `generate/`, LLM response logging to `llm_clients/`, or `Role` moved into `utils/` so they can stay;
   - the import-linter contract that `utils/` imports no project package, which then replaces the narrower `score` one;
   - keeping a fresh-interpreter test of what each package actually loads (`tests/unit/score/test_import_isolation.py`), since import-linter reads import statements and can't see what an `__init__.py` pulls in.
-- **Acknowledged compatibility break.** Anything outside `vera.py` that parses `p_*`/`j_*` names directly (`spring_scripts/`, `distribute_files.py`, `score/compare.py`, notebooks, human-review tooling) stops auto-discovering new runs. Reading old data keeps working: `vera judge --conversations <old p_* folder>` and `vera score -r <old results.csv>` take explicit paths and never derive meaning from folder names. Existing `output/` folders are left alone; there is no migration script.
+- **Acknowledged compatibility break.** Anything outside `vera.py` that parses `p_*`/`j_*` names directly (`spring_scripts/`, `score/compare.py`, notebooks, human-review tooling) stops auto-discovering new runs. Reading old data keeps working: `vera judge --conversations <old p_* folder>` and `vera score -r <old results.csv>` take explicit paths and never derive meaning from folder names. Existing `output/` folders are left alone; there is no migration script.
 
 ### Model spec boundary
 
@@ -108,7 +108,6 @@ The engine rewrite can change concurrency, timing, and error handling even when 
 - **Import contracts.** Full import-linter contract (all [Layer model](./architecture.md#layer-model) boundaries) plus grimp import-graph assertions.
 - **Root-clutter cleanup:**
   - delete `logging/`, `logs/`, root `conversations/`, `human_validation/` (old generated dumps, already gitignored)
-  - move `distribute_files.py` into `scripts/`
   - fix stale `docker-compose.yml` volume mounts (`./evaluations` doesn't exist, `./logs` is missing)
   - `spring_scripts/`, `openspec/`, `alba.md`, `Untitled.ipynb`: untracked scratch, out of scope
 
@@ -136,6 +135,7 @@ Smaller items that belong to no phase. Each can ship as its own PR whenever it's
 - Decide whether `vera pipeline` needs per-stage debug. Today `--debug` covers the whole run, because `set_debug` flips a process global and `debug` lives on `InvocationConfig`. A `--debug-stage generate|judge|score` flag toggling that global around each stage in `vera_cli/pipeline.py:_execute` would be ~10 lines and no schema change. Revisit once someone has had to debug one stage of a long pipeline; drop this item if that never happens.
 - Move each `vera` subcommand's argparse `register()` out of its command module (`vera_cli/generate.py`, `judge.py`, `score.py`, `pipeline.py`) into a parser-only module. Do all four in one change, since `vera generate` is the reference the other three copy.
 - Print the resolved settings at the start of a run; LLM classes should report the model actually used.
+- **`vera report`.** Replace `scripts/summarize_results.py` with a `vera report` subcommand that turns a `results.csv` into the improvement report (stats JSON and Markdown). Move the logic into a package module (e.g. `judge/report.py`), so it no longer patches `sys.path` to import `judge/`, and point `docs/scoring.md` and `docs/rubric.md` at the command. Done when `scripts/` is gone.
 
 ### Config and providers
 
