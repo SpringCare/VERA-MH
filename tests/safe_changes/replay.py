@@ -229,7 +229,7 @@ def pipeline_config(output: Path) -> dict[str, Any]:
             "output": str(output),
             "max_concurrent": 1,
             "max_total_words": None,
-            "persona_speaks_first": True,
+            "first_speaker": "user",
             "user_language": "English",
             "sessions": None,
         },

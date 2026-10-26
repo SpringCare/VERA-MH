@@ -38,7 +38,7 @@ def _generation_config(**overrides: object) -> dict:
         "output": "output",
         "max_concurrent": None,
         "max_total_words": None,
-        "persona_speaks_first": True,
+        "first_speaker": "user",
         "user_language": "English",
         "sessions": None,
         "persona_context_template": "data/SI/persona_context_template.txt",
@@ -242,7 +242,8 @@ def test_generation_delegates_every_value_to_generate_main() -> None:
                 "2",
                 "--max-total-words",
                 "100",
-                "--provider-speaks-first",
+                "--first-speaker",
+                "chatbot",
                 "--sessions",
                 "intake,coaching",
                 "--sample",
@@ -327,7 +328,7 @@ def test_config_without_output_or_speed_fields_gets_the_cli_defaults(
                 "user": [{"name": "claude-sonnet-5", "repeats": 1}],
                 "turns": 30,
                 "user_language": "English",
-                "persona_speaks_first": True,
+                "first_speaker": "user",
                 "sessions": None,
                 "max_total_words": None,
             },
@@ -396,7 +397,7 @@ def test_config_target_rejects_explicit_persona_component(tmp_path: Path) -> Non
         ["--output", "elsewhere"],
         ["--max-concurrent", "2"],
         ["--max-total-words", "10"],
-        ["--provider-speaks-first"],
+        ["--first-speaker", "chatbot"],
         ["--sessions", "intake"],
     ],
 )
@@ -672,3 +673,27 @@ def test_configs_without_into_still_resolve(tmp_path: Path) -> None:
     config = _write_config(tmp_path, _generation_config())
     args = vera.build_parser().parse_args(["generate", "--config", str(config)])
     assert generate.resolve_configs(args)[0].invocation.into is None
+
+
+def test_config_with_the_old_speaking_order_field_says_it_was_renamed(
+    tmp_path: Path,
+) -> None:
+    config_data = _generation_config()
+    del config_data["generation"]["first_speaker"]
+    config_data["generation"]["persona_speaks_first"] = True
+    config = _write_config(tmp_path, config_data)
+    parser = vera.build_parser()
+
+    with pytest.raises(cli_config.ConfigError, match="renamed.*first_speaker"):
+        generate.resolve_configs(
+            parser.parse_args(["generate", "--config", str(config)])
+        )
+
+
+def test_config_rejects_an_unknown_first_speaker(tmp_path: Path) -> None:
+    config = _write_config(tmp_path, _generation_config(first_speaker="persona"))
+
+    with pytest.raises(SystemExit) as error:
+        vera.main(["generate", "--config", str(config)])
+
+    assert error.value.code == 2

@@ -54,7 +54,7 @@ def _run_config(tmp_path: Path, **generation_overrides: object) -> RunConfig:
         "output": str(tmp_path / "output"),
         "max_concurrent": None,
         "max_total_words": None,
-        "persona_speaks_first": True,
+        "first_speaker": "user",
         "sessions": None,
         "persona_context_template": str(template),
         "user_language": "English",

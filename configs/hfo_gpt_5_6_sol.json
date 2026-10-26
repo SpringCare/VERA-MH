@@ -9,7 +9,7 @@
     "output": "output",
     "max_concurrent": 10,
     "max_total_words": null,
-    "persona_speaks_first": true,
+    "first_speaker": "user",
     "user_language": "English",
     "sessions": null
   },

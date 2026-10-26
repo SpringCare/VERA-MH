@@ -53,7 +53,7 @@ def _config(
             "output": str(output),
             "max_concurrent": 2,
             "max_total_words": None,
-            "persona_speaks_first": True,
+            "first_speaker": "user",
             "user_language": "English",
             "sessions": None,
         },

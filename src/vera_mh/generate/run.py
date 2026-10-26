@@ -217,7 +217,8 @@ async def run_for_user_models(
             max_concurrent=generation.max_concurrent,
             max_total_words=generation.max_total_words,
             max_personas=max_personas,
-            persona_speaks_first=generation.persona_speaks_first,
+            # The domain still takes a bool; `first_speaker` is the public name.
+            persona_speaks_first=generation.first_speaker == "user",
             session_types=generation.sessions,
             resume=into is not None,
             persona_context_template_path=generation.persona_context_template,
