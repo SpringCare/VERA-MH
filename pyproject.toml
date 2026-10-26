@@ -18,6 +18,17 @@ dependencies = [
     "aiofiles>=25.1.0",
 ]
 
+[project.scripts]
+vera = "vera_mh.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# `uv sync` installs the project in editable mode, so `vera` runs this checkout.
+[tool.hatch.build.targets.wheel]
+packages = ["src/vera_mh"]
+
 [project.optional-dependencies]
 dev = [
     "pyright>=1.1.0",
@@ -61,21 +72,21 @@ constraint-dependencies = [
 ]
 
 [tool.importlinter]
-root_packages = ["judge", "score", "utils", "llm_clients"]
+root_packages = ["vera_mh"]
 
 # docs/architecture.md, Layer model: judging and scoring never import each other.
 # What both need lives in utils/.
 [[tool.importlinter.contracts]]
 name = "judge and score are independent"
 type = "independence"
-modules = ["judge", "score"]
+modules = ["vera_mh.judge", "vera_mh.score"]
 
 # Scoring is arithmetic over results.csv; it has no reason to load LLM clients.
 [[tool.importlinter.contracts]]
 name = "score does not import llm_clients"
 type = "forbidden"
-source_modules = ["score"]
-forbidden_modules = ["llm_clients"]
+source_modules = ["vera_mh.score"]
+forbidden_modules = ["vera_mh.llm_clients"]
 
 [tool.pyright]
 typeCheckingMode = "basic"
@@ -136,7 +147,7 @@ addopts = [
     # calls locally while failing in CI.
     "--disable-socket",
     "--allow-unix-socket",
-    "--cov=.",
+    "--cov=vera_mh",
     "--cov-report=term-missing",
     "--cov-report=html",
     # Set for the unit layer that runs on PRs (70% when set); the integration
