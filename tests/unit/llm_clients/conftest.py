@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from llm_clients import Role
-from llm_clients.config import Config
+from vera_mh.llm_clients import Role
+from vera_mh.llm_clients.config import Config
 
 # ============================================================================
 # Mock Response Factories
@@ -217,7 +217,7 @@ def _patch_api_credentials(
         env_vars: Dict of {ENV_VAR_NAME: value} to set
         config_attrs: Dict of {Config.ATTR_NAME: value} to set
     """
-    from llm_clients.config import Config
+    from vera_mh.llm_clients.config import Config
 
     for env_var, value in env_vars.items():
         monkeypatch.setenv(env_var, value)
@@ -261,7 +261,7 @@ def mock_claude_model():
     """Fixture to patch ChatAnthropic for Claude tests."""
     from unittest.mock import MagicMock, patch
 
-    with patch("llm_clients.claude_llm.ChatAnthropic") as mock:
+    with patch("vera_mh.llm_clients.claude_llm.ChatAnthropic") as mock:
         mock_llm = MagicMock()
         mock_llm.model = "claude-sonnet-4-5-20250929"
         mock.return_value = mock_llm
@@ -276,7 +276,7 @@ def mock_claude_config():
     """
     from unittest.mock import patch
 
-    with patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key"):
+    with patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key"):
         yield
 
 
@@ -285,7 +285,7 @@ def mock_gemini_model():
     """Fixture to patch ChatGoogleGenerativeAI for Gemini tests."""
     from unittest.mock import MagicMock, patch
 
-    with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock:
+    with patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock:
         mock_llm = MagicMock()
         mock.return_value = mock_llm
         yield mock
@@ -299,7 +299,7 @@ def mock_gemini_config():
     """
     from unittest.mock import patch
 
-    with patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key"):
+    with patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key"):
         yield
 
 
@@ -308,7 +308,7 @@ def mock_openai_model():
     """Fixture to patch ChatOpenAI for OpenAI tests."""
     from unittest.mock import MagicMock, patch
 
-    with patch("llm_clients.openai_llm.ChatOpenAI") as mock:
+    with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock:
         mock_llm = MagicMock()
         mock.return_value = mock_llm
         yield mock
@@ -322,7 +322,7 @@ def mock_openai_config():
     """
     from unittest.mock import patch
 
-    with patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key"):
+    with patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key"):
         yield
 
 
@@ -334,7 +334,7 @@ def mock_ollama_model():
     """
     from unittest.mock import MagicMock, patch
 
-    with patch("llm_clients.ollama_llm.LangChainOllamaLLM") as mock:
+    with patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM") as mock:
         mock_instance = MagicMock()
         mock.return_value = mock_instance
         yield mock
@@ -346,7 +346,7 @@ def mock_endpoint_config():
     from unittest.mock import patch
 
     with patch(
-        "llm_clients.endpoint_llm.Config.get_endpoint_config",
+        "vera_mh.llm_clients.endpoint_llm.Config.get_endpoint_config",
         return_value={
             "base_url": "https://api.example.com/chat",
             "api_key": "test-endpoint-key",
@@ -371,13 +371,13 @@ def mock_azure_config():
     from unittest.mock import patch
 
     with (
-        patch("llm_clients.azure_llm.Config.AZURE_API_KEY", "test-key"),
+        patch("vera_mh.llm_clients.azure_llm.Config.AZURE_API_KEY", "test-key"),
         patch(
-            "llm_clients.azure_llm.Config.AZURE_ENDPOINT",
+            "vera_mh.llm_clients.azure_llm.Config.AZURE_ENDPOINT",
             "https://test.openai.azure.com",
         ),
         patch(
-            "llm_clients.azure_llm.Config.get_azure_config",
+            "vera_mh.llm_clients.azure_llm.Config.get_azure_config",
             # The real configured default, so this stub tests that AzureLLM
             # reads get_azure_config rather than pinning a second model ID
             # that has to be updated alongside the first.

@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from judge.rubric_config import (
+from vera_mh.judge.rubric_config import (
     COL_ANSWER,
     COL_AUTO_ANSWER,
     COL_DIMENSION,

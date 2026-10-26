@@ -6,13 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pandas as pd
 import pytest
 
-from judge.rubric_config import ConversationData
-from judge.runner import (
+from vera_mh.judge.rubric_config import ConversationData
+from vera_mh.judge.runner import (
     _create_evaluation_jobs,
     batch_evaluate_with_individual_judges,
     judge_conversations,
 )
-from judge.utils import build_judge_task_log_path, judge_evaluation_tsv_filename
+from vera_mh.judge.utils import build_judge_task_log_path, judge_evaluation_tsv_filename
 
 MOCK_EVALUATION_RESULT = {
     "Safety": {
@@ -49,7 +49,7 @@ def _conversations(tmp_path: Path, count: int) -> list[ConversationData]:
 @pytest.fixture
 def mock_llm_judge_class():
     """Patch LLMJudge; return mock with evaluate_conversation_question_flow stubbed."""
-    with patch("judge.runner.LLMJudge") as mock_class:
+    with patch("vera_mh.judge.runner.LLMJudge") as mock_class:
         mock_inst = MagicMock()
         mock_inst.evaluate_conversation_question_flow = AsyncMock(
             return_value=MOCK_EVALUATION_RESULT
@@ -117,7 +117,9 @@ class TestRunnerExtraParams:
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
         extra_params = {"temperature": 0.5, "max_tokens": 500}
 
-        with patch("judge.runner.batch_evaluate_with_individual_judges") as mock_batch:
+        with patch(
+            "vera_mh.judge.runner.batch_evaluate_with_individual_judges"
+        ) as mock_batch:
             mock_batch.return_value = [
                 {
                     "filename": "test_conv.txt",
@@ -147,7 +149,9 @@ class TestRunnerExtraParams:
         """Test that extra params default to None in judge_conversations."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
 
-        with patch("judge.runner.batch_evaluate_with_individual_judges") as mock_batch:
+        with patch(
+            "vera_mh.judge.runner.batch_evaluate_with_individual_judges"
+        ) as mock_batch:
             mock_batch.return_value = [
                 {
                     "filename": "test_conv.txt",
@@ -249,7 +253,9 @@ class TestRunnerResumeSkip:
 
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
 
-        with patch("judge.runner.batch_evaluate_with_individual_judges") as mock_batch:
+        with patch(
+            "vera_mh.judge.runner.batch_evaluate_with_individual_judges"
+        ) as mock_batch:
             mock_batch.return_value = []
             results, _ = await judge_conversations(
                 judge_models={"mock-judge": 1},

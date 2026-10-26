@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from judge.rubric_config import RubricConfig
 from tests.mocks.mock_llm import MockLLM
+from vera_mh.judge.rubric_config import RubricConfig
 
 _judge_logs_temp: Path | None = None
 _adhoc_temp: Path | None = None
@@ -98,7 +98,7 @@ def zero_retry_backoff(monkeypatch) -> None:
     seconds. Tests that check the delays install their own override, which
     replaces this one.
     """
-    from llm_clients.llm_interface import LLMInterface
+    from vera_mh.llm_clients.llm_interface import LLMInterface
 
     monkeypatch.setattr(
         LLMInterface, "_compute_retry_delay_seconds", lambda self, attempt: 0.0
@@ -140,7 +140,7 @@ def mock_llm() -> MockLLM:
 @pytest.fixture
 def mock_persona() -> MockLLM:
     """Mock LLM configured as a persona."""
-    from llm_clients.llm_interface import Role
+    from vera_mh.llm_clients.llm_interface import Role
 
     return MockLLM(
         name="mock-persona",
@@ -152,7 +152,7 @@ def mock_persona() -> MockLLM:
 @pytest.fixture
 def mock_agent() -> MockLLM:
     """Mock LLM configured as a chatbot agent."""
-    from llm_clients.llm_interface import Role
+    from vera_mh.llm_clients.llm_interface import Role
 
     return MockLLM(
         name="mock-agent",

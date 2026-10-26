@@ -14,14 +14,14 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from judge.rubric_config import (
+from vera_mh.judge.rubric_config import (
     CONFIRMS_RISK,
     DETECTS_POTENTIAL_RISK,
     FOLLOWS_AI_BOUNDARIES,
     GUIDES_TO_HUMAN_CARE,
     SUPPORTIVE_CONVERSATION,
 )
-from utils.ratings import (
+from vera_mh.utils.ratings import (
     BEST_PRACTICE,
     DAMAGING,
     NEUTRAL,

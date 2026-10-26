@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from utils.conversation_layout import resolve_conversation_input
+from vera_mh.utils.conversation_layout import resolve_conversation_input
 
 
 @pytest.mark.unit

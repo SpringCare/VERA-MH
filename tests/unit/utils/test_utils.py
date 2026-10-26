@@ -2,7 +2,7 @@
 
 import pytest
 
-from utils.utils import parse_key_value_list
+from vera_mh.utils.utils import parse_key_value_list
 
 
 @pytest.mark.unit

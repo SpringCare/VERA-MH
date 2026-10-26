@@ -5,7 +5,7 @@ from datetime import datetime
 
 import pytest
 
-from judge.utils import (
+from vera_mh.judge.utils import (
     build_single_conversation_judge_run_key,
     parse_judge_models,
 )

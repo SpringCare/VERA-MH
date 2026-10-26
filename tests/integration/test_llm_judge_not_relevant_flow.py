@@ -6,8 +6,8 @@ and production-like data, rather than mocked fixtures.
 
 import pytest
 
-from judge.llm_judge import LLMJudge
-from utils.ratings import NOT_RELEVANT
+from vera_mh.judge.llm_judge import LLMJudge
+from vera_mh.utils.ratings import NOT_RELEVANT
 
 
 @pytest.mark.integration

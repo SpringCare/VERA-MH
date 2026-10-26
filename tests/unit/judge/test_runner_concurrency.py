@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from judge.rubric_config import ConversationData
-from judge.runner import batch_evaluate_with_individual_judges
+from vera_mh.judge.rubric_config import ConversationData
+from vera_mh.judge.runner import batch_evaluate_with_individual_judges
 
 MOCK_EVALUATION_RESULT = {
     "Safety": {
@@ -34,7 +34,7 @@ def _conversations(tmp_path: Path, count: int) -> list[ConversationData]:
 
 @pytest.fixture
 def mock_llm_judge_class():
-    with patch("judge.runner.LLMJudge") as mock_class:
+    with patch("vera_mh.judge.runner.LLMJudge") as mock_class:
         mock_judge = MagicMock()
         mock_judge.evaluate_conversation_question_flow = AsyncMock(
             return_value=MOCK_EVALUATION_RESULT

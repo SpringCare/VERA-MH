@@ -2,7 +2,7 @@
 
 import re
 
-from utils.naming import TRANSCRIPT_RUN_SUFFIX_RE
+from vera_mh.utils.naming import TRANSCRIPT_RUN_SUFFIX_RE
 
 
 def _match(suffix: str) -> re.Match[str] | None:

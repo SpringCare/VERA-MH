@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from llm_clients.llm_interface import LLMGenerationFailed, Role
+from vera_mh.llm_clients.llm_interface import LLMGenerationFailed, Role
 
 from .test_base_llm import TestLLMBase
 from .test_helpers import (
@@ -32,13 +32,13 @@ class TestOllamaLLM(TestLLMBase):
 
     def create_llm(self, role: Role, **kwargs):
         """Create OllamaLLM instance for testing."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         # Provide default name if not specified
         if "name" not in kwargs:
             kwargs["name"] = "test-ollama"
 
-        with patch("llm_clients.ollama_llm.LangChainOllamaLLM") as mock_ollama:
+        with patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM") as mock_ollama:
             mock_instance = MagicMock()
             mock_ollama.return_value = mock_instance
             return OllamaLLM(role=role, **kwargs)
@@ -70,10 +70,10 @@ class TestOllamaLLM(TestLLMBase):
         self, mock_response_factory, mock_llm_factory, mock_system_message
     ):
         """Return LLM output; Ollama's ainvoke returns a string directly."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         expected_text = "Ollama response string"
-        with patch("llm_clients.ollama_llm.LangChainOllamaLLM") as mock_ollama:
+        with patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM") as mock_ollama:
             mock_instance = MagicMock()
             mock_instance.ainvoke = AsyncMock(return_value=expected_text)
             mock_ollama.return_value = mock_instance
@@ -90,9 +90,9 @@ class TestOllamaLLM(TestLLMBase):
         self, mock_response_factory, mock_llm_factory, mock_system_message
     ):
         """Test that generate_response updates metadata - Ollama override."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
-        with patch("llm_clients.ollama_llm.LangChainOllamaLLM") as mock_ollama:
+        with patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM") as mock_ollama:
             mock_instance = MagicMock()
             mock_instance.ainvoke = AsyncMock(return_value="Response")
             mock_ollama.return_value = mock_instance
@@ -116,9 +116,9 @@ class TestOllamaLLM(TestLLMBase):
         self, mock_llm_factory, mock_system_message
     ):
         """Test that generate_response handles errors - Ollama override."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
-        with patch("llm_clients.ollama_llm.LangChainOllamaLLM") as mock_ollama:
+        with patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM") as mock_ollama:
             mock_instance = MagicMock()
             mock_instance.ainvoke = AsyncMock(side_effect=Exception("Ollama Error"))
             mock_ollama.return_value = mock_instance
@@ -133,9 +133,9 @@ class TestOllamaLLM(TestLLMBase):
                 mock_ainvoke=mock_instance.ainvoke,
             )
 
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     def test_init_with_default_config(self, mock_ollama):
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         OllamaLLM(name="test-ollama", role=Role.PROVIDER)
 
@@ -150,10 +150,10 @@ class TestOllamaLLM(TestLLMBase):
         # temperature should NOT be set by default
         assert "temperature" not in call_kwargs
 
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     def test_init_with_custom_model_name(self, mock_ollama):
         """Test initialization with custom model name."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER, model_name="llama3:70b")
 
@@ -161,20 +161,20 @@ class TestOllamaLLM(TestLLMBase):
         assert call_kwargs["model"] == "llama3:70b"
         assert llm.model_name == "llama3:70b"
 
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     def test_init_with_custom_temperature(self, mock_ollama):
         """Test initialization with custom temperature via kwargs."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         OllamaLLM(name="test-ollama", role=Role.PROVIDER, temperature=0.9)
 
         call_kwargs = mock_ollama.call_args[1]
         assert call_kwargs["temperature"] == 0.9
 
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     def test_init_with_custom_base_url(self, mock_ollama):
         """Test initialization with custom Ollama base URL."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         custom_url = "http://remote-server:11434"
         OllamaLLM(name="test-ollama", role=Role.PROVIDER, base_url=custom_url)
@@ -182,10 +182,10 @@ class TestOllamaLLM(TestLLMBase):
         call_kwargs = mock_ollama.call_args[1]
         assert call_kwargs["base_url"] == custom_url
 
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     def test_init_kwargs_override_defaults(self, mock_ollama):
         """Test that kwargs override default config values."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         OllamaLLM(
             name="test-ollama",
@@ -201,12 +201,12 @@ class TestOllamaLLM(TestLLMBase):
         assert call_kwargs["num_predict"] == 500
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_without_system_prompt(
         self, mock_ollama, mock_system_message
     ):
         """Test response without system prompt uses Human/Assistant format."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="This is a test response")
@@ -220,12 +220,12 @@ class TestOllamaLLM(TestLLMBase):
         assert response == "This is a test response"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_with_system_prompt_in_init(
         self, mock_ollama, mock_system_message
     ):
         """Test generating response with system prompt set during initialization."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="I'm doing well, thanks!")
@@ -246,12 +246,12 @@ class TestOllamaLLM(TestLLMBase):
         assert response == "I'm doing well, thanks!"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_with_system_prompt_set_later(
         self, mock_ollama, mock_system_message
     ):
         """Test generating response with system prompt set after initialization."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Sure, I can help with that")
@@ -268,12 +268,12 @@ class TestOllamaLLM(TestLLMBase):
         assert response == "Sure, I can help with that"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_handles_ollama_connection_error(
         self, mock_ollama, mock_system_message
     ):
         """Test error handling when Ollama server is unreachable."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(
@@ -292,12 +292,12 @@ class TestOllamaLLM(TestLLMBase):
         )
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_handles_model_not_found(
         self, mock_ollama, mock_system_message
     ):
         """Test error handling when model doesn't exist."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(
@@ -319,12 +319,12 @@ class TestOllamaLLM(TestLLMBase):
         )
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_handles_timeout_error(
         self, mock_ollama, mock_system_message
     ):
         """Test error handling when request times out."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(
@@ -343,12 +343,12 @@ class TestOllamaLLM(TestLLMBase):
         )
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_handles_generic_exception(
         self, mock_ollama, mock_system_message
     ):
         """Test error handling for unexpected exceptions."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(
@@ -367,13 +367,13 @@ class TestOllamaLLM(TestLLMBase):
         )
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_with_none_message(
         self, mock_ollama, mock_system_message
     ):
         """Test generating response with None uses default start_prompt."""
-        from llm_clients.llm_interface import DEFAULT_START_PROMPT
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.llm_interface import DEFAULT_START_PROMPT
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Default response")
@@ -388,10 +388,10 @@ class TestOllamaLLM(TestLLMBase):
         assert response == "Default response"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_with_empty_string(self, mock_ollama):
         """Test generating response with empty string message."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Response to empty")
@@ -409,10 +409,10 @@ class TestOllamaLLM(TestLLMBase):
         assert response == "Response to empty"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_preserves_multiline_messages(self, mock_ollama):
         """Test that multiline messages are preserved correctly."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Response")
@@ -427,10 +427,10 @@ class TestOllamaLLM(TestLLMBase):
         call_args = mock_instance.ainvoke.call_args[0][0]
         assert "Line 1\nLine 2\nLine 3" in call_args
 
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     def test_set_system_prompt_updates_prompt(self, mock_ollama):
         """Test that set_system_prompt updates the system_prompt attribute."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
 
@@ -446,10 +446,10 @@ class TestOllamaLLM(TestLLMBase):
         assert llm.system_prompt == "You are a science tutor"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_set_system_prompt_affects_subsequent_calls(self, mock_ollama):
         """Test that changing system prompt affects future generate_response calls."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Response")
@@ -476,10 +476,10 @@ class TestOllamaLLM(TestLLMBase):
         assert "System: You are helpful" in call2
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_with_conversation_history(self, mock_ollama):
         """Test generate_response with conversation_history parameter."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Response with history")
@@ -523,12 +523,12 @@ class TestOllamaLLM(TestLLMBase):
         assert "Assistant:" in call_args
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_with_empty_conversation_history(
         self, mock_ollama, mock_system_message
     ):
         """Test generate_response with empty conversation_history list."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Response")
@@ -545,12 +545,12 @@ class TestOllamaLLM(TestLLMBase):
         assert call_args == "Human: Test\n\nAssistant:"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_with_none_conversation_history(
         self, mock_ollama, mock_system_message
     ):
         """Test generate_response with None conversation_history."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Response")
@@ -567,10 +567,10 @@ class TestOllamaLLM(TestLLMBase):
         assert call_args == "Human: Test\n\nAssistant:"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_generate_response_with_persona_role_flips_types(self, mock_ollama):
         """Test that persona role flips message types in conversation history."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Persona response")
@@ -606,18 +606,18 @@ class TestOllamaLLM(TestLLMBase):
 
     def test_last_response_metadata_copy_returns_copy(self):
         """Test that last_response_metadata.copy() returns a copy, not the original."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
         assert_metadata_copy_behavior(llm)
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_metadata_populated_after_successful_response(
         self, mock_ollama, mock_system_message
     ):
         """Test that metadata is populated correctly after successful response."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="This is a test response")
@@ -637,12 +637,12 @@ class TestOllamaLLM(TestLLMBase):
         assert metadata["usage"] == {}
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_metadata_populated_after_error(
         self, mock_ollama, mock_system_message
     ):
         """Test that repeated failures raise LLMGenerationFailed after retries."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(
@@ -661,10 +661,10 @@ class TestOllamaLLM(TestLLMBase):
         )
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_metadata_tracks_timing(self, mock_ollama, mock_system_message):
         """Test that response timing is tracked correctly."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Timed response")
@@ -677,10 +677,10 @@ class TestOllamaLLM(TestLLMBase):
         assert_response_timing(metadata)
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_timestamp_format(self, mock_ollama, mock_system_message):
         """Test that timestamp is in ISO format."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Test")
@@ -693,10 +693,10 @@ class TestOllamaLLM(TestLLMBase):
         assert_iso_timestamp(metadata["timestamp"])
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_metadata_structure_complete(self, mock_ollama, mock_system_message):
         """Test that metadata structure includes all expected fields."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Complete response")
@@ -719,10 +719,10 @@ class TestOllamaLLM(TestLLMBase):
         assert isinstance(metadata["usage"], dict)
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_metadata_initialized_empty(self, mock_ollama):
         """Test that metadata is initialized as empty dict."""
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_ollama.return_value = mock_instance
@@ -734,14 +734,14 @@ class TestOllamaLLM(TestLLMBase):
         assert metadata == {}
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_usage_metadata_always_empty(self, mock_ollama, mock_system_message):
         """Test that Ollama usage metadata is always empty.
 
         Ollama's BaseLLM.ainvoke returns a plain string without metadata,
         so usage is always an empty dict.
         """
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Test response")
@@ -758,7 +758,7 @@ class TestOllamaLLM(TestLLMBase):
         assert "total_tokens" not in metadata["usage"]
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_no_response_object_in_metadata(
         self, mock_ollama, mock_system_message
     ):
@@ -766,7 +766,7 @@ class TestOllamaLLM(TestLLMBase):
 
         Ollama returns a plain string, not a response object.
         """
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Test response")
@@ -780,13 +780,13 @@ class TestOllamaLLM(TestLLMBase):
         assert "response" not in metadata
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_no_finish_reason_in_metadata(self, mock_ollama, mock_system_message):
         """Test that Ollama metadata doesn't include finish_reason.
 
         Ollama's simple string response doesn't include finish reason.
         """
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Test response")
@@ -801,13 +801,13 @@ class TestOllamaLLM(TestLLMBase):
         assert "stop_reason" not in metadata
 
     @pytest.mark.asyncio
-    @patch("llm_clients.ollama_llm.LangChainOllamaLLM")
+    @patch("vera_mh.llm_clients.ollama_llm.LangChainOllamaLLM")
     async def test_no_raw_metadata_stored(self, mock_ollama, mock_system_message):
         """Test that Ollama doesn't store raw metadata.
 
         Ollama's ainvoke returns a plain string without rich metadata.
         """
-        from llm_clients.ollama_llm import OllamaLLM
+        from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         mock_instance = MagicMock()
         mock_instance.ainvoke = AsyncMock(return_value="Test response")

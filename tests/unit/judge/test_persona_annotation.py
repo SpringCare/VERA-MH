@@ -9,10 +9,10 @@ judging run over a reporting convenience (`_annotate_with_personas`).
 import pandas as pd
 import pytest
 
-from judge.runner import _annotate_with_personas
-from judge.utils import add_persona_columns_to_dataframe
-from score.utils import load_personas_risk_levels
-from utils.judge_results import load_persona_column
+from vera_mh.judge.runner import _annotate_with_personas
+from vera_mh.judge.utils import add_persona_columns_to_dataframe
+from vera_mh.score.utils import load_personas_risk_levels
+from vera_mh.utils.judge_results import load_persona_column
 
 # Two targets with deliberately different persona schemas: the point of the
 # generic loader is that neither column name is privileged in code.

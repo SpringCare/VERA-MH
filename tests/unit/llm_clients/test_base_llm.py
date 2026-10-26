@@ -32,8 +32,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from pydantic import BaseModel, Field
 
-from llm_clients import Role
-from llm_clients.llm_interface import JudgeLLM, LLMGenerationFailed, LLMInterface
+from vera_mh.llm_clients import Role
+from vera_mh.llm_clients.llm_interface import (
+    JudgeLLM,
+    LLMGenerationFailed,
+    LLMInterface,
+)
 
 from .test_helpers import (
     assert_iso_timestamp,

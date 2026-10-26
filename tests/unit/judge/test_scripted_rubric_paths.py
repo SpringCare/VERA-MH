@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from judge.llm_judge import LLMJudge
-from judge.rubric_config import ConversationData, RubricConfig
+from vera_mh.judge.llm_judge import LLMJudge
+from vera_mh.judge.rubric_config import ConversationData, RubricConfig
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SI = REPO_ROOT / "data/SI"

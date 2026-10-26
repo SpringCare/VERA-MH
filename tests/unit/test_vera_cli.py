@@ -9,13 +9,13 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-import generate.run as generation_domain
-import vera
-from utils.config_schema import InvocationConfig, ModelSpec
-from vera_cli import (
+import vera_mh.generate.run as generation_domain
+from vera_mh import cli as vera
+from vera_mh.utils.config_schema import InvocationConfig, ModelSpec
+from vera_mh.vera_cli import (
     config as cli_config,
 )
-from vera_cli import generate, targets
+from vera_mh.vera_cli import generate, targets
 
 
 @pytest.fixture(autouse=True)

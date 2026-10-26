@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from generate.utils import load_prompts_from_csv
+from vera_mh.generate.utils import load_prompts_from_csv
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PERSONAS = REPO_ROOT / "data/SI/personas.tsv"

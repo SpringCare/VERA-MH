@@ -20,7 +20,7 @@ import json
 import shutil
 from pathlib import Path
 
-from generate.utils import load_prompts_from_csv
+from vera_mh.generate.utils import load_prompts_from_csv
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GOLDEN_DIR = REPO_ROOT / "tests/fixtures/golden_prompts"

@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from llm_clients import Role
-from llm_clients.endpoint_llm import EndpointLLM
-from llm_clients.llm_interface import DEFAULT_START_PROMPT, LLMGenerationFailed
+from vera_mh.llm_clients import Role
+from vera_mh.llm_clients.endpoint_llm import EndpointLLM
+from vera_mh.llm_clients.llm_interface import DEFAULT_START_PROMPT, LLMGenerationFailed
 
 from .test_base_llm import TestLLMBase
 from .test_helpers import (
@@ -71,7 +71,7 @@ class TestEndpointLLM(TestLLMBase):
     @contextmanager
     def get_mock_patches(self):
         with patch(
-            "llm_clients.endpoint_llm.aiohttp.ClientSession",
+            "vera_mh.llm_clients.endpoint_llm.aiohttp.ClientSession",
             new_callable=lambda: _make_aiohttp_mock(),
         ):
             yield
@@ -87,7 +87,7 @@ class TestEndpointLLM(TestLLMBase):
         expected_text = "Test response text"
         with self.get_mock_patches():
             with patch(
-                "llm_clients.endpoint_llm.aiohttp.ClientSession",
+                "vera_mh.llm_clients.endpoint_llm.aiohttp.ClientSession",
                 new_callable=lambda: _make_aiohttp_mock(content=expected_text),
             ):
                 llm = self.create_llm(role=Role.PROVIDER, name="TestLLM")
@@ -123,7 +123,7 @@ class TestEndpointLLM(TestLLMBase):
 
         with self.get_mock_patches():
             with patch(
-                "llm_clients.endpoint_llm.aiohttp.ClientSession",
+                "vera_mh.llm_clients.endpoint_llm.aiohttp.ClientSession",
                 new_callable=lambda: mock_session_class,
             ):
                 llm = self.create_llm(role=Role.PROVIDER, name="TestLLM")
@@ -176,7 +176,7 @@ class TestEndpointLLM(TestLLMBase):
     async def test_start_conversation_calls_api_when_no_first_message(self):
         with self.get_mock_patches():
             with patch(
-                "llm_clients.endpoint_llm.aiohttp.ClientSession",
+                "vera_mh.llm_clients.endpoint_llm.aiohttp.ClientSession",
                 new_callable=lambda: _make_aiohttp_mock(content="First turn from API"),
             ) as mock_session_class:
                 llm = EndpointLLM(name="ep", role=Role.PROVIDER)
@@ -193,7 +193,7 @@ class TestEndpointLLM(TestLLMBase):
         server_cid = "server-returned-cid"
         with self.get_mock_patches():
             with patch(
-                "llm_clients.endpoint_llm.aiohttp.ClientSession",
+                "vera_mh.llm_clients.endpoint_llm.aiohttp.ClientSession",
                 new_callable=lambda: _make_aiohttp_mock(
                     content="OK", conversation_id=server_cid
                 ),
@@ -208,7 +208,7 @@ class TestEndpointLLM(TestLLMBase):
         """Verify start_conversation / default start_prompt with empty history."""
         with self.get_mock_patches():
             with patch(
-                "llm_clients.endpoint_llm.aiohttp.ClientSession",
+                "vera_mh.llm_clients.endpoint_llm.aiohttp.ClientSession",
                 new_callable=lambda: _make_aiohttp_mock(content="Delegated first turn"),
             ):
                 llm = EndpointLLM(name="ep", role=Role.PROVIDER)
@@ -221,7 +221,7 @@ class TestEndpointLLM(TestLLMBase):
     ):
         with self.get_mock_patches():
             with patch(
-                "llm_clients.endpoint_llm.aiohttp.ClientSession",
+                "vera_mh.llm_clients.endpoint_llm.aiohttp.ClientSession",
                 new_callable=lambda: _make_aiohttp_mock(content="Delegated from None"),
             ):
                 llm = EndpointLLM(name="ep", role=Role.PROVIDER)

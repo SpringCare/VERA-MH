@@ -2,25 +2,25 @@ from unittest.mock import patch
 
 import pytest
 
-from llm_clients import Role
-from llm_clients.azure_llm import AzureLLM
-from llm_clients.claude_llm import ClaudeLLM
-from llm_clients.gemini_llm import GeminiLLM
-from llm_clients.llm_factory import LLMFactory
-from llm_clients.ollama_llm import OllamaLLM
-from llm_clients.openai_llm import OpenAILLM
+from vera_mh.llm_clients import Role
+from vera_mh.llm_clients.azure_llm import AzureLLM
+from vera_mh.llm_clients.claude_llm import ClaudeLLM
+from vera_mh.llm_clients.gemini_llm import GeminiLLM
+from vera_mh.llm_clients.llm_factory import LLMFactory
+from vera_mh.llm_clients.ollama_llm import OllamaLLM
+from vera_mh.llm_clients.openai_llm import OpenAILLM
 
 
 @pytest.fixture
 def mock_all_api_keys():
     """Fixture to patch all API keys for multi-provider tests."""
     with (
-        patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key"),
-        patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key"),
-        patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key"),
-        patch("llm_clients.azure_llm.Config.AZURE_API_KEY", "test-key"),
+        patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key"),
+        patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key"),
+        patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key"),
+        patch("vera_mh.llm_clients.azure_llm.Config.AZURE_API_KEY", "test-key"),
         patch(
-            "llm_clients.azure_llm.Config.AZURE_ENDPOINT",
+            "vera_mh.llm_clients.azure_llm.Config.AZURE_ENDPOINT",
             "https://test.openai.azure.com",
         ),
     ):
@@ -141,8 +141,8 @@ class TestLLMFactory:
         assert "Unsupported model" in str(exc_info.value)
         assert unsupported_model in str(exc_info.value)
 
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     def test_factory_passes_kwargs(self, mock_chat_anthropic):
         """Test that factory correctly forwards kwargs to LLM implementations."""
         # Arrange
@@ -166,8 +166,8 @@ class TestLLMFactory:
         assert call_kwargs["temperature"] == temperature
         assert call_kwargs["max_tokens"] == max_tokens
 
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     def test_factory_filters_non_model_params(self, mock_chat_openai):
         """Test that factory filters out non-model-specific parameters."""
         model_name = "gpt-4o"
@@ -194,8 +194,8 @@ class TestLLMFactory:
         assert call_kwargs["temperature"] == temperature
         assert "prompt_name" not in call_kwargs  # Filtered param should not be present
 
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     def test_create_openai_llm_with_openai_prefix(self, mock_chat_openai):
         """Test that factory correctly identifies OpenAI models with 'openai' prefix."""
         model_name = "openai-custom-model"
@@ -238,7 +238,7 @@ class TestLLMFactory:
     def test_factory_case_insensitive_model_detection(self, mock_all_api_keys):
         """Test that factory detects models regardless of case."""
         with patch(
-            "llm_clients.azure_llm.Config.get_azure_config",
+            "vera_mh.llm_clients.azure_llm.Config.get_azure_config",
             return_value={"model": "azure-gpt-4o"},
         ):
             claude_llm = LLMFactory.create_llm(
@@ -266,7 +266,7 @@ class TestLLMFactory:
     @pytest.mark.usefixtures("mock_claude_config", "mock_claude_model")
     def test_create_judge_llm_claude(self):
         """Test that create_judge_llm correctly creates Claude JudgeLLM instance."""
-        from llm_clients.llm_interface import JudgeLLM
+        from vera_mh.llm_clients.llm_interface import JudgeLLM
 
         model_name = "claude-sonnet-4-5-20250929"
         name = "TestClaudeJudge"
@@ -285,7 +285,7 @@ class TestLLMFactory:
     @pytest.mark.usefixtures("mock_openai_config", "mock_openai_model")
     def test_create_judge_llm_openai(self):
         """Test that create_judge_llm correctly creates OpenAI JudgeLLM instance."""
-        from llm_clients.llm_interface import JudgeLLM
+        from vera_mh.llm_clients.llm_interface import JudgeLLM
 
         model_name = "gpt-4o"
         name = "TestGPTJudge"
@@ -304,7 +304,7 @@ class TestLLMFactory:
     @pytest.mark.usefixtures("mock_gemini_config", "mock_gemini_model")
     def test_create_judge_llm_gemini(self):
         """Test that create_judge_llm correctly creates Gemini JudgeLLM instance."""
-        from llm_clients.llm_interface import JudgeLLM
+        from vera_mh.llm_clients.llm_interface import JudgeLLM
 
         model_name = "gemini-pro"
         name = "TestGeminiJudge"
@@ -322,7 +322,7 @@ class TestLLMFactory:
 
     def test_create_judge_llm_azure(self, mock_azure_config):
         """Test that create_judge_llm correctly creates Azure JudgeLLM instance."""
-        from llm_clients.llm_interface import JudgeLLM
+        from vera_mh.llm_clients.llm_interface import JudgeLLM
 
         model_name = "azure-grok-4"
         name = "TestAzureJudge"
@@ -350,11 +350,11 @@ class TestLLMFactory:
         assert model_name in str(exc_info.value)
         assert "Ollama" in str(exc_info.value)
 
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     def test_create_judge_llm_passes_kwargs(self, mock_chat_anthropic):
         """Test that create_judge_llm forwards kwargs to LLM implementations."""
-        from llm_clients.llm_interface import JudgeLLM
+        from vera_mh.llm_clients.llm_interface import JudgeLLM
 
         model_name = "claude-sonnet-4-5-20250929"
         name = "TestKwargsJudge"

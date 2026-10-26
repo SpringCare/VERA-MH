@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from llm_clients.config import Config
+from vera_mh.llm_clients.config import Config
 
 
 @pytest.mark.unit
@@ -72,7 +72,7 @@ class TestConfig:
         # Reload the module to pick up the patched environment
         import importlib
 
-        from llm_clients import config
+        from vera_mh.llm_clients import config
 
         importlib.reload(config)
 
@@ -86,7 +86,7 @@ class TestConfig:
         """Test that OPENAI_API_KEY can be loaded from environment."""
         import importlib
 
-        from llm_clients import config
+        from vera_mh.llm_clients import config
 
         importlib.reload(config)
         assert config.Config.OPENAI_API_KEY == "test-openai-key"
@@ -98,7 +98,7 @@ class TestConfig:
         """Test that GOOGLE_API_KEY can be loaded from environment."""
         import importlib
 
-        from llm_clients import config
+        from vera_mh.llm_clients import config
 
         importlib.reload(config)
         assert config.Config.GOOGLE_API_KEY == "test-google-key"

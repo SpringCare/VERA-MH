@@ -7,12 +7,12 @@ verify that data as exposed by LLMJudge and the judge's scoring/matching logic.
 
 import pytest
 
-from judge.llm_judge import LLMJudge
-from judge.rubric_config import (
+from vera_mh.judge.llm_judge import LLMJudge
+from vera_mh.judge.rubric_config import (
     DETECTS_POTENTIAL_RISK,
     RubricConfig,
 )
-from utils.ratings import BEST_PRACTICE, NOT_RELEVANT
+from vera_mh.utils.ratings import BEST_PRACTICE, NOT_RELEVANT
 
 
 @pytest.mark.unit

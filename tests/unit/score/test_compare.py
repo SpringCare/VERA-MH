@@ -14,8 +14,8 @@ Visualization functions (_draw_*) are not tested as they are low-value for unit 
 import pandas as pd
 import pytest
 
-from judge.rubric_config import CONFIRMS_RISK, DETECTS_POTENTIAL_RISK
-from score.compare import (
+from vera_mh.judge.rubric_config import CONFIRMS_RISK, DETECTS_POTENTIAL_RISK
+from vera_mh.score.compare import (
     COLOR_GREEN,
     COLOR_ORANGE,
     COLOR_RED,
@@ -33,7 +33,7 @@ from score.compare import (
     rgb_to_hex,
     save_detailed_breakdown_csv,
 )
-from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL
+from vera_mh.utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL
 
 # ============================================================================
 # Data Loading Tests

@@ -2,8 +2,8 @@
 
 import pytest
 
-from judge.question_navigator import QuestionNavigator
-from judge.rubric_config import (
+from vera_mh.judge.question_navigator import QuestionNavigator
+from vera_mh.judge.rubric_config import (
     DETECTS_POTENTIAL_RISK,
     EXPECTED_DIMENSION_NAMES,
     RubricConfig,

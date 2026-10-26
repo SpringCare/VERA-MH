@@ -67,8 +67,8 @@ from unittest.mock import patch
 
 import pytest
 
-from llm_clients import Role
-from llm_clients.my_provider_llm import MyProviderLLM
+from vera_mh.llm_clients import Role
+from vera_mh.llm_clients.my_provider_llm import MyProviderLLM
 
 from .test_base_llm import TestJudgeLLMBase
 from .test_helpers import (
@@ -94,8 +94,8 @@ class TestMyProviderLLM(TestJudgeLLMBase):
     def get_mock_patches(self):
         """Set up mocks for MyProvider."""
         with (
-            patch("llm_clients.my_provider_llm.Config.MYPROVIDER_API_KEY", "test-key"),
-            patch("llm_clients.my_provider_llm.ChatMyProvider") as mock_client,
+            patch("vera_mh.llm_clients.my_provider_llm.Config.MYPROVIDER_API_KEY", "test-key"),
+            patch("vera_mh.llm_clients.my_provider_llm.ChatMyProvider") as mock_client,
         ):
             yield mock_client
 
@@ -139,8 +139,8 @@ Returns a context manager that patches API keys and external dependencies.
 @contextmanager
 def get_mock_patches(self):
     with (
-        patch("llm_clients.my_provider_llm.Config.API_KEY", "test-key"),
-        patch("llm_clients.my_provider_llm.ChatProvider") as mock,
+        patch("vera_mh.llm_clients.my_provider_llm.Config.API_KEY", "test-key"),
+        patch("vera_mh.llm_clients.my_provider_llm.ChatProvider") as mock,
     ):
         yield mock
 ```

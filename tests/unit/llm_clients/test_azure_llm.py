@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pydantic import BaseModel, Field
 
-from llm_clients import Role
-from llm_clients.azure_llm import AzureLLM
-from llm_clients.config import Config
-from llm_clients.llm_interface import LLMGenerationFailed
+from vera_mh.llm_clients import Role
+from vera_mh.llm_clients.azure_llm import AzureLLM
+from vera_mh.llm_clients.config import Config
+from vera_mh.llm_clients.llm_interface import LLMGenerationFailed
 
 from .test_base_llm import TestJudgeLLMBase
 from .test_helpers import (
@@ -39,7 +39,7 @@ class DictWithAttr(dict):
 @pytest.fixture
 def mock_azure_model():
     """Fixture to patch AzureAIChatCompletionsModel."""
-    with patch("llm_clients.azure_llm.AzureAIChatCompletionsModel") as mock:
+    with patch("vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel") as mock:
         yield mock
 
 
@@ -70,16 +70,18 @@ class TestAzureLLM(TestJudgeLLMBase):
             kwargs["name"] = "TestAzure"
 
         with (
-            patch("llm_clients.azure_llm.Config.AZURE_API_KEY", "test-key"),
+            patch("vera_mh.llm_clients.azure_llm.Config.AZURE_API_KEY", "test-key"),
             patch(
-                "llm_clients.azure_llm.Config.AZURE_ENDPOINT",
+                "vera_mh.llm_clients.azure_llm.Config.AZURE_ENDPOINT",
                 "https://test.openai.azure.com",
             ),
             patch(
-                "llm_clients.azure_llm.Config.get_azure_config",
+                "vera_mh.llm_clients.azure_llm.Config.get_azure_config",
                 return_value={"model": "gpt-5.2"},
             ),
-            patch("llm_clients.azure_llm.AzureAIChatCompletionsModel") as mock_model,
+            patch(
+                "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
+            ) as mock_model,
         ):
             mock_llm = MagicMock()
             mock_llm.model_name = "gpt-5.2"
@@ -107,7 +109,7 @@ class TestAzureLLM(TestJudgeLLMBase):
 
     def test_init_missing_api_key_raises_error(self):
         """Test that missing AZURE_API_KEY raises ValueError."""
-        with patch("llm_clients.azure_llm.Config.AZURE_API_KEY", None):
+        with patch("vera_mh.llm_clients.azure_llm.Config.AZURE_API_KEY", None):
             with pytest.raises(ValueError) as exc_info:
                 AzureLLM(name="TestAzure", role=Role.PERSONA)
 
@@ -116,8 +118,8 @@ class TestAzureLLM(TestJudgeLLMBase):
     def test_init_missing_endpoint_raises_error(self):
         """Test that missing AZURE_ENDPOINT raises ValueError."""
         with (
-            patch("llm_clients.azure_llm.Config.AZURE_ENDPOINT", None),
-            patch("llm_clients.azure_llm.Config.AZURE_API_KEY", "test-key"),
+            patch("vera_mh.llm_clients.azure_llm.Config.AZURE_ENDPOINT", None),
+            patch("vera_mh.llm_clients.azure_llm.Config.AZURE_API_KEY", "test-key"),
         ):
             with pytest.raises(ValueError) as exc_info:
                 AzureLLM(name="TestAzure", role=Role.PERSONA)
@@ -143,7 +145,9 @@ class TestAzureLLM(TestJudgeLLMBase):
 
     def test_init_with_kwargs(self):
         """Test initialization with additional kwargs."""
-        with patch("llm_clients.azure_llm.AzureAIChatCompletionsModel") as mock_model:
+        with patch(
+            "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
+        ) as mock_model:
             AzureLLM(
                 name="TestAzure",
                 role=Role.PERSONA,
@@ -162,10 +166,12 @@ class TestAzureLLM(TestJudgeLLMBase):
         """Test initialization with API version from config."""
         with (
             patch(
-                "llm_clients.azure_llm.Config.AZURE_API_VERSION",
+                "vera_mh.llm_clients.azure_llm.Config.AZURE_API_VERSION",
                 "2024-05-01-preview",
             ),
-            patch("llm_clients.azure_llm.AzureAIChatCompletionsModel") as mock_model,
+            patch(
+                "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
+            ) as mock_model,
         ):
             llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
 
@@ -176,8 +182,10 @@ class TestAzureLLM(TestJudgeLLMBase):
     def test_init_with_default_api_version(self):
         """Test initialization with default API version when not configured."""
         with (
-            patch("llm_clients.azure_llm.Config.AZURE_API_VERSION", None),
-            patch("llm_clients.azure_llm.AzureAIChatCompletionsModel") as mock_model,
+            patch("vera_mh.llm_clients.azure_llm.Config.AZURE_API_VERSION", None),
+            patch(
+                "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
+            ) as mock_model,
         ):
             llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
 
@@ -189,10 +197,12 @@ class TestAzureLLM(TestJudgeLLMBase):
         """Test that endpoint trailing slash is removed."""
         with (
             patch(
-                "llm_clients.azure_llm.Config.AZURE_ENDPOINT",
+                "vera_mh.llm_clients.azure_llm.Config.AZURE_ENDPOINT",
                 "https://test.openai.azure.com/",
             ),
-            patch("llm_clients.azure_llm.AzureAIChatCompletionsModel") as mock_model,
+            patch(
+                "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
+            ) as mock_model,
         ):
             llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
 
@@ -204,10 +214,12 @@ class TestAzureLLM(TestJudgeLLMBase):
         """Test that /models suffix is added for Azure AI Foundry endpoints."""
         with (
             patch(
-                "llm_clients.azure_llm.Config.AZURE_ENDPOINT",
+                "vera_mh.llm_clients.azure_llm.Config.AZURE_ENDPOINT",
                 "https://test.services.ai.azure.com",
             ),
-            patch("llm_clients.azure_llm.AzureAIChatCompletionsModel") as mock_model,
+            patch(
+                "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
+            ) as mock_model,
         ):
             llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
 
@@ -221,10 +233,12 @@ class TestAzureLLM(TestJudgeLLMBase):
         """Test that /models suffix is not duplicated if already present."""
         with (
             patch(
-                "llm_clients.azure_llm.Config.AZURE_ENDPOINT",
+                "vera_mh.llm_clients.azure_llm.Config.AZURE_ENDPOINT",
                 "https://test.services.ai.azure.com/models",
             ),
-            patch("llm_clients.azure_llm.AzureAIChatCompletionsModel") as mock_model,
+            patch(
+                "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
+            ) as mock_model,
         ):
             llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
 
@@ -238,10 +252,10 @@ class TestAzureLLM(TestJudgeLLMBase):
         """Test that non-HTTPS endpoint raises ValueError."""
         with (
             patch(
-                "llm_clients.azure_llm.Config.AZURE_ENDPOINT",
+                "vera_mh.llm_clients.azure_llm.Config.AZURE_ENDPOINT",
                 "http://test.openai.azure.com",
             ),
-            patch("llm_clients.azure_llm.AzureAIChatCompletionsModel"),
+            patch("vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"),
         ):
             with pytest.raises(ValueError) as exc_info:
                 AzureLLM(name="TestAzure", role=Role.PERSONA)
@@ -252,10 +266,10 @@ class TestAzureLLM(TestJudgeLLMBase):
         """Test that endpoint with unexpected pattern raises ValueError."""
         with (
             patch(
-                "llm_clients.azure_llm.Config.AZURE_ENDPOINT",
+                "vera_mh.llm_clients.azure_llm.Config.AZURE_ENDPOINT",
                 "https://test.example.com",
             ),
-            patch("llm_clients.azure_llm.AzureAIChatCompletionsModel"),
+            patch("vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"),
         ):
             with pytest.raises(ValueError) as exc_info:
                 AzureLLM(name="TestAzure", role=Role.PERSONA)
@@ -314,7 +328,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         self, mock_azure_config, mock_azure_model
     ):
         """Test start_conversation with empty history uses default start_prompt."""
-        from llm_clients.llm_interface import DEFAULT_START_PROMPT
+        from vera_mh.llm_clients.llm_interface import DEFAULT_START_PROMPT
 
         mock_response = create_mock_response(
             text="Response", response_id="chatcmpl-empty"
@@ -523,7 +537,9 @@ class TestAzureLLM(TestJudgeLLMBase):
     @pytest.mark.asyncio
     async def test_generate_structured_response_success(self, mock_llm_factory):
         """Test successful structured response generation."""
-        with patch("llm_clients.azure_llm.AzureAIChatCompletionsModel") as mock_model:
+        with patch(
+            "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
+        ) as mock_model:
             mock_llm = MagicMock()
 
             # Create a test Pydantic model
@@ -564,7 +580,9 @@ class TestAzureLLM(TestJudgeLLMBase):
     @pytest.mark.asyncio
     async def test_generate_structured_response_error(self):
         """Test error handling in structured response generation."""
-        with patch("llm_clients.azure_llm.AzureAIChatCompletionsModel") as mock_model:
+        with patch(
+            "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
+        ) as mock_model:
             mock_llm = MagicMock()
 
             class TestResponse(BaseModel):
@@ -598,7 +616,9 @@ class TestAzureLLM(TestJudgeLLMBase):
     @pytest.mark.asyncio
     async def test_generate_response_with_conversation_history(self):
         """Test generate_response with conversation_history parameter."""
-        with patch("llm_clients.azure_llm.AzureAIChatCompletionsModel") as mock_model:
+        with patch(
+            "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
+        ) as mock_model:
             mock_llm = MagicMock()
 
             mock_response = create_mock_response(

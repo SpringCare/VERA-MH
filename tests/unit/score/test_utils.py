@@ -3,11 +3,11 @@
 import pandas as pd
 import pytest
 
-from judge.rubric_config import (
+from vera_mh.judge.rubric_config import (
     CONFIRMS_RISK,
     DETECTS_POTENTIAL_RISK,
 )
-from score.utils import (
+from vera_mh.score.utils import (
     BEST_PRACTICE_KEY,
     DAMAGING_KEY,
     NEUTRAL_KEY,
@@ -21,7 +21,7 @@ from score.utils import (
     pct_of_total,
     read_judge_results_csv,
 )
-from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT
+from vera_mh.utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT
 
 # ============================================================================
 # Percentage Utility Tests

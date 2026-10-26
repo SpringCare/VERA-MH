@@ -5,10 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from llm_clients import Role
-from llm_clients.claude_llm import ClaudeLLM
-from llm_clients.config import Config
-from llm_clients.llm_interface import LLMGenerationFailed
+from vera_mh.llm_clients import Role
+from vera_mh.llm_clients.claude_llm import ClaudeLLM
+from vera_mh.llm_clients.config import Config
+from vera_mh.llm_clients.llm_interface import LLMGenerationFailed
 
 from .test_base_llm import TestJudgeLLMBase
 from .test_helpers import (
@@ -37,8 +37,10 @@ class TestClaudeLLM(TestJudgeLLMBase):
         if "name" not in kwargs:
             kwargs["name"] = "TestClaude"
 
-        with patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key"):
-            with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key"
+        ):
+            with patch("vera_mh.llm_clients.claude_llm.ChatAnthropic") as mock_chat:
                 mock_llm = MagicMock()
                 mock_llm.model = kwargs.get("model_name", "claude-sonnet-4-5-20250929")
                 mock_chat.return_value = mock_llm
@@ -61,7 +63,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
     # Claude-Specific Tests
     # ============================================================================
 
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", None)
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", None)
     def test_init_missing_api_key_raises_error(self):
         """Test that missing ANTHROPIC_API_KEY raises ValueError."""
         with pytest.raises(ValueError) as exc_info:
@@ -96,7 +98,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
         this against the configured default would assert nothing about kwargs
         passthrough. Dropping is covered separately by the param-filter tests.
         """
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-haiku-4-5-20251001"
             mock_chat_anthropic.return_value = mock_llm
@@ -116,10 +120,12 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
     def test_init_passes_base_url_when_configured(self):
         """A configured base URL reaches ChatAnthropic."""
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_chat_anthropic.return_value = MagicMock()
             with patch(
-                "llm_clients.claude_llm.Config.get_base_url",
+                "vera_mh.llm_clients.claude_llm.Config.get_base_url",
                 return_value="https://gateway.example.com",
             ):
                 ClaudeLLM(name="TestClaude", role=Role.PERSONA)
@@ -129,16 +135,22 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
     def test_init_omits_base_url_when_not_configured(self):
         """Without an override, base_url is left out so ChatAnthropic defaults."""
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_chat_anthropic.return_value = MagicMock()
-            with patch("llm_clients.claude_llm.Config.get_base_url", return_value=None):
+            with patch(
+                "vera_mh.llm_clients.claude_llm.Config.get_base_url", return_value=None
+            ):
                 ClaudeLLM(name="TestClaude", role=Role.PERSONA)
 
             assert "base_url" not in mock_chat_anthropic.call_args[1]
 
     def test_init_strips_sampling_params_for_opus_4_8(self, default_llm_kwargs):
         """Opus 4.8 rejects temperature/top_p/top_k; none may reach ChatAnthropic."""
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-opus-4-8"
             mock_chat_anthropic.return_value = mock_llm
@@ -157,7 +169,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
     def test_init_strips_sampling_params_for_opus_4_7(self, default_llm_kwargs):
         """Opus 4.7 shares Opus 4.8's sampling-param and manual-thinking 400s."""
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-opus-4-7"
             mock_chat_anthropic.return_value = mock_llm
@@ -176,7 +190,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
     def test_init_strips_sampling_params_for_fable_5(self, default_llm_kwargs):
         """Fable 5 shares the same sampling-param 400s as Opus 4.7/4.8."""
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-fable-5"
             mock_chat_anthropic.return_value = mock_llm
@@ -194,7 +210,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
             assert call_kwargs["max_tokens"] == 500
 
     def test_model_supports_param_unsupported_for_opus_4_8(self, default_llm_kwargs):
-        with patch("llm_clients.claude_llm.ChatAnthropic"):
+        with patch("vera_mh.llm_clients.claude_llm.ChatAnthropic"):
             llm = ClaudeLLM(
                 name="TestClaude",
                 role=Role.JUDGE,
@@ -206,7 +222,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert not llm._model_supports_param("claude-opus-4-8", "top_k")
 
     def test_model_supports_param_case_insensitive(self, default_llm_kwargs):
-        with patch("llm_clients.claude_llm.ChatAnthropic"):
+        with patch("vera_mh.llm_clients.claude_llm.ChatAnthropic"):
             llm = ClaudeLLM(
                 name="TestClaude",
                 role=Role.JUDGE,
@@ -218,7 +234,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
     def test_filter_supported_params_strips_sampling_params_for_opus_4_8(
         self, default_llm_kwargs
     ):
-        with patch("llm_clients.claude_llm.ChatAnthropic"):
+        with patch("vera_mh.llm_clients.claude_llm.ChatAnthropic"):
             llm = ClaudeLLM(
                 name="TestClaude",
                 role=Role.JUDGE,
@@ -329,7 +345,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
         self,
     ):
         """Thinking forces temperature=1, but sonnet-5 rejects temperature outright."""
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-sonnet-5"
             mock_chat_anthropic.return_value = mock_llm
@@ -348,7 +366,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
     def test_init_with_thinking_effort_forces_temperature_1_for_haiku(self):
         """Haiku supports temperature, so the forced temperature=1 survives."""
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-haiku-4-5"
             mock_chat_anthropic.return_value = mock_llm
@@ -368,7 +388,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
             assert call_kwargs["temperature"] == 1
 
     def test_unsupported_model_params_covers_all_adaptive_markers(self):
-        with patch("llm_clients.claude_llm.ChatAnthropic"):
+        with patch("vera_mh.llm_clients.claude_llm.ChatAnthropic"):
             llm = ClaudeLLM(name="TestClaude", role=Role.JUDGE)
         unsupported = llm._unsupported_model_params()
         assert unsupported == {
@@ -380,8 +400,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         }
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_success_with_system_prompt(
         self, mock_chat_anthropic, mock_response_factory, mock_system_message
     ):
@@ -427,8 +447,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert "raw_metadata" in metadata
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_propagates_cache_usage_tokens(
         self, mock_chat_anthropic, mock_response_factory, mock_system_message
     ):
@@ -467,8 +487,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert usage["total_tokens"] == 30
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_caching_false_omits_cache_control_on_invoke(
         self, mock_chat_anthropic, mock_response_factory, mock_system_message
     ):
@@ -501,8 +521,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert "cache_control" not in mock_llm.ainvoke.call_args.kwargs
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_omits_none_cache_usage_keys(
         self, mock_chat_anthropic, mock_response_factory, mock_system_message
     ):
@@ -535,8 +555,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert "cache_read_input_tokens" not in usage
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_without_system_prompt(
         self, mock_chat_anthropic, mock_response_factory, mock_system_message
     ):
@@ -562,8 +582,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         verify_no_system_message_in_call(mock_llm)
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_without_usage_metadata(
         self, mock_chat_anthropic, mock_response_factory, mock_system_message
     ):
@@ -588,8 +608,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert metadata["usage"] == {}
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_without_response_metadata(
         self, mock_chat_anthropic, mock_system_message
     ):
@@ -617,8 +637,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert metadata["stop_reason"] is None
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_model_name_update_from_metadata(
         self, mock_chat_anthropic, mock_response_factory, mock_system_message
     ):
@@ -644,8 +664,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert llm.last_response_metadata["model"] == "claude-3-opus-20240229"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_api_error(
         self, mock_chat_anthropic, mock_llm_factory, mock_system_message
     ):
@@ -667,8 +687,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         )
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_tracks_timing(
         self, mock_chat_anthropic, mock_response_factory, mock_system_message
     ):
@@ -704,8 +724,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert llm.system_prompt == "Updated prompt"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_with_partial_usage_metadata(
         self, mock_chat_anthropic, mock_response_factory, mock_system_message
     ):
@@ -735,8 +755,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert metadata["usage"]["total_tokens"] == 15
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_metadata_includes_response_object(
         self, mock_chat_anthropic, mock_response_factory, mock_system_message
     ):
@@ -758,8 +778,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert metadata["response"] == mock_response
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_timestamp_format(
         self, mock_chat_anthropic, mock_response_factory, mock_system_message
     ):
@@ -780,8 +800,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert_iso_timestamp(metadata["timestamp"])
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_metadata_with_stop_reason(
         self, mock_chat_anthropic, mock_response_factory, mock_system_message
     ):
@@ -808,8 +828,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert metadata["stop_reason"] == "max_tokens"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_raw_metadata_stored(
         self, mock_chat_anthropic, mock_response_factory, mock_system_message
     ):
@@ -839,8 +859,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert metadata["raw_metadata"]["nested"]["key"] == "value"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_with_conversation_history(
         self, mock_chat_anthropic, mock_response_factory, sample_conversation_history
     ):
@@ -875,13 +895,13 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert len(messages) == 4
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_with_empty_conversation_history(
         self, mock_chat_anthropic, mock_response_factory
     ):
         """Test start_conversation with empty history uses default start_prompt."""
-        from llm_clients.llm_interface import DEFAULT_START_PROMPT
+        from vera_mh.llm_clients.llm_interface import DEFAULT_START_PROMPT
 
         mock_response = mock_response_factory(
             text="Response", response_id="msg_empty", provider="claude"
@@ -905,15 +925,15 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert messages[1].content == DEFAULT_START_PROMPT
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_with_none_conversation_history(
         self, mock_chat_anthropic, mock_response_factory
     ):
         """Test generate_response with None
         delegates to start_conversation (default start_prompt).
         """
-        from llm_clients.llm_interface import DEFAULT_START_PROMPT
+        from vera_mh.llm_clients.llm_interface import DEFAULT_START_PROMPT
 
         mock_response = mock_response_factory(
             text="Response", response_id="msg_none", provider="claude"
@@ -938,8 +958,8 @@ class TestClaudeLLM(TestJudgeLLMBase):
         assert messages[1].content == DEFAULT_START_PROMPT
 
     @pytest.mark.asyncio
-    @patch("llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
-    @patch("llm_clients.claude_llm.ChatAnthropic")
+    @patch("vera_mh.llm_clients.claude_llm.Config.ANTHROPIC_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.claude_llm.ChatAnthropic")
     async def test_generate_response_with_persona_role_flips_types(
         self, mock_chat_anthropic, mock_response_factory, sample_conversation_history
     ):
@@ -972,7 +992,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
         """Test successful structured response generation."""
         from pydantic import BaseModel, Field
 
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-sonnet-4-5-20250929"
 
@@ -1024,7 +1046,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
         """Exercise the real `include_raw=True` shape, not a bare instance."""
         from pydantic import BaseModel, Field
 
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-sonnet-4-5-20250929"
 
@@ -1060,7 +1084,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
         """When parsing fails, the error message must surface raw/stop_reason info."""
         from pydantic import BaseModel
 
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-sonnet-4-5-20250929"
 
@@ -1100,7 +1126,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
         """Test structured response with nested Pydantic model."""
         from pydantic import BaseModel, Field
 
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-sonnet-4-5-20250929"
 
@@ -1150,7 +1178,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
         """Test error handling in structured response generation."""
         from pydantic import BaseModel
 
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-sonnet-4-5-20250929"
 
@@ -1184,7 +1214,9 @@ class TestClaudeLLM(TestJudgeLLMBase):
         """Test that structured response metadata includes correct fields."""
         from pydantic import BaseModel
 
-        with patch("llm_clients.claude_llm.ChatAnthropic") as mock_chat_anthropic:
+        with patch(
+            "vera_mh.llm_clients.claude_llm.ChatAnthropic"
+        ) as mock_chat_anthropic:
             mock_llm = MagicMock()
             mock_llm.model = "claude-sonnet-4-5-20250929"
 

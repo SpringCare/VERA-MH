@@ -19,8 +19,8 @@ from typing import Dict, List, Set
 
 import pytest
 
-import llm_clients
-from llm_clients.llm_interface import JudgeLLM, LLMInterface
+from vera_mh import llm_clients
+from vera_mh.llm_clients.llm_interface import JudgeLLM, LLMInterface
 
 
 def implementation_to_test_file_stem(impl_name: str) -> str:
@@ -58,13 +58,13 @@ def get_all_llm_classes() -> Dict[str, List[str]]:
             continue
 
         try:
-            module = importlib.import_module(f"llm_clients.{module_info.name}")
+            module = importlib.import_module(f"vera_mh.llm_clients.{module_info.name}")
         except ImportError:
             continue
 
         for name, obj in inspect.getmembers(module, inspect.isclass):
             # Only include classes defined in this module
-            if obj.__module__ != f"llm_clients.{module_info.name}":
+            if obj.__module__ != f"vera_mh.llm_clients.{module_info.name}":
                 continue
 
             # Skip the base interface classes themselves

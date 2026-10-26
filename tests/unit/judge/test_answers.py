@@ -11,7 +11,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from judge.answers import (
+from vera_mh.judge.answers import (
     ANSWERS_TSV_NAME,
     answer_column,
     answers_tsv_path,
@@ -21,7 +21,7 @@ from judge.answers import (
     write_answers_tsv,
     write_conversation_answers,
 )
-from judge.llm_judge import LLMJudge
+from vera_mh.judge.llm_judge import LLMJudge
 
 # Opaque, non-lexical IDs: sorting these as strings gives 1, 10, 2 — the
 # aggregate must follow rubric order instead.

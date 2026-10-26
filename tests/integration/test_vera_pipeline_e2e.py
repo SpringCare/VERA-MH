@@ -24,12 +24,12 @@ from unittest.mock import patch
 
 import pytest
 
-import vera
-from llm_clients import Role
-from llm_clients.config import Config
-from llm_clients.llm_factory import LLMFactory
 from tests.mocks.mock_llm import MockLLM
-from vera_cli import config as cli_config
+from vera_mh import cli as vera
+from vera_mh.llm_clients import Role
+from vera_mh.llm_clients.config import Config
+from vera_mh.llm_clients.llm_factory import LLMFactory
+from vera_mh.vera_cli import config as cli_config
 
 # Read from Config so tests/integration/test_model_availability.py catches a
 # retired model there, instead of this run failing partway.

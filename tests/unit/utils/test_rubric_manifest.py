@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from utils.rubric_manifest import (
+from vera_mh.utils.rubric_manifest import (
     load_manifest,
     load_manifest_persona_context_template,
     load_manifest_personas,
