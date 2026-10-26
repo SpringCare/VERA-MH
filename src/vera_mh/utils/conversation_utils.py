@@ -124,7 +124,8 @@ def load_persona_role_reminder() -> str:
     Return the reminder that the persona LLM plays the help-seeker,
     not the counselor.
     """
-    return Path("data/persona_prompt_reminder.txt").read_text(encoding="utf-8")
+    reminder = Path(__file__).resolve().parents[3] / "data/persona_prompt_reminder.txt"
+    return reminder.read_text(encoding="utf-8")
 
 
 def apply_persona_role_reminder(

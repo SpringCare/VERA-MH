@@ -88,7 +88,7 @@ Shared utilities (utils/) — leaf layer
 |------|------|
 | `data/` | Committed evaluation inputs (personas, rubrics, prompts) |
 | `output/` | Runtime artifacts (gitignored) |
-| `scripts/` | Pipeline helpers, including `distribute_files.py` |
+| `scripts/` | `summarize_results.py`, the improvement report (to become `vera report`) |
 | `tests/` | Permanent tests |
 | `tmp_tests/` | Scratch experiments (not committed) |
 

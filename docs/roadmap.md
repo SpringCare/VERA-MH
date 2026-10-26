@@ -15,16 +15,16 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
 
 | Step | What | PRs | Phase |
 |---|---|---|---|
-| 1. Safety net | Tests that prove a change didn't move scores: golden scoring, scripted judge, replay of a recorded run | [#270](https://github.com/SpringCare/VERA-MH/pull/270) (needs the replay recording) | |
-| 2. Data contracts | What a run records (manifest, run config, run record), then naming, order of events, and folder layout, decided together | [#277](https://github.com/SpringCare/VERA-MH/pull/277), then [#268](https://github.com/SpringCare/VERA-MH/pull/268) + [#276](https://github.com/SpringCare/VERA-MH/pull/276) | [Traceability](#traceability) |
-| 3. Engine | One job loop for generation and judging; the pipeline as a single job list | [#266](https://github.com/SpringCare/VERA-MH/pull/266) | [Shared engine](#shared-engine) |
-| 4. Terminal output | Plain event lines, fail-fast, end summary, and prints moved to logs (any time); the live display (after step 3) | [#271](https://github.com/SpringCare/VERA-MH/pull/271) | [Backlog](#cli-and-run-experience) |
-| 5. Remove `legacy/` | Delete the scripts, their tests, `legacy-scripts.md`, and the `rubric_manifest.json` symlinks, as announced in v2.0.4. Done first: see below | this PR | |
-| In parallel | A judge flow that decides each outcome once; needs the HFO rubric authors' answer on Q11 | [#267](https://github.com/SpringCare/VERA-MH/pull/267) (after step 1) | [Rubric-agnostic scoring](#rubric-agnostic-scoring) |
+| 1. Remove `legacy/` | Delete the scripts, their tests, `legacy-scripts.md`, and the `rubric_manifest.json` symlinks, as announced in v2.0.4 | [#287](https://github.com/SpringCare/VERA-MH/pull/287) | |
+| 2. Safety net | Tests that prove a change didn't move scores: golden scoring, scripted judge, replay of a recorded run | [#270](https://github.com/SpringCare/VERA-MH/pull/270) (needs the replay recording) | |
+| 3. Data contracts | What a run records (manifest, run config, run record), then naming, order of events, and folder layout, decided together | [#277](https://github.com/SpringCare/VERA-MH/pull/277), then [#268](https://github.com/SpringCare/VERA-MH/pull/268) + [#276](https://github.com/SpringCare/VERA-MH/pull/276) | [Traceability](#traceability) |
+| 4. Engine | One job loop for generation and judging; the pipeline as a single job list | [#266](https://github.com/SpringCare/VERA-MH/pull/266) | [Shared engine](#shared-engine) |
+| 5. Terminal output | Plain event lines, fail-fast, end summary, and prints moved to logs (any time); the live display (after step 4) | [#271](https://github.com/SpringCare/VERA-MH/pull/271) | [Backlog](#cli-and-run-experience) |
+| In parallel | A judge flow that decides each outcome once; needs the HFO rubric authors' answer on Q11 | [#267](https://github.com/SpringCare/VERA-MH/pull/267) (after step 2) | [Rubric-agnostic scoring](#rubric-agnostic-scoring) |
 
-- **Why this order.** Step 1 comes first because every later step is meant to leave scores unchanged, and it's what proves that. Step 2 defines the files and folders the job loop in step 3 reads and writes (its resume checks, the run roots it needs up front). Step 4's live display needs the events step 3 emits; its other half needs nothing.
-- **Inside step 2:** first one function that creates run roots, one clock read per run, and the tests that enforce both, still writing today's folder names; then the run record; then the new layout and conversation files. #276 replaces #268's layout section, so the two are settled as one decision.
-- **Legacy scripts are no longer supported.** Removing `legacy/` (step 5) lands first, so every other step changes one code path instead of two, with no old-shape adapters. Users who still need the scripts stay on 2.0.x (`main`) until 2.1 ships.
+- **Legacy scripts are no longer supported.** From now on, no change needs to keep `legacy/` working, so removing it is step 1: every later step then changes one code path instead of two, with no old-shape adapters. Users who still need the scripts stay on 2.0.x (`main`) until 2.1 ships.
+- **Why this order.** Step 2 comes before the rest because every later step is meant to leave scores unchanged, and it's what proves that. Step 3 defines the files and folders the job loop in step 4 reads and writes (its resume checks, the run roots it needs up front). Step 5's live display needs the events step 4 emits; its other half needs nothing.
+- **Inside step 3,** the two designs interleave: #277's manifest and config-defaults PRs (A, B); then the run-root function, one clock read, and their enforcement tests ([run-lifecycle.md](./design/run-lifecycle.md)); then the run record and what builds on it (#277's C, then D, E, F); then the new layout and conversation files (#268, #276). #277's model check at load (G) can land any time. Each design's PR list is in its "Implementation plan" section, for example [config-and-manifest.md](./design/config-and-manifest.md#implementation-plan).
 - **Smaller PRs go to `main`:** [#270](https://github.com/SpringCare/VERA-MH/pull/270) (tests only), [#278](https://github.com/SpringCare/VERA-MH/pull/278) (`vera` command), [#269](https://github.com/SpringCare/VERA-MH/pull/269) (user-side language).
 - **When every step has merged into `release/2.1`:** merge `main` into it one last time, move `[Unreleased]` to `v2.1.0` in the CHANGELOG, merge `release/2.1` into `main`, and tag that merge commit `v2.1.0`.
 
@@ -33,7 +33,7 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
 - **Phases have names, not numbers.** Code comments and docs cite them by name ("Traceability"), so reordering or inserting a phase never changes what an old reference means.
 - **Order is dependency order.** Each phase builds only on what earlier phases leave behind. Storage and OpenSpec are independent of the others and can run whenever a concrete need appears.
 - **"Done when" is the bar.** A phase isn't done because its changes landed; it's done when its Done-when holds. Every Done-when also includes updating `README.md`, `AGENTS.md`, and any other doc the phase makes stale.
-- **No phase keeps `legacy/` working.** The legacy scripts are removed in 2.1; don't add adapters or compatibility stopgaps for them.
+- **No phase keeps `legacy/` working.** The legacy scripts are no longer supported, and removing them is step 1 of the [Release 2.1 plan](#release-21-plan). Don't add adapters or compatibility stopgaps for them.
 - **Planning a phase doesn't pre-clear it.** Each phase still needs maintainer sign-off before it starts (see [ESCALATE](./architecture.md#escalate-stop-and-ask)).
 - **Rollback:** a phase that ships broken is reverted through its own PRs. There is no feature-flag period carrying old and new behavior side by side.
 
@@ -73,7 +73,7 @@ Scoring today assumes the SI rubric in several places.
   - where the two modules go: transcript writing to `generate/`, LLM response logging to `llm_clients/`, or `Role` moved into `utils/` so they can stay;
   - the import-linter contract that `utils/` imports no project package, which then replaces the narrower `score` one;
   - keeping a fresh-interpreter test of what each package actually loads (`tests/unit/score/test_import_isolation.py`), since import-linter reads import statements and can't see what an `__init__.py` pulls in.
-- **Acknowledged compatibility break.** Anything outside `vera` that parses `p_*`/`j_*` names directly (`spring_scripts/`, `distribute_files.py`, `score/compare.py`, notebooks, human-review tooling) stops auto-discovering new runs. Reading old data keeps working: `vera judge --conversations <old p_* folder>` and `vera score -r <old results.csv>` take explicit paths and never derive meaning from folder names. Existing `output/` folders are left alone; there is no migration script.
+- **Acknowledged compatibility break.** Anything outside `vera` that parses `p_*`/`j_*` names directly (`spring_scripts/`, `score/compare.py`, notebooks, human-review tooling) stops auto-discovering new runs. Reading old data keeps working: `vera judge --conversations <old p_* folder>` and `vera score -r <old results.csv>` take explicit paths and never derive meaning from folder names. Existing `output/` folders are left alone; there is no migration script.
 
 ### Model spec boundary
 
@@ -108,7 +108,6 @@ The engine rewrite can change concurrency, timing, and error handling even when 
 - **Import contracts.** Full import-linter contract (all [Layer model](./architecture.md#layer-model) boundaries) plus grimp import-graph assertions.
 - **Root-clutter cleanup:**
   - delete `logging/`, `logs/`, root `conversations/`, `human_validation/` (old generated dumps, already gitignored)
-  - move `distribute_files.py` into `scripts/`
   - fix stale `docker-compose.yml` volume mounts (`./evaluations` doesn't exist, `./logs` is missing)
   - `spring_scripts/`, `openspec/`, `alba.md`, `Untitled.ipynb`: untracked scratch, out of scope
 
@@ -136,6 +135,7 @@ Smaller items that belong to no phase. Each can ship as its own PR whenever it's
 - Decide whether `vera pipeline` needs per-stage debug. Today `--debug` covers the whole run, because `set_debug` flips a process global and `debug` lives on `InvocationConfig`. A `--debug-stage generate|judge|score` flag toggling that global around each stage in `vera_cli/pipeline.py:_execute` would be ~10 lines and no schema change. Revisit once someone has had to debug one stage of a long pipeline; drop this item if that never happens.
 - Move each `vera` subcommand's argparse `register()` out of its command module (`vera_cli/generate.py`, `judge.py`, `score.py`, `pipeline.py`) into a parser-only module. Do all four in one change, since `vera generate` is the reference the other three copy.
 - Print the resolved settings at the start of a run; LLM classes should report the model actually used.
+- **`vera report`.** Replace `scripts/summarize_results.py` with a `vera report` subcommand that turns a `results.csv` into the improvement report (stats JSON and Markdown). Move the logic into a package module (e.g. `judge/report.py`), so it no longer patches `sys.path` to import `judge/`, and point `docs/scoring.md` and `docs/rubric.md` at the command. Done when `scripts/` is gone.
 
 ### Config and providers
 
