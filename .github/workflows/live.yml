@@ -20,9 +20,10 @@ on:
 
 # A newer run of the same trigger supersedes an in-flight one, and cancelling
 # saves the calls it has not made yet (providers bill per call). Grouping by
-# trigger keeps a merge from cancelling a manual `all` run, or the reverse.
+# trigger keeps a merge from cancelling a manual `all` run, or the reverse;
+# grouping by branch keeps a push to release/2.1 from cancelling main's run.
 concurrency:
-  group: live-tests-${{ github.event_name }}
+  group: live-tests-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -50,7 +51,7 @@ jobs:
     # The runner is an AL2023 host, which setup-python has no builds for, so
     # uv installs the Python pinned in .python-version instead.
     - name: Install uv
-      uses: astral-sh/setup-uv@v10.3.0
+      uses: astral-sh/setup-uv@v10.3.2
       with:
         enable-cache: true
         cache-dependency-glob: uv.lock

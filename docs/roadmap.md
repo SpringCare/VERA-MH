@@ -15,16 +15,16 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
 
 | Step | What | PRs | Phase |
 |---|---|---|---|
-| 1. Safety net | Tests that prove a change didn't move scores: golden scoring, scripted judge, replay of a recorded run | [#270](https://github.com/SpringCare/VERA-MH/pull/270) (needs the replay recording) | |
-| 2. Data contracts | What a run records (manifest, run config, run record), then naming, order of events, and folder layout, decided together | [#277](https://github.com/SpringCare/VERA-MH/pull/277), then [#268](https://github.com/SpringCare/VERA-MH/pull/268) + [#276](https://github.com/SpringCare/VERA-MH/pull/276) | [Traceability](#traceability) |
-| 3. Engine | One job loop for generation and judging; the pipeline as a single job list | [#266](https://github.com/SpringCare/VERA-MH/pull/266) | [Shared engine](#shared-engine) |
-| 4. Terminal output | Plain event lines, fail-fast, end summary, and prints moved to logs (any time); the live display (after step 3) | [#271](https://github.com/SpringCare/VERA-MH/pull/271) | [Backlog](#cli-and-run-experience) |
-| 5. Remove `legacy/` | Delete the scripts, their parity tests, and [legacy-scripts.md](./legacy-scripts.md), as announced in v2.0.4 | — | [Deferred](#deferred) |
-| In parallel | A judge flow that decides each outcome once; needs the HFO rubric authors' answer on Q11 | [#267](https://github.com/SpringCare/VERA-MH/pull/267) (after step 1) | [Rubric-agnostic scoring](#rubric-agnostic-scoring) |
+| 1. Remove `legacy/` | Delete the scripts, their parity tests, [legacy-scripts.md](./legacy-scripts.md), and the domain stopgaps that exist only for them, as announced in v2.0.4 | — | |
+| 2. Safety net | Tests that prove a change didn't move scores: golden scoring, scripted judge, replay of a recorded run | [#270](https://github.com/SpringCare/VERA-MH/pull/270) (needs the replay recording) | |
+| 3. Data contracts | What a run records (manifest, run config, run record), then naming, order of events, and folder layout, decided together | [#277](https://github.com/SpringCare/VERA-MH/pull/277), then [#268](https://github.com/SpringCare/VERA-MH/pull/268) + [#276](https://github.com/SpringCare/VERA-MH/pull/276) | [Traceability](#traceability) |
+| 4. Engine | One job loop for generation and judging; the pipeline as a single job list | [#266](https://github.com/SpringCare/VERA-MH/pull/266) | [Shared engine](#shared-engine) |
+| 5. Terminal output | Plain event lines, fail-fast, end summary, and prints moved to logs (any time); the live display (after step 4) | [#271](https://github.com/SpringCare/VERA-MH/pull/271) | [Backlog](#cli-and-run-experience) |
+| In parallel | A judge flow that decides each outcome once; needs the HFO rubric authors' answer on Q11 | [#267](https://github.com/SpringCare/VERA-MH/pull/267) (after step 2) | [Rubric-agnostic scoring](#rubric-agnostic-scoring) |
 
-- **Why this order.** Step 1 comes first because every later step is meant to leave scores unchanged, and it's what proves that. Step 2 defines the files and folders the job loop in step 3 reads and writes (its resume checks, the run roots it needs up front). Step 4's live display needs the events step 3 emits; its other half needs nothing.
-- **Inside step 2:** first one function that creates run roots, one clock read per run, and the tests that enforce both, still writing today's folder names; then the run record; then the new layout and conversation files. #276 replaces #268's layout section, so the two are settled as one decision.
-- **Removing `legacy/` last** keeps the legacy scripts working through the other steps on `release/2.1` too. Until then the [phase rules](#how-phases-work) still apply: legacy adapts and the domain doesn't bend.
+- **Legacy scripts are no longer supported.** From now on, no change needs to keep `legacy/` working, so removing it is step 1: every later step then changes one code path instead of two, with no old-shape adapters. Users who still need the scripts stay on 2.0.x (`main`) until 2.1 ships.
+- **Why this order.** Step 2 comes before the rest because every later step is meant to leave scores unchanged, and it's what proves that. Step 3 defines the files and folders the job loop in step 4 reads and writes (its resume checks, the run roots it needs up front). Step 5's live display needs the events step 4 emits; its other half needs nothing.
+- **Inside step 3,** the two designs interleave: #277's manifest and config-defaults PRs (A, B); then the run-root function, one clock read, and their enforcement tests ([run-lifecycle.md](./design/run-lifecycle.md)); then the run record and what builds on it (#277's C, then D, E, F); then the new layout and conversation files (#268, #276). #277's model check at load (G) can land any time. Each design's PR list is in its "Implementation plan" section, for example [config-and-manifest.md](./design/config-and-manifest.md#implementation-plan).
 - **Smaller PRs go to `main`:** [#270](https://github.com/SpringCare/VERA-MH/pull/270) (tests only), [#278](https://github.com/SpringCare/VERA-MH/pull/278) (`vera` command), [#269](https://github.com/SpringCare/VERA-MH/pull/269) (user-side language).
 - **When every step has merged into `release/2.1`:** merge `main` into it one last time, move `[Unreleased]` to `v2.1.0` in the CHANGELOG, merge `release/2.1` into `main`, and tag that merge commit `v2.1.0`.
 
@@ -33,7 +33,7 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
 - **Phases have names, not numbers.** Code comments and docs cite them by name ("Traceability"), so reordering or inserting a phase never changes what an old reference means.
 - **Order is dependency order.** Each phase builds only on what earlier phases leave behind. Storage and OpenSpec are independent of the others and can run whenever a concrete need appears.
 - **"Done when" is the bar.** A phase isn't done because its changes landed; it's done when its Done-when holds. Every Done-when also includes updating `README.md`, `AGENTS.md`, and any other doc the phase makes stale.
-- **Every phase keeps [`legacy/`](../legacy/) working.** Removing the legacy scripts is [deferred](#deferred). Until then, legacy adapts and the domain doesn't bend: `legacy/` may import domain packages and `utils/`, never the reverse, and when a phase changes a signature or helper a legacy script uses, the old-shape adapter moves into `legacy/` instead of staying in the domain. The parity tests (`tests/integration/test_cli_parity.py`, `test_score_parity.py`) must stay green.
+- **No phase keeps [`legacy/`](../legacy/) working.** The legacy scripts are no longer supported, and removing them is step 1 of the [Release 2.1 plan](#release-21-plan). Don't add adapters or compatibility stopgaps for them.
 - **Planning a phase doesn't pre-clear it.** Each phase still needs maintainer sign-off before it starts (see [ESCALATE](./architecture.md#escalate-stop-and-ask)).
 - **Rollback:** a phase that ships broken is reverted through its own PRs. There is no feature-flag period carrying old and new behavior side by side.
 
@@ -65,7 +65,7 @@ Scoring today assumes the SI rubric in several places.
 ### Traceability
 
 - **Persisted run records.** `utils/config_schema.py` formalizes the config shape into a stable interface (design doc required for later changes). Each run writes `config.json` once at start, plus `state.json` and a `.sha256` sidecar. The config records the checksum of every input file it uses (rubrics, personas, prompts), so a changed input fails loudly instead of silently.
-- **Naming.** Rewrite `utils/naming.py` for the `c_`/`u_`/`j_` scheme. The `p_`/`j_` helpers the legacy scripts use (`legacy/judge.py`, `legacy/run_pipeline.py`) move into `legacy/`, which keeps writing the old layout.
+- **Naming.** Rewrite `utils/naming.py` for the `c_`/`u_`/`j_` scheme. The `p_`/`j_` helpers only the legacy scripts used go with them.
 - **Run metadata from records, not folder names.** Pooling (`score/pool.py`) works out persona, agent, turns, and judge by parsing `p_*`/`j_*` names and folder nesting, so runs outside that layout become `unknown`. Read them from each run's `config.json` instead.
 - **Target-rooted output.** New runs write under `output/<target>/`, with pooled results under `c_<chatbot>/pooled/` (see [Data flow and artifacts](./architecture.md#data-flow-and-artifacts)). The target root attributes judging output on its own, which unblocks `vera judge --target all`: its only blocker was output attribution.
 - **Resume.** `--into` already resumes a run folder. Decide whether a `state.json`-backed `vera resume` still adds enough to build.
@@ -77,7 +77,7 @@ Scoring today assumes the SI rubric in several places.
 
 ### Model spec boundary
 
-- Generation and judging take `ModelSpec` directly. Delete the `run_for_user_models` / `_legacy_model_config` stopgaps in `generate/run.py`; `legacy/generate.py` builds its own `ModelSpec` instead.
+- Generation and judging take `ModelSpec` directly. Delete the `run_for_user_models` / `_legacy_model_config` stopgaps in `generate/run.py`.
 - Per-model judge parameters: lift the "all judge models must share provider parameters" check in `utils/config_schema.py`.
 - Afterwards `generate` and `judge` describe models identically.
 
@@ -155,7 +155,6 @@ Smaller items that belong to no phase. Each can ship as its own PR whenever it's
 
 ## Deferred
 
-- **Removing `legacy/`.** Triggered by a tagged release whose CHANGELOG announces the removal; [v2.0.4](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.4) did. Then delete `legacy/`, the legacy side of the parity tests, and [legacy-scripts.md](./legacy-scripts.md). Scheduled as the last step of the [Release 2.1 plan](#release-21-plan).
 - **Per-persona system prompts.** Personas may need their own system prompts rather than one global prompt. The mechanism (a `system_prompt` field, a `system_prompt_file` pointer, or something else) is undecided; revisit when the persona schema is formalized, likely in [Traceability](#traceability).
 
 ## Completed

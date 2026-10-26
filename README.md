@@ -23,9 +23,11 @@ VERA-MH (Validation of Ethical and Responsible AI in Mental Health) is a framewo
 
 ```bash
 pip install uv                 # if you don't have it
-uv sync
+uv sync                        # installs the dependencies and the `vera` command
 cp .env.example .env           # add ANTHROPIC_API_KEY, OPENAI_API_KEY, ... as needed
 ```
+
+Then run commands as `uv run vera …`, or activate the environment (`source .venv/bin/activate`) and type `vera …`. `uv run python vera.py …` also works.
 
 Run a smoke test (generate, judge, and score on 3 personas):
 
