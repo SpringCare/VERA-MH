@@ -42,7 +42,9 @@ HASH_FILE = "config.json.sha256"
 # a record can be run again.
 RECORD_ONLY_KEYS = frozenset({"format_version", "inputs", "provenance"})
 
-# Left out of the hash because they don't change what a run produces.
+# Left out of the hash. `provenance` says where the run came from; in
+# `invocation`, `debug` only adds logging and `sample` only runs a subset for a
+# quick check, so neither changes how any conversation is produced.
 UNHASHED_KEYS = frozenset({"provenance", "invocation"})
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
