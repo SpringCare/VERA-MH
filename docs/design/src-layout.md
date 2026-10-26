@@ -45,9 +45,13 @@ Imports gain the `vera_mh.` prefix: `from judge.runner import X` becomes
 `from vera_mh.judge.runner import X`.
 
 What stays at the root: `tests/`, `docs/`, `data/`, `configs/`, `scripts/`,
-`publication_data/`, `legacy/`, and `score_comparisons/`. Nothing in the main
-code imports `legacy/` or `score_comparisons/`, and the latter is mostly CSV
-and PNG output; moving them would add churn for no gain.
+`publication_data/`, and `score_comparisons/`. Nothing in the main code
+imports `score_comparisons/`, and it is mostly CSV and PNG output; moving it
+would add churn for no gain.
+
+`legacy/` does not move: it is deleted first, as step 1 of the
+[Release 2.1 plan](../roadmap.md#release-21-plan). The move happens after
+that, so it never touches the legacy scripts or their tests.
 
 ### Alternatives considered
 
@@ -63,7 +67,7 @@ and PNG output; moving them would add churn for no gain.
 
 | Where | Change |
 |---|---|
-| Python imports | 348 lines in 95 files get the `vera_mh.` prefix |
+| Python imports | 348 lines in 95 files get the `vera_mh.` prefix (counted before the legacy removal, which lowers it) |
 | Dotted names in strings | About 400, mostly `mock.patch("judge.x.y")` targets in tests |
 | `pyproject.toml` | `[project.scripts] vera = "vera_mh.cli:main"`; hatch builds `src/vera_mh`; `--cov=src/vera_mh`; import-linter `root_packages = ["vera_mh"]`, contracts renamed to `vera_mh.judge` etc. |
 | CI | The pyright gate lists `src/vera_mh/{generate,score,utils,vera_cli}` |
