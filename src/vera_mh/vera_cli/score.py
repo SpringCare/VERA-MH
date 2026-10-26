@@ -140,16 +140,17 @@ def _from_config(
 ) -> list[RunConfig]:
     """Resolve a config object into one canonical run.
 
-    Only `results` is required. The behavior fields take the CLI defaults when
-    left out, as in `generate` and `judge`; `null` and leaving a field out both
-    mean "no value" for `output` and `personas`.
+    `results`, `personas`, and `skip_risk_analysis` are required: the last two
+    decide whether the risk-level breakdown exists, so a config must say, with
+    an explicit `null` for no personas file. `output` only says where scores go,
+    so it takes the CLI default when left out.
     """
     scoring = config_section(config, "scoring", command="score")
 
     output = scoring.get("output", DEFAULTS["output"])
     if output is not None and (not isinstance(output, str) or not output):
         raise ConfigError("scoring.output must be null or a path string")
-    personas = scoring.get("personas", DEFAULTS["personas"])
+    personas = required(scoring, "personas", section="scoring config")
 
     return [
         RunConfig(
@@ -165,8 +166,8 @@ def _from_config(
                     if personas is not None
                     else None
                 ),
-                skip_risk_analysis=scoring.get(
-                    "skip_risk_analysis", DEFAULTS["skip_risk_analysis"]
+                skip_risk_analysis=required(
+                    scoring, "skip_risk_analysis", section="scoring config"
                 ),
             ),
         )

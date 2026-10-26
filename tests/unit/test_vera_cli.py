@@ -299,8 +299,11 @@ def test_each_user_model_gets_one_generate_main_call(tmp_path: Path) -> None:
     )
 
 
-@pytest.mark.parametrize("field", ["chatbot", "user"])
-def test_config_requires_the_models(tmp_path: Path, field: str) -> None:
+@pytest.mark.parametrize("field", ["chatbot", "user", *generate.RESULT_FIELDS])
+def test_config_requires_the_models_and_result_fields(
+    tmp_path: Path, field: str
+) -> None:
+    """Anything that changes the conversations must be stated in the file."""
     config_data = _generation_config()
     del config_data["generation"][field]
     config = _write_config(tmp_path, config_data)
@@ -311,10 +314,10 @@ def test_config_requires_the_models(tmp_path: Path, field: str) -> None:
     assert error.value.code == 2
 
 
-def test_config_without_behavior_fields_gets_the_cli_defaults(
+def test_config_without_output_or_speed_fields_gets_the_cli_defaults(
     tmp_path: Path,
 ) -> None:
-    """A config that states only the models and target matches the same flags."""
+    """Leaving out `output` and `max_concurrent` matches the same flags."""
     config = _write_config(
         tmp_path,
         {
@@ -322,9 +325,15 @@ def test_config_without_behavior_fields_gets_the_cli_defaults(
             "generation": {
                 "chatbot": {"name": "gpt-5", "repeats": 1},
                 "user": [{"name": "claude-sonnet-5", "repeats": 1}],
+                "turns": 30,
+                "user_language": "English",
+                "persona_speaks_first": True,
+                "sessions": None,
+                "max_total_words": None,
             },
         },
     )
+    assert set(generate.OPTIONAL_FIELDS) == {"output", "max_concurrent"}
     parser = vera.build_parser()
 
     from_config = generate.resolve_configs(

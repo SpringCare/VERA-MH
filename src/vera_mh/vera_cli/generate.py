@@ -59,10 +59,10 @@ from .targets import (
 # *presence* stays detectable (see `register`), which means defaults cannot be
 # parser defaults and are instead applied during resolution by `flag_value`.
 #
-# A config file may leave out any of these behavior fields too, and gets the
-# same default (see `_from_config`). What a run actually used is written out in
-# full by `--print` today and by the run record later, so a short config file
-# does not make a run less reproducible.
+# In a config file, only `output` and `max_concurrent` may be left to these
+# defaults: they change where a run writes and how fast, not what it produces.
+# The other fields change the conversations, so a config must state them (see
+# `RESULT_FIELDS`).
 #
 # Every default here is discoverable via `vera generate -h`: each flag's help
 # text states it. Keep that true when adding a flag — a default a user cannot
@@ -75,6 +75,24 @@ DEFAULTS: dict[str, Any] = {
     "provider_speaks_first": False,
     "user_language": "English",
     "sessions": None,
+}
+
+# Fields that change the conversations. A config file must state each one, so
+# the file alone says what a run produces, and a default changing later can't
+# quietly change what an old config does.
+RESULT_FIELDS = (
+    "turns",
+    "user_language",
+    "persona_speaks_first",
+    "sessions",
+    "max_total_words",
+)
+
+# Fields a config file may leave out: they change where a run writes and how
+# fast, not what it produces.
+OPTIONAL_FIELDS = {
+    "output": DEFAULTS["output"],
+    "max_concurrent": DEFAULTS["max_concurrent"],
 }
 
 # Top-level object keys allowed inside a `--config` JSON document. These are
@@ -191,9 +209,10 @@ def _from_config(
 ) -> list[RunConfig]:
     """Resolve a config object into canonical runs.
 
-    `chatbot`, `user`, and the personas (or a target) are required. Every other
-    field is a behavior field and takes the CLI default when the file leaves it
-    out, so adding an option does not break existing config files.
+    `chatbot`, `user`, the personas (or a target), and every field in
+    `RESULT_FIELDS` are required. The `OPTIONAL_FIELDS` take the CLI defaults
+    when the file leaves them out, so a new output or speed option doesn't break
+    existing config files.
     """
     generation = config_section(config, "generation", command="generate")
     chatbot = model_from_config(
@@ -204,20 +223,15 @@ def _from_config(
         required(generation, "user", section="generation config"),
         field="generation.user",
     )
-    # The config spells the speaking order from the persona's side, the CLI
-    # flag from the chatbot's, so that one default is flipped.
-    behavior_defaults = {
-        "turns": DEFAULTS["turns"],
-        "output": DEFAULTS["output"],
-        "max_concurrent": DEFAULTS["max_concurrent"],
-        "max_total_words": DEFAULTS["max_total_words"],
-        "persona_speaks_first": not DEFAULTS["provider_speaks_first"],
-        "sessions": DEFAULTS["sessions"],
-        "user_language": DEFAULTS["user_language"],
-    }
     behavior = {
-        field: generation.get(field, default)
-        for field, default in behavior_defaults.items()
+        **{
+            field: required(generation, field, section="generation config")
+            for field in RESULT_FIELDS
+        },
+        **{
+            field: generation.get(field, default)
+            for field, default in OPTIONAL_FIELDS.items()
+        },
     }
     if not isinstance(behavior["output"], str):
         raise ConfigError("generation.output must be a path string")
