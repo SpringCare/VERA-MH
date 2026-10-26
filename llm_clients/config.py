@@ -99,8 +99,7 @@ class Config:
 
     # The recommended VERA-MH profile: the two user models and the judge behind
     # the published scores. configs/recommended-SI.json must match these (a unit
-    # test enforces it), and legacy/run_recommended_vera_pipeline.sh reads them
-    # through get_recommended_models(). Change them only together with the
+    # test enforces it). Change them only together with the
     # published methodology -- scores from other models are not comparable.
     # claude-opus-4-5 is the undated alias of the only Opus 4.5 snapshot
     # (20251101), so it is the same model; the alias resolves on more

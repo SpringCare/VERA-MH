@@ -114,7 +114,7 @@ async def load_manifest_rubric_paths(manifest_path: str) -> dict[str, str]:
 
     A manifest names its files by bare filename, and those names mean "beside
     this manifest" -- never relative to `$ROOT` or the working directory. So
-    given `judge.py --rubrics data/SI/rubric_manifest.json` containing::
+    given `data/SI/manifest.json` containing::
 
         {"rubric_file": "rubric.tsv",
          "rubric_prompt_beginning_file": "rubric_prompt_beginning.txt",

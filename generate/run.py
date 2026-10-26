@@ -154,10 +154,6 @@ async def run_generation(
     return results, output_folder
 
 
-# Moved here from the root `generate.py` when that script went to `legacy/`
-# (v2.0.3): `vera generate` calls this, and `vera_cli` must not import from
-# `legacy/`. It used to call the legacy `main()`, a pass-through with the same
-# keyword arguments, so it now calls `run_generation` directly.
 async def run_for_user_models(
     generation: GenerationConfig,
     *,

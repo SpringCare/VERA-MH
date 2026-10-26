@@ -8,8 +8,7 @@ side, and it is what `vera judge` calls.
 It deliberately does none of the CLI's work. It does not parse arguments, read
 a target manifest, apply defaults, choose an output location, or configure
 debug logging — every one of those is resolved by the caller. That boundary is
-what lets one function serve both the unified CLI and the legacy `judge.py`
-script without either one's conventions leaking into the domain.
+what keeps the CLI's conventions out of the domain.
 
 Unlike the generation side, this module already sits in the permanent package,
 so no temporary root-level boundary function is needed.

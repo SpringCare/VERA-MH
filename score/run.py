@@ -1,7 +1,7 @@
 """
 Score one judge run's ``results.csv``: the scoring application entry point.
 
-Run with `vera score -r <results.csv>`; the legacy CLI is `legacy/score.py`.
+Run with `vera score -r <results.csv>`.
 
 Reads results.csv, re-calculates the dataframe from the tsv files in the same
 folder if the results.csv is empty, calculates dimension-level and aggregate scores,
@@ -82,8 +82,7 @@ def run_scoring(
     This is the scoring domain's application function, the counterpart of
     `judge.run.run_judging`: it receives final values, does the work, and
     returns. It does not parse arguments, apply defaults, or decide where
-    anything lives -- every one of those is the caller's. That boundary is what
-    lets one function serve both `vera score` and the legacy `legacy/score.py`.
+    anything lives -- every one of those is the caller's.
 
     Visualization failures are warnings rather than errors: the scores are the
     result, and a chart that could not be drawn does not invalidate them.

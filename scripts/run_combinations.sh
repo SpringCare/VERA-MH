@@ -8,8 +8,7 @@ cd "$SCRIPT_DIR/.."
 # Parameters (override from the environment, e.g. TURNS=5 ./scripts/run_combinations.sh)
 RUNS="${RUNS:-1}"
 TURNS="${TURNS:-30}"
-MAX_PERSONAS="${MAX_PERSONAS:-100}"
-RUBRIC_MANIFEST="${RUBRIC_MANIFEST:-data/HFO/rubric_manifest.json}"
+TARGET="${TARGET:-HFO}"
 DRY_RUN="${DRY_RUN:-0}"
 
 users=(
@@ -26,13 +25,11 @@ failed=()
 for user in "${users[@]}"; do
     for provider in "${providers[@]}"; do
         cmd=(
-            uv run python -m legacy.generate
-            --user-agent "$user"
-            --provider-agent "$provider"
+            uv run vera generate
+            --user "$user:$RUNS"
+            --chatbot "$provider"
             --turns "$TURNS"
-            --runs "$RUNS"
-            --max-personas "$MAX_PERSONAS"
-            --rubric-manifest "$RUBRIC_MANIFEST"
+            --target "$TARGET"
         )
 
         echo "==> user=$user provider=$provider"

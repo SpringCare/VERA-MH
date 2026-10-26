@@ -1,7 +1,7 @@
 #!/bin/bash
 # Score all evaluation folders in publication_evaluations/vera_mh_v1_scores/
 #
-# This script finds all j_* evaluation folders and runs score.py on each one.
+# This script finds all j_* evaluation folders and runs `vera score` on each one.
 # It will generate scores.json and visualization PNGs for each evaluation.
 
 set -e  # Exit on error
@@ -50,8 +50,8 @@ while IFS= read -r eval_folder; do
     
     echo "[$count/$total] 📈 Scoring: $eval_folder"
     
-    # Run score.py
-    if python3 -m legacy.score -r "$results_csv" 2>&1; then
+    # Pass the SI personas so the risk-level breakdown runs, as legacy score.py did by default
+    if uv run vera score -r "$results_csv" --personas data/SI/personas.tsv 2>&1; then
         success=$((success + 1))
         echo "   ✅ Success"
     else
