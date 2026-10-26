@@ -26,12 +26,33 @@ class RunRootExistsError(FileExistsError):
 
 
 def run_started_at() -> datetime:
-    """Read the clock once, at the start of a run."""
+    """Read the clock once, at the start of a run.
+
+    A plain `datetime.now()` with a name, for two reasons. The enforcement test
+    (`tests/unit/utils/test_run_root.py`) can then tell the time that names a
+    run apart from the `datetime.now()` calls that time durations or stamp log
+    lines, which it allow-lists. And a test that needs a fixed run time patches
+    this one function instead of `datetime` in each module that starts a run.
+    """
     return datetime.now()
 
 
 def create_run_root(parent: str | Path, name: str) -> Path:
     """Create the folder for a new run and return its path.
+
+    `parent` is where the run goes and `name` is the run's folder name, which
+    the caller builds with the run's timestamp. Today's names, one per kind of
+    run:
+
+    - generation, under `--output`:
+      `output/p_claude_opus_4_5__a_gpt_5_4__t30__r1__20261015_191409/`,
+      which the run fills with `conversations/` and `logs/`
+    - judging, in `<generation run>/evaluations/`:
+      `j_gpt-5.4x1_reasoning_effortlow_20261015_191804_102__<generation run>/`,
+      which gets one TSV per conversation, `results.csv`, and `scores/`
+    - pooling, under `--output`:
+      `output/j_gpt-5.4x1__p_claude_opus_4_5+gpt_5_2__a_gpt_5_4__t30__r1__20261015_191923/`,
+      which gets the merged `results.csv`, `pool_metadata.json`, and `scores/`
 
     The parent folders are created as needed. The run folder itself must not
     exist yet: `mkdir` without `exist_ok` checks and creates in one step, so two
