@@ -7,9 +7,9 @@ from unittest.mock import patch
 
 import pytest
 
-from judge.llm_judge import LLMJudge
-from judge.rubric_config import ConversationData, RubricConfig
-from utils.utils import parse_key_value_list
+from vera_mh.judge.llm_judge import LLMJudge
+from vera_mh.judge.rubric_config import ConversationData, RubricConfig
+from vera_mh.utils.utils import parse_key_value_list
 
 
 def _setup_extra_params_arg(argv: list[str]) -> dict[str, Any]:
@@ -135,7 +135,7 @@ class TestJudgeExtraParams:
 
         # Patch LLMFactory.create_llm to capture parameters
         with patch(
-            "judge.llm_judge.LLMFactory.create_llm", side_effect=create_mock_llm
+            "vera_mh.judge.llm_judge.LLMFactory.create_llm", side_effect=create_mock_llm
         ):
             # Load rubric config from test directory
             rubric_config = await RubricConfig.load(

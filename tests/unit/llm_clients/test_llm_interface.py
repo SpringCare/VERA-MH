@@ -5,8 +5,8 @@ from unittest.mock import MagicMock
 import pytest
 from pydantic import BaseModel
 
-from llm_clients import Role
-from llm_clients.llm_interface import (
+from vera_mh.llm_clients import Role
+from vera_mh.llm_clients.llm_interface import (
     LLMGenerationFailed,
     LLMInterface,
     ensure_pydantic_response,
@@ -554,7 +554,9 @@ class TestLLMInterfaceHooks:
             observed_sleep_calls.append(delay)
 
         monkeypatch.setattr(LLMInterface, "_compute_retry_delay_seconds", fake_compute)
-        monkeypatch.setattr("llm_clients.llm_interface.asyncio.sleep", fake_sleep)
+        monkeypatch.setattr(
+            "vera_mh.llm_clients.llm_interface.asyncio.sleep", fake_sleep
+        )
 
         with pytest.raises(LLMGenerationFailed):
             await h.always_fail()

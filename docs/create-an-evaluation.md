@@ -51,10 +51,10 @@ These commands run the whole evaluation: the simulated users talk to the chatbot
 
 ```bash
 # A quick test with 2 personas
-uv run python vera.py pipeline -c <chatbot> -u <user-model>:1 -j <judge>:1 --target MY_TARGET --sample 2
+uv run vera pipeline -c <chatbot> -u <user-model>:1 -j <judge>:1 --target MY_TARGET --sample 2
 
 # The full evaluation, with every persona
-uv run python vera.py pipeline -c <chatbot> -u <user-model>:1 -j <judge>:1 --target MY_TARGET
+uv run vera pipeline -c <chatbot> -u <user-model>:1 -j <judge>:1 --target MY_TARGET
 ```
 
 - `-c` is the chatbot being tested, `-u` the model playing the personas, `-j` the model acting as judge.
@@ -71,8 +71,8 @@ To apply your rubric to existing conversations (for example, real user conversat
 
 ```bash
 # Judge every .txt file in the folder with your rubric; results go under the output folder
-uv run python vera.py judge -j <judge>:1 --rubric MY_TARGET --conversations <folder> -o <output folder>
+uv run vera judge -j <judge>:1 --rubric MY_TARGET --conversations <folder> -o <output folder>
 
 # Score the results.csv the judge wrote
-uv run python vera.py score -r <output folder>/<judging folder>/results.csv
+uv run vera score -r <output folder>/<judging folder>/results.csv
 ```

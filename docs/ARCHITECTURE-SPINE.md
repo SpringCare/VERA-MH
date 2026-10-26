@@ -29,7 +29,7 @@ Layer → package mapping:
 
 | Layer | Packages |
 | --- | --- |
-| CLI | `vera.py`, `vera_cli/` |
+| CLI | `cli.py`, `vera_cli/` |
 | Domain (mutually isolated) | `generate/`, `judge/`, `score/` |
 | Workers | `workers/` |
 | Infrastructure | `llm_clients/`, `storage/` |
@@ -39,7 +39,7 @@ Layer → package mapping:
 
 ```mermaid
 graph TD
-    ENTRY["vera.py (sole executable, thin)"] --> CLI["vera_cli/"]
+    ENTRY["vera command, cli.py (sole executable, thin)"] --> CLI["vera_cli/"]
     CLI --> GEN["generate/"]
     CLI --> JUDGE["judge/"]
     CLI --> SCORE["score/"]
@@ -62,9 +62,9 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 ### AD-1 — Single, thin CLI entrypoint
 
-- **Binds:** `vera.py`, `vera_cli/`, `generate/`, `judge/`, `score/`
+- **Binds:** `cli.py`, `vera_cli/`, `generate/`, `judge/`, `score/`
 - **Prevents:** business logic creeping into the CLI entrypoint; a fat orchestrator re-implementing what domain runners already do; a second root-level entrypoint script reappearing after migration.
-- **Rule:** [ADOPTED] `vera.py` is the only root-level executable in the target layout; domain packages are libraries, not invoked directly as scripts. `vera.py` only loads arguments and dispatches. CLI support lives in small, responsibility-focused `vera_cli/` modules: top-level parser, per-command flags/defaults, canonical config resolution, and thin command adapters. During migration an adapter may import a reusable function from a legacy root module, but never its CLI parser or a subprocess. Removing `generate.py` and introducing the permanent `generate/` package happen atomically. Domain packages never import `vera_cli/`, and neither `vera.py` nor `vera_cli/` contains domain behavior.
+- **Rule:** [ADOPTED] `vera` (`cli.py`) is the only executable in the target layout; domain packages are libraries, not invoked directly as scripts. `cli.py` only loads arguments and dispatches. CLI support lives in small, responsibility-focused `vera_cli/` modules: top-level parser, per-command flags/defaults, canonical config resolution, and thin command adapters. During migration an adapter may import a reusable function from a legacy root module, but never its CLI parser or a subprocess. Removing `generate.py` and introducing the permanent `generate/` package happen atomically. Domain packages never import `vera_cli/`, and neither `cli.py` nor `vera_cli/` contains domain behavior.
 
 ### AD-2 — Domain package isolation and workers inversion of control
 
@@ -92,7 +92,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
             answer = await judge_llm.generate_response(question.prompt)  # judge/'s own job shape
             question = navigator.next(question, answer)
 
-    # vera.py wires both handlers into their own instance of the same WorkerPool class
+    # cli.py wires both handlers into their own instance of the same WorkerPool class
     generate_pool = WorkerPool(queue=LocalQueue(), handler=run_one_conversation)
     judge_pool = WorkerPool(queue=LocalQueue(), handler=run_one_judgment)
     ```
@@ -129,9 +129,9 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 ### AD-8 — workers/ is a separate top-level package with explicit dispatch
 
-- **Binds:** `workers/`, `vera.py`
+- **Binds:** `workers/`, `cli.py`
 - **Prevents:** hidden registration magic; `workers/` depending on domain packages (which would invert AD-2).
-- **Rule:** [ADOPTED] `workers/` sits between domain and infrastructure as its own top-level package (not folded into `utils/`). `vera.py` wires concrete handler instances into a `WorkerPool` at startup — no implicit/magic handler registry. `QueueProtocol` (ABC) exists from day one; `LocalQueue` (asyncio) is the only implementation now, `SQSQueue` is a drop-in later behind the same protocol.
+- **Rule:** [ADOPTED] `workers/` sits between domain and infrastructure as its own top-level package (not folded into `utils/`). `cli.py` wires concrete handler instances into a `WorkerPool` at startup — no implicit/magic handler registry. `QueueProtocol` (ABC) exists from day one; `LocalQueue` (asyncio) is the only implementation now, `SQSQueue` is a drop-in later behind the same protocol.
 
 ### AD-9 — Interfaces are colocated with implementations, per concern
 
@@ -183,7 +183,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 ### AD-17 — --config and CLI flags are mutually exclusive
 
-- **Binds:** `vera.py`, `utils/config_schema.py`
+- **Binds:** `cli.py`, `utils/config_schema.py`
 - **Prevents:** a merge/override mechanism between two config sources that would make the effective config ambiguous or order-dependent.
 - **Rule:** [ADOPTED] For a given run, a piece of information (model selection/repeats, sampling knobs, persona/rubric lists, etc.) is supplied via `--config` JSON or via CLI flags, never both. Supplying the same information through both is rejected/errors — there is no silent merge. Both forms resolve to the same canonical `RunConfig` before print, persistence, or dispatch. CLI-only controls such as `--debug`, `--sample`, and `--print` may accompany either form. `--debug` and `--sample <N>` are recorded as invocation metadata in the run's persisted `config.json`, because they describe how the run actually executed; a resumed sampled run retains that sampled scope. `--print` is not persisted because it exits without creating a run. **The either/or rule governs run-defining information only, so an invocation-only control is not an exception to it — it is the category the rule already provides for.** That category is not a hand-maintained list: it is exactly the fields of `InvocationConfig`, and a control belongs there when it says nothing about *which* run this is. Two of its members alter behavior rather than only observability, and both are named here so the category stays explicitly enumerated and reviewable: `--sample <N>` caps how much of the already-resolved persona/rubric/judge lists this invocation uses, without replacing those canonical lists. `--into <run folder>` continues an existing run, skipping work whose output is already on disk, and supplies that folder as the destination in place of the run-defining `output` (the two are mutually exclusive on the command line). `--into` qualifies because a run completed in one go and the same run finished across two invocations are the same run. It is also not `vera resume` -- it is the stateless per-stage skip the legacy scripts spelled `--resume`, re-deriving progress from files already written, whereas `vera resume` reads `state.json` after verifying `config.json` (AD-18). **The category has two sub-kinds, which differ in what reaches the run's record.** *Persisted execution metadata* — `debug`, `sample` — describes how the run actually executed, and is written into `config.json` and covered by its hash. *Per-invocation addressing* — `into` — says where this execution attaches, and is deliberately excluded from both. That exclusion is forced rather than stylistic: AD-18 fixes `config.json` as written once at run start and never modified, and a continuation happens strictly after run start, so a continuing invocation has nowhere to record its `into`; hashing it would additionally give a continued run a different id from the same run completed in one go, contradicting the very reason `into` is invocation-only. `InvocationConfig.to_dict` nonetheless carries `into`, because it also serializes the resolved run into `VERA_RUN_CONFIG` for `--print`, which must emit a command that continues the same folder rather than minting a new run. **Round-trip form and persisted record therefore diverge at exactly this one field, so AD-18's writer must derive the record separately instead of reusing `to_dict`.** Any further behavior-altering control must be justified and named here, and must state which sub-kind it joins, before it may join the category; a flag that scopes *which* run happens is run-defining and stays inside the either/or rule.
 
@@ -243,7 +243,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 ### AD-27 — Chatbot selection is required, explicit, and distinct from the user-side LLM list
 
-- **Binds:** `vera.py`, `utils/config_schema.py`, `generate/`
+- **Binds:** `cli.py`, `utils/config_schema.py`, `generate/`
 - **Prevents:** the chatbot under test being inferred from context or defaulted silently; `generation.user` (the user/persona-side LLM list) being mistaken for chatbot selection, or vice versa, since both are LLM-selection fields in the same `generation` block; a bare `models` field leaving it ambiguous which of the two roles it names.
 - **Rule:** [ADOPTED] The chatbot under test is selected via `-c <model>[:repeats]` on the CLI or `generation.chatbot` in `config.json` — a single object, not a list (AD-19's single-chatbot-per-invocation scope), and required whenever `--config` is not used. There is no default chatbot. `generation.chatbot` is distinct from `generation.user`, which selects the user-side (`u`) LLM(s); the two are never conflated or merged into one field, and neither is named the generic `models` precisely because `generation` has two competing LLM roles — each gets its own entity-specific field name instead. `vera judge` never takes `-c` — judging is decoupled from chatbot selection by design (AD-5), and the chatbot is already implicit in whichever `--conversations` folder is passed in.
 
@@ -251,7 +251,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 
 - **Binds:** `utils/config_schema.py`, target manifests (AD-21)
 - **Prevents:** a config's meaning depending on the working directory the CLI happened to be invoked from, or on where the config file itself was saved; a reader assuming `config.json` and a target manifest share one path-resolution rule because both are JSON.
-- **Rule:** [ADOPTED] Path fields inside `config.json` (e.g. `generation.personas`) resolve relative to `$ROOT` — the directory containing `vera.py` — regardless of the CLI's working directory, the config file's own location, or how the config arrives (`--config <file>`, `--config -`, or `VERA_RUN_CONFIG`). Target-manifest path fields resolve relative to the manifest's own folder instead (AD-21), keeping the complete target directory portable across checkouts.
+- **Rule:** [ADOPTED] Path fields inside `config.json` (e.g. `generation.personas`) resolve relative to `$ROOT` — the repository root — regardless of the CLI's working directory, the config file's own location, or how the config arrives (`--config <file>`, `--config -`, or `VERA_RUN_CONFIG`). Target-manifest path fields resolve relative to the manifest's own folder instead (AD-21), keeping the complete target directory portable across checkouts.
 
 ## Consistency Conventions
 
@@ -266,7 +266,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 | Name | Version |
 | --- | --- |
 | Python | `3.14`, set in `.python-version`; `requires-python` and ruff `target-version` match it |
-| Package/dependency manager | uv (`uv.lock` present; CLI usage documented as `uv run python vera.py ...`) |
+| Package/dependency manager | uv (`uv.lock` present; CLI usage documented as `uv run vera ...`) |
 | langchain / langchain-anthropic / langchain-openai / langchain-ollama | `>=0.1.0` direct floor per `pyproject.toml`, but effectively constrained to the post-1.0 langchain rewrite by `[tool.uv] constraint-dependencies`' `langchain-core>=1.2.5` pin — pre-1.0 langchain is not actually installable under this lockfile despite the loose direct floor |
 | langchain-google-genai / langchain-azure-ai | `>=1.0.0` |
 | python-dotenv | `>=1.2.2` |
@@ -278,7 +278,7 @@ No edge runs `generate/` ↔ `judge/` ↔ `score/`, and none runs from `workers/
 | pytest-cov / pytest-asyncio / pytest-mock / pytest-timeout | `>=4.1.0` / `>=0.21.0` / `>=3.12.0` / `>=2.2.0` (dev group) |
 | freezegun | `>=1.4.0` (dev group) |
 | pre-commit | `>=3.0.0` (dev group) |
-| pyright | `>=1.1.0`, mode `basic` currently; blocking in CI for `generate/`, `score/`, `utils/`, `vera_cli/`, `vera.py`; target: blocking per package as each reaches zero errors, all packages by the Quality gates phase (`docs/roadmap.md`) |
+| pyright | `>=1.1.0`, mode `basic` currently; blocking in CI for `generate/`, `score/`, `utils/`, `vera_cli/`, `cli.py`; target: blocking per package as each reaches zero errors, all packages by the Quality gates phase (`docs/roadmap.md`) |
 | ruff | `>=0.3.0`, line-length 88, rules `E`/`F`/`I` |
 | import-linter, grimp | Not yet present in `pyproject.toml` — planned additions (AD-16), introduced incrementally starting the phase each new boundary is created |
 
@@ -321,7 +321,7 @@ output/
 Package tree:
 
 ```text
-vera.py                          # root parser, command registration, dispatch
+cli.py                           # root parser, command registration, dispatch
 vera_cli/
   config.py, targets.py          # shared config and manifest helpers
   <command>.py                   # flags, defaults, resolution, thin adapter
@@ -372,4 +372,4 @@ tests/           # permanent tests
 - **Fate of `judge/`'s legacy score-tooling siblings.** *Resolved in the Scoring split:* `score_comparison.py` moved to `score/compare.py`, `score_comparison_from_export_summary.py` was deleted as unused, and `score_utils.py` was split between `score/utils.py` and `utils/` (`judge_results.py`, `ratings.py`).
 - **Possible future `report/` package.** `scripts/summarize_results.py`'s improvement report is deterministic aggregation over `judge/` output, so it stays under `judge/` for now. If reporting later evolves to call an LLM for creative improvement suggestions rather than just stats, that's a different concern from `judge/`'s pure-core-plus-handler charter and would warrant its own `report/` package. Can wait because no LLM-based reporting exists yet — revisit only once that feature is actually proposed.
 - **OpenSpec adoption (the OpenSpec phase in `docs/roadmap.md`, independent of the others).** `openspec/` exists today only as empty scaffolding; whether the team actually adopts the OpenSpec workflow for large multi-file features (the existing ESCALATE trigger: new judge dimensions, pipeline CLI changes) is not yet decided. Can wait because no other phase depends on it, and it can be pulled forward independently the moment a qualifying feature would benefit from it — done only once a real change has gone through `openspec/changes/`, not once the config exists.
-- **`$ROOT` resolution assumes running from the repo tree, not a packaged install.** AD-28 defines `$ROOT` as "the directory containing `vera.py`," which in the only invocation shape that exists today (`uv run python vera.py`) resolves fine via the entry module's own `__file__`. That resolution breaks the moment `vera` ships as a packaged console-script entry point: there is no `vera.py` in the repo tree to anchor `__file__` to, and `$ROOT`'s meaning would silently change rather than error, which is worse than a loud failure. Can wait because no packaging effort is underway or scheduled. If packaging lands, `$ROOT` resolution must move to an explicit `VERA_ROOT` env var or a package-data root, never `__file__` of the entry module — and this is one instance of a broader pattern: any spine decision written against "the directory containing `vera.py`" or otherwise assuming a repo-tree checkout needs the same re-look at that point, not just this one.
+- **`$ROOT` resolution assumes running from the repo tree, not a packaged install.** `$ROOT` is the repository root, found from `vera_cli/config.py`'s own `__file__`. That works because `uv sync` installs `vera_mh` in editable mode, so the code stays in the checkout. A non-editable wheel would put the code in `site-packages`, and `$ROOT`'s meaning would silently change rather than error. If VERA-MH ships as a wheel, `$ROOT` must move to an explicit `VERA_ROOT` env var or package data, and every decision written against "the repository root" needs the same re-look.

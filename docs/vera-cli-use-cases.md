@@ -3,9 +3,9 @@ status: resolved
 updated: 2026-09-15
 ---
 
-# `vera.py` — Use Cases and CLI/Config Design
+# `vera` — Use Cases and CLI/Config Design
 
-This document lists the intended use cases for the `vera.py` entry point, the CLI/config surface that supports them, and the naming scheme for run artifacts. Originally circulated as a draft for review (PR #170); all open questions from that review have been resolved and are marked below.
+This document lists the intended use cases for the `vera` entry point, the CLI/config surface that supports them, and the naming scheme for run artifacts. Originally circulated as a draft for review (PR #170); all open questions from that review have been resolved and are marked below.
 
 ## Entity vocabulary
 
@@ -268,7 +268,7 @@ the name stays free for the command that earns it.
 - **Run-defining CLI flags and `--config` are strictly either/or, never combined for the same run.** A given piece of information (model selection/repeats, sampling knobs, persona/rubric lists) is supplied via one or the other, never both — the implementation rejects the combination rather than silently merging. Invocation controls `--sample`, `--debug`, `--into`, and `--print` MAY accompany config input. Executed runs persist `sample` and `debug` under `invocation` in their immutable `config.json`; `--print` exits without creating a run.
 - Internally, `--config` always resolves to the same canonical flag-set the CLI would produce, so there is exactly one resolved form regardless of input path. The tool prints this resolved form at run start for terminal/CI-log visibility (it does not write to the shell's own history — an opt-in `--print` flag emits the resolved flag-string with no execution, for a caller who wants to `eval` it into their own shell explicitly).
 - JSON, not YAML — robust when passed as a one-line env var or stdin payload with no escaping ambiguity.
-- **Path fields inside `config.json` (`generation.personas`, etc.) resolve relative to `$ROOT`** — the directory containing `vera.py` — never relative to the current working directory or the config file. A [target manifest](./architecture.md#target-manifest) deliberately resolves its fields relative to its own directory so the complete target remains portable.
+- **Path fields inside `config.json` (`generation.personas`, etc.) resolve relative to `$ROOT`** — the repository root — never relative to the current working directory or the config file. A [target manifest](./architecture.md#target-manifest) deliberately resolves its fields relative to its own directory so the complete target remains portable.
 
 For example, given `configs/run.json` and `data/SI/manifest.json`:
 

@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from vera_cli.config import ConfigError
-from vera_cli.targets import load_target
+from vera_mh.vera_cli.config import ConfigError
+from vera_mh.vera_cli.targets import load_target
 
 
 def _target(tmp_path: Path, **manifest_extra) -> Path:
@@ -79,10 +79,10 @@ class TestJudgeCliWiring:
 
     @staticmethod
     def _resolved_judging(argv: list[str]) -> dict:
-        import vera
+        from vera_mh import cli as vera
 
         namespace = vera.build_parser().parse_args(argv)
-        from vera_cli import judge as judge_command
+        from vera_mh.vera_cli import judge as judge_command
 
         runs = judge_command.resolve_configs(namespace)
         assert len(runs) == 1
@@ -142,9 +142,9 @@ class TestJudgeCliWiring:
         """
         import json
 
-        import vera
-        from vera_cli import config as cli_config
-        from vera_cli import judge as judge_command
+        from vera_mh import cli as vera
+        from vera_mh.vera_cli import config as cli_config
+        from vera_mh.vera_cli import judge as judge_command
 
         manifest = _target(tmp_path)
         conversations = tmp_path / "run" / "conversations"

@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Breaking / migration
 
+- **Code moved under `src/vera_mh/`**—`generate`, `judge`, `score`, `utils`, `llm_clients`, and `vera_cli` are now subpackages of one package, so imports gain a prefix: `from judge.runner import X` becomes `from vera_mh.judge.runner import X`, and the same goes for `patch()` targets. `python -m score.compare` is now `python -m vera_mh.score.compare`. `uv sync` installs the package and a `vera` command (`vera = "vera_mh.cli:main"`), which replaces `python vera.py`: the root `vera.py` is gone, so run `uv run vera <command>`. Design: [docs/design/src-layout.md](docs/design/src-layout.md) (#285).
 - **Legacy scripts removed**—`legacy/` is gone (`legacy.generate`, `legacy.judge`, `legacy.score`, `legacy.run_pipeline`, `legacy.pool_vera_scores`, `run_recommended_vera_pipeline.sh`), as announced in v2.0.4, along with `docs/legacy-scripts.md`, the tests that drove the scripts, and the `data/SI/rubric_manifest.json` and `data/HFO/rubric_manifest.json` symlinks only they read. Use the `vera` commands; the flag mapping is in [v2.0.4's `docs/legacy-scripts.md`](https://github.com/SpringCare/VERA-MH/blob/v2.0.4/docs/legacy-scripts.md). `distribute_files.py`, `scripts/run_combinations.sh`, and `scripts/score_publication_evaluations.sh` are removed too. To run several chatbots, loop over `vera generate --chatbot`; `--user` already takes several models.
 
 ### Runtime, CLI, and pipeline
@@ -38,7 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Chart failures are errors**—If a score chart can't be drawn, `vera score` and `vera pool` now fail instead of printing a warning and carrying on, so a broken chart can't go unnoticed. The optional risk-level chart still only warns.
 - **`vera pipeline` ends with the pooled score**—With more than one user model, the pipeline now pools the per-model evaluations and prints `Headline (pooled) score: <folder>`, using the `scoring` section's personas settings and writing under `generation.output`. It used to print the folders and leave pooling to you.
 - **Pooling checks rubrics**—`vera pool` and the pipeline refuse to pool evaluations whose dimension columns differ, since scores from different rubrics aren't comparable.
-- **`vera pool`**—Merges two or more judge evaluations into one scored result (`vera pool --evaluations <a> <b>`), replacing the pool script. Pooling now lives in [`score/pool.py`](score/pool.py) (`from score import run_pooling`). Like `vera score`, it skips the risk breakdown unless `--personas` is given.
+- **`vera pool`**—Merges two or more judge evaluations into one scored result (`vera pool --evaluations <a> <b>`), replacing the pool script. Pooling now lives in [`score/pool.py`](src/vera_mh/score/pool.py) (`from score import run_pooling`). Like `vera score`, it skips the risk breakdown unless `--personas` is given.
 
 ### Testing and CI
 
@@ -63,15 +64,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Documentation and development workflow
 
-- **Shared command skeleton**—The `vera` command modules now share `run_command`, `resolve_with`, `add_common_flags`, and `config_section` from [`vera_cli/config.py`](vera_cli/config.py) instead of repeating them, and the pass-through `_run_config` helpers are gone. No change to flags, help text, or output.
+- **Shared command skeleton**—The `vera` command modules now share `run_command`, `resolve_with`, `add_common_flags`, and `config_section` from [`vera_cli/config.py`](src/vera_mh/vera_cli/config.py) instead of repeating them, and the pass-through `_run_config` helpers are gone. No change to flags, help text, or output.
 
 ## [v2.0.3](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.3) \- 2026-10-09
 
 ### Breaking / migration
 
 - **Legacy scripts moved to [`legacy/`](legacy/)**—Run them from the repository root as modules: `uv run python -m legacy.generate`, `-m legacy.judge`, `-m legacy.score` (was `python -m judge.score`), and `-m legacy.run_pipeline`. They may be removed at any time; [`docs/legacy-scripts.md`](docs/legacy-scripts.md) maps their flags to `vera`.
-- **Generation package renamed**—`generate_conversations` is now [`generate/`](generate/). Update imports and `patch()` targets accordingly.
-- **Scoring moved to [`score/`](score/)**—`judge.score` is split into `score.run` (`run_scoring`, also importable as `from score import run_scoring`) and `score.aggregate` (score computation); `judge.score_viz` is now `score.viz`.
+- **Generation package renamed**—`generate_conversations` is now [`generate/`](src/vera_mh/generate/). Update imports and `patch()` targets accordingly.
+- **Scoring moved to [`score/`](src/vera_mh/score/)**—`judge.score` is split into `score.run` (`run_scoring`, also importable as `from score import run_scoring`) and `score.aggregate` (score computation); `judge.score_viz` is now `score.viz`.
 
 ### Targets, rubric, and scoring
 
@@ -79,7 +80,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Runtime, CLI, and pipeline
 
-- **Recommended models from config**—The recommended SI profile reads its models from [`llm_clients/config.py`](llm_clients/config.py).
+- **Recommended models from config**—The recommended SI profile reads its models from [`llm_clients/config.py`](src/vera_mh/llm_clients/config.py).
 - **Opus 4.5 alias**—The recommended second user model is now `claude-opus-4-5`, the undated alias of the same `20251101` snapshot, which more endpoints accept.
 
 ### Testing and CI
@@ -120,7 +121,7 @@ VERA-MH 2.0 is released. It breaks the legacy scripts: they still run in 2.0.0, 
 - **Config files**—Every `vera` command takes `--config`, `VERA_RUN_CONFIG`, or `--print`. The recommended SI profile is [`configs/recommended-SI.json`](configs/recommended-SI.json).
 - **`vera pipeline`**—Runs generation, judging, and scoring in one invocation, passing each stage's output to the next.
 - **`--into`**—`vera generate` and `vera judge` can continue an existing run.
-- **Model IDs in one place**—Default models are read from [`llm_clients/config.py`](llm_clients/config.py).
+- **Model IDs in one place**—Default models are read from [`llm_clients/config.py`](src/vera_mh/llm_clients/config.py).
 
 ### Testing, CI, and documentation
 
@@ -142,9 +143,9 @@ VERA-MH 2.0 is released. It breaks the legacy scripts: they still run in 2.0.0, 
 
 ### Runtime, CLI, and pipeline
 
-- **Reasoning support** — Added provider-aware reasoning/extended-thinking parameters for OpenAI (`reasoning_effort`), Claude (`thinking_effort`), and Gemini (`thinking_level` / `thinking_budget`) in [`llm_clients/`](llm_clients/), including CLI documentation and model-specific parameter handling.  
-- **Structured-output resilience** — Added compatibility handling in [`llm_clients/llm_interface.py`](llm_clients/llm_interface.py) for occasional Claude wrapped tool-call responses, with regression tests for reasoning and structured-output behavior.  
-- **Provider-specific parameter filtering** — [`llm_clients/`](llm_clients/) clients now drop sampling parameters unsupported by reasoning-enabled models before the API call, logging what was dropped: Claude adaptive-thinking models (now including `opus-4-7` and `fable-5`) reject `temperature`/`top_p`/`top_k`; OpenAI `gpt-5`+ reasoning models (excluding `*-chat`) reject those plus `presence_penalty`/`frequency_penalty`/`logprobs`/`top_logprobs`; Gemini `gemini-3`+ drops `temperature`/`top_p`/`top_k` per Google's migration guidance. Version gating is by parsed major version, so newer model generations are covered without code changes.
+- **Reasoning support** — Added provider-aware reasoning/extended-thinking parameters for OpenAI (`reasoning_effort`), Claude (`thinking_effort`), and Gemini (`thinking_level` / `thinking_budget`) in [`llm_clients/`](src/vera_mh/llm_clients/), including CLI documentation and model-specific parameter handling.  
+- **Structured-output resilience** — Added compatibility handling in [`llm_clients/llm_interface.py`](src/vera_mh/llm_clients/llm_interface.py) for occasional Claude wrapped tool-call responses, with regression tests for reasoning and structured-output behavior.  
+- **Provider-specific parameter filtering** — [`llm_clients/`](src/vera_mh/llm_clients/) clients now drop sampling parameters unsupported by reasoning-enabled models before the API call, logging what was dropped: Claude adaptive-thinking models (now including `opus-4-7` and `fable-5`) reject `temperature`/`top_p`/`top_k`; OpenAI `gpt-5`+ reasoning models (excluding `*-chat`) reject those plus `presence_penalty`/`frequency_penalty`/`logprobs`/`top_logprobs`; Gemini `gemini-3`+ drops `temperature`/`top_p`/`top_k` per Google's migration guidance. Version gating is by parsed major version, so newer model generations are covered without code changes.
 
 ### Documentation, legal, and development workflow
 

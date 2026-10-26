@@ -20,7 +20,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from score.run import run_scoring
+from vera_mh.score.run import run_scoring
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CASES_DIR = REPO_ROOT / "tests/fixtures/golden_scoring"

@@ -26,13 +26,15 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 - Use `python3` or `uv run python` explicitly
 - Add or update tests when changing behavior
 - **Module naming in domain packages** (`generate/`, `judge/`, `score/`): `run.py` holds the `run_<verb>` entry point and the package `__init__` re-exports it, so callers write `from score import run_scoring`. The engine lives in `runner.py` or a topic module (`aggregate.py`, `pool.py`); charts go in `viz.py` and package helpers in `utils.py`. Never repeat the package name in a module name (no `score/score.py` or `score/score_viz.py`)
-- **Type-check new code**: new or changed code should pass `uv run pyright <changed paths>` (basic mode, configured in `pyproject.toml`). CI fails on pyright errors in `generate/`, `score/`, `utils/`, `vera_cli/`, and `vera.py`, and only reports them elsewhere, so check locally
+- **Type-check new code**: new or changed code should pass `uv run pyright <changed paths>` (basic mode, configured in `pyproject.toml`). CI fails on pyright errors in `generate/`, `score/`, `utils/`, `vera_cli/`, and `cli.py`, and only reports them elsewhere, so check locally
 
 ## Architecture Map
 
+The Python packages live in one package, `src/vera_mh/`; import them as `vera_mh.judge`, `vera_mh.utils`, and so on. Package paths in the docs (`judge/runner.py`) are relative to `src/vera_mh/`. `uv sync` installs the `vera` command, which runs `src/vera_mh/cli.py`.
+
 | Area | Key paths | When to edit |
 |------|-----------|--------------|
-| **CLI** | `vera.py`, `vera_cli/`, `utils/config_schema.py` | Thin entry point, command adapters, and shared command/config wiring |
+| **CLI** | `cli.py`, `vera_cli/`, `utils/config_schema.py` | Thin entry point, command adapters, and shared command/config wiring |
 | **Generation** | `generate/` | Conversation simulation, turns, personas |
 | **Judging** | `judge/` | Rubric scoring, TSV output, question navigation |
 | **Scoring** | `score/` | Score aggregation, pooling, and visualizations from `results.csv` |
@@ -43,7 +45,7 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 | **Config** | `llm_clients/config.py` | Default and recommended model IDs, API keys |
 | **Shared utils** | `utils/` | Naming, logging, conversation layout |
 
-**Entry points:** `vera.py` (`generate`, `judge`, `score`, `pipeline`) is the only
+**Entry points:** the `vera` command (`generate`, `judge`, `score`, `pipeline`) is the only
 entry point. The pre-2.0 scripts in `legacy/` were removed in 2.1.
 
 **Temporary experiments:** `tmp_tests/` (not committed). **Permanent tests:** `tests/`.
@@ -107,7 +109,7 @@ Full reference: [docs/cli.md](docs/cli.md).
 
 ```bash
 # Generate, judge, and score in one run (smoke test on 3 personas)
-uv run python vera.py pipeline \
+uv run vera pipeline \
   -c gpt-5.4 \
   -u claude-opus-4-5:1 \
   -j gpt-5.4:1 \
@@ -116,14 +118,14 @@ uv run python vera.py pipeline \
   --sample 3
 
 # Single stages
-uv run python vera.py generate -c gpt-5.4 -u claude-opus-4-5:1 --target SI
-uv run python vera.py judge -j gpt-5.4:1 --judge-params reasoning_effort=low \
+uv run vera generate -c gpt-5.4 -u claude-opus-4-5:1 --target SI
+uv run vera judge -j gpt-5.4:1 --judge-params reasoning_effort=low \
   --conversations output/{YOUR_P_RUN} --target SI
-uv run python vera.py score -r output/{YOUR_P_RUN}/evaluations/{YOUR_J_RUN}/results.csv
+uv run vera score -r output/{YOUR_P_RUN}/evaluations/{YOUR_J_RUN}/results.csv
 
 # Recommended published-score profile (settings live in configs/recommended-SI.json)
 jq '.generation.chatbot.name = "<model-under-test>"' configs/recommended-SI.json \
-  | uv run python vera.py pipeline --config -
+  | uv run vera pipeline --config -
 
 # Development
 uv sync

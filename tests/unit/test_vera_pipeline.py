@@ -8,11 +8,11 @@ from pathlib import Path
 
 import pytest
 
-import vera
-from llm_clients.config import Config
-from utils.config_schema import JudgingConfig
-from vera_cli import config as cli_config
-from vera_cli import pipeline
+from vera_mh import cli as vera
+from vera_mh.llm_clients.config import Config
+from vera_mh.utils.config_schema import JudgingConfig
+from vera_mh.vera_cli import config as cli_config
+from vera_mh.vera_cli import pipeline
 
 
 @pytest.fixture(autouse=True)

@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
-from llm_clients.llm_interface import Role
-from utils.conversation_utils import (
+from vera_mh.llm_clients.llm_interface import Role
+from vera_mh.utils.conversation_utils import (
     add_timestamp_to_path,
     build_langchain_messages,
     ensure_provider_has_last_turn,

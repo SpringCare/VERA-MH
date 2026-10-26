@@ -11,13 +11,13 @@ import sys
 import pytest
 
 
-@pytest.mark.parametrize("package", ["judge", "llm_clients"])
+@pytest.mark.parametrize("package", ["vera_mh.judge", "vera_mh.llm_clients"])
 def test_importing_score_does_not_load(package: str):
     loaded = subprocess.run(
         [
             sys.executable,
             "-c",
-            "import sys, score, score.compare; "
+            "import sys, vera_mh.score, vera_mh.score.compare; "
             f"print(any(m == {package!r} or m.startswith({package + '.'!r}) "
             "for m in sys.modules))",
         ],

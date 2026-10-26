@@ -8,10 +8,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-import vera
-from utils.config_schema import RubricFiles
-from vera_cli import config as cli_config
-from vera_cli import judge
+from vera_mh import cli as vera
+from vera_mh.utils.config_schema import RubricFiles
+from vera_mh.vera_cli import config as cli_config
+from vera_mh.vera_cli import judge
 
 
 @pytest.fixture(autouse=True)

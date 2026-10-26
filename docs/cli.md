@@ -1,6 +1,6 @@
 # The `vera` CLI
 
-`vera.py` is the single entry point for VERA-MH 2.0. It has four commands:
+`vera` is the single entry point for VERA-MH 2.0. It has four commands:
 
 | Command | What it does |
 |---------|--------------|
@@ -9,7 +9,7 @@
 | `vera score` | Turn judge ratings into VERA-MH scores and charts |
 | `vera pipeline` | Generate, judge, and score in one invocation, passing each stage's output to the next |
 
-Invoke it as `uv run python vera.py <command> ...`. Every command accepts `--help`.
+Invoke it as `uv run vera <command> ...`. Every command accepts `--help`.
 
 For the reasoning behind these choices, see [vera-cli-use-cases.md](vera-cli-use-cases.md) and [architecture.md](architecture.md).
 
@@ -44,7 +44,7 @@ A run is defined **either** by command-line flags **or** by a JSON config; you c
 
 - `--config run.json`—a file
 - `--config -`—stdin
-- the `VERA_RUN_CONFIG` environment variable—the config JSON itself (not a path), handy in CI where writing a file is awkward: `VERA_RUN_CONFIG='{"target": "SI", ...}' uv run python vera.py pipeline`. It can't be combined with `--config`.
+- the `VERA_RUN_CONFIG` environment variable—the config JSON itself (not a path), handy in CI where writing a file is awkward: `VERA_RUN_CONFIG='{"target": "SI", ...}' uv run vera pipeline`. It can't be combined with `--config`.
 
 A few **invocation controls** describe how to run, not what the run is, so they may accompany either form:
 
@@ -99,7 +99,7 @@ A top-level `target` expands into the concrete persona and rubric paths. Instead
 Simulates conversations. Requires `-c`, at least one `-u`, and `--target` or `--personas`.
 
 ```bash
-uv run python vera.py generate \
+uv run vera generate \
   -c gpt-5.4 \
   -u claude-opus-4-5:1 \
   --target SI
@@ -124,14 +124,14 @@ uv run python vera.py generate \
 
 **Conversation ending.** A conversation stops at `--turns`, or earlier when the persona emits the end-of-conversation signal defined in the persona prompt. Custom chatbot clients can define their own termination signals.
 
-**Multi-session conversations.** With `--sessions`, each persona runs the listed session types in sequence, each with its own transcript (`..._run1_s1_intake.txt`, `..._run1_s2_coaching.txt`). A chatbot client can implement `prepare_sessions()`, `enter_session()`, and `first_speaker` on [`LLMInterface`](../llm_clients/llm_interface.py) to set up sessions or control who speaks first; see [evaluating.md](evaluating.md).
+**Multi-session conversations.** With `--sessions`, each persona runs the listed session types in sequence, each with its own transcript (`..._run1_s1_intake.txt`, `..._run1_s2_coaching.txt`). A chatbot client can implement `prepare_sessions()`, `enter_session()`, and `first_speaker` on [`LLMInterface`](../src/vera_mh/llm_clients/llm_interface.py) to set up sessions or control who speaks first; see [evaluating.md](evaluating.md).
 
 ## `vera judge`
 
 Rates one generation run's conversations. Requires at least one `-j`, `--conversations`, and `--target` or `--rubric`.
 
 ```bash
-uv run python vera.py judge \
+uv run vera judge \
   -j gpt-5.4:1 \
   --judge-params reasoning_effort=low \
   --conversations output/<generation-run> \
@@ -161,7 +161,7 @@ There is no single-conversation mode, and a flat folder of `.txt` transcripts (r
 Aggregates a judge run's `results.csv` into VERA-MH scores and charts. The results file is the only required input.
 
 ```bash
-uv run python vera.py score \
+uv run vera score \
   -r output/<generation-run>/evaluations/<evaluation-run>/results.csv \
   --personas data/SI/personas.tsv
 ```
@@ -182,7 +182,7 @@ Merges two or more judge evaluations into one `results.csv` and scores it, typic
 Used behind the scenes by `vera pipeline`, so most users won't run it directly. Run it yourself to pool evaluations judged separately, across runs, or re-pooled later.
 
 ```bash
-uv run python vera.py pool --personas data/SI/personas.tsv \
+uv run vera pool --personas data/SI/personas.tsv \
   --evaluations output/<generation-run-A>/evaluations/<evaluation-run-A> \
                output/<generation-run-B>/evaluations/<evaluation-run-B>
 ```
@@ -201,7 +201,7 @@ The config section is `pooling` with the same four fields (`evaluations`, `outpu
 Runs generate, judge, and score in sequence, then pools the evaluations when there is more than one user model. Its flag form accepts only the three model roles and the target:
 
 ```bash
-uv run python vera.py pipeline \
+uv run vera pipeline \
   -c gpt-5.4 \
   -u gpt-5.2:1 claude-opus-4-5:1 \
   -j gpt-5.4:1 \
@@ -227,17 +227,17 @@ Generation and judging both spend real LLM calls, so a run that dies partway sho
 
 ```bash
 # The original run. Creates a new folder under output/ and prints its path.
-uv run python vera.py generate -c gpt-5.4 -u claude-opus-4-5:1 --target SI
+uv run vera generate -c gpt-5.4 -u claude-opus-4-5:1 --target SI
 
 # It died partway. Same command, plus --into naming the folder it created:
-uv run python vera.py generate -c gpt-5.4 -u claude-opus-4-5:1 --target SI \
+uv run vera generate -c gpt-5.4 -u claude-opus-4-5:1 --target SI \
   --into output/p_claude_opus_4_5__a_gpt_5_4__t30__r1__20260713_153000
 ```
 
 `vera judge` takes the same flag, pointed at the evaluation folder it was writing:
 
 ```bash
-uv run python vera.py judge -j gpt-5.4:1 --judge-params reasoning_effort=low \
+uv run vera judge -j gpt-5.4:1 --judge-params reasoning_effort=low \
   --conversations output/<generation-run> --target SI \
   --into output/<generation-run>/evaluations/<evaluation-run>
 ```
@@ -268,7 +268,7 @@ Reasoning-capable models each take a different parameter:
 | Gemini 3 | `thinking_level` | `low`, `high` |
 | Gemini 2.5 | `thinking_budget` | integer token budget |
 
-`thinking_effort` is VERA-MH shorthand, not a native Anthropic field: it is translated into the right `thinking`/`effort`/`budget_tokens` combination for each model in [`llm_clients/claude_llm.py`](../llm_clients/claude_llm.py). Claude forces `temperature=1` whenever thinking is on. The other three pass straight through. Per-provider details are in [evaluating.md](evaluating.md#reasoning--extended-thinking-by-provider).
+`thinking_effort` is VERA-MH shorthand, not a native Anthropic field: it is translated into the right `thinking`/`effort`/`budget_tokens` combination for each model in [`llm_clients/claude_llm.py`](../src/vera_mh/llm_clients/claude_llm.py). Claude forces `temperature=1` whenever thinking is on. The other three pass straight through. Per-provider details are in [evaluating.md](evaluating.md#reasoning--extended-thinking-by-provider).
 
 To route Claude, OpenAI, or Gemini calls through a gateway such as LiteLLM, set `API_BASE_URL` (or the per-provider `ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL` / `GOOGLE_BASE_URL`) in `.env`. The matching `*_API_KEY` must then be a key the gateway accepts.
 

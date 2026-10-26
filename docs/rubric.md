@@ -120,7 +120,7 @@ Once `data/NEW_TARGET/manifest.json` exists, `vera generate`, `vera judge`, and
 one go:
 
 ```bash
-uv run python vera.py pipeline \
+uv run vera pipeline \
   -c <chatbot-model> \
   -u <user-model>:1 \
   -j <judge-model>:1 \
@@ -130,7 +130,7 @@ uv run python vera.py pipeline \
 Or judge existing conversations with the new rubric:
 
 ```bash
-uv run python vera.py judge \
+uv run vera judge \
   -j <judge-model>:1 \
   --conversations output/my-run \
   --target NEW_TARGET

@@ -4,9 +4,13 @@ from unittest.mock import patch
 
 import pytest
 
-from generate.conversation_simulator import ConversationSimulator
-from llm_clients.llm_interface import DEFAULT_START_PROMPT, LLMGenerationFailed, Role
 from tests.mocks.mock_llm import MockLLM
+from vera_mh.generate.conversation_simulator import ConversationSimulator
+from vera_mh.llm_clients.llm_interface import (
+    DEFAULT_START_PROMPT,
+    LLMGenerationFailed,
+    Role,
+)
 
 
 @pytest.mark.unit
@@ -380,7 +384,7 @@ class TestConversationSimulator:
         await simulator.generate_conversation(max_turns=2)
 
         with patch(
-            "generate.conversation_simulator.save_conversation_to_file"
+            "vera_mh.generate.conversation_simulator.save_conversation_to_file"
         ) as mock_save:
             simulator.save_conversation("test_convo.txt", folder="test_folder")
 

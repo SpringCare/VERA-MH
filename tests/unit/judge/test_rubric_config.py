@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from judge.rubric_config import RubricConfig
+from vera_mh.judge.rubric_config import RubricConfig
 
 
 async def load_inline_rubric(tmp_path: Path, rows: str) -> RubricConfig:

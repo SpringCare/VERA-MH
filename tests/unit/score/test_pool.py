@@ -7,8 +7,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from score import pool
-from utils.naming import build_generation_run_folder_name
+from vera_mh.score import pool
+from vera_mh.utils.naming import build_generation_run_folder_name
 
 # Generation-run folder names, built with the real naming helper so the tests
 # follow its format. The folders themselves are created under `tmp_path` by

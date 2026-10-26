@@ -2,8 +2,8 @@
 
 from langchain_core.messages import AIMessage, HumanMessage
 
-from generate.conversation_turn import ConversationTurn
-from llm_clients import Role
+from vera_mh.generate.conversation_turn import ConversationTurn
+from vera_mh.llm_clients import Role
 
 
 class TestConversationTurnCreation:

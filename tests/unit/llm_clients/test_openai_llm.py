@@ -5,10 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from llm_clients import Role
-from llm_clients.config import Config
-from llm_clients.llm_interface import LLMGenerationFailed
-from llm_clients.openai_llm import OpenAILLM
+from vera_mh.llm_clients import Role
+from vera_mh.llm_clients.config import Config
+from vera_mh.llm_clients.llm_interface import LLMGenerationFailed
+from vera_mh.llm_clients.openai_llm import OpenAILLM
 
 from .test_base_llm import TestJudgeLLMBase
 from .test_helpers import (
@@ -37,8 +37,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         if "name" not in kwargs:
             kwargs["name"] = "TestOpenAI"
 
-        with patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key"):
-            with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+        with patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key"):
+            with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock_chat:
                 mock_llm = MagicMock()
                 mock_chat.return_value = mock_llm
                 return OpenAILLM(role=role, **kwargs)
@@ -60,7 +60,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
     # OpenAI-Specific Tests
     # ============================================================================
 
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", None)
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", None)
     def test_init_missing_api_key_raises_error(self):
         """Test that missing OPENAI_API_KEY raises ValueError."""
         with pytest.raises(ValueError) as exc_info:
@@ -87,7 +87,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
     def test_init_with_kwargs(self, default_llm_kwargs):
         """Test initialization with additional kwargs (non-reasoning model)."""
-        with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+        with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock_chat:
             OpenAILLM(
                 name="TestOpenAI",
                 role=Role.PERSONA,
@@ -103,9 +103,9 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
     def test_init_passes_base_url_when_configured(self):
         """A configured base URL reaches ChatOpenAI."""
-        with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+        with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock_chat:
             with patch(
-                "llm_clients.openai_llm.Config.get_base_url",
+                "vera_mh.llm_clients.openai_llm.Config.get_base_url",
                 return_value="https://gateway.example.com/v1",
             ):
                 OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
@@ -116,15 +116,17 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
     def test_init_omits_base_url_when_not_configured(self):
         """Without an override, base_url is left out so ChatOpenAI defaults."""
-        with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
-            with patch("llm_clients.openai_llm.Config.get_base_url", return_value=None):
+        with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+            with patch(
+                "vera_mh.llm_clients.openai_llm.Config.get_base_url", return_value=None
+            ):
                 OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
 
             assert "base_url" not in mock_chat.call_args[1]
 
     def test_init_strips_unsupported_sampling_params_for_gpt5(self, default_llm_kwargs):
         """gpt-5.x rejects temperature/top_p while reasoning; must not be sent."""
-        with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+        with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock_chat:
             OpenAILLM(
                 name="TestOpenAI",
                 role=Role.JUDGE,
@@ -139,7 +141,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
     def test_init_keeps_sampling_params_for_gpt5_chat(self, default_llm_kwargs):
         """gpt-5*-chat variants support temperature/top_p; must not be stripped."""
-        with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+        with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock_chat:
             OpenAILLM(
                 name="TestOpenAI",
                 role=Role.JUDGE,
@@ -152,7 +154,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
             assert call_kwargs["top_p"] == 0.9
 
     def test_model_supports_param_unsupported_for_gpt5(self, default_llm_kwargs):
-        with patch("llm_clients.openai_llm.ChatOpenAI"):
+        with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI"):
             llm = OpenAILLM(
                 name="TestOpenAI",
                 role=Role.JUDGE,
@@ -171,7 +173,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert llm._model_supports_param("gpt-6-chat", "temperature")
 
     def test_model_supports_param_case_insensitive(self, default_llm_kwargs):
-        with patch("llm_clients.openai_llm.ChatOpenAI"):
+        with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI"):
             llm = OpenAILLM(
                 name="TestOpenAI",
                 role=Role.JUDGE,
@@ -183,7 +185,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
     def test_filter_supported_params_strips_unsupported_for_gpt5(
         self, default_llm_kwargs
     ):
-        with patch("llm_clients.openai_llm.ChatOpenAI"):
+        with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI"):
             llm = OpenAILLM(
                 name="TestOpenAI",
                 role=Role.JUDGE,
@@ -195,8 +197,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert filtered == {"max_tokens": 500}
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_success_with_system_prompt(
         self, mock_chat_openai, mock_response_factory, mock_system_message
     ):
@@ -261,8 +263,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert "raw_usage_metadata" in metadata
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_without_system_prompt(
         self, mock_chat_openai, mock_response_factory, mock_system_message
     ):
@@ -288,8 +290,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         verify_no_system_message_in_call(mock_llm)
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_without_additional_kwargs(
         self, mock_chat_openai, mock_system_message
     ):
@@ -312,8 +314,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert metadata["additional_kwargs"] == {}
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_without_response_metadata(
         self, mock_chat_openai, mock_system_message
     ):
@@ -338,8 +340,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert metadata["finish_reason"] is None
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_without_usage_metadata(
         self, mock_chat_openai, mock_system_message
     ):
@@ -373,8 +375,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert metadata["usage"]["total_tokens"] == 30
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_api_error(
         self, mock_chat_openai, mock_llm_factory, mock_system_message
     ):
@@ -393,8 +395,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         )
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_retries_then_succeeds(
         self, mock_chat_openai, mock_response_factory, mock_system_message
     ):
@@ -421,8 +423,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert llm.last_response_metadata["response_id"] == "chatcmpl-retry"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_no_retry_on_quota_substring(
         self, mock_chat_openai, mock_llm_factory, mock_system_message
     ):
@@ -440,8 +442,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert mock_llm.ainvoke.call_count == 1
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_tracks_timing(
         self, mock_chat_openai, mock_response_factory, mock_system_message
     ):
@@ -478,8 +480,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert llm.system_prompt == "Updated prompt"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_metadata_includes_response_object(
         self, mock_chat_openai, mock_response_factory, mock_system_message
     ):
@@ -500,8 +502,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert metadata["response"] == mock_response
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_timestamp_format(
         self, mock_chat_openai, mock_response_factory, mock_system_message
     ):
@@ -521,8 +523,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert_iso_timestamp(metadata["timestamp"])
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_model_name_update_from_metadata(
         self, mock_chat_openai, mock_response_factory, mock_system_message
     ):
@@ -545,8 +547,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert metadata["model"] == "gpt-4o-0613-updated"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_with_conversation_history(
         self, mock_chat_openai, mock_response_factory, sample_conversation_history
     ):
@@ -585,8 +587,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert len(messages) == 4
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_with_empty_conversation_history(
         self, mock_chat_openai, mock_response_factory, mock_system_message
     ):
@@ -614,8 +616,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert len(messages) == 2
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_with_none_conversation_history(
         self, mock_chat_openai, mock_response_factory, mock_system_message
     ):
@@ -643,8 +645,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert len(messages) == 2
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_with_persona_role_flips_types(
         self, mock_chat_openai, mock_response_factory, sample_conversation_history
     ):
@@ -675,8 +677,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         verify_message_types_for_persona(mock_llm, expected_message_count=4)
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_generate_response_with_partial_usage_metadata(
         self, mock_chat_openai, mock_response_factory, mock_system_message
     ):
@@ -715,8 +717,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         )  # Gets from metadata, doesn't calculate
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_metadata_with_finish_reason(
         self, mock_chat_openai, mock_response_factory, mock_system_message
     ):
@@ -739,8 +741,8 @@ class TestOpenAILLM(TestJudgeLLMBase):
         assert metadata["finish_reason"] == "length"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
-    @patch("llm_clients.openai_llm.ChatOpenAI")
+    @patch("vera_mh.llm_clients.openai_llm.Config.OPENAI_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.openai_llm.ChatOpenAI")
     async def test_raw_metadata_stored(
         self, mock_chat_openai, mock_response_factory, mock_system_message
     ):
@@ -774,7 +776,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         """Test successful structured response generation."""
         from pydantic import BaseModel, Field
 
-        with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+        with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock_chat:
             mock_llm = MagicMock()
 
             # Create a test Pydantic model
@@ -824,7 +826,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         """Test structured response with nested Pydantic model."""
         from pydantic import BaseModel, Field
 
-        with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+        with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock_chat:
             mock_llm = MagicMock()
 
             # Define nested Pydantic models
@@ -873,7 +875,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         """Test error handling in structured response generation."""
         from pydantic import BaseModel
 
-        with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+        with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock_chat:
             mock_llm = MagicMock()
 
             class TestResponse(BaseModel):
@@ -906,7 +908,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         """Test that structured response metadata includes correct fields."""
         from pydantic import BaseModel
 
-        with patch("llm_clients.openai_llm.ChatOpenAI") as mock_chat:
+        with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock_chat:
             mock_llm = MagicMock()
 
             class SimpleResponse(BaseModel):

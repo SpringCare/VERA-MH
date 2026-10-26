@@ -6,13 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from langchain_core.messages import AIMessage
 
-from llm_clients import Role
-from llm_clients.config import Config
-from llm_clients.gemini_llm import (
+from vera_mh.llm_clients import Role
+from vera_mh.llm_clients.config import Config
+from vera_mh.llm_clients.gemini_llm import (
     _STRUCTURED_OUTPUT_MAX_LOG_CHARS,
     GeminiLLM,
 )
-from llm_clients.llm_interface import LLMGenerationFailed
+from vera_mh.llm_clients.llm_interface import LLMGenerationFailed
 
 from .test_base_llm import TestJudgeLLMBase
 from .test_helpers import (
@@ -55,8 +55,10 @@ class TestGeminiLLM(TestJudgeLLMBase):
         if "name" not in kwargs:
             kwargs["name"] = "TestGemini"
 
-        with patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key"):
-            with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+        with patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key"):
+            with patch(
+                "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+            ) as mock_chat:
                 mock_llm = MagicMock()
                 mock_chat.return_value = mock_llm
                 return GeminiLLM(role=role, **kwargs)
@@ -78,7 +80,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
     # Gemini-Specific Tests
     # ============================================================================
 
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", None)
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", None)
     def test_init_missing_api_key_raises_error(self):
         """Test that missing GOOGLE_API_KEY raises ValueError."""
         with pytest.raises(ValueError) as exc_info:
@@ -113,7 +115,9 @@ class TestGeminiLLM(TestJudgeLLMBase):
         this against the configured default would assert nothing about kwargs
         passthrough. Dropping is covered separately by the param-filter tests.
         """
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+        with patch(
+            "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+        ) as mock_chat:
             GeminiLLM(
                 name="TestGemini",
                 role=Role.PERSONA,
@@ -129,9 +133,11 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
     def test_init_passes_base_url_when_configured(self):
         """A configured base URL reaches ChatGoogleGenerativeAI."""
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+        with patch(
+            "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+        ) as mock_chat:
             with patch(
-                "llm_clients.gemini_llm.Config.get_base_url",
+                "vera_mh.llm_clients.gemini_llm.Config.get_base_url",
                 return_value="https://gateway.example.com",
             ):
                 GeminiLLM(name="TestGemini", role=Role.PERSONA)
@@ -140,8 +146,12 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
     def test_init_omits_base_url_when_not_configured(self):
         """Without an override, base_url is left out so the client defaults."""
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
-            with patch("llm_clients.gemini_llm.Config.get_base_url", return_value=None):
+        with patch(
+            "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+        ) as mock_chat:
+            with patch(
+                "vera_mh.llm_clients.gemini_llm.Config.get_base_url", return_value=None
+            ):
                 GeminiLLM(name="TestGemini", role=Role.PERSONA)
 
             assert "base_url" not in mock_chat.call_args[1]
@@ -149,7 +159,9 @@ class TestGeminiLLM(TestJudgeLLMBase):
     def test_init_strips_sampling_params_for_gemini_3(self, default_llm_kwargs):
         """Gemini 3.x: temperature/top_p/top_k are no longer recommended and
         must not be forced onto the model (Google migration guidance)."""
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+        with patch(
+            "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+        ) as mock_chat:
             GeminiLLM(
                 name="TestGemini",
                 role=Role.JUDGE,
@@ -164,7 +176,9 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
     def test_init_keeps_sampling_params_for_pre_gemini_3(self, default_llm_kwargs):
         """Pre-Gemini-3 models are unaffected by the sampling-param filter."""
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+        with patch(
+            "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+        ) as mock_chat:
             GeminiLLM(
                 name="TestGemini",
                 role=Role.JUDGE,
@@ -177,7 +191,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
             assert call_kwargs["top_p"] == 0.9
 
     def test_model_supports_param_unsupported_for_gemini_3(self, default_llm_kwargs):
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI"):
+        with patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"):
             llm = GeminiLLM(
                 name="TestGemini",
                 role=Role.JUDGE,
@@ -196,7 +210,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
     def test_filter_supported_params_strips_unsupported_for_gemini_3(
         self, default_llm_kwargs
     ):
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI"):
+        with patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"):
             llm = GeminiLLM(
                 name="TestGemini",
                 role=Role.JUDGE,
@@ -219,7 +233,9 @@ class TestGeminiLLM(TestJudgeLLMBase):
         fields (unlike Claude's `thinking` dict, no shim is needed here).
         Regression guard against a future langchain-google-genai rename.
         """
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+        with patch(
+            "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+        ) as mock_chat:
             GeminiLLM(
                 name="TestGemini",
                 role=Role.PERSONA,
@@ -231,8 +247,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
                 assert call_kwargs[key] == value
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_success_with_system_prompt(
         self, mock_chat_gemini, mock_response_factory, mock_system_message
     ):
@@ -281,8 +297,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert "raw_metadata" in metadata
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_without_system_prompt(
         self, mock_chat_gemini, mock_response_factory, mock_system_message
     ):
@@ -307,8 +323,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         verify_no_system_message_in_call(mock_llm)
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_with_fallback_token_usage(
         self, mock_chat_gemini, mock_response_factory, mock_system_message
     ):
@@ -342,8 +358,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert metadata["usage"]["total_tokens"] == 30
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_without_usage_metadata(
         self, mock_chat_gemini, mock_response_factory, mock_system_message
     ):
@@ -367,8 +383,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert metadata["usage"] == {}
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_without_response_metadata(
         self, mock_chat_gemini, mock_system_message
     ):
@@ -394,8 +410,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert metadata["finish_reason"] is None
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_model_name_update_from_dict_metadata(
         self, mock_chat_gemini, mock_system_message
     ):
@@ -419,8 +435,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert llm.last_response_metadata["model"] == "gemini-2.0-flash"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_api_error(
         self, mock_chat_gemini, mock_llm_factory, mock_system_message
     ):
@@ -439,8 +455,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         )
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_tracks_timing(
         self, mock_chat_gemini, mock_response_factory, mock_system_message
     ):
@@ -475,8 +491,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert llm.system_prompt == "Updated prompt"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_metadata_includes_response_object(
         self, mock_chat_gemini, mock_response_factory, mock_system_message
     ):
@@ -497,8 +513,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert metadata["response"] == mock_response
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_timestamp_format(
         self, mock_chat_gemini, mock_response_factory, mock_system_message
     ):
@@ -518,8 +534,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert_iso_timestamp(metadata["timestamp"])
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_finish_reason_extraction(
         self, mock_chat_gemini, mock_response_factory, mock_system_message
     ):
@@ -545,8 +561,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert metadata["finish_reason"] == "MAX_TOKENS"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_raw_metadata_stored(self, mock_chat_gemini, mock_system_message):
         """Test that raw metadata is stored."""
         mock_llm = MagicMock()
@@ -572,8 +588,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert metadata["raw_metadata"]["nested"]["key"] == "value"
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_with_conversation_history(
         self, mock_chat_gemini, mock_response_factory, sample_conversation_history
     ):
@@ -612,8 +628,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert len(messages) == 4
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_with_empty_conversation_history(
         self, mock_chat_gemini, mock_response_factory, mock_system_message
     ):
@@ -641,8 +657,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert len(messages) == 2
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_with_none_conversation_history(
         self, mock_chat_gemini, mock_response_factory, mock_system_message
     ):
@@ -670,8 +686,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         assert len(messages) == 2
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_with_persona_role_flips_types(
         self, mock_chat_gemini, mock_response_factory, sample_conversation_history
     ):
@@ -700,8 +716,8 @@ class TestGeminiLLM(TestJudgeLLMBase):
         verify_message_types_for_persona(mock_llm, expected_message_count=4)
 
     @pytest.mark.asyncio
-    @patch("llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
-    @patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI")
+    @patch("vera_mh.llm_clients.gemini_llm.Config.GOOGLE_API_KEY", "test-key")
+    @patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI")
     async def test_generate_response_with_partial_usage_metadata(
         self, mock_chat_gemini, mock_response_factory, mock_system_message
     ):
@@ -746,7 +762,9 @@ class TestGeminiLLM(TestJudgeLLMBase):
         """Test successful structured response generation."""
         from pydantic import BaseModel, Field
 
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+        with patch(
+            "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+        ) as mock_chat:
             mock_llm = MagicMock()
 
             # Create a test Pydantic model
@@ -799,7 +817,9 @@ class TestGeminiLLM(TestJudgeLLMBase):
         """Test structured response with nested Pydantic model."""
         from pydantic import BaseModel, Field
 
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+        with patch(
+            "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+        ) as mock_chat:
             mock_llm = MagicMock()
 
             # Define nested Pydantic models
@@ -850,7 +870,9 @@ class TestGeminiLLM(TestJudgeLLMBase):
         """Test error handling in structured response generation."""
         from pydantic import BaseModel
 
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+        with patch(
+            "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+        ) as mock_chat:
             mock_llm = MagicMock()
 
             class TestResponse(BaseModel):
@@ -888,7 +910,9 @@ class TestGeminiLLM(TestJudgeLLMBase):
         """When parsing yields no model, failure metadata includes raw response."""
         from pydantic import BaseModel, Field
 
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+        with patch(
+            "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+        ) as mock_chat:
             mock_llm = MagicMock()
 
             class TestResponse(BaseModel):
@@ -927,7 +951,9 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
         huge_content = "x" * (_STRUCTURED_OUTPUT_MAX_LOG_CHARS + 5000)
 
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+        with patch(
+            "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+        ) as mock_chat:
             mock_llm = MagicMock()
 
             class TestResponse(BaseModel):
@@ -964,9 +990,13 @@ class TestGeminiLLM(TestJudgeLLMBase):
         async def _noop_sleep(_delay: float) -> None:
             return None
 
-        monkeypatch.setattr("llm_clients.llm_interface.asyncio.sleep", _noop_sleep)
+        monkeypatch.setattr(
+            "vera_mh.llm_clients.llm_interface.asyncio.sleep", _noop_sleep
+        )
 
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+        with patch(
+            "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+        ) as mock_chat:
             mock_llm = MagicMock()
 
             class TestResponse(BaseModel):
@@ -1002,7 +1032,9 @@ class TestGeminiLLM(TestJudgeLLMBase):
         """Test that structured response metadata includes correct fields."""
         from pydantic import BaseModel
 
-        with patch("llm_clients.gemini_llm.ChatGoogleGenerativeAI") as mock_chat:
+        with patch(
+            "vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"
+        ) as mock_chat:
             mock_llm = MagicMock()
 
             class SimpleResponse(BaseModel):

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from generate.utils import load_prompts_from_csv as _load_prompts_from_csv
+from vera_mh.generate.utils import load_prompts_from_csv as _load_prompts_from_csv
 
 
 def load_prompts_from_csv(*, prompt_template_path, **kwargs):

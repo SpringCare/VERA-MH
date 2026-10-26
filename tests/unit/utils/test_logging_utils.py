@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from llm_clients import Role
 from tests.mocks.mock_llm import MockLLM
-from utils.debug import set_debug
-from utils.logging_utils import (
+from vera_mh.llm_clients import Role
+from vera_mh.utils.debug import set_debug
+from vera_mh.utils.logging_utils import (
     cleanup_logger,
     extract_last_response_metadata,
     log_conversation_end,

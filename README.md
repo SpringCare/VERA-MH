@@ -12,7 +12,7 @@ VERA-MH (Validation of Ethical and Responsible AI in Mental Health) is a framewo
 
 2.0 also adds:
 
-- **The `vera` CLI**—a single entry point (`vera.py`) with `generate`, `judge`, `score`, and `pipeline` commands, replacing the separate scripts.
+- **The `vera` CLI**—a single entry point, the `vera` command, with `generate`, `judge`, `score`, and `pipeline` commands, replacing the separate scripts.
 - **Config files**—any run can be described by a JSON config and replayed exactly; each command prints its fully resolved config when it starts.
 
 2.0 introduces breaking changes; see the [CHANGELOG](CHANGELOG.md). The project is a continuous work in progress, and feedback is welcome under the [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
@@ -27,12 +27,12 @@ uv sync                        # installs the dependencies and the `vera` comman
 cp .env.example .env           # add ANTHROPIC_API_KEY, OPENAI_API_KEY, ... as needed
 ```
 
-Then run commands as `uv run vera …`, or activate the environment (`source .venv/bin/activate`) and type `vera …`. `uv run python vera.py …` also works.
+Then run commands as `uv run vera …`, or activate the environment (`source .venv/bin/activate`) and type `vera …`.
 
 Run a smoke test (generate, judge, and score on 3 personas):
 
 ```bash
-uv run python vera.py pipeline \
+uv run vera pipeline \
   -c gpt-5.4 \
   -u claude-opus-4-5:1 \
   -j gpt-5.4:1 \
@@ -57,7 +57,7 @@ For a score comparable to the published VERA-MH numbers, use the recommended pro
 
 ```bash
 jq '.generation.chatbot.name = "<model-under-test>"' configs/recommended-SI.json \
-  | uv run python vera.py pipeline --config -
+  | uv run vera pipeline --config -
 ```
 
 This produces one evaluation per user model, then pools them: the headline score is the **pooled** folder the pipeline prints at the end (`Headline (pooled) score: ...`). How the score is computed and what the output files contain is covered in [docs/scoring.md](docs/scoring.md).

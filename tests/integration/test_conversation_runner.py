@@ -15,9 +15,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from generate.runner import ConversationRunner
-from llm_clients.llm_interface import Role
 from tests.mocks.mock_llm import MockLLM
+from vera_mh.generate.runner import ConversationRunner
+from vera_mh.llm_clients.llm_interface import Role
 
 
 def create_test_runner(
@@ -103,7 +103,7 @@ def mock_llm_factory():
             )
 
     with patch(
-        "generate.runner.LLMFactory.create_llm",
+        "vera_mh.generate.runner.LLMFactory.create_llm",
         side_effect=create_mock_llm,
     ) as mock:
         yield mock
@@ -213,7 +213,7 @@ class TestConversationRunnerInit:
             "run": 1,
         }
 
-        with patch("generate.runner.setup_conversation_logger") as mock_logger:
+        with patch("vera_mh.generate.runner.setup_conversation_logger") as mock_logger:
             mock_logger.return_value = MagicMock()
             await runner.run_single_conversation(
                 persona_config=persona_config,
@@ -260,7 +260,7 @@ class TestConversationRunnerInit:
             "run": 1,
         }
 
-        with patch("generate.runner.setup_conversation_logger") as mock_logger:
+        with patch("vera_mh.generate.runner.setup_conversation_logger") as mock_logger:
             mock_logger.return_value = MagicMock()
             await runner.run_single_conversation(
                 persona_config=persona_config,
@@ -306,7 +306,7 @@ class TestConversationRunnerSingle:
         }
 
         # Act - patch setup_conversation_logger to use tmp_path
-        with patch("generate.runner.setup_conversation_logger") as mock_logger:
+        with patch("vera_mh.generate.runner.setup_conversation_logger") as mock_logger:
             logger = logging.getLogger("test_conversation")
             logger.handlers.clear()
             os.makedirs(log_folder / run_id, exist_ok=True)
@@ -357,7 +357,7 @@ class TestConversationRunnerSingle:
             "run": 1,
         }
 
-        with patch("generate.runner.setup_conversation_logger") as mock_logger:
+        with patch("vera_mh.generate.runner.setup_conversation_logger") as mock_logger:
             logger = logging.getLogger("test_agent_first")
             logger.handlers.clear()
             mock_logger.return_value = logger
@@ -404,7 +404,9 @@ class TestConversationRunnerSingle:
         os.makedirs(log_folder / run_id, exist_ok=True)
         log_file = log_folder / run_id / "test_conversation.log"
 
-        with patch("generate.runner.setup_conversation_logger") as mock_logger_setup:
+        with patch(
+            "vera_mh.generate.runner.setup_conversation_logger"
+        ) as mock_logger_setup:
             logger = logging.getLogger("test_conversation_logging")
             logger.handlers.clear()
             logger.setLevel(logging.INFO)
@@ -461,7 +463,7 @@ class TestConversationRunnerSingle:
         }
 
         # Act
-        with patch("generate.runner.setup_conversation_logger") as mock_logger:
+        with patch("vera_mh.generate.runner.setup_conversation_logger") as mock_logger:
             logger = MagicMock()
             mock_logger.return_value = logger
 
@@ -503,7 +505,7 @@ class TestConversationRunnerSingle:
         }
 
         # Create mock with early termination
-        with patch("generate.runner.LLMFactory.create_llm") as mock:
+        with patch("vera_mh.generate.runner.LLMFactory.create_llm") as mock:
             persona_mock = MockLLM(
                 name="persona",
                 model_name="mock-persona-model",
@@ -527,7 +529,9 @@ class TestConversationRunnerSingle:
             mock.side_effect = side_effect
 
             # Patch conversation simulator to detect early termination
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 logger = MagicMock()
                 mock_logger.return_value = logger
 
@@ -565,7 +569,7 @@ class TestConversationRunnerSingle:
         }
 
         # Act
-        with patch("generate.runner.setup_conversation_logger") as mock_logger:
+        with patch("vera_mh.generate.runner.setup_conversation_logger") as mock_logger:
             logger = MagicMock()
             mock_logger.return_value = logger
 
@@ -626,10 +630,12 @@ class TestConversationRunnerMultiple:
             {"Name": "Persona2", "prompt": "Prompt 2"},
         ]
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = mock_personas
 
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 logger = MagicMock()
                 mock_logger.return_value = logger
 
@@ -664,10 +670,10 @@ class TestConversationRunnerMultiple:
             persona_context_template_path="data/persona_context_custom.txt",
         )
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = [{"Name": "Persona1", "prompt": "Prompt 1"}]
 
-            with patch("generate.runner.setup_conversation_logger"):
+            with patch("vera_mh.generate.runner.setup_conversation_logger"):
                 await runner.run_conversations(persona_names=["Persona1"])
 
         assert mock_load.call_args.kwargs["prompt_path"] == "data/personas_custom.tsv"
@@ -718,10 +724,12 @@ class TestConversationRunnerMultiple:
 
         runner.run_single_conversation = tracked_run
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = mock_personas
 
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 logger = MagicMock()
                 mock_logger.return_value = logger
 
@@ -755,10 +763,12 @@ class TestConversationRunnerMultiple:
 
         mock_personas = [{"Name": "Persona1", "prompt": "Prompt 1"}]
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = mock_personas
 
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 logger = MagicMock()
                 mock_logger.return_value = logger
 
@@ -792,10 +802,12 @@ class TestConversationRunnerMultiple:
             {"Name": "Persona2", "prompt": "Prompt 2"},
         ]
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = mock_personas
 
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 logger = MagicMock()
                 mock_logger.return_value = logger
 
@@ -832,9 +844,11 @@ class TestConversationRunnerMultiple:
         )
         mock_personas = [{"Name": "Persona1", "prompt": "Prompt 1"}]
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = mock_personas
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 mock_logger.return_value = MagicMock()
                 results = await runner.run_conversations(persona_names=None)
 
@@ -867,9 +881,11 @@ class TestConversationRunnerMultiple:
         )
         mock_personas = [{"Name": "Persona1", "prompt": "Prompt 1"}]
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = mock_personas
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 mock_logger.return_value = MagicMock()
                 results = await runner.run_conversations(persona_names=None)
 
@@ -902,9 +918,11 @@ class TestConversationRunnerMultiple:
         )
         mock_personas = [{"Name": "Mary Jane", "prompt": "Prompt 1"}]
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = mock_personas
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 mock_logger.return_value = MagicMock()
                 results = await runner.run_conversations(persona_names=None)
 
@@ -936,9 +954,11 @@ class TestConversationRunnerMultiple:
         )
         mock_personas = [{"Name": "Persona1", "prompt": "Prompt 1"}]
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = mock_personas
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 mock_logger.return_value = MagicMock()
                 results = await runner.run_conversations(persona_names=None)
 
@@ -975,9 +995,11 @@ class TestConversationRunnerMultiple:
         )
         mock_personas = [{"Name": "Persona1", "prompt": "Prompt 1"}]
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = mock_personas
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 mock_logger.return_value = MagicMock()
                 results = await runner.run_conversations(persona_names=None)
 
@@ -1031,11 +1053,11 @@ class TestConversationRunnerMultiple:
 
         with (
             patch(
-                "generate.runner.LLMFactory.create_llm",
+                "vera_mh.generate.runner.LLMFactory.create_llm",
                 side_effect=[persona_mock, agent_mock],
             ),
             patch(
-                "generate.runner.setup_conversation_logger",
+                "vera_mh.generate.runner.setup_conversation_logger",
                 return_value=MagicMock(),
             ),
         ):
@@ -1096,8 +1118,8 @@ class TestConversationRunnerMultiple:
         ]
 
         with (
-            patch("generate.runner.load_prompts_from_csv") as mock_load,
-            patch("generate.runner.setup_conversation_logger") as mock_logger,
+            patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load,
+            patch("vera_mh.generate.runner.setup_conversation_logger") as mock_logger,
         ):
             mock_load.return_value = mock_personas
             mock_logger.return_value = MagicMock()
@@ -1149,7 +1171,7 @@ class TestConversationRunnerFileOperations:
         }
 
         # Act
-        with patch("generate.runner.setup_conversation_logger") as mock_logger:
+        with patch("vera_mh.generate.runner.setup_conversation_logger") as mock_logger:
             logger = MagicMock()
             mock_logger.return_value = logger
 
@@ -1185,10 +1207,12 @@ class TestConversationRunnerFileOperations:
 
         mock_personas = [{"Name": "TestPersona", "prompt": "Test prompt"}]
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = mock_personas
 
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 logger = MagicMock()
                 mock_logger.return_value = logger
 
@@ -1221,10 +1245,12 @@ class TestConversationRunnerFileOperations:
 
         mock_personas = [{"Name": "TestPersona", "prompt": "Test prompt"}]
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = mock_personas
 
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 logger = MagicMock()
                 mock_logger.return_value = logger
 
@@ -1280,11 +1306,11 @@ class TestConversationRunnerErrorHandling:
             max_tokens=1000,
         )
 
-        with patch("generate.runner.setup_conversation_logger") as mock_logger:
+        with patch("vera_mh.generate.runner.setup_conversation_logger") as mock_logger:
             logger = MagicMock()
             mock_logger.return_value = logger
 
-            with patch("generate.runner.LLMFactory.create_llm") as mock_factory:
+            with patch("vera_mh.generate.runner.LLMFactory.create_llm") as mock_factory:
                 # run_single_conversation creates persona first, then agent
                 mock_factory.side_effect = [persona_mock, error_agent]
 
@@ -1318,10 +1344,12 @@ class TestConversationRunnerErrorHandling:
             folder_name=str(conv_folder),
         )
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = []
 
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 logger = MagicMock()
                 mock_logger.return_value = logger
 
@@ -1355,11 +1383,11 @@ class TestConversationRunnerErrorHandling:
         }
 
         # Act
-        with patch("generate.runner.setup_conversation_logger") as mock_logger:
+        with patch("vera_mh.generate.runner.setup_conversation_logger") as mock_logger:
             logger = MagicMock()
             mock_logger.return_value = logger
 
-            with patch("generate.runner.cleanup_logger") as mock_cleanup:
+            with patch("vera_mh.generate.runner.cleanup_logger") as mock_cleanup:
                 await runner.run_single_conversation(
                     persona_config=persona_config,
                     max_turns=2,
@@ -1400,7 +1428,7 @@ class TestConversationRunnerPerformance:
         }
 
         # Act
-        with patch("generate.runner.setup_conversation_logger") as mock_logger:
+        with patch("vera_mh.generate.runner.setup_conversation_logger") as mock_logger:
             logger = MagicMock()
             mock_logger.return_value = logger
 
@@ -1441,10 +1469,12 @@ class TestConversationRunnerPerformance:
             {"Name": "Persona2", "prompt": "Prompt 2"},
         ]
 
-        with patch("generate.runner.load_prompts_from_csv") as mock_load:
+        with patch("vera_mh.generate.runner.load_prompts_from_csv") as mock_load:
             mock_load.return_value = mock_personas
 
-            with patch("generate.runner.setup_conversation_logger") as mock_logger:
+            with patch(
+                "vera_mh.generate.runner.setup_conversation_logger"
+            ) as mock_logger:
                 logger = MagicMock()
                 mock_logger.return_value = logger
 
@@ -1531,11 +1561,11 @@ class TestMultiSessionRunner:
 
         with (
             patch(
-                "generate.runner.LLMFactory.create_llm",
+                "vera_mh.generate.runner.LLMFactory.create_llm",
                 side_effect=[persona_mock, tracking_agent],
             ),
             patch(
-                "generate.runner.setup_conversation_logger",
+                "vera_mh.generate.runner.setup_conversation_logger",
                 return_value=MagicMock(),
             ),
         ):
@@ -1584,11 +1614,11 @@ class TestMultiSessionRunner:
 
         with (
             patch(
-                "generate.runner.LLMFactory.create_llm",
+                "vera_mh.generate.runner.LLMFactory.create_llm",
                 side_effect=[persona_mock, tracking_agent],
             ),
             patch(
-                "generate.runner.setup_conversation_logger",
+                "vera_mh.generate.runner.setup_conversation_logger",
                 return_value=MagicMock(),
             ),
         ):
@@ -1640,11 +1670,11 @@ class TestMultiSessionRunner:
 
         with (
             patch(
-                "generate.runner.LLMFactory.create_llm",
+                "vera_mh.generate.runner.LLMFactory.create_llm",
                 side_effect=[persona_mock, tracking_agent],
             ),
             patch(
-                "generate.runner.setup_conversation_logger",
+                "vera_mh.generate.runner.setup_conversation_logger",
                 return_value=MagicMock(),
             ),
         ):
@@ -1698,11 +1728,11 @@ class TestMultiSessionRunner:
 
         with (
             patch(
-                "generate.runner.LLMFactory.create_llm",
+                "vera_mh.generate.runner.LLMFactory.create_llm",
                 side_effect=[persona_mock, tracking_agent],
             ),
             patch(
-                "generate.runner.setup_conversation_logger",
+                "vera_mh.generate.runner.setup_conversation_logger",
                 return_value=MagicMock(),
             ),
         ):
@@ -1753,11 +1783,11 @@ class TestMultiSessionRunner:
 
         with (
             patch(
-                "generate.runner.LLMFactory.create_llm",
+                "vera_mh.generate.runner.LLMFactory.create_llm",
                 side_effect=[persona_mock, agent_mock],
             ),
             patch(
-                "generate.runner.setup_conversation_logger",
+                "vera_mh.generate.runner.setup_conversation_logger",
                 return_value=MagicMock(),
             ),
         ):
@@ -1810,11 +1840,11 @@ class TestMultiSessionRunner:
 
         with (
             patch(
-                "generate.runner.LLMFactory.create_llm",
+                "vera_mh.generate.runner.LLMFactory.create_llm",
                 side_effect=[persona_mock, agent_mock],
             ),
             patch(
-                "generate.runner.setup_conversation_logger",
+                "vera_mh.generate.runner.setup_conversation_logger",
                 return_value=MagicMock(),
             ),
         ):

@@ -9,13 +9,13 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-import generate.run as generation_domain
-import vera
-from utils.config_schema import InvocationConfig, ModelSpec
-from vera_cli import (
+import vera_mh.generate.run as generation_domain
+from vera_mh import cli as vera
+from vera_mh.utils.config_schema import InvocationConfig, ModelSpec
+from vera_mh.vera_cli import (
     config as cli_config,
 )
-from vera_cli import generate, targets
+from vera_mh.vera_cli import generate, targets
 
 
 @pytest.fixture(autouse=True)
@@ -400,7 +400,7 @@ def test_config_allows_debug_sample_and_print_controls(
     assert rendered.startswith(cli_config.VERA_RUN_CONFIG_ENV)
     assert '"debug":true' in rendered
     assert '"sample":1' in rendered
-    assert rendered.rstrip().endswith("uv run python vera.py generate")
+    assert rendered.rstrip().endswith("uv run vera generate")
 
 
 def test_persisted_invocation_metadata_is_accepted(tmp_path: Path) -> None:

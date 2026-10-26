@@ -27,10 +27,10 @@ from pathlib import Path
 from typing import Any, Callable, Optional, Type, TypeVar
 from unittest.mock import patch
 
-import vera
-from llm_clients.llm_factory import LLMFactory
-from llm_clients.llm_interface import JudgeLLM, Role
-from vera_cli import config as cli_config
+from vera_mh import cli as vera
+from vera_mh.llm_clients.llm_factory import LLMFactory
+from vera_mh.llm_clients.llm_interface import JudgeLLM, Role
+from vera_mh.vera_cli import config as cli_config
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RECORDING = REPO_ROOT / "tests/fixtures/replay/calls.jsonl"

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from utils.conversation_utils import (
+from vera_mh.utils.conversation_utils import (
     format_conversation_summary,
     generate_conversation_filename,
     save_conversation_to_file,

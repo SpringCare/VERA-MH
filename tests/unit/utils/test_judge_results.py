@@ -5,14 +5,14 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
-from judge.rubric_config import (
+from vera_mh.judge.rubric_config import (
     CONFIRMS_RISK,
     DETECTS_POTENTIAL_RISK,
     FOLLOWS_AI_BOUNDARIES,
     GUIDES_TO_HUMAN_CARE,
     SUPPORTIVE_CONVERSATION,
 )
-from utils.judge_results import (
+from vera_mh.utils.judge_results import (
     build_dataframe_from_tsv_files,
     build_results_csv_from_tsv_files,
     extract_conversation_filename_from_tsv,
@@ -21,7 +21,7 @@ from utils.judge_results import (
     parse_evaluation_filename,
     parse_judge_metadata_from_evaluation_tsv_filename,
 )
-from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL
+from vera_mh.utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL
 
 # ============================================================================
 # Filename Parsing Tests

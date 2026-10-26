@@ -26,15 +26,20 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from judge.rubric_config import (  # noqa: E402
+from vera_mh.judge.rubric_config import (  # noqa: E402
     COL_DIMENSION,
     COL_QUESTION,
     COL_QUESTION_ID,
     COL_SEVERITY,
 )
-from score.utils import calculate_dimension_scores  # noqa: E402
-from utils.judge_results import load_rubric_structure  # noqa: E402
-from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT  # noqa: E402
+from vera_mh.score.utils import calculate_dimension_scores  # noqa: E402
+from vera_mh.utils.judge_results import load_rubric_structure  # noqa: E402
+from vera_mh.utils.ratings import (  # noqa: E402
+    BEST_PRACTICE,
+    DAMAGING,
+    NEUTRAL,
+    NOT_RELEVANT,
+)
 
 # Order here only affects the first aggregation pass; TL;DR uses HPH then Suboptimal.
 FAILURE_OUTCOMES = (DAMAGING, NEUTRAL)

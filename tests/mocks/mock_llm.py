@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
-from llm_clients.llm_interface import JudgeLLM, LLMGenerationFailed, Role
+from vera_mh.llm_clients.llm_interface import JudgeLLM, LLMGenerationFailed, Role
 
 T = TypeVar("T")
 

@@ -16,20 +16,24 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
-from judge.answers import (
+from tests.mocks.mock_llm import MockLLM
+from vera_mh.judge.answers import (
     answer_column,
     answers_tsv_path,
     conversation_answers_dir,
     explanation_column,
 )
-from judge.rubric_config import ConversationData, RubricConfig, load_conversations
-from judge.runner import (
+from vera_mh.judge.rubric_config import (
+    ConversationData,
+    RubricConfig,
+    load_conversations,
+)
+from vera_mh.judge.runner import (
     batch_evaluate_with_individual_judges,
     judge_conversations,
     judge_single_conversation,
 )
-from tests.mocks.mock_llm import MockLLM
-from utils.judge_results import build_dataframe_from_tsv_files
+from vera_mh.utils.judge_results import build_dataframe_from_tsv_files
 
 
 @pytest.fixture
@@ -156,7 +160,9 @@ def mock_llm_factory_for_judge():
         ]
         return MockLLM(responses=responses, **kwargs)
 
-    with patch("judge.llm_judge.LLMFactory.create_llm", side_effect=create_mock_judge):
+    with patch(
+        "vera_mh.judge.llm_judge.LLMFactory.create_llm", side_effect=create_mock_judge
+    ):
         yield
 
 
@@ -182,7 +188,7 @@ class TestJudgeSingleConversation:
         Act: Call judge_single_conversation with missing file
         Assert: Raises FileNotFoundError when loading conversation
         """
-        from judge.llm_judge import LLMJudge
+        from vera_mh.judge.llm_judge import LLMJudge
 
         output_folder = str(tmp_path / "evaluations")
         missing_file = str(tmp_path / "nonexistent.txt")
@@ -389,11 +395,11 @@ class TestBatchEvaluateWithIndividualJudges:
         )
 
         with patch(
-            "judge.llm_judge.LLMFactory.create_llm",
+            "vera_mh.judge.llm_judge.LLMFactory.create_llm",
             side_effect=create_mock_judge_with_errors,
         ):
             with patch(
-                "judge.llm_judge.LLMJudge.evaluate_conversation_question_flow",
+                "vera_mh.judge.llm_judge.LLMJudge.evaluate_conversation_question_flow",
                 mock_evaluate_malformed,
             ):
                 output_folder = str(tmp_path / "error_evaluations")
@@ -1869,10 +1875,10 @@ class TestErrorHandlingAndCoverage:
         )
 
         with patch(
-            "judge.llm_judge.LLMJudge.evaluate_conversation_question_flow",
+            "vera_mh.judge.llm_judge.LLMJudge.evaluate_conversation_question_flow",
             mock_evaluate_error,
         ):
-            with patch("judge.llm_judge.LLMFactory.create_llm"):
+            with patch("vera_mh.judge.llm_judge.LLMFactory.create_llm"):
                 output_folder = str(tmp_path / "error_test")
 
                 results = await batch_evaluate_with_individual_judges(
@@ -1948,7 +1954,7 @@ class TestErrorHandlingAndCoverage:
             return []
 
         with patch(
-            "judge.runner.batch_evaluate_with_individual_judges",
+            "vera_mh.judge.runner.batch_evaluate_with_individual_judges",
             mock_batch_evaluate_empty,
         ):
             conv_folder = tmp_path / "conversations"
@@ -1990,7 +1996,7 @@ class TestRunnerHelperFunctions:
         Act: Call _parse_evaluation_to_dict
         Assert: Returns flattened dict with all fields
         """
-        from judge.runner import _parse_evaluation_to_dict
+        from vera_mh.judge.runner import _parse_evaluation_to_dict
 
         evaluation = {
             "safety": {
@@ -2026,7 +2032,7 @@ class TestRunnerHelperFunctions:
         Act: Call _parse_evaluation_to_dict
         Assert: Returns dict with empty strings for missing fields
         """
-        from judge.runner import _parse_evaluation_to_dict
+        from vera_mh.judge.runner import _parse_evaluation_to_dict
 
         evaluation = {
             "safety": {
@@ -2049,8 +2055,8 @@ class TestRunnerHelperFunctions:
         Act: Call _create_evaluation_jobs
         Assert: Creates 6 jobs (2 convs × 3 instances)
         """
-        from judge.rubric_config import ConversationData, RubricConfig
-        from judge.runner import _create_evaluation_jobs
+        from vera_mh.judge.rubric_config import ConversationData, RubricConfig
+        from vera_mh.judge.runner import _create_evaluation_jobs
 
         # Create mock ConversationData objects
         conversations = [
@@ -2109,8 +2115,8 @@ class TestRunnerHelperFunctions:
         Act: Call _create_evaluation_jobs
         Assert: Creates 10 jobs (2 convs × 5 total instances)
         """
-        from judge.rubric_config import ConversationData, RubricConfig
-        from judge.runner import _create_evaluation_jobs
+        from vera_mh.judge.rubric_config import ConversationData, RubricConfig
+        from vera_mh.judge.runner import _create_evaluation_jobs
 
         # Create mock ConversationData objects
         conversations = [
@@ -2164,8 +2170,8 @@ class TestRunnerHelperFunctions:
         Act: Call _create_evaluation_jobs
         Assert: Returns empty job list
         """
-        from judge.rubric_config import RubricConfig
-        from judge.runner import _create_evaluation_jobs
+        from vera_mh.judge.rubric_config import RubricConfig
+        from vera_mh.judge.runner import _create_evaluation_jobs
 
         conversations = []
         judge_models = {"judge-a": 2}
@@ -2188,12 +2194,12 @@ class TestRunnerHelperFunctions:
 
     def test_filter_jobs_skip_existing_tsv(self, tmp_path):
         """Resume skip omits jobs when matching evaluation TSV already exists."""
-        from judge.rubric_config import ConversationData, RubricConfig
-        from judge.runner import (
+        from vera_mh.judge.rubric_config import ConversationData, RubricConfig
+        from vera_mh.judge.runner import (
             _create_evaluation_jobs,
             _list_existing_evaluation_tsv_basenames,
         )
-        from judge.utils import judge_evaluation_tsv_filename
+        from vera_mh.judge.utils import judge_evaluation_tsv_filename
 
         conversations = [
             ConversationData(

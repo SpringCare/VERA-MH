@@ -9,9 +9,9 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-import vera
-from vera_cli import config as cli_config
-from vera_cli import pool
+from vera_mh import cli as vera
+from vera_mh.vera_cli import config as cli_config
+from vera_mh.vera_cli import pool
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EVAL_FIXTURE = REPO_ROOT / "tests/fixtures/eval_tsv_rebuild__20260415_140037"
@@ -195,7 +195,7 @@ def test_print_round_trips_through_the_environment(
 
     assert pool.run(args) == 0
     printed = capsys.readouterr().out.strip()
-    assert printed.endswith("uv run python vera.py pool")
+    assert printed.endswith("uv run vera pool")
 
     payload = printed.split("=", 1)[1].rsplit(" uv run", 1)[0].strip("'")
     monkeypatch.setenv(cli_config.VERA_RUN_CONFIG_ENV, payload)

@@ -31,7 +31,7 @@ from typing import List, Optional, Set
 
 import pytest
 
-from llm_clients.config import Config
+from vera_mh.llm_clients.config import Config
 
 # One GET against a models endpoint; generous enough for a proxied gateway.
 _TIMEOUT_SECONDS = 30
