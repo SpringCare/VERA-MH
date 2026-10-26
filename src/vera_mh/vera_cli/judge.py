@@ -164,9 +164,9 @@ def _from_config(
 ) -> list[RunConfig]:
     """Resolve a config object into one canonical run.
 
-    Every behavior field is required rather than defaulted, matching `generate`:
-    a stored config is a complete, reproducible description of a run, so a value
-    it does not state is an error rather than something this code fills in.
+    `models`, `conversations`, and the rubric (or a target) are required. The
+    behavior fields take the CLI defaults when left out, as in `generate`, and a
+    missing `output` lands beside the conversations, as `--output` does.
     """
     judging = config_section(config, "judging", command="judge")
     models = models_from_config(
@@ -229,9 +229,12 @@ def _from_config(
             else []
         )
 
-    output = required(judging, "output", section="judging config")
-    if not isinstance(output, str) or not output:
-        raise ConfigError("judging.output must be a path string")
+    output = judging.get("output", DEFAULTS["output"])
+    if output is not None and (not isinstance(output, str) or not output):
+        raise ConfigError("judging.output must be null or a path string")
+    output_root = _output_root(
+        conversations[0], path_from_root(output) if output is not None else None
+    )
 
     return [
         RunConfig(
@@ -240,11 +243,11 @@ def _from_config(
                 models=models,
                 conversations=conversations,
                 rubrics=rubrics,
-                output=path_from_root(output),
-                max_concurrent=required(
-                    judging, "max_concurrent", section="judging config"
+                output=output_root,
+                max_concurrent=judging.get(
+                    "max_concurrent", DEFAULTS["max_concurrent"]
                 ),
-                per_judge=required(judging, "per_judge", section="judging config"),
+                per_judge=judging.get("per_judge", DEFAULTS["per_judge"]),
                 personas=personas,
                 persona_annotation_columns=annotation_columns,
             ),

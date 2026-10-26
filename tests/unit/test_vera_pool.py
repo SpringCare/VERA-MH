@@ -140,19 +140,37 @@ def test_config_paths_resolve_from_repository_root(tmp_path: Path) -> None:
     assert resolved.pooling.personas == str(PERSONAS_FIXTURE.resolve())
 
 
-@pytest.mark.parametrize(
-    "field", ["evaluations", "output", "personas", "skip_risk_analysis"]
-)
-def test_config_requires_every_pooling_field(tmp_path: Path, field: str) -> None:
+def test_config_requires_evaluations(tmp_path: Path) -> None:
     data = _pooling_config([EVAL_FIXTURE_REL, EVAL_FIXTURE_REL])
-    del data["pooling"][field]  # type: ignore[union-attr]
+    del data["pooling"]["evaluations"]  # type: ignore[union-attr]
     config = _write_config(tmp_path, data)
     parser = vera.build_parser()
 
     with pytest.raises(
-        cli_config.ConfigError, match=f"missing required field: {field}"
+        cli_config.ConfigError, match="missing required field: evaluations"
     ):
         pool.resolve_configs(parser.parse_args(["pool", "--config", str(config)]))
+
+
+def test_config_without_behavior_fields_gets_the_cli_defaults(
+    tmp_path: Path,
+) -> None:
+    """A config that states only `evaluations` matches `vera pool --evaluations`."""
+    config = _write_config(
+        tmp_path, {"pooling": {"evaluations": [EVAL_FIXTURE_REL, EVAL_FIXTURE_REL]}}
+    )
+    parser = vera.build_parser()
+
+    from_config = pool.resolve_configs(
+        parser.parse_args(["pool", "--config", str(config)])
+    )
+    from_cli = pool.resolve_configs(
+        parser.parse_args(
+            ["pool", "--evaluations", str(EVAL_FIXTURE), str(EVAL_FIXTURE)]
+        )
+    )
+
+    assert from_config == from_cli
 
 
 def test_config_rejects_one_evaluation(tmp_path: Path) -> None:

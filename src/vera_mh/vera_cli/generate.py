@@ -59,9 +59,10 @@ from .targets import (
 # *presence* stays detectable (see `register`), which means defaults cannot be
 # parser defaults and are instead applied during resolution by `flag_value`.
 #
-# These defaults are CLI-only. A config-driven run states every behavior field
-# explicitly, so no run silently inherits a value that is not written down
-# somewhere the user controls.
+# A config file may leave out any of these behavior fields too, and gets the
+# same default (see `_from_config`). What a run actually used is written out in
+# full by `--print` today and by the run record later, so a short config file
+# does not make a run less reproducible.
 #
 # Every default here is discoverable via `vera generate -h`: each flag's help
 # text states it. Keep that true when adding a flag — a default a user cannot
@@ -190,9 +191,9 @@ def _from_config(
 ) -> list[RunConfig]:
     """Resolve a config object into canonical runs.
 
-    Every behavior field is required rather than defaulted: a stored config is
-    meant to be a complete, reproducible description of a run, so a value the
-    file does not state is an error instead of something this code fills in.
+    `chatbot`, `user`, and the personas (or a target) are required. Every other
+    field is a behavior field and takes the CLI default when the file leaves it
+    out, so adding an option does not break existing config files.
     """
     generation = config_section(config, "generation", command="generate")
     chatbot = model_from_config(
@@ -203,17 +204,20 @@ def _from_config(
         required(generation, "user", section="generation config"),
         field="generation.user",
     )
+    # The config spells the speaking order from the persona's side, the CLI
+    # flag from the chatbot's, so that one default is flipped.
+    behavior_defaults = {
+        "turns": DEFAULTS["turns"],
+        "output": DEFAULTS["output"],
+        "max_concurrent": DEFAULTS["max_concurrent"],
+        "max_total_words": DEFAULTS["max_total_words"],
+        "persona_speaks_first": not DEFAULTS["provider_speaks_first"],
+        "sessions": DEFAULTS["sessions"],
+        "user_language": DEFAULTS["user_language"],
+    }
     behavior = {
-        field: required(generation, field, section="generation config")
-        for field in (
-            "turns",
-            "output",
-            "max_concurrent",
-            "max_total_words",
-            "persona_speaks_first",
-            "sessions",
-            "user_language",
-        )
+        field: generation.get(field, default)
+        for field, default in behavior_defaults.items()
     }
     if not isinstance(behavior["output"], str):
         raise ConfigError("generation.output must be a path string")

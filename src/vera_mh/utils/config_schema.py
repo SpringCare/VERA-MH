@@ -14,8 +14,8 @@ not parse arguments, read files, resolve paths, or define defaults. So a path
 field is checked here only for being a non-empty string; whether the file
 exists is checked by the command that resolved it (`vera_cli.config.config_path`
 / `existing_file`), the same split `RubricFiles` describes. CLI behavior
-defaults live beside the flags in `vera_cli/generate.py`, and
-config-driven runs must state every behavior field explicitly. `to_dict` is the
+defaults live beside the flags in each `vera_cli/<command>.py`, and a config
+file that leaves a behavior field out gets the same default. `to_dict` is the
 inverse of the config input format, which is what makes a resolved run
 round-trippable: `--print` emits a config that reproduces the same run.
 

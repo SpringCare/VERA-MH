@@ -384,3 +384,28 @@ def test_pipeline_pooling_uses_the_scoring_settings(
     assert call["personas_tsv"] == run.scoring.personas
     assert call["personas_tsv"].endswith("data/SI/personas.tsv")
     assert call["skip_risk_analysis"] is False
+
+
+def test_config_without_behavior_fields_gets_the_cli_defaults(
+    tmp_path: Path,
+) -> None:
+    """A config that states only the models and target matches the same flags."""
+    config = _write_config(
+        tmp_path,
+        {
+            "target": "SI",
+            "generation": {
+                "chatbot": {"name": "claude-sonnet-5", "repeats": 1},
+                "user": [{"name": "gpt-5.2", "repeats": 1}],
+            },
+            "judging": {"models": [{"name": "gpt-5.4", "repeats": 1}]},
+        },
+    )
+    parser = vera.build_parser()
+
+    (from_config,) = pipeline.resolve_configs(
+        parser.parse_args(["pipeline", "--config", str(config)])
+    )
+    (from_cli,) = pipeline.resolve_configs(parser.parse_args(_cli()))
+
+    assert from_config == from_cli
