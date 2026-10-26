@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import os
 import sys
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from vera_mh.utils.config_schema import GenerationConfig, ModelSpec
@@ -18,6 +17,7 @@ from vera_mh.utils.naming import (
     model_token_for_run_folder,
     parse_generation_run_folder_name,
 )
+from vera_mh.utils.run_root import create_run_root, run_started_at
 
 from .runner import ConversationRunner
 from .utils import DEFAULT_USER_LANGUAGE
@@ -112,7 +112,7 @@ async def run_generation(
                 "Resume mode requires --run-id to match the run folder name when set."
             )
     elif run_id is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = run_started_at().strftime("%Y%m%d_%H%M%S")
         run_id = build_generation_run_folder_name(
             persona_model_config["model"],
             agent_model_config["model"],
@@ -120,8 +120,7 @@ async def run_generation(
             runs_per_prompt,
             timestamp,
         )
-        output_folder = f"{output_folder}/{run_id}"
-        os.makedirs(output_folder, exist_ok=True)
+        output_folder = str(create_run_root(output_folder, run_id))
 
     runner = ConversationRunner(
         persona_model_config=persona_model_config,

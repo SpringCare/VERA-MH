@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -89,7 +90,9 @@ def test_pooled_folder_name_uses_the_first_generation_run(tmp_path: Path) -> Non
     eval_b = _nested_eval(tmp_path, GEN_RUN_B, "j_b")
     combined = pd.DataFrame({"judge_model": ["gpt-5.4"], "judge_instance": [1]})
 
-    name = pool._synthetic_pooled_folder_basename([eval_a, eval_b], combined)
+    name = pool._synthetic_pooled_folder_basename(
+        [eval_a, eval_b], combined, started_at=datetime(2026, 4, 22, 15, 30)
+    )
 
     assert name.startswith(
         "j_gpt-5.4x1__p_claude_opus_4_5+gpt_5_2__a_gpt_5_4_nano__t30__r1__"
@@ -101,7 +104,9 @@ def test_pooled_folder_name_falls_back_without_a_generation_run(
 ) -> None:
     combined = pd.DataFrame({"judge_model": ["gpt-5.4"], "judge_instance": [1]})
 
-    name = pool._synthetic_pooled_folder_basename([tmp_path], combined)
+    name = pool._synthetic_pooled_folder_basename(
+        [tmp_path], combined, started_at=datetime(2026, 4, 22, 15, 30)
+    )
 
     assert name.startswith("j_gpt-5.4x1__p_unknown__a_unknown__t30__r1__")
 

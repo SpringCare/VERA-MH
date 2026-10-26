@@ -33,6 +33,7 @@ from vera_mh.score.aggregate import (
 from vera_mh.score.utils import ensure_results_csv
 from vera_mh.score.viz import create_risk_level_visualizations, create_visualizations
 from vera_mh.utils.naming import parse_generation_run_folder_name
+from vera_mh.utils.run_root import create_run_root, run_started_at
 
 # ``j_{judge_info}_{timestamp}__p_...`` or ``...__conversations`` (legacy flat layout)
 _JUDGE_EVAL_DIR_HEAD = re.compile(
@@ -197,6 +198,7 @@ def _synthetic_pooled_folder_basename(
     source_eval_dirs: list[Path],
     combined: Any,
     *,
+    started_at: datetime,
     judge_slug: str | None = None,
 ) -> str:
     """
@@ -212,13 +214,14 @@ def _synthetic_pooled_folder_basename(
     Args:
         source_eval_dirs: Non-empty list of resolved evaluation directories.
         combined: Merged results dataframe (used for judge slug inference).
+        started_at: The pooling run's single clock read, for the timestamp suffix.
         judge_slug: Optional override for the judge segment.
 
     Returns:
         Directory basename (no path separators), e.g.
         ``j_gpt-5.4x1__p_claude_opus_4_5+gpt_5_2__a_gpt_5_4_nano__t30__r1__20260422_153000``.
     """
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts = started_at.strftime("%Y%m%d_%H%M%S")
     judge = _judge_slug_for_pool(combined, source_eval_dirs, judge_slug=judge_slug)
     persona_slug = _persona_slug_for_pool(source_eval_dirs)
     gen = _generation_folder_for_eval(source_eval_dirs[0])
@@ -368,16 +371,16 @@ def run_pooling(
             file=sys.stderr,
         )
 
+    started_at = run_started_at()
     synth_name = _synthetic_pooled_folder_basename(
-        eval_dirs, combined, judge_slug=judge_slug
+        eval_dirs, combined, started_at=started_at, judge_slug=judge_slug
     )
-    out_eval = (Path(output_parent) / synth_name).resolve()
-    out_eval.mkdir(parents=True, exist_ok=True)
+    out_eval = create_run_root(Path(output_parent).resolve(), synth_name)
     results_csv = out_eval / "results.csv"
     combined.to_csv(results_csv, index=False)
 
     metadata = {
-        "created_at": datetime.now().isoformat(timespec="seconds"),
+        "created_at": started_at.isoformat(timespec="seconds"),
         "source_evaluation_directories": [str(p) for p in eval_dirs],
         "rows_per_source": rows_per_source,
         "pooled_results_csv": str(results_csv),
