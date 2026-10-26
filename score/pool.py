@@ -5,8 +5,7 @@ models and judge models), writes the merged CSV plus ``pool_metadata.json`` into
 a new ``j_*``-style folder, and scores it like `score.run.run_scoring`. Typical
 use is combining the two user-model suites of the recommended profile.
 
-`run_pooling` is the scoring domain's application function for ``vera pool``;
-``legacy/pool_vera_scores.py`` wraps the same function for the legacy CLI.
+`run_pooling` is the scoring domain's application function for ``vera pool``.
 
 Until the Traceability phase (docs/roadmap.md) builds the target-rooted layout,
 the pooled folder is named in the legacy ``j_<judge>__p_<a>+<b>__a_<agent>__...``

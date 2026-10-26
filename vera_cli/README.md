@@ -14,8 +14,8 @@ not built yet.
 |---|---|
 | `../vera.py` | Root parser and dispatcher. Registers each command, routes to its handler, turns `ConfigError` into a standard CLI error. |
 | `generate.py` | The `generate` command: flags, input resolution, and the call into the generation domain. The reference implementation for new commands. |
-| `judge.py` | The `judge` command, same five steps. Differs from legacy `judge.py` in two ways, both recorded in [../docs/vera-cli-use-cases.md](../docs/vera-cli-use-cases.md): no single-conversation mode, and no implicit working-directory output. |
-| `score.py` | The `score` command, same five steps. Two structural differences, both following from scoring calling no model: no `--target` (it reads a `results.csv` judging already wrote), and a synchronous `_execute`. Differs from legacy [`legacy/score.py`](../legacy/score.py) in one way, recorded in [../CHANGELOG.md](../CHANGELOG.md): omitting `--personas` skips the risk-level breakdown instead of defaulting to an SI personas file. |
+| `judge.py` | The `judge` command, same five steps. Differs from the pre-2.0 `judge.py` in two ways, both recorded in [../docs/vera-cli-use-cases.md](../docs/vera-cli-use-cases.md): no single-conversation mode, and no implicit working-directory output. |
+| `score.py` | The `score` command, same five steps. Two structural differences, both following from scoring calling no model: no `--target` (it reads a `results.csv` judging already wrote), and a synchronous `_execute`. Differs from the pre-2.0 `score.py` in one way, recorded in [../CHANGELOG.md](../CHANGELOG.md): omitting `--personas` skips the risk-level breakdown instead of defaulting to an SI personas file. |
 | `pool.py` | The `pool` command, structured like `score`: no `--target`, a synchronous `_execute`, and no personas default. Calls `score.run_pooling`. |
 | `pipeline.py` | The `pipeline` command: generate, then judge, then score, feeding each stage's output to the next. A shim — it reuses the three single-stage resolvers and domain functions and owns no logic or defaults of its own. Its CLI shorthand is only `-c`/`-u`/`-j`/`--target`, because `--output` and `--max-concurrent` mean different things per stage; everything stage-specific comes from `--config`. Its input resolves in two halves because the chained paths cannot be known up front — see [../docs/pipeline.md](../docs/pipeline.md). |
 | `config.py` | Shared input handling: loading config JSON, the config-or-flags rule, turning config-stated strings into verified absolute paths, resolved-run rendering, and the command skeleton every command shares (`run_command`, `resolve_with`, `add_common_flags`). |
@@ -98,20 +98,10 @@ called as Python functions, never as subprocesses or through another parser.
 
 ## Transitional state
 
-`generate` calls into the root `generate.py` module, which is a legacy script
-whose reusable functions have not yet moved into a permanent `generate/`
-package. Two stopgaps live there and are labeled as such:
+`generate` calls into `generate/run.py`, where two stopgaps live, labeled as
+such:
 `run_for_user_models`, which expands a run's user models into individual
 generations, and `_legacy_model_config`, which flattens a `ModelSpec` into the
 dict shape the old signature expects. Both disappear when the generation domain
 accepts `ModelSpec` directly. See
 [../docs/architecture.md](../docs/architecture.md) for the boundary contract.
-
-`data/SI/rubric_manifest.json` is a symlink to `manifest.json` for the same
-reason. `targets.py` reads only `manifest.json`, but `judge.py`,
-`run_pipeline.py`, and the root `generate.py` still default to the old name. A
-symlink rather than a copy because the two would otherwise describe the same
-bundle in two editable places, and a one-sided edit would silently point
-`vera generate` and the legacy scripts at different personas. **Delete the
-symlink when the last legacy script that reads it is removed** — it has no
-purpose beyond them, and nothing in `vera_cli` will notice it is gone.

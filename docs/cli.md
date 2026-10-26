@@ -154,7 +154,7 @@ uv run python vera.py judge \
 
 Each evaluation folder contains one `.tsv` per conversation (dimension, rating, and the judge's reasoning), a `results.csv` with every conversation's ratings, and per-conversation judge logs in `logs/`. Use `results.csv` to find conversations with a rating you care about, then open that conversation's `.tsv` to see which rubric question produced it.
 
-Differences from the legacy `judge.py`: there is no single-conversation mode, and a flat folder of `.txt` transcripts (rather than a generation run) requires an explicit `-o`.
+There is no single-conversation mode, and a flat folder of `.txt` transcripts (rather than a generation run) requires an explicit `-o`.
 
 ## `vera score`
 

@@ -1,7 +1,7 @@
-"""Integration test comparing judge.py output to expected clinician ratings.
+"""Integration test comparing vera judge output to expected clinician ratings.
 
 This test:
-1. Runs judge.py on conversations in tests/fixtures/conversations using OpenAI's gpt-4o
+1. Runs vera judge on the conversations in tests/fixtures/conversations with gpt-4o
 2. Extracts ratings from the judge output
 3. Compares them to expected values from transcript_agreement_scores.csv
 """
@@ -134,7 +134,7 @@ def expected_ratings_csv(conversations_dir: Path) -> Path:
 # far past the 30s suite default.
 @pytest.mark.timeout(900)
 class TestJudgeAgainstClinicianRatings:
-    """Test judge.py output against expected clinician ratings."""
+    """Test vera judge output against expected clinician ratings."""
 
     def test_judge_scores_match_expected_ratings(
         self,
@@ -145,7 +145,7 @@ class TestJudgeAgainstClinicianRatings:
         """Test that judge ratings match expected clinician ratings.
 
         This test:
-        1. Runs judge.py on conversations in fixtures
+        1. Runs vera judge on conversations in fixtures
         2. Reads TSV output files
         3. Compares ratings to expected ratings from transcript_agreement_scores.csv
 
@@ -181,8 +181,8 @@ class TestJudgeAgainstClinicianRatings:
                 + "\n".join(f"  - {v}" for v in invalid_expected)
             )
 
-        # Run judge.py as subprocess
-        print(f"\nRunning judge.py on conversations in {conversations_dir}...")
+        # Run vera judge as subprocess
+        print(f"\nRunning vera judge on conversations in {conversations_dir}...")
         project_root = Path(__file__).parent.parent.parent
         # For debugging: output to fixtures/conversations folder
         # output_dir = conversations_dir / "evaluations"
@@ -194,10 +194,12 @@ class TestJudgeAgainstClinicianRatings:
             "uv",
             "run",
             "python",
-            "-m",
-            "legacy.judge",
-            "-f",
+            "vera.py",
+            "judge",
+            "--conversations",
             str(conversations_dir),
+            "--rubric",
+            "SI",
             "-j",
             "gpt-4o",
             "-o",
@@ -212,16 +214,16 @@ class TestJudgeAgainstClinicianRatings:
             check=False,
         )
 
-        print("judge.py completed")
+        print("vera judge completed")
 
         if result.returncode != 0:
             pytest.fail(
-                f"judge.py failed with return code {result.returncode}.\n"
+                f"vera judge failed with return code {result.returncode}.\n"
                 f"stdout: {result.stdout}\n"
                 f"stderr: {result.stderr}"
             )
 
-        # Find the output folder (judge.py creates a timestamped subdirectory)
+        # Find the output folder (vera judge creates a timestamped subdirectory)
         # Look for directories matching the pattern j_*__conversations
         # Use the most recently created folder
         output_folders = [
@@ -258,13 +260,13 @@ class TestJudgeAgainstClinicianRatings:
                 f"{missing_tsv_files}"
             )
 
-        # Read from results.csv (created by judge.py)
-        # This tests that judge.py correctly creates the CSV with dimension data
+        # Read from results.csv (created by vera judge)
+        # This tests that vera judge correctly creates the CSV with dimension data
         results_csv = output_folder / "results.csv"
         if not results_csv.exists():
             pytest.fail(
                 f"results.csv not found in {output_folder}. "
-                f"judge.py should create this file with evaluation results."
+                f"vera judge should create this file with evaluation results."
             )
 
         print(f"\nReading results from {results_csv}...")

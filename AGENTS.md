@@ -44,12 +44,7 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 | **Shared utils** | `utils/` | Naming, logging, conversation layout |
 
 **Entry points:** `vera.py` (`generate`, `judge`, `score`, `pipeline`) is the only
-supported entry point. The old scripts live in [`legacy/`](legacy/); they are
-no longer supported, and removing them is the first step of the 2.1 release
-(see [docs/roadmap.md](docs/roadmap.md#release-21-plan)).
-
-**Don't keep legacy working.** Don't add adapters or compatibility stopgaps for
-the legacy scripts, and don't shape a domain change around them.
+entry point. The pre-2.0 scripts in `legacy/` were removed in 2.1.
 
 **Temporary experiments:** `tmp_tests/` (not committed). **Permanent tests:** `tests/`.
 
@@ -142,7 +137,6 @@ uv run pyright
 pre-commit run --all-files
 ```
 
-The scripts in [`legacy/`](legacy/) (`generate.py`, `judge.py`, `score.py`, `run_pipeline.py`, `run_recommended_vera_pipeline.sh`) are no longer supported and are removed in 2.1; don't build on them, and never import them from `vera_cli/` or the domain packages. Their flags and `vera` equivalents are in [docs/legacy-scripts.md](docs/legacy-scripts.md).
 
 Use full provider model IDs (e.g. `claude-opus-4-5`, `gpt-5.4`) as in README. There are no aliases: `sonnet` or `gpt` alone won't resolve. Current defaults and the recommended models are in `llm_clients/config.py`.
 
@@ -208,7 +202,6 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 - **`vera` CLI reference, output layout:** [docs/cli.md](./docs/cli.md)
 - **Scoring, pooling, comparison:** [docs/scoring.md](./docs/scoring.md)
 - **Targets and personas:** [docs/targets.md](./docs/targets.md)
-- **Legacy scripts (deprecated):** [docs/legacy-scripts.md](./docs/legacy-scripts.md)
 - **Custom LLM providers:** [docs/evaluating.md](./docs/evaluating.md)
 - **Judge behavior:** [docs/judge.md](./docs/judge.md)
 - **`vera pipeline` input resolution:** [docs/pipeline.md](./docs/pipeline.md)

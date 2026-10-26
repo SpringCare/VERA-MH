@@ -4,6 +4,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Breaking / migration
+
+- **Legacy scripts removed**—`legacy/` is gone (`legacy.generate`, `legacy.judge`, `legacy.score`, `legacy.run_pipeline`, `legacy.pool_vera_scores`, `run_recommended_vera_pipeline.sh`), as announced in v2.0.4, along with `docs/legacy-scripts.md`, the tests that drove the scripts, and the `data/SI/rubric_manifest.json` and `data/HFO/rubric_manifest.json` symlinks only they read. Use the `vera` commands; the flag mapping is in [v2.0.4's `docs/legacy-scripts.md`](https://github.com/SpringCare/VERA-MH/blob/v2.0.4/docs/legacy-scripts.md). `distribute_files.py`, `scripts/run_combinations.sh`, and `scripts/score_publication_evaluations.sh` are removed too. To run several chatbots, loop over `vera generate --chatbot`; `--user` already takes several models.
+
 ### Runtime, CLI, and pipeline
 
 - **A `vera` command**—`uv sync` now installs a `vera` command, so `uv run vera …` (or `vera …` in an activated environment) works from anywhere in the repository; `uv run python vera.py …` still works. Generation now finds its shared prompt files relative to the repository instead of the working directory. The Docker image installs the command and runs it by default; its previous `CMD` used the system Python, which lacked the dependencies.

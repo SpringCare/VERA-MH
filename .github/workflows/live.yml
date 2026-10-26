@@ -81,9 +81,8 @@ jobs:
         tests/integration/test_model_availability.py
         tests/integration/test_vera_pipeline_e2e.py
 
-    # Manual only. `all` adds the legacy-script suite (test_scoring.py: 7
-    # tests on reasoning models, each generating its own conversations) and
-    # the clinician-ratings judge check, too costly to run on a schedule. See
+    # Manual only. `all` adds the clinician-ratings judge check, too costly
+    # to run on a schedule. See
     # the live-test consolidation item in docs/roadmap.md's Backlog.
     - name: Run all live tests
       if: inputs.scope == 'all'
