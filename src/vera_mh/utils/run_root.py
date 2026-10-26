@@ -60,6 +60,9 @@ def create_run_root(
       `output/j_gpt-5.4x1__p_claude_opus_4_5+gpt_5_2__a_gpt_5_4__t30__r1__20261015_191923/`,
       which gets the merged `results.csv`, `pool_metadata.json`, and `scores/`
 
+    Each starts with `config.json` and `config.json.sha256` when `record` is
+    given.
+
     The parent folders are created as needed. The run folder itself must not
     exist yet: `mkdir` without `exist_ok` checks and creates in one step, so two
     processes starting the same run cannot both succeed.
