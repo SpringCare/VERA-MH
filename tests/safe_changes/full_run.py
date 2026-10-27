@@ -26,6 +26,10 @@ and charts aren't compared.
     uv run python -m tests.safe_changes.full_run seed <saved run> <baseline>
     uv run python -m tests.safe_changes.full_run check <baseline>
 
+Or both in one: `check <baseline> --saved <saved run>` seeds first when the
+baseline is missing or the saved run changed (never because the code changed),
+then checks.
+
 `<saved run>` is the folder holding the saved `p_*` generation runs (each with its
 `evaluations/j_*` judge run). Seed again, which costs nothing, after a change
 that is meant to alter what the models are sent or what the run writes, and
@@ -593,6 +597,25 @@ def run(work: Path, create_llm: Any, sample: Optional[int]) -> Path:
     return work / "output"
 
 
+def saved_run_fingerprint(saved_folder: Path) -> str:
+    """sha256 of every saved file seeding reads: transcripts and judge answers.
+
+    A baseline stores the fingerprint of the saved run it was seeded from, so a
+    check can tell when the saved run has changed and the baseline is stale.
+    """
+    digest = hashlib.sha256()
+    files = sorted(
+        [
+            *saved_folder.glob("p_*/conversations/*.txt"),
+            *saved_folder.glob("p_*/evaluations/j_*/answers/by_question/*.tsv"),
+        ]
+    )
+    for path in files:
+        digest.update(path.relative_to(saved_folder).as_posix().encode("utf-8"))
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
 def seed(saved_folder: Path, baseline: Path, sample: Optional[int]) -> None:
     """Turn a saved run into a baseline: recorded calls and expected outputs."""
     saved = SavedRun(saved_folder)
@@ -614,8 +637,9 @@ def seed(saved_folder: Path, baseline: Path, sample: Optional[int]) -> None:
     if baseline.exists():
         shutil.rmtree(baseline)
     (baseline / "expected").mkdir(parents=True)
+    settings = {"sample": sample, "saved_run": saved_run_fingerprint(saved_folder)}
     (baseline / "settings.json").write_text(
-        json.dumps({"sample": sample}) + "\n", encoding="utf-8"
+        json.dumps(settings, indent=2) + "\n", encoding="utf-8"
     )
     with open(baseline / "calls.jsonl", "w", encoding="utf-8") as f:
         # Sorted, so seeding again gives a readable diff rather than the calls
@@ -631,6 +655,34 @@ def seed(saved_folder: Path, baseline: Path, sample: Optional[int]) -> None:
         f"Seeded {len(seeder.calls)} calls from {len(used)} conversations and "
         f"{len(produced)} outputs into {baseline}"
     )
+
+
+def seed_if_stale(
+    saved_folder: Path, baseline: Path, sample: Optional[int]
+) -> Optional[str]:
+    """Seed `baseline` only if its inputs changed; say why, or None if it's fresh.
+
+    The inputs are the saved run, never the code: a baseline is never seeded
+    because a check failed, or every code change would quietly become the new
+    expected output. When a change is meant to alter the outputs, run `seed`
+    yourself and review the diff.
+    """
+    settings_file = baseline / "settings.json"
+    if not settings_file.is_file():
+        reason = "no baseline yet"
+    else:
+        settings = json.loads(settings_file.read_text(encoding="utf-8"))
+        recorded = settings.get("saved_run")
+        if recorded == saved_run_fingerprint(saved_folder):
+            return None
+        reason = (
+            "the baseline doesn't record which saved run it came from"
+            if recorded is None
+            else "the saved run changed since the baseline was seeded"
+        )
+        sample = settings["sample"]
+    seed(saved_folder, baseline, sample)
+    return reason
 
 
 def check(baseline: Path) -> list[str]:
@@ -683,6 +735,16 @@ def main() -> int:
     logs_parser.add_argument("saved_run", type=Path)
     check_parser = commands.add_parser("check", help="replay a baseline")
     check_parser.add_argument("baseline", type=Path)
+    check_parser.add_argument(
+        "--saved",
+        type=Path,
+        default=None,
+        help="the saved run: seed first if the baseline is missing or the saved "
+        "run changed (never because the code changed)",
+    )
+    check_parser.add_argument(
+        "--sample", type=int, default=None, help="for a baseline seeded from scratch"
+    )
     args = parser.parse_args()
 
     if args.command == "seed":
@@ -692,6 +754,10 @@ def main() -> int:
         written = answers_from_logs(args.saved_run)
         print(f"Wrote the answers of {written} judged conversations")
         return 0
+    if args.saved is not None:
+        reason = seed_if_stale(args.saved, args.baseline, args.sample)
+        if reason:
+            print(f"Seeded {args.baseline} first: {reason}")
     problems = check(args.baseline)
     for problem in problems:
         print(problem, file=sys.stderr)
