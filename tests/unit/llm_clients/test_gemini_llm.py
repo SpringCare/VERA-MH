@@ -6,13 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from langchain_core.messages import AIMessage
 
-from vera_mh.llm_clients import Role
 from vera_mh.llm_clients.config import Config
 from vera_mh.llm_clients.gemini_llm import (
     _STRUCTURED_OUTPUT_MAX_LOG_CHARS,
     GeminiLLM,
 )
 from vera_mh.llm_clients.llm_interface import LLMGenerationFailed
+from vera_mh.utils.role import Role
 
 from .test_base_llm import TestJudgeLLMBase
 from .test_helpers import (

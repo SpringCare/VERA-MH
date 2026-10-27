@@ -15,9 +15,10 @@ from vera_mh.judge.utils import (
     log_llm_failure_metadata,
     log_llm_response_metadata,
 )
-from vera_mh.llm_clients import LLMFactory, Role
+from vera_mh.llm_clients import LLMFactory
 from vera_mh.llm_clients.llm_interface import JudgeLLM, LLMGenerationFailed
 from vera_mh.utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL
+from vera_mh.utils.role import Role
 
 
 class LLMJudge:

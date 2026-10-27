@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from vera_mh.llm_clients import Role
 from vera_mh.llm_clients.config import Config
+from vera_mh.utils.role import Role
 
 # ============================================================================
 # Mock Response Factories

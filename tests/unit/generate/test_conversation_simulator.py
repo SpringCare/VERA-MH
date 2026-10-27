@@ -9,8 +9,8 @@ from vera_mh.generate.conversation_simulator import ConversationSimulator
 from vera_mh.llm_clients.llm_interface import (
     DEFAULT_START_PROMPT,
     LLMGenerationFailed,
-    Role,
 )
+from vera_mh.utils.role import Role
 
 
 @pytest.mark.unit

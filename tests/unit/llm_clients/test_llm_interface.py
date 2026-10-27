@@ -5,13 +5,13 @@ from unittest.mock import MagicMock
 import pytest
 from pydantic import BaseModel
 
-from vera_mh.llm_clients import Role
 from vera_mh.llm_clients.llm_interface import (
     LLMGenerationFailed,
     LLMInterface,
     ensure_pydantic_response,
     extract_structured_invoke_result,
 )
+from vera_mh.utils.role import Role
 
 
 class ConcreteLLM(LLMInterface):

@@ -7,9 +7,9 @@ from langchain_azure_ai.chat_models import AzureAIChatCompletionsModel
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 
-from vera_mh.llm_clients import Role
 from vera_mh.utils.conversation_utils import build_langchain_messages
 from vera_mh.utils.debug import debug_print
+from vera_mh.utils.role import Role
 
 from .config import Config
 from .llm_interface import (

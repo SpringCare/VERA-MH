@@ -1,6 +1,8 @@
 from typing import Optional
 
-from .llm_interface import JudgeLLM, LLMInterface, Role
+from vera_mh.utils.role import Role
+
+from .llm_interface import JudgeLLM, LLMInterface
 
 
 class LLMFactory:

@@ -5,10 +5,11 @@ import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
 from datetime import datetime
-from enum import Enum
 from typing import Any, Dict, List, Optional, Protocol, Type, TypeVar
 
 from pydantic import BaseModel, ValidationError
+
+from vera_mh.utils.role import Role
 
 T = TypeVar("T", bound=BaseModel)
 R = TypeVar("R")
@@ -111,14 +112,6 @@ class RetryOnErrorCallback(Protocol):
 
 class LLMGenerationFailed(Exception):
     """Raised when an LLM call fails after all retry attempts are exhausted."""
-
-
-class Role(Enum):
-    """Role of the LLM in a conversation."""
-
-    PERSONA = "persona"  # User roleplaying as a human seeking help
-    PROVIDER = "provider"  # Chatbot providing support
-    JUDGE = "judge"  # Judge role, used for judge operations
 
 
 # Default prompt sent to the LLM when starting a conversation (no first_message set).

@@ -4,9 +4,10 @@ from typing import Any, Dict, List, Optional
 import aiohttp
 
 from vera_mh.utils.conversation_utils import build_langchain_messages
+from vera_mh.utils.role import Role
 
 from .config import Config
-from .llm_interface import LLMInterface, Role
+from .llm_interface import LLMInterface
 
 
 class EndpointLLM(LLMInterface):

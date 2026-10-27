@@ -23,8 +23,8 @@ The helpers are organized into the following categories:
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from vera_mh.llm_clients import Role
 from vera_mh.llm_clients.llm_interface import LLMGenerationFailed, LLMInterface
+from vera_mh.utils.role import Role
 
 # ============================================================================
 # Metadata Assertions

@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
-from vera_mh.llm_clients.llm_interface import Role
 from vera_mh.utils.conversation_utils import (
     add_timestamp_to_path,
     build_langchain_messages,
@@ -14,6 +13,7 @@ from vera_mh.utils.conversation_utils import (
     format_conversation_summary,
     load_persona_role_reminder,
 )
+from vera_mh.utils.role import Role
 
 
 class TestEnsureProviderHasLastTurn:

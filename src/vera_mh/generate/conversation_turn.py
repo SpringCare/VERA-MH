@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
-from vera_mh.llm_clients.llm_interface import Role
+from vera_mh.utils.role import Role
 
 
 @dataclass

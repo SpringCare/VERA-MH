@@ -5,7 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from vera_mh.llm_clients.llm_interface import LLMGenerationFailed, Role
+from vera_mh.llm_clients.llm_interface import LLMGenerationFailed
+from vera_mh.utils.role import Role
 
 from .test_base_llm import TestLLMBase
 from .test_helpers import (

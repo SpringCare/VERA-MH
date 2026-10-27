@@ -17,7 +17,7 @@ import pytest
 
 from tests.mocks.mock_llm import MockLLM
 from vera_mh.generate.runner import ConversationRunner
-from vera_mh.llm_clients.llm_interface import Role
+from vera_mh.utils.role import Role
 
 
 def create_test_runner(

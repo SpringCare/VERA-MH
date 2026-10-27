@@ -140,7 +140,7 @@ def mock_llm() -> MockLLM:
 @pytest.fixture
 def mock_persona() -> MockLLM:
     """Mock LLM configured as a persona."""
-    from vera_mh.llm_clients.llm_interface import Role
+    from vera_mh.utils.role import Role
 
     return MockLLM(
         name="mock-persona",
@@ -152,7 +152,7 @@ def mock_persona() -> MockLLM:
 @pytest.fixture
 def mock_agent() -> MockLLM:
     """Mock LLM configured as a chatbot agent."""
-    from vera_mh.llm_clients.llm_interface import Role
+    from vera_mh.utils.role import Role
 
     return MockLLM(
         name="mock-agent",
