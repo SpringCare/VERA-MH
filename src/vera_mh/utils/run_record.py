@@ -72,8 +72,18 @@ def build_run_record(run_config: RunConfig) -> dict[str, Any]:
     }
 
 
-def with_start_time(record: dict[str, Any], started_at: datetime) -> dict[str, Any]:
-    """A copy of `record` stamped with the run's one clock read."""
+def with_start_time(
+    record: dict[str, Any] | None, started_at: datetime
+) -> dict[str, Any] | None:
+    """A copy of `record` stamped with the run's one clock read.
+
+    `record` is None when the run was started outside a `vera` command (tests,
+    direct calls into the domain): there is no `config.json` to write, so there
+    is nothing to stamp. The start time is not lost either way, because the
+    caller has already used it for the run's folder name.
+    """
+    if record is None:
+        return None
     stamped = copy.deepcopy(record)
     stamped["provenance"]["started_at"] = started_at.isoformat(timespec="seconds")
     return stamped

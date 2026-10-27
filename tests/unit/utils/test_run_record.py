@@ -229,3 +229,8 @@ async def test_generation_writes_the_record_with_the_folder_time(
     started_at = datetime.fromisoformat(written["provenance"]["started_at"])
     assert root.name.endswith(started_at.strftime("%Y%m%d_%H%M%S"))
     assert written["generation"] == record["generation"]
+
+
+def test_no_record_means_nothing_to_stamp() -> None:
+    """Outside a `vera` command there is no record, and no `config.json`."""
+    assert with_start_time(None, datetime(2026, 10, 26, 14, 30, 5)) is None

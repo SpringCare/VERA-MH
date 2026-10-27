@@ -379,7 +379,7 @@ def run_pooling(
     synth_name = _synthetic_pooled_folder_basename(
         eval_dirs, combined, started_at=started_at, judge_slug=judge_slug
     )
-    record = with_start_time(run_record, started_at) if run_record else None
+    record = with_start_time(run_record, started_at)
     out_eval = create_run_root(Path(output_parent).resolve(), synth_name, record)
     results_csv = out_eval / "results.csv"
     combined.to_csv(results_csv, index=False)

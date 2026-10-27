@@ -128,9 +128,7 @@ async def run_generation(
             runs_per_prompt,
             timestamp,
         )
-        record = (
-            with_start_time(run_record, started_at) if run_record is not None else None
-        )
+        record = with_start_time(run_record, started_at)
         output_folder = str(create_run_root(output_folder, run_id, record))
 
     runner = ConversationRunner(
