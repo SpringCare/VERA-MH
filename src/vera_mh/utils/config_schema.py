@@ -160,6 +160,11 @@ class RubricFiles:
         return dataclasses.asdict(self)
 
 
+# Who opens the conversation, in the CLI's u/c vocabulary: the user-side LLM
+# playing the persona, or the chatbot under test.
+FIRST_SPEAKERS = ("user", "chatbot")
+
+
 @dataclasses.dataclass(frozen=True)
 class GenerationConfig:
     """What run to perform — the run-defining half of a `RunConfig`.
@@ -181,7 +186,7 @@ class GenerationConfig:
     output: str
     max_concurrent: int | None
     max_total_words: int | None
-    persona_speaks_first: bool
+    first_speaker: str
     sessions: list[str] | None
     persona_context_template: str
     user_language: str
@@ -217,8 +222,10 @@ class GenerationConfig:
                 )
             if self.max_total_words < 1:
                 raise ValueError("generation.max_total_words must be at least 1")
-        if not isinstance(self.persona_speaks_first, bool):
-            raise ValueError("generation.persona_speaks_first must be a boolean")
+        if self.first_speaker not in FIRST_SPEAKERS:
+            raise ValueError(
+                "generation.first_speaker must be one of: " + ", ".join(FIRST_SPEAKERS)
+            )
         if self.sessions is not None:
             if not self.sessions:
                 raise ValueError("generation.sessions cannot be empty")
@@ -242,7 +249,7 @@ class GenerationConfig:
             "output": self.output,
             "max_concurrent": self.max_concurrent,
             "max_total_words": self.max_total_words,
-            "persona_speaks_first": self.persona_speaks_first,
+            "first_speaker": self.first_speaker,
             "sessions": list(self.sessions) if self.sessions is not None else None,
             "persona_context_template": self.persona_context_template,
             "user_language": self.user_language,

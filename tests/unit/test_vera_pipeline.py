@@ -402,7 +402,7 @@ def test_config_without_behavior_fields_gets_the_cli_defaults(
                 "user": [{"name": "gpt-5.2", "repeats": 1}],
                 "turns": 30,
                 "user_language": "English",
-                "persona_speaks_first": True,
+                "first_speaker": "user",
                 "sessions": None,
                 "max_total_words": None,
             },

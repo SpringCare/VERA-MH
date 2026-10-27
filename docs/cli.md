@@ -55,7 +55,7 @@ A few **invocation controls** describe how to run, not what the run is, so they 
 | `--print` | Print the fully resolved invocation (as a `VERA_RUN_CONFIG=...` command) and exit without running anything |
 | `--into <folder>` | Continue an existing run (`generate`, `judge`); see [below](#continuing-an-interrupted-run---into) |
 
-A config file must state every field that changes what a run produces: the models, the personas, conversations, or rubric (or a `target` that supplies them), and for `generate` also `turns`, `user_language`, `persona_speaks_first`, `sessions`, and `max_total_words` (`null` where no limit is intended). For `score` and `pool`, `personas` and `skip_risk_analysis` are required, because they decide whether the risk breakdown exists. Fields that only change where output goes or how fast a run goes (`output`, `max_concurrent`, `per_judge`) may be left out and get the same default as the flag. Unknown fields are rejected.
+A config file must state every field that changes what a run produces: the models, the personas, conversations, or rubric (or a `target` that supplies them), and for `generate` also `turns`, `user_language`, `first_speaker`, `sessions`, and `max_total_words` (`null` where no limit is intended). For `score` and `pool`, `personas` and `skip_risk_analysis` are required, because they decide whether the risk breakdown exists. Fields that only change where output goes or how fast a run goes (`output`, `max_concurrent`, `per_judge`) may be left out and get the same default as the flag. Unknown fields are rejected.
 
 Every command prints its resolved config when it starts, so the log of a run shows exactly what it did.
 
@@ -78,7 +78,7 @@ Paths inside a config resolve against the repository root, not the working direc
     "output": "output",
     "max_concurrent": 10,
     "max_total_words": null,
-    "persona_speaks_first": true,
+    "first_speaker": "user",
     "user_language": "English",
     "sessions": null
   },
@@ -117,7 +117,7 @@ uv run vera generate \
 | `-o`, `--output` | Parent directory for new run folders | `output` |
 | `--max-concurrent` | Maximum concurrent conversations; set this if the chatbot times out or rate-limits | unlimited |
 | `--max-total-words` | Cap on total response words per conversation | unlimited |
-| `--provider-speaks-first` | Chatbot speaks first | persona speaks first |
+| `--first-speaker {user,chatbot}` | Who opens the conversation: the user-side LLM or the chatbot | `user` |
 | `--user-language` | Language the user-side LLM writes in, e.g. `"Mexican Spanish"`; see [user-language.md](user-language.md) | English |
 | `--sessions` | Comma-separated session types run in order per persona (e.g. `intake,coaching`) | one session |
 | `--user-params` | `k=v,...` provider parameters for every `-u` model | none |

@@ -312,7 +312,7 @@ Top-level `generation` and `judging` blocks are **completely orthogonal** — mo
     "output": "output",
     "max_concurrent": null,
     "max_total_words": null,
-    "persona_speaks_first": true,
+    "first_speaker": "user",
     "user_language": "English",
     "sessions": null,
     "persona_context_template": "data/SI/persona_context_template.txt"
@@ -340,7 +340,7 @@ judging prompts. In the persisted canonical config, those entries contain the
 resolved concrete paths rather than a manifest reference.
 
 In config mode, the generation fields that change the conversations (`turns`,
-`user_language`, `persona_speaks_first`, `sessions`, `max_total_words`) are
+`user_language`, `first_speaker`, `sessions`, `max_total_words`) are
 required, including explicit `null` where no limit or session list is intended.
 `output` and `max_concurrent` only change where and how fast a run goes, so a
 config may leave them to the CLI defaults.

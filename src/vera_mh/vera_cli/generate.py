@@ -29,7 +29,12 @@ from pathlib import Path
 from typing import Any
 
 from vera_mh.generate import run_for_user_models
-from vera_mh.utils.config_schema import GenerationConfig, InvocationConfig, RunConfig
+from vera_mh.utils.config_schema import (
+    FIRST_SPEAKERS,
+    GenerationConfig,
+    InvocationConfig,
+    RunConfig,
+)
 from vera_mh.utils.run_record import build_run_record
 from vera_mh.utils.utils import parse_key_value_list
 
@@ -77,7 +82,7 @@ DEFAULTS: dict[str, Any] = {
     "output": "output",
     "max_concurrent": None,
     "max_total_words": None,
-    "provider_speaks_first": False,
+    "first_speaker": "user",
     "user_language": "English",
     "sessions": None,
 }
@@ -88,7 +93,7 @@ DEFAULTS: dict[str, Any] = {
 RESULT_FIELDS = (
     "turns",
     "user_language",
-    "persona_speaks_first",
+    "first_speaker",
     "sessions",
     "max_total_words",
 )
@@ -198,9 +203,7 @@ def _from_cli(
                 ),
                 max_concurrent=flag_value(args, "max_concurrent", defaults=DEFAULTS),
                 max_total_words=flag_value(args, "max_total_words", defaults=DEFAULTS),
-                persona_speaks_first=not flag_value(
-                    args, "provider_speaks_first", defaults=DEFAULTS
-                ),
+                first_speaker=flag_value(args, "first_speaker", defaults=DEFAULTS),
                 sessions=_sessions(flag_value(args, "sessions", defaults=DEFAULTS)),
                 user_language=flag_value(args, "user_language", defaults=DEFAULTS),
             ),
@@ -220,6 +223,11 @@ def _from_config(
     existing config files.
     """
     generation = config_section(config, "generation", command="generate")
+    if "persona_speaks_first" in generation:
+        raise ConfigError(
+            'generation.persona_speaks_first was renamed: use "first_speaker": '
+            '"user" in place of true, or "chatbot" in place of false'
+        )
     chatbot = model_from_config(
         required(generation, "chatbot", section="generation config"),
         field="generation.chatbot",
@@ -422,10 +430,11 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         help="Maximum response words per conversation (default: unlimited)",
     )
     parser.add_argument(
-        "--provider-speaks-first",
-        action="store_true",
+        "--first-speaker",
+        choices=FIRST_SPEAKERS,
         default=argparse.SUPPRESS,
-        help="Have the chatbot speak first (default: persona speaks first)",
+        help="Who opens the conversation: the user-side LLM or the chatbot "
+        "(default: user)",
     )
     parser.add_argument(
         "--user-language",

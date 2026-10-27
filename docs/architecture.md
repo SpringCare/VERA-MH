@@ -172,7 +172,7 @@ The two input forms use those defaults differently, split by whether a field
 changes what a run produces:
 
 - **Fields that change the results** (for `generate`: `turns`, `user_language`,
-  `persona_speaks_first`, `sessions`, `max_total_words`; for `score` and `pool`:
+  `first_speaker`, `sessions`, `max_total_words`; for `score` and `pool`:
   `personas`, `skip_risk_analysis`) are required in a config file, using `null`
   where the schema allows no limit or no session list. The CLI defaults them.
 - **Fields that change only where output goes or how fast a run goes**
