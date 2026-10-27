@@ -27,8 +27,15 @@ and charts aren't compared.
 `<saved run>` is the folder holding the saved `p_*` generation runs (each with its
 `evaluations/j_*` judge run). Seed again, which costs nothing, after a change
 that is meant to alter what the models are sent or what the run writes, and
-review the diff. `seed --sample N` keeps the first N personas, for the small baseline
-committed in `tests/fixtures/full_run/` that CI checks.
+review the diff. `seed --sample N` keeps the first N personas. The slice CI checks
+is committed in `tests/fixtures/full_run/`: `saved/` holds its 10 saved
+conversations and judge logs (absolute paths replaced by `<REPO>`), and
+`baseline/` what they were seeded into:
+
+    uv run python -m tests.safe_changes.full_run seed \
+        tests/fixtures/full_run/saved tests/fixtures/full_run/baseline --sample 5
+
+The full run and its baseline stay local (`output/full_run_baseline/`).
 """
 
 from __future__ import annotations
@@ -62,7 +69,10 @@ from vera_mh.utils.conversation_utils import format_conversation_summary
 from vera_mh.vera_cli import config as cli_config
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-COMMITTED_BASELINE = REPO_ROOT / "tests/fixtures/full_run"
+# The committed slice: the saved conversations it was seeded from, and the
+# baseline CI checks. The full run and its baseline are kept locally.
+COMMITTED_SAVED_RUN = REPO_ROOT / "tests/fixtures/full_run/saved"
+COMMITTED_BASELINE = REPO_ROOT / "tests/fixtures/full_run/baseline"
 
 # The settings of the saved run, as it was started. The model names are the
 # ones it was run with, because they are part of every recorded call.
@@ -527,7 +537,10 @@ def seed(saved_folder: Path, baseline: Path, sample: Optional[int]) -> None:
         json.dumps({"sample": sample}) + "\n", encoding="utf-8"
     )
     with open(baseline / "calls.jsonl", "w", encoding="utf-8") as f:
-        for call in seeder.calls:
+        # Sorted, so seeding again gives a readable diff rather than the calls
+        # in whatever order the concurrent run happened to make them. The sort
+        # is stable, so repeated identical calls keep their order.
+        for call in sorted(seeder.calls, key=lambda call: call["key"]):
             f.write(json.dumps(call, ensure_ascii=False) + "\n")
     for name, text in produced.items():
         path = baseline / "expected" / name

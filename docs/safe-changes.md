@@ -17,7 +17,7 @@ So the tests never ask a model anything. They feed the code fixed inputs (person
 | Judge | **Scripted judge** | How answers become ratings: the rubric walk, gates, `ASSIGN_END`, `NOT_RELEVANT>>`, severities | The judge's answer to each question | `tests/unit/judge/test_scripted_rubric_paths.py` | Scenarios in the test file |
 | Score | **Golden scoring** | The score math: percentages, the VERA formula, rounding, worst band, risk breakdown | `results.csv` files | `tests/unit/score/test_scoring_golden.py` | `tests/fixtures/golden_scoring/` |
 | All | **Pipeline replay** | The stages working together, including the exact prompts the judge is sent | Recorded model replies | `tests/unit/test_replay_pipeline.py` | `tests/fixtures/replay/` |
-| All | **Full-run replay** | The same, at scale: real 30-turn conversations, both user models, judging, scoring, and pooling | A saved run of the recommended SI profile | `tests/unit/test_full_run_replay.py` (10 conversations); the full 200 locally | `tests/fixtures/full_run/` |
+| All | **Full-run replay** | The same, at scale: real 30-turn conversations, both user models, judging, scoring, and pooling | A saved run of the recommended SI profile | `tests/unit/test_full_run_replay.py` (10 conversations); the full 200 locally | `tests/fixtures/full_run/` (the 10 saved conversations, and their baseline) |
 
 All are in the unit layer: no API keys, no network, and they run on every PR. Their helper code is in `tests/safe_changes/`; their data in `tests/fixtures/`. A change to one stage fails that stage's guard, so the failure says where to look; the pipeline replay catches what only shows when the stages run together.
 
@@ -42,7 +42,7 @@ First decide whether the change was meant to alter results.
 | Golden scoring | `uv run python -m tests.safe_changes.golden_scoring` | Free |
 | Scripted judge | Edit the scenario's expected ratings in the test file | Free |
 | Generation and pipeline replay (one recording) | `uv run python -m tests.safe_changes.replay` | A few cents of API calls |
-| Full-run replay | `uv run python -m tests.safe_changes.full_run seed <saved run> tests/fixtures/full_run --sample 5`, and without `--sample` into your local full baseline (`output/full_run_baseline/`, gitignored, about 17 MB) | Free: seeding reads the saved run |
+| Full-run replay | `uv run python -m tests.safe_changes.full_run seed tests/fixtures/full_run/saved tests/fixtures/full_run/baseline --sample 5`; locally, also from the full saved run into `output/full_run_baseline/` (gitignored, about 17 MB) | Free: seeding reads the saved run |
 
 In the PR:
 
