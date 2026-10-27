@@ -1,0 +1,19 @@
+{
+  "format_version": 1,
+  "inputs": {
+    "<REPO>/data/SI/personas.tsv": "sha256:07f0aa92cde50469d18aff640ed03e0df93e8863aed75ea102e4ba97a124330b"
+  },
+  "invocation": {
+    "debug": false,
+    "sample": 5
+  },
+  "pooling": {
+    "evaluations": [
+      "/private<WORK>/output/p_gpt_5_2__a_gpt_5_4_mini__t30__r1__<TS>/evaluations/j_gpt-5.4x1_reasoning_effortlow_<TS>__p_gpt_5_2__a_gpt_5_4_mini__t30__r1__<TS>",
+      "/private<WORK>/output/p_claude_opus_4_5_20251101__a_gpt_5_4_mini__t30__r1__<TS>/evaluations/j_gpt-5.4x1_reasoning_effortlow_<TS>__p_claude_opus_4_5_20251101__a_gpt_5_4_mini__t30__r1__<TS>"
+    ],
+    "output": "/private<WORK>/output",
+    "personas": "<REPO>/data/SI/personas.tsv",
+    "skip_risk_analysis": false
+  }
+}

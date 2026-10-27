@@ -1,0 +1,34 @@
+{
+  "format_version": 1,
+  "generation": {
+    "chatbot": {
+      "name": "gpt-5.4-mini",
+      "repeats": 1
+    },
+    "first_speaker": "user",
+    "max_concurrent": null,
+    "max_total_words": null,
+    "output": "/private<WORK>/output",
+    "persona_context_template": "<REPO>/data/SI/persona_context_template.txt",
+    "personas": [
+      "<REPO>/data/SI/personas.tsv"
+    ],
+    "sessions": null,
+    "turns": 30,
+    "user": [
+      {
+        "name": "gpt-5.2",
+        "repeats": 1
+      }
+    ],
+    "user_language": "English"
+  },
+  "inputs": {
+    "<REPO>/data/SI/persona_context_template.txt": "sha256:251eb0f477008e8d3591c7a42b026117df2879a65ac0cfbdfe2983b8ab19547d",
+    "<REPO>/data/SI/personas.tsv": "sha256:07f0aa92cde50469d18aff640ed03e0df93e8863aed75ea102e4ba97a124330b"
+  },
+  "invocation": {
+    "debug": false,
+    "sample": 5
+  }
+}

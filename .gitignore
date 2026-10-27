@@ -11,6 +11,10 @@ evaluations/
 logging/
 logs/
 
+# Except in the full-run replay's expected outputs, which mirror a run's layout
+!tests/fixtures/full_run/**/conversations/
+!tests/fixtures/full_run/**/evaluations/
+
 # Track publication_data
 !publication_data/
 !publication_data/**
