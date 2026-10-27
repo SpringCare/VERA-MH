@@ -12,11 +12,10 @@ logging/
 logs/
 
 # Except in the full-run replay's committed slice, which mirrors a run's layout:
-# its saved conversations and judge logs, and the baseline seeded from them.
+# its saved conversations and judge answers, and the baseline seeded from them.
 # The full run and its baseline stay local, under output/.
 !tests/fixtures/full_run/**/conversations/
 !tests/fixtures/full_run/**/evaluations/
-!tests/fixtures/full_run/**/logs/
 
 # Track publication_data
 !publication_data/

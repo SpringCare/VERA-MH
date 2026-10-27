@@ -8,12 +8,14 @@ It works in two steps.
 
 **Seed** turns the saved run into a recording, without calling any model. It runs
 `vera pipeline` with a fake LLM that answers from the saved run: each user and
-chatbot turn from the saved transcript, each judge question from the saved judge
-log. Seeding is strict. Every history the code sends must equal the saved
-transcript up to that turn, every judge question must be the one the saved log
-asked next, and every saved turn and answer must be used. It records every call
-in full, keyed like `replay.py` (model, system prompt, everything sent), plus the
-outputs the current code produces. That is the baseline.
+chatbot turn from the saved transcript, each judge question from the judge's
+saved answers (`answers/by_question/`, one file per conversation, in the order
+the questions were asked). Seeding is strict. Every history the code sends must
+equal the saved transcript up to that turn, every judge question must be the one
+the saved answers have next, and every saved turn and answer must be used. It
+records every call in full, keyed like `replay.py` (model, system prompt,
+everything sent), plus the outputs the current code produces. That is the
+baseline.
 
 **Check** replays the baseline with the same matching as `replay.py`: a call must
 match a recorded call on everything sent, every recorded reply must be used, and
@@ -29,19 +31,26 @@ and charts aren't compared.
 that is meant to alter what the models are sent or what the run writes, and
 review the diff. `seed --sample N` keeps the first N personas. The slice CI checks
 is committed in `tests/fixtures/full_run/`: `saved/` holds its 10 saved
-conversations and judge logs (absolute paths replaced by `<REPO>`), and
+conversations and judge answers (absolute paths replaced by `<REPO>`), and
 `baseline/` what they were seeded into:
 
     uv run python -m tests.safe_changes.full_run seed \
         tests/fixtures/full_run/saved tests/fixtures/full_run/baseline --sample 5
 
 The full run and its baseline stay local (`output/full_run_baseline/`).
+
+A run from before the judge wrote `answers/` keeps them only in its judge logs;
+`answers-from-logs <saved run>` writes them out once, with the judge's own
+writers:
+
+    uv run python -m tests.safe_changes.full_run answers-from-logs <saved run>
 """
 
 from __future__ import annotations
 
 import argparse
 import ast
+import asyncio
 import csv
 import hashlib
 import io
@@ -63,6 +72,15 @@ from tests.safe_changes.replay import (
     what_the_model_sees,
 )
 from vera_mh import cli as vera
+from vera_mh.judge.answers import (
+    COL_ANSWER,
+    COL_EXPLANATION,
+    COL_QUESTION_ID,
+    conversation_answers_dir,
+    write_answers_tsv,
+    write_conversation_answers,
+)
+from vera_mh.judge.rubric_config import RubricConfig
 from vera_mh.llm_clients.llm_factory import LLMFactory
 from vera_mh.llm_clients.llm_interface import JudgeLLM, Role
 from vera_mh.utils.conversation_utils import format_conversation_summary
@@ -156,22 +174,27 @@ def read_transcript(path: Path) -> Turns:
 
 
 def read_judge_log(path: Path) -> list[tuple[str, dict[str, Any]]]:
-    """Each question the judge was asked, in order: (prompt, structured reply)."""
+    """Each question the judge was asked, in order: (question ID, reply).
+
+    Only for runs from before the judge wrote `answers/` (see
+    `answers_from_logs`); seeding reads the answers files.
+    """
     record_start = re.compile(
         r"^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d,\d{3} - \S+ - \w+ - ", re.MULTILINE
     )
     messages = record_start.split(path.read_text(encoding="utf-8"))[1:]
     asked: list[tuple[str, dict[str, Any]]] = []
-    prompt: Optional[str] = None
+    question_id: Optional[str] = None
     for message in messages:
         message = message[:-1] if message.endswith("\n") else message
-        if message.startswith("PROMPT:\n"):
-            prompt = message[len("PROMPT:\n") :]
+        heading = re.fullmatch(r"--- Question (\S+) ---", message)
+        if heading:
+            question_id = heading.group(1)
         elif message.startswith("STRUCTURED RESPONSE:\n"):
-            if prompt is None:
+            if question_id is None:
                 raise SavedRunError(f"{path.name}: a reply with no question")
-            asked.append((prompt, _structured_reply(message, path)))
-            prompt = None
+            asked.append((question_id, _structured_reply(message, path)))
+            question_id = None
     return asked
 
 
@@ -192,6 +215,49 @@ def _structured_reply(message: str, path: Path) -> dict[str, Any]:
     }
 
 
+def answers_from_logs(saved_folder: Path) -> int:
+    """Write each judge run's `answers/` from its logs, for runs from before the
+    judge wrote them. Uses the judge's own writers, so the files are exactly the
+    ones a current run writes. Returns how many conversations were written."""
+    written = 0
+    for evaluation in sorted(saved_folder.glob("p_*/evaluations/j_*")):
+        for log in sorted((evaluation / "logs").glob("*.log")):
+            entries = [
+                {"question_id": question_id, **reply}
+                for question_id, reply in read_judge_log(log)
+            ]
+            output = conversation_answers_dir(evaluation) / f"{log.stem}.tsv"
+            write_conversation_answers(output, entries)
+            written += 1
+        write_answers_tsv(evaluation, si_rubric().question_order)
+    return written
+
+
+def read_saved_answers(path: Path) -> list[tuple[str, dict[str, Any]]]:
+    """A conversation's `answers/by_question` file: (question ID, reply) in the
+    order the judge asked them."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if lines[0].split("\t") != [COL_QUESTION_ID, COL_ANSWER, COL_EXPLANATION]:
+        raise SavedRunError(f"{path.name}: unexpected columns")
+    answers = []
+    for line in lines[1:]:
+        question_id, answer, explanation = line.split("\t")
+        answers.append((question_id, {"answer": answer, "reasoning": explanation}))
+    return answers
+
+
+def si_rubric() -> RubricConfig:
+    """The SI rubric the saved run was judged with, loaded by the judge's code."""
+    folder = REPO_ROOT / "data/SI"
+    return asyncio.run(
+        RubricConfig.from_paths(
+            rubric_file=str(folder / "rubric.tsv"),
+            rubric_prompt_beginning_file=str(folder / "rubric_prompt_beginning.txt"),
+            question_prompt_file=str(folder / "question_prompt.txt"),
+        )
+    )
+
+
 class SavedRun:
     """A saved full run's conversations and judge answers, by (user model, persona)."""
 
@@ -200,7 +266,11 @@ class SavedRun:
         name = re.compile(rf"^[0-9a-f]{{6}}_(?P<persona>.+)_(?P<user>{users})_run1$")
         self.turns: dict[tuple[str, str], Turns] = {}
         self.transcripts: dict[tuple[str, str], str] = {}
-        self.judge_calls: dict[tuple[str, str], list[tuple[str, dict]]] = {}
+        self.judge_answers: dict[tuple[str, str], list[tuple[str, dict]]] = {}
+        self.question_text = {
+            question_id: data["question"]
+            for question_id, data in si_rubric().question_flow_data.items()
+        }
         for run in sorted(folder.glob("p_*")):
             (evaluation,) = (run / "evaluations").glob("j_*")
             for path in sorted((run / "conversations").glob("*.txt")):
@@ -210,8 +280,9 @@ class SavedRun:
                 key = (found["user"], found["persona"])
                 self.turns[key] = read_transcript(path)
                 self.transcripts[key] = path.read_text(encoding="utf-8")
-                (log,) = (evaluation / "logs").glob(f"{path.stem}_*.log")
-                self.judge_calls[key] = read_judge_log(log)
+                by_question = conversation_answers_dir(evaluation)
+                (answers,) = by_question.glob(f"{path.stem}_*.tsv")
+                self.judge_answers[key] = read_saved_answers(answers)
         if not self.turns:
             raise SavedRunError(f"no saved conversations under {folder}")
 
@@ -279,13 +350,23 @@ class Seeder:
         return reply
 
     def judge_reply(self, key: tuple[str, str], prompt: Optional[str]) -> dict:
-        asked = self.saved.judge_calls[key]
+        """The saved answer to the judge's next question in this conversation.
+
+        The k-th question asked gets the k-th saved answer, and the prompt must
+        be asking that question. A few rubric questions are asked in two
+        dimensions with the same wording, so wording alone can't tell those
+        apart; the order does, and the baseline records every exact prompt.
+        """
+        answers = self.saved.judge_answers[key]
         k = self.used_judge_calls[key]
-        if k >= len(asked):
-            raise self._fail(f"{key}: judge question {k + 1} of {len(asked)}")
-        expected_prompt, reply = asked[k]
-        if prompt != expected_prompt:
-            raise self._fail(f"{key}: judge question {k + 1} differs from the log")
+        if k >= len(answers):
+            raise self._fail(f"{key}: judge question {k + 1} of {len(answers)}")
+        question_id, reply = answers[k]
+        expected = f"Question: {self.saved.question_text[question_id]}"
+        if not (prompt or "").startswith(expected):
+            raise self._fail(
+                f"{key}: judge question {k + 1} should be question {question_id}"
+            )
         self.used_judge_calls[key] = k + 1
         return reply
 
@@ -301,7 +382,7 @@ class Seeder:
         for key in keys:
             if self.used_turns[key] != len(self.saved.turns[key]):
                 left.append(f"{key}: {self.used_turns[key]} of the saved turns used")
-            if self.used_judge_calls[key] != len(self.saved.judge_calls[key]):
+            if self.used_judge_calls[key] != len(self.saved.judge_answers[key]):
                 left.append(f"{key}: not every saved judge answer was used")
         return left
 
@@ -595,12 +676,21 @@ def main() -> int:
     seed_parser.add_argument("saved_run", type=Path)
     seed_parser.add_argument("baseline", type=Path)
     seed_parser.add_argument("--sample", type=int, default=None)
+    logs_parser = commands.add_parser(
+        "answers-from-logs",
+        help="write answers/ from judge logs, for runs from before answers/ existed",
+    )
+    logs_parser.add_argument("saved_run", type=Path)
     check_parser = commands.add_parser("check", help="replay a baseline")
     check_parser.add_argument("baseline", type=Path)
     args = parser.parse_args()
 
     if args.command == "seed":
         seed(args.saved_run, args.baseline, args.sample)
+        return 0
+    if args.command == "answers-from-logs":
+        written = answers_from_logs(args.saved_run)
+        print(f"Wrote the answers of {written} judged conversations")
         return 0
     problems = check(args.baseline)
     for problem in problems:
