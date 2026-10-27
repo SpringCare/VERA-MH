@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 import pandas as pd
 
 from vera_mh.utils.judge_results import build_dataframe_from_tsv_files
+from vera_mh.utils.run_root import create_run_root, run_started_at
 
 from .answers import conversation_answers_dir, write_answers_tsv
 from .llm_judge import LLMJudge
@@ -579,7 +580,7 @@ async def judge_conversations(
         tuple, and output_folder is the path where evaluations were saved
     """
     if output_folder is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
+        timestamp = run_started_at().strftime("%Y%m%d_%H%M%S_%f")[:-3]
         judges_str = "_".join(
             f"{model}x{count}" for model, count in judge_models.items()
         )
@@ -599,11 +600,13 @@ async def judge_conversations(
                     judge_info += f"_{k}{v}"
 
         folder_name = conversation_folder_name or "conversations"
-        output_folder = build_evaluation_run_folder_path(
+        new_folder = build_evaluation_run_folder_path(
             output_root, judge_info, timestamp, folder_name
         )
-
-    os.makedirs(output_folder, exist_ok=True)
+        output_folder = str(create_run_root(output_root, Path(new_folder).name))
+    else:
+        # An existing run being continued (`--into`), not a new run root.
+        os.makedirs(output_folder, exist_ok=True)
 
     total_found = len(conversations)
     total_evaluations = len(conversations) * sum(judge_models.values())
