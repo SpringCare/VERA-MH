@@ -18,7 +18,7 @@ from vera_mh.utils.naming import (
     model_token_for_run_folder,
     parse_generation_run_folder_name,
 )
-from vera_mh.utils.run_record import with_start_time
+from vera_mh.utils.run_record import require_run_record, with_start_time
 from vera_mh.utils.run_root import create_run_root, run_started_at
 
 from .runner import ConversationRunner
@@ -128,7 +128,7 @@ async def run_generation(
             runs_per_prompt,
             timestamp,
         )
-        record = with_start_time(run_record, started_at)
+        record = with_start_time(require_run_record(run_record), started_at)
         output_folder = str(create_run_root(output_folder, run_id, record))
 
     runner = ConversationRunner(

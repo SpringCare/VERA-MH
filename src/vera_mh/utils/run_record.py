@@ -72,18 +72,8 @@ def build_run_record(run_config: RunConfig) -> dict[str, Any]:
     }
 
 
-def with_start_time(
-    record: dict[str, Any] | None, started_at: datetime
-) -> dict[str, Any] | None:
-    """A copy of `record` stamped with the run's one clock read.
-
-    `record` is None when the run was started outside a `vera` command (tests,
-    direct calls into the domain): there is no `config.json` to write, so there
-    is nothing to stamp. The start time is not lost either way, because the
-    caller has already used it for the run's folder name.
-    """
-    if record is None:
-        return None
+def with_start_time(record: dict[str, Any], started_at: datetime) -> dict[str, Any]:
+    """A copy of `record` stamped with the run's one clock read."""
     stamped = copy.deepcopy(record)
     stamped["provenance"]["started_at"] = started_at.isoformat(timespec="seconds")
     return stamped
@@ -102,6 +92,22 @@ def write_run_record(run_root: Path, record: dict[str, Any]) -> None:
         json.dumps(record, indent=2) + "\n", encoding="utf-8"
     )
     (run_root / HASH_FILE).write_text(record_hash(record) + "\n", encoding="utf-8")
+
+
+def require_run_record(record: dict[str, Any] | None) -> dict[str, Any]:
+    """The record for a new run, or an error saying one is needed.
+
+    Every `vera` command passes one. Only a direct call into the domain can
+    forget, and starting a run there without one would leave a run folder with
+    no `config.json`, so it stops instead. Continuing a run (`--into`) needs no
+    record and doesn't call this.
+    """
+    if record is None:
+        raise ValueError(
+            "starting a new run needs a run record, to write as its config.json; "
+            "build one with utils.run_record.build_run_record"
+        )
+    return record
 
 
 def check_record_inputs(config: dict[str, Any]) -> None:

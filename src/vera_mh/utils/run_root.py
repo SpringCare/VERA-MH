@@ -41,9 +41,7 @@ def run_started_at() -> datetime:
     return datetime.now()
 
 
-def create_run_root(
-    parent: str | Path, name: str, record: dict[str, Any] | None = None
-) -> Path:
+def create_run_root(parent: str | Path, name: str, record: dict[str, Any]) -> Path:
     """Create the folder for a new run, write its record, and return its path.
 
     `parent` is where the run goes and `name` is the run's folder name, which
@@ -60,15 +58,13 @@ def create_run_root(
       `output/j_gpt-5.4x1__p_claude_opus_4_5+gpt_5_2__a_gpt_5_4__t30__r1__20261015_191923/`,
       which gets the merged `results.csv`, `pool_metadata.json`, and `scores/`
 
-    Each starts with `config.json` and `config.json.sha256` when `record` is
-    given.
+    Each starts with `config.json` and `config.json.sha256`, written from
+    `record`. A new run can't start without one, so every run folder says what
+    ran; continuing a run (`--into`) opens its existing folder instead.
 
     The parent folders are created as needed. The run folder itself must not
     exist yet: `mkdir` without `exist_ok` checks and creates in one step, so two
     processes starting the same run cannot both succeed.
-
-    `record` is None only for callers outside a `vera` command (tests, direct
-    calls into the domain), which have no resolved config to record.
     """
     root = Path(parent) / name
     root.parent.mkdir(parents=True, exist_ok=True)
@@ -79,6 +75,5 @@ def create_run_root(
             f"run folder already exists: {root}. Two runs got the same name; "
             "start the run again, or pass --into to continue that run."
         ) from error
-    if record is not None:
-        write_run_record(root, record)
+    write_run_record(root, record)
     return root

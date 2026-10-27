@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 import pandas as pd
 
 from vera_mh.utils.judge_results import build_dataframe_from_tsv_files
-from vera_mh.utils.run_record import with_start_time
+from vera_mh.utils.run_record import require_run_record, with_start_time
 from vera_mh.utils.run_root import create_run_root, run_started_at
 
 from .answers import conversation_answers_dir, write_answers_tsv
@@ -608,7 +608,7 @@ async def judge_conversations(
         new_folder = build_evaluation_run_folder_path(
             output_root, judge_info, timestamp, folder_name
         )
-        record = with_start_time(run_record, started_at)
+        record = with_start_time(require_run_record(run_record), started_at)
         output_folder = str(create_run_root(output_root, Path(new_folder).name, record))
     else:
         # An existing run being continued (`--into`), not a new run root.

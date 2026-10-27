@@ -24,6 +24,7 @@ from vera_mh.utils.run_record import (
     check_record_inputs,
     file_checksum,
     record_hash,
+    require_run_record,
     with_start_time,
 )
 from vera_mh.utils.run_root import create_run_root
@@ -231,6 +232,7 @@ async def test_generation_writes_the_record_with_the_folder_time(
     assert written["generation"] == record["generation"]
 
 
-def test_no_record_means_nothing_to_stamp() -> None:
-    """Outside a `vera` command there is no record, and no `config.json`."""
-    assert with_start_time(None, datetime(2026, 10, 26, 14, 30, 5)) is None
+def test_a_new_run_without_a_record_stops() -> None:
+    """Every new run folder gets a config.json, so starting one needs a record."""
+    with pytest.raises(ValueError, match="needs a run record"):
+        require_run_record(None)
