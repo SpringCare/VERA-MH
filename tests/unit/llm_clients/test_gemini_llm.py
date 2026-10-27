@@ -84,15 +84,13 @@ class TestGeminiLLM(TestJudgeLLMBase):
     def test_init_missing_api_key_raises_error(self):
         """Test that missing GOOGLE_API_KEY raises ValueError."""
         with pytest.raises(ValueError) as exc_info:
-            GeminiLLM(name="TestGemini", role=Role.PERSONA)
+            GeminiLLM(name="TestGemini", role=Role.USER)
 
         assert "GOOGLE_API_KEY not found" in str(exc_info.value)
 
     def test_init_with_default_model(self):
         """Test initialization with default model from config."""
-        llm = GeminiLLM(
-            name="TestGemini", role=Role.PERSONA, system_prompt="Test prompt"
-        )
+        llm = GeminiLLM(name="TestGemini", role=Role.USER, system_prompt="Test prompt")
 
         assert llm.name == "TestGemini"
         assert llm.system_prompt == "Test prompt"
@@ -102,7 +100,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
     def test_init_with_custom_model(self):
         """Test initialization with custom model name."""
         llm = GeminiLLM(
-            name="TestGemini", role=Role.PERSONA, model_name="gemini-1.5-flash"
+            name="TestGemini", role=Role.USER, model_name="gemini-1.5-flash"
         )
 
         assert llm.model_name == "gemini-1.5-flash"
@@ -120,7 +118,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         ) as mock_chat:
             GeminiLLM(
                 name="TestGemini",
-                role=Role.PERSONA,
+                role=Role.USER,
                 model_name="gemini-1.5-pro",
                 **default_llm_kwargs,
             )
@@ -140,7 +138,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
                 "vera_mh.llm_clients.gemini_llm.Config.get_base_url",
                 return_value="https://gateway.example.com",
             ):
-                GeminiLLM(name="TestGemini", role=Role.PERSONA)
+                GeminiLLM(name="TestGemini", role=Role.USER)
 
             assert mock_chat.call_args[1]["base_url"] == "https://gateway.example.com"
 
@@ -152,7 +150,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
             with patch(
                 "vera_mh.llm_clients.gemini_llm.Config.get_base_url", return_value=None
             ):
-                GeminiLLM(name="TestGemini", role=Role.PERSONA)
+                GeminiLLM(name="TestGemini", role=Role.USER)
 
             assert "base_url" not in mock_chat.call_args[1]
 
@@ -238,7 +236,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         ) as mock_chat:
             GeminiLLM(
                 name="TestGemini",
-                role=Role.PERSONA,
+                role=Role.USER,
                 **reasoning_kwargs,
             )
 
@@ -275,7 +273,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
         llm = GeminiLLM(
             name="TestGemini",
-            role=Role.PERSONA,
+            role=Role.USER,
             system_prompt="You are a helpful assistant.",
         )
         response = await llm.generate_response(conversation_history=mock_system_message)
@@ -314,7 +312,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)  # No system prompt
+        llm = GeminiLLM(name="TestGemini", role=Role.USER)  # No system prompt
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response without system prompt"
@@ -347,7 +345,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
+        llm = GeminiLLM(name="TestGemini", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response with fallback"
@@ -375,7 +373,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
+        llm = GeminiLLM(name="TestGemini", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response"
@@ -399,7 +397,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
+        llm = GeminiLLM(name="TestGemini", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response"
@@ -427,7 +425,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
         llm = GeminiLLM(
             name="TestGemini",
-            role=Role.PERSONA,
+            role=Role.USER,
             model_name="gemini-1.5-pro",
         )
         await llm.generate_response(conversation_history=mock_system_message)
@@ -444,7 +442,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm = mock_llm_factory(side_effect=Exception("API quota exceeded"))
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
+        llm = GeminiLLM(name="TestGemini", role=Role.USER)
         with pytest.raises(LLMGenerationFailed) as exc_info:
             await llm.generate_response(conversation_history=mock_system_message)
 
@@ -469,7 +467,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
+        llm = GeminiLLM(name="TestGemini", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -477,13 +475,13 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
     def test_last_response_metadata_copy_returns_copy(self):
         """Test that last_response_metadata.copy() returns a copy, not the original."""
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
+        llm = GeminiLLM(name="TestGemini", role=Role.USER)
         assert_metadata_copy_behavior(llm)
 
     def test_set_system_prompt(self):
         """Test set_system_prompt method."""
         llm = GeminiLLM(
-            name="TestGemini", role=Role.PERSONA, system_prompt="Initial prompt"
+            name="TestGemini", role=Role.USER, system_prompt="Initial prompt"
         )
         assert llm.system_prompt == "Initial prompt"
 
@@ -505,7 +503,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
+        llm = GeminiLLM(name="TestGemini", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -527,7 +525,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
+        llm = GeminiLLM(name="TestGemini", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -554,7 +552,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
+        llm = GeminiLLM(name="TestGemini", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -579,7 +577,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
+        llm = GeminiLLM(name="TestGemini", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -612,7 +610,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA, system_prompt="Test")
+        llm = GeminiLLM(name="TestGemini", role=Role.USER, system_prompt="Test")
 
         response = await llm.generate_response(
             conversation_history=sample_conversation_history
@@ -645,7 +643,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA, system_prompt="Test")
+        llm = GeminiLLM(name="TestGemini", role=Role.USER, system_prompt="Test")
 
         response = await llm.generate_response(conversation_history=mock_system_message)
 
@@ -674,7 +672,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA, system_prompt="Test")
+        llm = GeminiLLM(name="TestGemini", role=Role.USER, system_prompt="Test")
 
         response = await llm.generate_response(conversation_history=mock_system_message)
 
@@ -702,9 +700,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
         # Persona system prompt should trigger message type flipping
         persona_prompt = "You are roleplaying as a human user"
-        llm = GeminiLLM(
-            name="TestGemini", system_prompt=persona_prompt, role=Role.PERSONA
-        )
+        llm = GeminiLLM(name="TestGemini", system_prompt=persona_prompt, role=Role.USER)
 
         response = await llm.generate_response(
             conversation_history=sample_conversation_history
@@ -746,7 +742,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_gemini.return_value = mock_llm
 
-        llm = GeminiLLM(name="TestGemini", role=Role.PERSONA)
+        llm = GeminiLLM(name="TestGemini", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Partial usage response"

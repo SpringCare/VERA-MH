@@ -47,7 +47,7 @@ class RetryHarness(LLMInterface):
     """Concrete LLM for testing _run_with_retry."""
 
     def __init__(self) -> None:
-        super().__init__("harness", Role.PROVIDER)
+        super().__init__("harness", Role.CHATBOT)
         self._call_n = 0
         self.fail_count = 0
 
@@ -119,7 +119,7 @@ class TestLLMInterface:
 
     def test_init_with_name_only(self):
         """Test initialization with only name parameter."""
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
 
         assert llm.name == "TestLLM"
         assert llm.system_prompt == ""
@@ -127,7 +127,7 @@ class TestLLMInterface:
     def test_init_with_name_and_system_prompt(self):
         """Test initialization with name and system prompt."""
         prompt = "You are a helpful assistant."
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER, system_prompt=prompt)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT, system_prompt=prompt)
 
         assert llm.name == "TestLLM"
         assert llm.system_prompt == prompt
@@ -135,7 +135,7 @@ class TestLLMInterface:
     @pytest.mark.asyncio
     async def test_generate_response_abstract_method(self, mock_system_message):
         """Test that generate_response is implemented in concrete class (line 21)."""
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "test response"
@@ -143,7 +143,7 @@ class TestLLMInterface:
     def test_set_system_prompt_abstract_method(self):
         """Test that set_system_prompt is implemented in concrete class (line 26)."""
         llm = ConcreteLLM(
-            name="TestLLM", role=Role.PROVIDER, system_prompt="Initial prompt"
+            name="TestLLM", role=Role.CHATBOT, system_prompt="Initial prompt"
         )
         assert llm.system_prompt == "Initial prompt"
 
@@ -153,20 +153,20 @@ class TestLLMInterface:
     def test_cannot_instantiate_abstract_class(self):
         """Test that LLMInterface cannot be instantiated directly."""
         with pytest.raises(TypeError) as exc_info:
-            LLMInterface(name="Test", role=Role.PROVIDER)  # pyright: ignore[reportAbstractUsage]
+            LLMInterface(name="Test", role=Role.CHATBOT)  # pyright: ignore[reportAbstractUsage]
 
         assert "Can't instantiate abstract class" in str(exc_info.value)
 
     def test_incomplete_implementation_raises_error(self):
         """Test that incomplete implementations raise TypeError."""
         with pytest.raises(TypeError) as exc_info:
-            IncompleteLLM(name="Incomplete", role=Role.PROVIDER)  # pyright: ignore[reportAbstractUsage]
+            IncompleteLLM(name="Incomplete", role=Role.CHATBOT)  # pyright: ignore[reportAbstractUsage]
 
         assert "Can't instantiate abstract class" in str(exc_info.value)
 
     def test_getattr_delegates_to_llm(self):
         """Test that __getattr__ delegates to self.llm (lines 40-41)."""
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
 
         # Access attributes that exist on llm
         assert llm.temperature == 0.7
@@ -174,7 +174,7 @@ class TestLLMInterface:
 
     def test_getattr_raises_attribute_error_for_missing_attribute(self):
         """Test that __getattr__ raises AttributeError for missing attributes."""
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
 
         # Try to access attribute that doesn't exist on llm (spec prevents it)
         with pytest.raises(AttributeError) as exc_info:
@@ -198,7 +198,7 @@ class TestLLMInterface:
             def set_system_prompt(self, system_prompt: str) -> None:
                 self.system_prompt = system_prompt
 
-        llm = MinimalLLM(name="Minimal", role=Role.PROVIDER)
+        llm = MinimalLLM(name="Minimal", role=Role.CHATBOT)
 
         # Should raise AttributeError
         with pytest.raises(AttributeError):
@@ -225,7 +225,7 @@ class TestLLMInterface:
             def set_system_prompt(self, system_prompt: str) -> None:
                 self.system_prompt = system_prompt
 
-        llm = NullLLM(name="Null", role=Role.PROVIDER)
+        llm = NullLLM(name="Null", role=Role.CHATBOT)
 
         # Should raise AttributeError since llm is None
         with pytest.raises(AttributeError):
@@ -233,8 +233,8 @@ class TestLLMInterface:
 
     def test_multiple_instances_have_independent_state(self):
         """Test that multiple LLM instances maintain independent state."""
-        llm1 = ConcreteLLM(name="LLM1", role=Role.PROVIDER, system_prompt="Prompt 1")
-        llm2 = ConcreteLLM(name="LLM2", role=Role.PROVIDER, system_prompt="Prompt 2")
+        llm1 = ConcreteLLM(name="LLM1", role=Role.CHATBOT, system_prompt="Prompt 1")
+        llm2 = ConcreteLLM(name="LLM2", role=Role.CHATBOT, system_prompt="Prompt 2")
 
         assert llm1.name == "LLM1"
         assert llm2.name == "LLM2"
@@ -249,7 +249,7 @@ class TestLLMInterface:
 
     def test_getattr_with_callable_attribute(self):
         """Test __getattr__ works with callable attributes."""
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
         llm.llm.custom_method = MagicMock(return_value="method result")
 
         # Access callable attribute through delegation
@@ -259,7 +259,7 @@ class TestLLMInterface:
 
     def test_system_prompt_default_empty_string(self):
         """Test that system_prompt defaults to empty string, not None."""
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
         assert llm.system_prompt == ""
         assert llm.system_prompt is not None
 
@@ -288,7 +288,7 @@ class TestLLMInterface:
             def set_system_prompt(self, system_prompt: str) -> None:
                 self.system_prompt = system_prompt
 
-        llm = FlexibleLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = FlexibleLLM(name="TestLLM", role=Role.CHATBOT)
 
         assert isinstance(llm.string_attr, str)
         assert isinstance(llm.int_attr, int)
@@ -298,21 +298,21 @@ class TestLLMInterface:
 
     def test_init_sets_conversation_id(self):
         """Test that conversation_id is set at init (e.g. UUID)."""
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
         assert llm.conversation_id is not None
         assert isinstance(llm.conversation_id, str)
         assert len(llm.conversation_id) > 0
 
     def test_create_conversation_id_returns_string(self):
         """Test that create_conversation_id returns a non-empty string (e.g. UUID)."""
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
         cid = llm.create_conversation_id()
         assert isinstance(cid, str)
         assert len(cid) > 0
 
     def test_create_conversation_id_returns_distinct_valid_uuid(self):
         """Test that repeated calls return distinct values and each is a valid UUID."""
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
         ids = [llm.create_conversation_id() for _ in range(50)]
         assert len(ids) == len(set(ids)), "ids must be distinct"
         for cid in ids:
@@ -323,7 +323,7 @@ class TestLLMInterface:
         Test _update_conversation_id_from_metadata preserves conversation_id
         when key is absent from response metadata.
         """
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
         original = llm.conversation_id
         llm._last_response_metadata = {}
         llm._update_conversation_id_from_metadata()
@@ -334,7 +334,7 @@ class TestLLMInterface:
         Test _update_conversation_id_from_metadata overwrites self.conversation_id
         with API-returned conversation_id.
         """
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
         llm._last_response_metadata = {"conversation_id": "api-provided-id"}
         llm._update_conversation_id_from_metadata()
         assert llm.conversation_id == "api-provided-id"
@@ -342,7 +342,7 @@ class TestLLMInterface:
     @pytest.mark.asyncio
     async def test_conversation_id_available_after_generate_response(self):
         """Test that conversation_id remains set after start_conversation."""
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
         await llm.start_conversation()
         assert llm.conversation_id is not None
 
@@ -353,18 +353,18 @@ class TestLLMInterfaceHooks:
 
     def test_custom_termination_signals_default_empty(self):
         """custom_termination_signals returns [] by default."""
-        llm = ConcreteLLM("test", Role.PROVIDER)
+        llm = ConcreteLLM("test", Role.CHATBOT)
         assert llm.custom_termination_signals == []
 
     def test_post_process_response_noop(self):
         """_post_process_response is a no-op by default."""
-        llm = ConcreteLLM("test", Role.PROVIDER)
+        llm = ConcreteLLM("test", Role.CHATBOT)
         assert llm._post_process_response("hello world") == "hello world"
         assert llm._post_process_response("") == ""
 
     def test_should_discard_response_default_false(self):
         """_should_discard_response returns False regardless of signals."""
-        llm = ConcreteLLM("test", Role.PROVIDER)
+        llm = ConcreteLLM("test", Role.CHATBOT)
         assert llm._should_discard_response([]) is False
         assert llm._should_discard_response(["SIGNAL"]) is False
 
@@ -376,7 +376,7 @@ class TestLLMInterfaceHooks:
             def custom_termination_signals(self):
                 return ["[END]", "[ERROR]"]
 
-        llm = SignalLLM("test", Role.PROVIDER)
+        llm = SignalLLM("test", Role.CHATBOT)
         found = llm._extract_signals("Something happened [END] here")
         assert found == ["[END]"]
 
@@ -388,7 +388,7 @@ class TestLLMInterfaceHooks:
             def custom_termination_signals(self):
                 return ["[END]"]
 
-        llm = SignalLLM("test", Role.PROVIDER)
+        llm = SignalLLM("test", Role.CHATBOT)
         assert llm._extract_signals("nothing special here") == []
 
     def test_extract_signals_returns_multiple_matches(self):
@@ -399,7 +399,7 @@ class TestLLMInterfaceHooks:
             def custom_termination_signals(self):
                 return ["[END]", "[ERROR]"]
 
-        llm = SignalLLM("test", Role.PROVIDER)
+        llm = SignalLLM("test", Role.CHATBOT)
         found = llm._extract_signals("[ERROR] something went wrong [END]")
         assert "[END]" in found
         assert "[ERROR]" in found
@@ -412,17 +412,17 @@ class TestLLMInterfaceHooks:
             def custom_termination_signals(self):
                 return ["[end]"]
 
-        llm = SignalLLM("test", Role.PROVIDER)
+        llm = SignalLLM("test", Role.CHATBOT)
         assert llm._extract_signals("message [END] here") == ["[end]"]
 
     def test_first_speaker_default_none(self):
         """first_speaker returns None by default."""
-        llm = ConcreteLLM("test", Role.PROVIDER)
+        llm = ConcreteLLM("test", Role.CHATBOT)
         assert llm.first_speaker is None
 
     def test_prepare_sessions_returns_unchanged(self):
         """prepare_sessions returns the same list unmodified."""
-        llm = ConcreteLLM("test", Role.PROVIDER)
+        llm = ConcreteLLM("test", Role.CHATBOT)
         sessions = ["intake", "coaching"]
         result = llm.prepare_sessions(sessions)
         assert result == sessions
@@ -430,13 +430,13 @@ class TestLLMInterfaceHooks:
     @pytest.mark.asyncio
     async def test_setup_is_noop(self):
         """setup() completes without error by default."""
-        llm = ConcreteLLM("test", Role.PROVIDER)
+        llm = ConcreteLLM("test", Role.CHATBOT)
         await llm.setup()  # must not raise
 
     @pytest.mark.asyncio
     async def test_enter_session_is_noop(self):
         """enter_session() completes without error by default."""
-        llm = ConcreteLLM("test", Role.PROVIDER)
+        llm = ConcreteLLM("test", Role.CHATBOT)
         await llm.enter_session("intake")  # must not raise
 
     @pytest.mark.asyncio
@@ -573,22 +573,22 @@ class TestModelParamSupport:
     """Tests for model-specific runtime parameter support on the base class."""
 
     def test_model_supports_param_default(self):
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
         assert llm._model_supports_param("any-model", "temperature")
 
     def test_base_class_returns_empty_unsupported_params_map(self):
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
         assert llm._unsupported_model_params() == {}
         assert llm._model_supports_param("any-model", "temperature")
 
     def test_filter_supported_params_passthrough(self):
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
         params = {"temperature": 0, "max_tokens": 500, "top_p": 0.9}
         filtered = llm._filter_supported_params("any-model", params)
         assert filtered == params
 
     def test_subclass_can_access_model_supports_param(self):
-        llm = ConcreteLLM(name="TestLLM", role=Role.PROVIDER)
+        llm = ConcreteLLM(name="TestLLM", role=Role.CHATBOT)
         assert llm._model_supports_param("any-model", "temperature")
 
 

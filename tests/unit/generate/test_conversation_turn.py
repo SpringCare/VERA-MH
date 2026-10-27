@@ -14,14 +14,14 @@ class TestConversationTurnCreation:
         message = HumanMessage(content="Hello world")
         turn = ConversationTurn(
             turn=1,
-            speaker=Role.PERSONA,
+            speaker=Role.USER,
             input_message="Start conversation",
             response_message=message,
             logging_metadata={"tokens": 100},
         )
 
         assert turn.turn == 1
-        assert turn.speaker == Role.PERSONA
+        assert turn.speaker == Role.USER
         assert turn.input_message == "Start conversation"
         assert turn.response == "Hello world"
         assert turn.early_termination is False
@@ -33,7 +33,7 @@ class TestConversationTurnCreation:
         message = AIMessage(content="Hi there!")
         turn = ConversationTurn(
             turn=2,
-            speaker=Role.PROVIDER,
+            speaker=Role.CHATBOT,
             input_message="Hello world",
             response_message=message,
             early_termination=True,
@@ -41,7 +41,7 @@ class TestConversationTurnCreation:
         )
 
         assert turn.turn == 2
-        assert turn.speaker == Role.PROVIDER
+        assert turn.speaker == Role.CHATBOT
         assert turn.input_message == "Hello world"
         assert turn.response == "Hi there!"
         assert turn.early_termination is True
@@ -52,7 +52,7 @@ class TestConversationTurnCreation:
         """Test creating with default values."""
         message = HumanMessage(content="Test")
         turn = ConversationTurn(
-            turn=1, speaker=Role.PERSONA, input_message="", response_message=message
+            turn=1, speaker=Role.USER, input_message="", response_message=message
         )
 
         assert turn.early_termination is False
@@ -63,7 +63,7 @@ class TestConversationTurnCreation:
         message = AIMessage(content="Response text")
         turn = ConversationTurn(
             turn=1,
-            speaker=Role.PROVIDER,
+            speaker=Role.CHATBOT,
             input_message="Input",
             response_message=message,
         )
@@ -80,7 +80,7 @@ class TestConversationTurnToDict:
         message = HumanMessage(content="Hello")
         turn = ConversationTurn(
             turn=1,
-            speaker=Role.PERSONA,
+            speaker=Role.USER,
             input_message="Start",
             response_message=message,
             logging_metadata={"tokens": 100},
@@ -90,7 +90,7 @@ class TestConversationTurnToDict:
 
         assert result == {
             "turn": 1,
-            "speaker": "persona",
+            "speaker": "user",
             "input": "Start",
             "response": "Hello",
             "early_termination": False,
@@ -102,7 +102,7 @@ class TestConversationTurnToDict:
         message = AIMessage(content="Goodbye")
         turn = ConversationTurn(
             turn=5,
-            speaker=Role.PROVIDER,
+            speaker=Role.CHATBOT,
             input_message="See you",
             response_message=message,
             early_termination=True,
@@ -119,7 +119,7 @@ class TestConversationTurnToDict:
         message = HumanMessage(content="Test")
         turn = ConversationTurn(
             turn=1,
-            speaker=Role.PERSONA,
+            speaker=Role.USER,
             input_message="Input",
             response_message=message,
             logging_metadata=None,
@@ -140,7 +140,7 @@ class TestConversationTurnToDict:
         message = AIMessage(content="Response")
         turn = ConversationTurn(
             turn=1,
-            speaker=Role.PROVIDER,
+            speaker=Role.CHATBOT,
             input_message="Prompt",
             response_message=message,
             logging_metadata=complex_metadata,
@@ -159,7 +159,7 @@ class TestConversationTurnFromDict:
         """Test from_dict creates HumanMessage for persona speaker."""
         data = {
             "turn": 1,
-            "speaker": "persona",
+            "speaker": "user",
             "input": "Start",
             "response": "Hello world",
             "early_termination": False,
@@ -167,10 +167,10 @@ class TestConversationTurnFromDict:
         }
 
         # From provider's perspective, persona is "they" (HumanMessage)
-        turn = ConversationTurn.from_dict(data, for_role=Role.PROVIDER)
+        turn = ConversationTurn.from_dict(data, for_role=Role.CHATBOT)
 
         assert turn.turn == 1
-        assert turn.speaker == Role.PERSONA
+        assert turn.speaker == Role.USER
         assert turn.input_message == "Start"
         assert turn.response == "Hello world"
         assert turn.early_termination is False
@@ -182,7 +182,7 @@ class TestConversationTurnFromDict:
         """Test from_dict creates AIMessage for agent speaker."""
         data = {
             "turn": 2,
-            "speaker": "provider",
+            "speaker": "chatbot",
             "input": "Hello world",
             "response": "Hi there!",
             "early_termination": False,
@@ -190,9 +190,9 @@ class TestConversationTurnFromDict:
         }
 
         # From provider's perspective, provider is "I" (AIMessage)
-        turn = ConversationTurn.from_dict(data, for_role=Role.PROVIDER)
+        turn = ConversationTurn.from_dict(data, for_role=Role.CHATBOT)
 
-        assert turn.speaker == Role.PROVIDER
+        assert turn.speaker == Role.CHATBOT
         assert isinstance(turn.response_message, AIMessage)
         assert turn.response_message.text == "Hi there!"
 
@@ -200,7 +200,7 @@ class TestConversationTurnFromDict:
         """Test from_dict creates AIMessage for chatbot speaker."""
         data = {
             "turn": 3,
-            "speaker": "provider",
+            "speaker": "chatbot",
             "input": "Question",
             "response": "Answer",
             "early_termination": True,
@@ -208,9 +208,9 @@ class TestConversationTurnFromDict:
         }
 
         # From provider's perspective, provider is "I" (AIMessage)
-        turn = ConversationTurn.from_dict(data, for_role=Role.PROVIDER)
+        turn = ConversationTurn.from_dict(data, for_role=Role.CHATBOT)
 
-        assert turn.speaker == Role.PROVIDER
+        assert turn.speaker == Role.CHATBOT
         assert isinstance(turn.response_message, AIMessage)
         assert turn.early_termination is True
 
@@ -218,13 +218,13 @@ class TestConversationTurnFromDict:
         """Test from_dict handles missing optional fields."""
         data = {
             "turn": 1,
-            "speaker": "persona",
+            "speaker": "user",
             "input": "",
             "response": "Test",
         }
 
         # From provider's perspective, persona is "they" (HumanMessage)
-        turn = ConversationTurn.from_dict(data, for_role=Role.PROVIDER)
+        turn = ConversationTurn.from_dict(data, for_role=Role.CHATBOT)
 
         assert turn.early_termination is False
         assert turn.logging_metadata is None
@@ -233,7 +233,7 @@ class TestConversationTurnFromDict:
         """Test from_dict from persona's perspective creates HumanMessage."""
         data = {
             "turn": 1,
-            "speaker": "provider",
+            "speaker": "chatbot",
             "input": "Question",
             "response": "Answer from provider",
             "early_termination": False,
@@ -241,9 +241,9 @@ class TestConversationTurnFromDict:
         }
 
         # From persona's perspective, provider is "they" (HumanMessage)
-        turn = ConversationTurn.from_dict(data, for_role=Role.PERSONA)
+        turn = ConversationTurn.from_dict(data, for_role=Role.USER)
 
-        assert turn.speaker == Role.PROVIDER
+        assert turn.speaker == Role.CHATBOT
         assert isinstance(turn.response_message, HumanMessage)
         assert turn.response_message.text == "Answer from provider"
 
@@ -252,7 +252,7 @@ class TestConversationTurnFromDict:
         original_message = HumanMessage(content="Original content")
         original_turn = ConversationTurn(
             turn=5,
-            speaker=Role.PERSONA,
+            speaker=Role.USER,
             input_message="Original input",
             response_message=original_message,
             early_termination=True,
@@ -262,7 +262,7 @@ class TestConversationTurnFromDict:
         # Convert to dict and back
         # Use provider's perspective to match original (persona is "they")
         dict_repr = original_turn.to_dict()
-        restored_turn = ConversationTurn.from_dict(dict_repr, for_role=Role.PROVIDER)
+        restored_turn = ConversationTurn.from_dict(dict_repr, for_role=Role.CHATBOT)
 
         # Check all fields match
         assert restored_turn.turn == original_turn.turn
@@ -282,7 +282,7 @@ class TestConversationTurnEdgeCases:
         message = AIMessage(content="")
         turn = ConversationTurn(
             turn=1,
-            speaker=Role.PROVIDER,
+            speaker=Role.CHATBOT,
             input_message="Input",
             response_message=message,
         )
@@ -296,7 +296,7 @@ class TestConversationTurnEdgeCases:
         message = HumanMessage(content=multiline_text)
         turn = ConversationTurn(
             turn=1,
-            speaker=Role.PERSONA,
+            speaker=Role.USER,
             input_message="Input",
             response_message=message,
         )
@@ -310,7 +310,7 @@ class TestConversationTurnEdgeCases:
         message = AIMessage(content=unicode_text)
         turn = ConversationTurn(
             turn=1,
-            speaker=Role.PROVIDER,
+            speaker=Role.CHATBOT,
             input_message="Say hello",
             response_message=message,
         )
@@ -321,5 +321,5 @@ class TestConversationTurnEdgeCases:
 
         # Test roundtrip
         # Use provider's perspective to match original (provider is "I")
-        restored = ConversationTurn.from_dict(dict_repr, for_role=Role.PROVIDER)
+        restored = ConversationTurn.from_dict(dict_repr, for_role=Role.CHATBOT)
         assert restored.response == unicode_text

@@ -90,7 +90,7 @@ class TestEndpointLLM(TestLLMBase):
                 "vera_mh.llm_clients.endpoint_llm.aiohttp.ClientSession",
                 new_callable=lambda: _make_aiohttp_mock(content=expected_text),
             ):
-                llm = self.create_llm(role=Role.PROVIDER, name="TestLLM")
+                llm = self.create_llm(role=Role.CHATBOT, name="TestLLM")
                 response = await llm.generate_response(
                     conversation_history=mock_system_message
                 )
@@ -101,7 +101,7 @@ class TestEndpointLLM(TestLLMBase):
         self, mock_response_factory, mock_llm_factory, mock_system_message
     ):
         with self.get_mock_patches():
-            llm = self.create_llm(role=Role.PROVIDER, name="TestLLM")
+            llm = self.create_llm(role=Role.CHATBOT, name="TestLLM")
             await llm.generate_response(conversation_history=mock_system_message)
         metadata = assert_metadata_structure(
             llm,
@@ -126,7 +126,7 @@ class TestEndpointLLM(TestLLMBase):
                 "vera_mh.llm_clients.endpoint_llm.aiohttp.ClientSession",
                 new_callable=lambda: mock_session_class,
             ):
-                llm = self.create_llm(role=Role.PROVIDER, name="TestLLM")
+                llm = self.create_llm(role=Role.CHATBOT, name="TestLLM")
                 with pytest.raises(LLMGenerationFailed) as exc_info:
                     await llm.generate_response(
                         conversation_history=mock_system_message
@@ -146,7 +146,7 @@ class TestEndpointLLM(TestLLMBase):
         with self.get_mock_patches():
             llm = EndpointLLM(
                 name="ep",
-                role=Role.PROVIDER,
+                role=Role.CHATBOT,
                 first_message="Hello",
                 start_prompt="Custom start",
             )
@@ -155,7 +155,7 @@ class TestEndpointLLM(TestLLMBase):
 
     def test_init_default_start_prompt(self):
         with self.get_mock_patches():
-            llm = EndpointLLM(name="ep", role=Role.PROVIDER)
+            llm = EndpointLLM(name="ep", role=Role.CHATBOT)
         assert llm.start_prompt == DEFAULT_START_PROMPT
 
     @pytest.mark.asyncio
@@ -163,7 +163,7 @@ class TestEndpointLLM(TestLLMBase):
         with self.get_mock_patches():
             llm = EndpointLLM(
                 name="ep",
-                role=Role.PROVIDER,
+                role=Role.CHATBOT,
                 first_message="Static first reply",
             )
         out = await llm.start_conversation()
@@ -179,7 +179,7 @@ class TestEndpointLLM(TestLLMBase):
                 "vera_mh.llm_clients.endpoint_llm.aiohttp.ClientSession",
                 new_callable=lambda: _make_aiohttp_mock(content="First turn from API"),
             ) as mock_session_class:
-                llm = EndpointLLM(name="ep", role=Role.PROVIDER)
+                llm = EndpointLLM(name="ep", role=Role.CHATBOT)
                 out = await llm.start_conversation()
         assert out == "First turn from API"
         mock_session_class.return_value.__aenter__.return_value.post.assert_called_once()
@@ -198,7 +198,7 @@ class TestEndpointLLM(TestLLMBase):
                     content="OK", conversation_id=server_cid
                 ),
             ):
-                llm = EndpointLLM(name="ep", role=Role.PROVIDER)
+                llm = EndpointLLM(name="ep", role=Role.CHATBOT)
                 llm.conversation_id = client_cid
                 await llm.generate_response(conversation_history=mock_system_message)
         assert llm.conversation_id == server_cid
@@ -211,7 +211,7 @@ class TestEndpointLLM(TestLLMBase):
                 "vera_mh.llm_clients.endpoint_llm.aiohttp.ClientSession",
                 new_callable=lambda: _make_aiohttp_mock(content="Delegated first turn"),
             ):
-                llm = EndpointLLM(name="ep", role=Role.PROVIDER)
+                llm = EndpointLLM(name="ep", role=Role.CHATBOT)
                 out = await llm.generate_response(conversation_history=[])
         assert out == "Delegated first turn"
 
@@ -224,14 +224,14 @@ class TestEndpointLLM(TestLLMBase):
                 "vera_mh.llm_clients.endpoint_llm.aiohttp.ClientSession",
                 new_callable=lambda: _make_aiohttp_mock(content="Delegated from None"),
             ):
-                llm = EndpointLLM(name="ep", role=Role.PROVIDER)
+                llm = EndpointLLM(name="ep", role=Role.CHATBOT)
                 out = await llm.generate_response(conversation_history=None)
         assert out == "Delegated from None"
 
     def test_set_system_prompt(self):
         with self.get_mock_patches():
             llm = self.create_llm(
-                role=Role.PROVIDER, name="TestLLM", system_prompt="Initial"
+                role=Role.CHATBOT, name="TestLLM", system_prompt="Initial"
             )
         assert llm.system_prompt == "Initial"
         llm.set_system_prompt("Updated")
@@ -239,14 +239,14 @@ class TestEndpointLLM(TestLLMBase):
 
     def test_getattr_returns_none_for_unknown_attribute(self):
         with self.get_mock_patches():
-            llm = EndpointLLM(name="ep", role=Role.PROVIDER)
+            llm = EndpointLLM(name="ep", role=Role.CHATBOT)
         assert llm.nonexistent_attr is None
 
     def test_temperature_and_max_tokens_accessible_from_self(self):
         with self.get_mock_patches():
             llm = EndpointLLM(
                 name="ep",
-                role=Role.PROVIDER,
+                role=Role.CHATBOT,
                 temperature=0.3,
                 max_tokens=100,
             )
@@ -255,5 +255,5 @@ class TestEndpointLLM(TestLLMBase):
 
     def test_last_response_metadata_copy_returns_copy(self):
         with self.get_mock_patches():
-            llm = self.create_llm(role=Role.PROVIDER, name="TestLLM")
+            llm = self.create_llm(role=Role.CHATBOT, name="TestLLM")
             assert_metadata_copy_behavior(llm)

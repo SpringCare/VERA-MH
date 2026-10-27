@@ -79,7 +79,7 @@ class TestOllamaLLM(TestLLMBase):
             mock_instance.ainvoke = AsyncMock(return_value=expected_text)
             mock_ollama.return_value = mock_instance
 
-            llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+            llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
             response = await llm.generate_response(
                 conversation_history=mock_system_message
             )
@@ -98,7 +98,7 @@ class TestOllamaLLM(TestLLMBase):
             mock_instance.ainvoke = AsyncMock(return_value="Response")
             mock_ollama.return_value = mock_instance
 
-            llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+            llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
             await llm.generate_response(conversation_history=mock_system_message)
 
             # Verify metadata structure (Ollama-specific)
@@ -124,7 +124,7 @@ class TestOllamaLLM(TestLLMBase):
             mock_instance.ainvoke = AsyncMock(side_effect=Exception("Ollama Error"))
             mock_ollama.return_value = mock_instance
 
-            llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+            llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
             with pytest.raises(LLMGenerationFailed) as exc_info:
                 await llm.generate_response(conversation_history=mock_system_message)
 
@@ -138,7 +138,7 @@ class TestOllamaLLM(TestLLMBase):
     def test_init_with_default_config(self, mock_ollama):
         from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
-        OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        OllamaLLM(name="test-ollama", role=Role.CHATBOT)
 
         # Verify Ollama was initialized with default config
         mock_ollama.assert_called_once()
@@ -156,7 +156,7 @@ class TestOllamaLLM(TestLLMBase):
         """Test initialization with custom model name."""
         from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER, model_name="llama3:70b")
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT, model_name="llama3:70b")
 
         call_kwargs = mock_ollama.call_args[1]
         assert call_kwargs["model"] == "llama3:70b"
@@ -167,7 +167,7 @@ class TestOllamaLLM(TestLLMBase):
         """Test initialization with custom temperature via kwargs."""
         from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
-        OllamaLLM(name="test-ollama", role=Role.PROVIDER, temperature=0.9)
+        OllamaLLM(name="test-ollama", role=Role.CHATBOT, temperature=0.9)
 
         call_kwargs = mock_ollama.call_args[1]
         assert call_kwargs["temperature"] == 0.9
@@ -178,7 +178,7 @@ class TestOllamaLLM(TestLLMBase):
         from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
         custom_url = "http://remote-server:11434"
-        OllamaLLM(name="test-ollama", role=Role.PROVIDER, base_url=custom_url)
+        OllamaLLM(name="test-ollama", role=Role.CHATBOT, base_url=custom_url)
 
         call_kwargs = mock_ollama.call_args[1]
         assert call_kwargs["base_url"] == custom_url
@@ -190,7 +190,7 @@ class TestOllamaLLM(TestLLMBase):
 
         OllamaLLM(
             name="test-ollama",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             temperature=0.1,
             top_p=0.95,
             num_predict=500,
@@ -213,7 +213,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="This is a test response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         # Verify message uses Human/Assistant format even without system prompt
@@ -234,7 +234,7 @@ class TestOllamaLLM(TestLLMBase):
 
         llm = OllamaLLM(
             name="test-ollama",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             system_prompt="You are a helpful assistant",
         )
         response = await llm.generate_response(conversation_history=mock_system_message)
@@ -258,7 +258,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Sure, I can help with that")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         llm.set_system_prompt("You are a coding expert")
         response = await llm.generate_response(conversation_history=mock_system_message)
 
@@ -282,7 +282,7 @@ class TestOllamaLLM(TestLLMBase):
         )
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         with pytest.raises(LLMGenerationFailed) as exc_info:
             await llm.generate_response(conversation_history=mock_system_message)
 
@@ -307,7 +307,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_ollama.return_value = mock_instance
 
         llm = OllamaLLM(
-            name="test-ollama", role=Role.PROVIDER, model_name="nonexistent:latest"
+            name="test-ollama", role=Role.CHATBOT, model_name="nonexistent:latest"
         )
         with pytest.raises(LLMGenerationFailed) as exc_info:
             await llm.generate_response(conversation_history=mock_system_message)
@@ -333,7 +333,7 @@ class TestOllamaLLM(TestLLMBase):
         )
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         with pytest.raises(LLMGenerationFailed) as exc_info:
             await llm.generate_response(conversation_history=mock_system_message)
 
@@ -357,7 +357,7 @@ class TestOllamaLLM(TestLLMBase):
         )
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         with pytest.raises(LLMGenerationFailed) as exc_info:
             await llm.generate_response(conversation_history=mock_system_message)
 
@@ -380,7 +380,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Default response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         response = await llm.generate_response(None)
 
         # None history: format uses default start_prompt message
@@ -398,7 +398,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Response to empty")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         response = await llm.generate_response(
             conversation_history=[{"turn": 0, "response": ""}]
         )
@@ -420,7 +420,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_ollama.return_value = mock_instance
 
         multiline_msg = "Line 1\nLine 2\nLine 3"
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER, system_prompt="Helper")
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT, system_prompt="Helper")
         await llm.generate_response(
             conversation_history=[{"turn": 0, "response": multiline_msg}]
         )
@@ -433,7 +433,7 @@ class TestOllamaLLM(TestLLMBase):
         """Test that set_system_prompt updates the system_prompt attribute."""
         from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
 
         # Initially empty string (from LLMInterface base class)
         assert llm.system_prompt == ""
@@ -456,7 +456,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
 
         # First call without system prompt
         await llm.generate_response(
@@ -487,25 +487,25 @@ class TestOllamaLLM(TestLLMBase):
         mock_ollama.return_value = mock_instance
 
         llm = OllamaLLM(
-            name="test-ollama", role=Role.PROVIDER, system_prompt="You are helpful"
+            name="test-ollama", role=Role.CHATBOT, system_prompt="You are helpful"
         )
 
         history = [
             {
                 "turn": 1,
-                "speaker": "persona",
+                "speaker": "user",
                 "input": "Start",
                 "response": "Hello",
             },
             {
                 "turn": 2,
-                "speaker": "provider",
+                "speaker": "chatbot",
                 "input": "Hello",
                 "response": "Hi there",
             },
             {
                 "turn": 3,
-                "speaker": "persona",
+                "speaker": "user",
                 "input": "Hi there",
                 "response": "How are you?",
             },
@@ -535,7 +535,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
 
         response = await llm.generate_response(conversation_history=mock_system_message)
 
@@ -557,7 +557,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
 
         response = await llm.generate_response(conversation_history=mock_system_message)
 
@@ -581,13 +581,13 @@ class TestOllamaLLM(TestLLMBase):
         # (persona -> Assistant, provider -> Human)
         persona_prompt = "You are roleplaying as a human user"
         llm = OllamaLLM(
-            name="test-ollama", role=Role.PERSONA, system_prompt=persona_prompt
+            name="test-ollama", role=Role.USER, system_prompt=persona_prompt
         )
 
         history = [
-            {"turn": 1, "speaker": "persona", "response": "Hello"},
-            {"turn": 2, "speaker": "provider", "response": "Hi there"},
-            {"turn": 3, "speaker": "persona", "response": "How are you?"},
+            {"turn": 1, "speaker": "user", "response": "Hello"},
+            {"turn": 2, "speaker": "chatbot", "response": "Hi there"},
+            {"turn": 3, "speaker": "user", "response": "How are you?"},
         ]
 
         response = await llm.generate_response(conversation_history=history)
@@ -609,7 +609,7 @@ class TestOllamaLLM(TestLLMBase):
         """Test that last_response_metadata.copy() returns a copy, not the original."""
         from vera_mh.llm_clients.ollama_llm import OllamaLLM
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         assert_metadata_copy_behavior(llm)
 
     @pytest.mark.asyncio
@@ -624,7 +624,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="This is a test response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER, model_name="llama3:8b")
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT, model_name="llama3:8b")
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "This is a test response"
@@ -651,7 +651,7 @@ class TestOllamaLLM(TestLLMBase):
         )
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER, model_name="llama3:8b")
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT, model_name="llama3:8b")
         with pytest.raises(LLMGenerationFailed) as exc_info:
             await llm.generate_response(conversation_history=mock_system_message)
 
@@ -671,7 +671,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Timed response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -687,7 +687,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Test")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -703,7 +703,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Complete response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER, model_name="mistral:7b")
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT, model_name="mistral:7b")
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -728,7 +728,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance = MagicMock()
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
 
         # Before any response, metadata should be empty
         metadata = llm.last_response_metadata
@@ -748,7 +748,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Test response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -773,7 +773,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Test response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -793,7 +793,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Test response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -814,7 +814,7 @@ class TestOllamaLLM(TestLLMBase):
         mock_instance.ainvoke = AsyncMock(return_value="Test response")
         mock_ollama.return_value = mock_instance
 
-        llm = OllamaLLM(name="test-ollama", role=Role.PROVIDER)
+        llm = OllamaLLM(name="test-ollama", role=Role.CHATBOT)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata

@@ -64,15 +64,13 @@ class TestOpenAILLM(TestJudgeLLMBase):
     def test_init_missing_api_key_raises_error(self):
         """Test that missing OPENAI_API_KEY raises ValueError."""
         with pytest.raises(ValueError) as exc_info:
-            OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+            OpenAILLM(name="TestOpenAI", role=Role.USER)
 
         assert "OPENAI_API_KEY not found" in str(exc_info.value)
 
     def test_init_with_default_model(self):
         """Test initialization with default model from config."""
-        llm = OpenAILLM(
-            name="TestOpenAI", role=Role.PERSONA, system_prompt="Test prompt"
-        )
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER, system_prompt="Test prompt")
 
         assert llm.name == "TestOpenAI"
         assert llm.system_prompt == "Test prompt"
@@ -81,7 +79,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
     def test_init_with_custom_model(self):
         """Test initialization with custom model name."""
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA, model_name="gpt-4o-turbo")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER, model_name="gpt-4o-turbo")
 
         assert llm.model_name == "gpt-4o-turbo"
 
@@ -90,7 +88,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock_chat:
             OpenAILLM(
                 name="TestOpenAI",
-                role=Role.PERSONA,
+                role=Role.USER,
                 model_name="gpt-4o",
                 **default_llm_kwargs,
             )
@@ -108,7 +106,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
                 "vera_mh.llm_clients.openai_llm.Config.get_base_url",
                 return_value="https://gateway.example.com/v1",
             ):
-                OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+                OpenAILLM(name="TestOpenAI", role=Role.USER)
 
             assert (
                 mock_chat.call_args[1]["base_url"] == "https://gateway.example.com/v1"
@@ -120,7 +118,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
             with patch(
                 "vera_mh.llm_clients.openai_llm.Config.get_base_url", return_value=None
             ):
-                OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+                OpenAILLM(name="TestOpenAI", role=Role.USER)
 
             assert "base_url" not in mock_chat.call_args[1]
 
@@ -233,7 +231,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
         llm = OpenAILLM(
             name="TestOpenAI",
-            role=Role.PERSONA,
+            role=Role.USER,
             system_prompt="You are a helpful assistant.",
         )
         expected_cache_key = llm.conversation_id
@@ -280,7 +278,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)  # No system prompt
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)  # No system prompt
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response without system prompt"
@@ -306,7 +304,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response"
@@ -329,7 +327,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response"
@@ -364,7 +362,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response"
@@ -384,7 +382,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm = mock_llm_factory(side_effect=Exception("API rate limit exceeded"))
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)
         with pytest.raises(LLMGenerationFailed) as exc_info:
             await llm.generate_response(conversation_history=mock_system_message)
 
@@ -416,7 +414,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         )
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
         assert response == "OK after flaky"
         assert mock_llm.ainvoke.call_count == 3
@@ -433,7 +431,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         )
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)
         with pytest.raises(LLMGenerationFailed) as exc_info:
             await llm.generate_response(conversation_history=mock_system_message)
 
@@ -458,7 +456,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -466,13 +464,13 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
     def test_last_response_metadata_copy_returns_copy(self):
         """Test that last_response_metadata.copy() returns a copy, not the original."""
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)
         assert_metadata_copy_behavior(llm)
 
     def test_set_system_prompt(self):
         """Test set_system_prompt method."""
         llm = OpenAILLM(
-            name="TestOpenAI", role=Role.PERSONA, system_prompt="Initial prompt"
+            name="TestOpenAI", role=Role.USER, system_prompt="Initial prompt"
         )
         assert llm.system_prompt == "Initial prompt"
 
@@ -494,7 +492,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -516,7 +514,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -540,7 +538,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA, model_name="gpt-4o")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER, model_name="gpt-4o")
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -571,7 +569,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PROVIDER, system_prompt="Test")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.CHATBOT, system_prompt="Test")
 
         response = await llm.generate_response(
             conversation_history=sample_conversation_history
@@ -604,7 +602,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA, system_prompt="Test")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER, system_prompt="Test")
 
         response = await llm.generate_response(conversation_history=mock_system_message)
 
@@ -633,7 +631,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA, system_prompt="Test")
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER, system_prompt="Test")
 
         response = await llm.generate_response(conversation_history=mock_system_message)
 
@@ -663,9 +661,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
         # Persona system prompt should trigger message type flipping
         persona_prompt = "You are roleplaying as a human user"
-        llm = OpenAILLM(
-            name="TestOpenAI", role=Role.PERSONA, system_prompt=persona_prompt
-        )
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER, system_prompt=persona_prompt)
 
         response = await llm.generate_response(
             conversation_history=sample_conversation_history
@@ -705,7 +701,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Partial usage response"
@@ -734,7 +730,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -762,7 +758,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_openai.return_value = mock_llm
 
-        llm = OpenAILLM(name="TestOpenAI", role=Role.PERSONA)
+        llm = OpenAILLM(name="TestOpenAI", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata

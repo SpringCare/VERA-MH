@@ -75,6 +75,11 @@ def save_conversation_to_file(
         f.write(summary)
 
 
+# The judge reads transcripts, so their wording must not change. This line
+# predates the role rename and still says "persona" / "provider".
+TRANSCRIPT_ENDED_BY = {Role.USER: "persona", Role.CHATBOT: "provider"}
+
+
 def format_conversation_summary(
     conversation_history: List[Dict[str, Any]],
 ) -> str:
@@ -85,8 +90,7 @@ def format_conversation_summary(
         conversation_history: List of conversation turns (speaker is role value)
 
     Returns:
-        Formatted conversation summary. Persona turns are labeled "user:",
-        other roles (e.g. provider) are labeled "chatbot:".
+        Formatted conversation summary, with turns labeled "user:" or "chatbot:".
     """
     if not conversation_history:
         return "No conversation recorded."
@@ -94,13 +98,12 @@ def format_conversation_summary(
     summary = ""
 
     for i, turn in enumerate(conversation_history):
-        # Get speaker value (Role enum value string: "persona", "provider", etc.)
+        # Get speaker value (Role enum value string: "user" or "chatbot")
         speaker_value = turn.get("speaker")
 
-        # Persona -> "user:", any other role -> "chatbot:"
         try:
             turn_role = Role(speaker_value)
-            prefix = "user:" if turn_role == Role.PERSONA else "chatbot:"
+            prefix = "user:" if turn_role == Role.USER else "chatbot:"
         except ValueError, TypeError:
             raise ValueError(f"Invalid role value '{speaker_value}' for turn {i}")
 
@@ -109,7 +112,8 @@ def format_conversation_summary(
 
         # Check for early termination flag
         if turn.get("early_termination", False):
-            summary += f"[CONVERSATION ENDED - {speaker_value} signaled termination]\n"
+            ended_by = TRANSCRIPT_ENDED_BY[turn_role]
+            summary += f"[CONVERSATION ENDED - {ended_by} signaled termination]\n"
 
         # Add empty line between speakers, but not after the last turn
         if i < len(conversation_history) - 1:
@@ -151,7 +155,7 @@ def apply_persona_role_reminder(
     if speaker is None:
         return
     # History was validated while building messages; Role(speaker) should not raise.
-    if Role(speaker) == Role.PROVIDER and isinstance(messages[-1], HumanMessage):
+    if Role(speaker) == Role.CHATBOT and isinstance(messages[-1], HumanMessage):
         prefix = load_persona_role_reminder()
         messages[-1] = HumanMessage(content=prefix + messages[-1].text)
 
@@ -167,7 +171,7 @@ def build_langchain_messages(
         conversation_history: Optional list of previous conversation turns.
             Each turn is a dict with keys: 'turn', 'speaker', 'response'.
             Turn 0 contains the initial message with speaker="system".
-        role: Optional role of the LLM (Role.PERSONA, Role.PROVIDER, or None).
+        role: Optional role of the LLM (Role.USER, Role.CHATBOT, or None).
             Messages from the same role are converted to AIMessage (what "I"
             said), messages from the other role are converted to HumanMessage
             (what "they" said).
@@ -220,7 +224,7 @@ def build_langchain_messages(
             messages.append(message)
 
     # Apply persona role reminder to the last provider message if conditions are met.
-    if role == Role.PERSONA:
+    if role == Role.USER:
         apply_persona_role_reminder(messages, conversation_history)
 
     return messages
@@ -238,7 +242,7 @@ def format_conversation_as_string(
     a string format with Human/Assistant labels.
 
     Args:
-        role: Role of the LLM (Role.PERSONA, Role.PROVIDER, or None)
+        role: Role of the LLM (Role.USER, Role.CHATBOT, or None)
         conversation_history: Optional list of previous conversation turns
         system_prompt: Optional system prompt to prepend
 

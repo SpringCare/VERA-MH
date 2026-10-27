@@ -103,7 +103,7 @@ class TestMyProviderLLM(TestJudgeLLMBase):
     def test_provider_specific_feature(self):
         """Test MyProvider-specific functionality."""
         with self.get_mock_patches():
-            llm = self.create_llm(role=Role.PROVIDER)
+            llm = self.create_llm(role=Role.CHATBOT)
             # Test provider-specific behavior
             pass
 ```
@@ -174,7 +174,7 @@ class TestMyProviderLLM(TestJudgeLLMBase):
     def test_special_endpoint_handling(self):
         """Test provider-specific endpoint logic."""
         with self.get_mock_patches():
-            llm = self.create_llm(role=Role.PROVIDER)
+            llm = self.create_llm(role=Role.CHATBOT)
             # Test unique behavior
             pass
 

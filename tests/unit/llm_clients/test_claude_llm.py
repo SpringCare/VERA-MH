@@ -67,15 +67,13 @@ class TestClaudeLLM(TestJudgeLLMBase):
     def test_init_missing_api_key_raises_error(self):
         """Test that missing ANTHROPIC_API_KEY raises ValueError."""
         with pytest.raises(ValueError) as exc_info:
-            ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+            ClaudeLLM(name="TestClaude", role=Role.USER)
 
         assert "ANTHROPIC_API_KEY not found" in str(exc_info.value)
 
     def test_init_with_default_model(self):
         """Test initialization with default model from config."""
-        llm = ClaudeLLM(
-            name="TestClaude", role=Role.PERSONA, system_prompt="Test prompt"
-        )
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER, system_prompt="Test prompt")
 
         assert llm.name == "TestClaude"
         assert llm.system_prompt == "Test prompt"
@@ -85,7 +83,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
     def test_init_with_custom_model(self):
         """Test initialization with custom model name."""
         llm = ClaudeLLM(
-            name="TestClaude", role=Role.PERSONA, model_name="claude-3-opus-20240229"
+            name="TestClaude", role=Role.USER, model_name="claude-3-opus-20240229"
         )
 
         assert llm.model_name == "claude-3-opus-20240229"
@@ -107,7 +105,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
             ClaudeLLM(
                 name="TestClaude",
-                role=Role.PERSONA,
+                role=Role.USER,
                 model_name="claude-haiku-4-5-20251001",
                 **default_llm_kwargs,
             )
@@ -128,7 +126,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
                 "vera_mh.llm_clients.claude_llm.Config.get_base_url",
                 return_value="https://gateway.example.com",
             ):
-                ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+                ClaudeLLM(name="TestClaude", role=Role.USER)
 
             call_kwargs = mock_chat_anthropic.call_args[1]
             assert call_kwargs["base_url"] == "https://gateway.example.com"
@@ -142,7 +140,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
             with patch(
                 "vera_mh.llm_clients.claude_llm.Config.get_base_url", return_value=None
             ):
-                ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+                ClaudeLLM(name="TestClaude", role=Role.USER)
 
             assert "base_url" not in mock_chat_anthropic.call_args[1]
 
@@ -425,7 +423,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
         llm = ClaudeLLM(
             name="TestClaude",
-            role=Role.PERSONA,
+            role=Role.USER,
             system_prompt="You are a helpful assistant.",
         )
         response = await llm.generate_response(conversation_history=mock_system_message)
@@ -476,7 +474,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
         llm = ClaudeLLM(
             name="TestClaude",
-            role=Role.PERSONA,
+            role=Role.USER,
             system_prompt="You are a helpful assistant.",
         )
         await llm.generate_response(conversation_history=mock_system_message)
@@ -511,7 +509,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
         llm = ClaudeLLM(
             name="TestClaude",
-            role=Role.PERSONA,
+            role=Role.USER,
             system_prompt="You are a helpful assistant.",
             caching=False,
         )
@@ -547,7 +545,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         usage = llm.last_response_metadata["usage"]
@@ -573,7 +571,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)  # No system prompt
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER)  # No system prompt
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response without system prompt"
@@ -600,7 +598,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response"
@@ -626,7 +624,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response"
@@ -656,7 +654,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
         llm = ClaudeLLM(
             name="TestClaude",
-            role=Role.PERSONA,
+            role=Role.USER,
             model_name="claude-sonnet-4-5-20250929",
         )
         await llm.generate_response(conversation_history=mock_system_message)
@@ -676,7 +674,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         )
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER)
         with pytest.raises(LLMGenerationFailed) as exc_info:
             await llm.generate_response(conversation_history=mock_system_message)
 
@@ -702,7 +700,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -710,13 +708,13 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
     def test_last_response_metadata_copy_returns_copy(self):
         """Test that last_response_metadata.copy() returns a copy, not the original."""
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER)
         assert_metadata_copy_behavior(llm)
 
     def test_set_system_prompt(self):
         """Test set_system_prompt method."""
         llm = ClaudeLLM(
-            name="TestClaude", role=Role.PERSONA, system_prompt="Initial prompt"
+            name="TestClaude", role=Role.USER, system_prompt="Initial prompt"
         )
         assert llm.system_prompt == "Initial prompt"
 
@@ -745,7 +743,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Partial usage response"
@@ -770,7 +768,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -793,7 +791,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -821,7 +819,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -850,7 +848,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA)
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -879,7 +877,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", system_prompt="Test", role=Role.PROVIDER)
+        llm = ClaudeLLM(name="TestClaude", system_prompt="Test", role=Role.CHATBOT)
 
         response = await llm.generate_response(
             conversation_history=sample_conversation_history
@@ -911,7 +909,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA, system_prompt="Test")
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER, system_prompt="Test")
 
         response = await llm.start_conversation()
 
@@ -943,7 +941,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_chat_anthropic.return_value = mock_llm
 
-        llm = ClaudeLLM(name="TestClaude", role=Role.PERSONA, system_prompt="Test")
+        llm = ClaudeLLM(name="TestClaude", role=Role.USER, system_prompt="Test")
 
         # None history delegates to start_conversation()
         response = await llm.generate_response(conversation_history=None)
@@ -974,9 +972,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
         # Persona system prompt should trigger message type flipping
         persona_prompt = "You are roleplaying as a human user"
-        llm = ClaudeLLM(
-            name="TestClaude", system_prompt=persona_prompt, role=Role.PERSONA
-        )
+        llm = ClaudeLLM(name="TestClaude", system_prompt=persona_prompt, role=Role.USER)
 
         response = await llm.generate_response(
             conversation_history=sample_conversation_history

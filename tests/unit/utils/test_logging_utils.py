@@ -301,7 +301,7 @@ class TestLogConversationTurn:
         log_conversation_turn(
             logger=logger,
             turn_number=1,
-            speaker=Role.PERSONA.value,
+            speaker=Role.USER.value,
             input_message="Hello, how are you?",
             response="I'm doing well, thanks!",
         )
@@ -309,7 +309,7 @@ class TestLogConversationTurn:
         log_file = Path(tmp_path / "logging" / "run_011" / "turn_test.log")
         content = log_file.read_text()
 
-        assert f"TURN 1 - {Role.PERSONA.value.upper()}" in content
+        assert f"TURN 1 - {Role.USER.value.upper()}" in content
         assert "Input: Hello, how are you?" in content
         assert "Response: I'm doing well, thanks!" in content
 
@@ -328,7 +328,7 @@ class TestLogConversationTurn:
         log_conversation_turn(
             logger=logger,
             turn_number=5,
-            speaker=Role.PROVIDER.value,
+            speaker=Role.CHATBOT.value,
             input_message="Let's end this",
             response="Goodbye",
             early_termination=True,
@@ -338,7 +338,7 @@ class TestLogConversationTurn:
         content = log_file.read_text()
 
         assert "EARLY TERMINATION" in content
-        assert f"detected by {Role.PROVIDER.value.upper()}" in content
+        assert f"detected by {Role.CHATBOT.value.upper()}" in content
 
     def test_logs_turn_with_metadata(self, tmp_path):
         """Test logging turn with metadata dictionary
@@ -357,7 +357,7 @@ class TestLogConversationTurn:
         log_conversation_turn(
             logger=logger,
             turn_number=2,
-            speaker=Role.PROVIDER.value,
+            speaker=Role.CHATBOT.value,
             input_message="What's the weather?",
             response="It's sunny today",
             logging=metadata,
@@ -385,7 +385,7 @@ class TestLogConversationTurn:
             log_conversation_turn(
                 logger=logger,
                 turn_number=i,
-                speaker=Role.PERSONA.value if i % 2 == 1 else Role.PROVIDER.value,
+                speaker=Role.USER.value if i % 2 == 1 else Role.CHATBOT.value,
                 input_message=f"Input {i}",
                 response=f"Response {i}",
             )
@@ -393,9 +393,9 @@ class TestLogConversationTurn:
         log_file = Path(tmp_path / "logging" / "run_014" / "multi_turn_test.log")
         content = log_file.read_text()
 
-        assert f"TURN 1 - {Role.PERSONA.value.upper()}" in content
-        assert f"TURN 2 - {Role.PROVIDER.value.upper()}" in content
-        assert f"TURN 3 - {Role.PERSONA.value.upper()}" in content
+        assert f"TURN 1 - {Role.USER.value.upper()}" in content
+        assert f"TURN 2 - {Role.CHATBOT.value.upper()}" in content
+        assert f"TURN 3 - {Role.USER.value.upper()}" in content
 
 
 @pytest.mark.unit
@@ -834,7 +834,7 @@ class TestFullConversationWorkflow:
         log_conversation_turn(
             logger=logger,
             turn_number=1,
-            speaker=Role.PERSONA.value,
+            speaker=Role.USER.value,
             input_message="Hello",
             response="Hi there!",
         )
@@ -842,7 +842,7 @@ class TestFullConversationWorkflow:
         log_conversation_turn(
             logger=logger,
             turn_number=2,
-            speaker=Role.PROVIDER.value,
+            speaker=Role.CHATBOT.value,
             input_message="Hi there!",
             response="How can I help?",
         )
@@ -861,8 +861,8 @@ class TestFullConversationWorkflow:
 
         assert "CONVERSATION STARTED" in content
         assert "Persona speaks first: True" in content
-        assert f"TURN 1 - {Role.PERSONA.value.upper()}" in content
-        assert f"TURN 2 - {Role.PROVIDER.value.upper()}" in content
+        assert f"TURN 1 - {Role.USER.value.upper()}" in content
+        assert f"TURN 2 - {Role.CHATBOT.value.upper()}" in content
         assert "CONVERSATION COMPLETED" in content
         assert "Duration: 45.67 seconds" in content
 

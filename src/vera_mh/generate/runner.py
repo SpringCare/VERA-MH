@@ -369,7 +369,7 @@ class ConversationRunner:
                 model_name=model_name,
                 name=f"{model_name} {persona_name}",
                 system_prompt=system_prompt,
-                role=Role.PERSONA,
+                role=Role.USER,
                 **self.persona_model_config,
             )
 
@@ -385,7 +385,7 @@ class ConversationRunner:
                 system_prompt=self.agent_model_config.get(
                     "system_prompt", "You are a helpful AI assistant."
                 ),
-                role=Role.PROVIDER,
+                role=Role.CHATBOT,
                 **agent_kwargs,
             )
 
@@ -462,7 +462,7 @@ class ConversationRunner:
 
                 first_speaker = agent.first_speaker
                 psf = (
-                    (first_speaker == Role.PERSONA)
+                    (first_speaker == Role.USER)
                     if first_speaker is not None
                     else self.persona_speaks_first
                 )

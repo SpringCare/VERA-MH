@@ -108,7 +108,7 @@ TURNS = 30
 T = TypeVar("T")
 
 # A saved conversation: its turns in order, each (speaker, text), where the
-# speaker is a `Role` value ("persona" or "provider").
+# speaker is a `Role` value ("user" or "chatbot").
 Turns = list[tuple[str, str]]
 
 # Run-specific values that differ between two runs of the same code.
@@ -165,7 +165,7 @@ def read_transcript(path: Path) -> Turns:
         if marker:
             reply = rest[: marker.start()]
             early_termination = True
-        speaker = Role.PERSONA.value if label == "user" else Role.PROVIDER.value
+        speaker = Role.USER.value if label == "user" else Role.CHATBOT.value
         turns.append((speaker, reply))
 
     history: list[dict[str, Any]] = [{"speaker": s, "response": r} for s, r in turns]
@@ -317,13 +317,13 @@ class Seeder:
     def create_llm(self, **settings: Any) -> "SeedLLM":
         """Stands in for `LLMFactory.create_llm`."""
         role = settings["role"]
-        if role == Role.PERSONA:
+        if role == Role.USER:
             model = settings["model_name"]
             key = (model, settings["name"].removeprefix(f"{model} "))
             if key not in self.saved.turns:
                 raise SeedMismatch(f"no saved conversation for {key}")
             self.last_persona = key
-        elif role == Role.PROVIDER:
+        elif role == Role.CHATBOT:
             if self.last_persona is None:
                 raise SeedMismatch("a chatbot was created before any persona")
             key = self.last_persona

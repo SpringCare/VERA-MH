@@ -42,7 +42,7 @@ class TestLLMFactory:
         llm = LLMFactory.create_llm(
             model_name=model_name,
             name=name,
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             system_prompt=system_prompt,
         )
 
@@ -50,7 +50,7 @@ class TestLLMFactory:
         assert llm.name == name
         assert llm.system_prompt == system_prompt
         assert llm.model_name == model_name
-        assert llm.role == Role.PROVIDER
+        assert llm.role == Role.CHATBOT
 
     @pytest.mark.usefixtures("mock_openai_config", "mock_openai_model")
     def test_create_openai_llm(self):
@@ -62,7 +62,7 @@ class TestLLMFactory:
         llm = LLMFactory.create_llm(
             model_name=model_name,
             name=name,
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             system_prompt=system_prompt,
         )
 
@@ -81,7 +81,7 @@ class TestLLMFactory:
         llm = LLMFactory.create_llm(
             model_name=model_name,
             name=name,
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             system_prompt=system_prompt,
         )
 
@@ -101,7 +101,7 @@ class TestLLMFactory:
         llm = LLMFactory.create_llm(
             model_name=model_name,
             name=name,
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             system_prompt=system_prompt,
         )
 
@@ -119,7 +119,7 @@ class TestLLMFactory:
         llm = LLMFactory.create_llm(
             model_name=model_name,
             name=name,
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             system_prompt=system_prompt,
         )
 
@@ -135,7 +135,7 @@ class TestLLMFactory:
 
         with pytest.raises(ValueError) as exc_info:
             LLMFactory.create_llm(
-                model_name=unsupported_model, name=name, role=Role.PROVIDER
+                model_name=unsupported_model, name=name, role=Role.CHATBOT
             )
 
         assert "Unsupported model" in str(exc_info.value)
@@ -156,7 +156,7 @@ class TestLLMFactory:
             name=name,
             temperature=temperature,
             max_tokens=max_tokens,
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
         )
 
         assert isinstance(llm, ClaudeLLM)
@@ -182,7 +182,7 @@ class TestLLMFactory:
             model_name=model_name,
             name=name,
             temperature=temperature,
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             **extra_params,
         )
 
@@ -201,9 +201,7 @@ class TestLLMFactory:
         model_name = "openai-custom-model"
         name = "TestOpenAIPrefix"
 
-        llm = LLMFactory.create_llm(
-            model_name=model_name, name=name, role=Role.PROVIDER
-        )
+        llm = LLMFactory.create_llm(model_name=model_name, name=name, role=Role.CHATBOT)
 
         assert isinstance(llm, OpenAILLM)
         assert llm.model_name == model_name
@@ -214,9 +212,7 @@ class TestLLMFactory:
         model_name = "google-gemini-ultra"
         name = "TestGooglePrefix"
 
-        llm = LLMFactory.create_llm(
-            model_name=model_name, name=name, role=Role.PROVIDER
-        )
+        llm = LLMFactory.create_llm(model_name=model_name, name=name, role=Role.CHATBOT)
 
         assert isinstance(llm, GeminiLLM)
         assert llm.model_name == model_name
@@ -228,9 +224,7 @@ class TestLLMFactory:
         expected_model_name = "llama-3"
         name = "TestOllamaPrefix"
 
-        llm = LLMFactory.create_llm(
-            model_name=model_name, name=name, role=Role.PROVIDER
-        )
+        llm = LLMFactory.create_llm(model_name=model_name, name=name, role=Role.CHATBOT)
 
         assert isinstance(llm, OllamaLLM)
         assert llm.model_name == expected_model_name
@@ -242,19 +236,19 @@ class TestLLMFactory:
             return_value={"model": "azure-gpt-4o"},
         ):
             claude_llm = LLMFactory.create_llm(
-                model_name="CLAUDE-3-5", name="Claude", role=Role.PROVIDER
+                model_name="CLAUDE-3-5", name="Claude", role=Role.CHATBOT
             )
             gpt_llm = LLMFactory.create_llm(
-                model_name="gpt-4o-TURBO", name="GPT", role=Role.PROVIDER
+                model_name="gpt-4o-TURBO", name="GPT", role=Role.CHATBOT
             )
             gemini_llm = LLMFactory.create_llm(
-                model_name="GEMINI-PRO", name="Gemini", role=Role.PROVIDER
+                model_name="GEMINI-PRO", name="Gemini", role=Role.CHATBOT
             )
             ollama_llm = LLMFactory.create_llm(
-                model_name="OLLAMA-LLAMA-3", name="Ollama", role=Role.PROVIDER
+                model_name="OLLAMA-LLAMA-3", name="Ollama", role=Role.CHATBOT
             )
             azure_llm = LLMFactory.create_llm(
-                model_name="AZURE-GROK-4", name="Azure", role=Role.PROVIDER
+                model_name="AZURE-GROK-4", name="Azure", role=Role.CHATBOT
             )
 
             assert isinstance(claude_llm, ClaudeLLM)

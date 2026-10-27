@@ -139,7 +139,7 @@ class ConversationSimulator:
             logging_metadata = current_speaker.last_response_metadata
             if current_speaker == self.agent:
                 logging_metadata["raw_response"] = raw_response
-            speaker = Role.PROVIDER if current_speaker == self.agent else Role.PERSONA
+            speaker = Role.CHATBOT if current_speaker == self.agent else Role.USER
             turn_obj = ConversationTurn(
                 turn=turn + 1,
                 speaker=speaker,

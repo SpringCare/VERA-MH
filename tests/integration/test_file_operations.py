@@ -22,9 +22,9 @@ class TestConversationFileOperations:
     def test_save_and_load_conversation(self, tmp_path: Path) -> None:
         """Test round-trip save and load of a conversation."""
         conversation = [
-            {"speaker": "persona", "response": "Hello, how are you?"},
-            {"speaker": "provider", "response": "I'm doing well, thanks for asking!"},
-            {"speaker": "persona", "response": "That's great to hear."},
+            {"speaker": "user", "response": "Hello, how are you?"},
+            {"speaker": "chatbot", "response": "I'm doing well, thanks for asking!"},
+            {"speaker": "user", "response": "That's great to hear."},
         ]
 
         filename = "test_conversation.txt"
@@ -43,16 +43,16 @@ class TestConversationFileOperations:
     def test_save_handles_unicode(self, tmp_path: Path) -> None:
         """Test saving conversation with Unicode (emojis and accents)."""
         conversation = [
-            {"speaker": "persona", "response": "Hello 👋 I'm feeling anxious 😟"},
+            {"speaker": "user", "response": "Hello 👋 I'm feeling anxious 😟"},
             {
-                "speaker": "provider",
+                "speaker": "chatbot",
                 "response": (
                     "I understand. Let's work through this together. "
                     "C'est normal d'avoir peur."
                 ),
             },
             {
-                "speaker": "persona",
+                "speaker": "user",
                 "response": "Merci! That means a lot. 🙏 Ich bin dankbar.",
             },
         ]
@@ -73,8 +73,8 @@ class TestConversationFileOperations:
     def test_conversation_file_format(self, tmp_path: Path) -> None:
         """Test saved conversation follows format (user:/chatbot:)."""
         conversation = [
-            {"speaker": "persona", "response": "First message"},
-            {"speaker": "provider", "response": "Second message"},
+            {"speaker": "user", "response": "First message"},
+            {"speaker": "chatbot", "response": "Second message"},
         ]
 
         filename = "format_test.txt"
@@ -90,7 +90,7 @@ class TestConversationFileOperations:
 
     def test_save_to_nonexistent_directory(self, tmp_path: Path) -> None:
         """Test saving to a nonexistent directory creates the directory."""
-        conversation = [{"speaker": "persona", "response": "Test message"}]
+        conversation = [{"speaker": "user", "response": "Test message"}]
 
         # Create a path to a subdirectory that doesn't exist
         subdir = tmp_path / "nested" / "conversations"
@@ -119,16 +119,16 @@ class TestConversationFileOperations:
         """Test saving multiple conversation files to the same directory."""
         conversations = [
             [
-                {"speaker": "persona", "response": "Message 1"},
-                {"speaker": "provider", "response": "Response 1"},
+                {"speaker": "user", "response": "Message 1"},
+                {"speaker": "chatbot", "response": "Response 1"},
             ],
             [
-                {"speaker": "persona", "response": "Message 2"},
-                {"speaker": "provider", "response": "Response 2"},
+                {"speaker": "user", "response": "Message 2"},
+                {"speaker": "chatbot", "response": "Response 2"},
             ],
             [
-                {"speaker": "persona", "response": "Message 3"},
-                {"speaker": "provider", "response": "Response 3"},
+                {"speaker": "user", "response": "Message 3"},
+                {"speaker": "chatbot", "response": "Response 3"},
             ],
         ]
 
@@ -155,10 +155,10 @@ class TestConversationFileOperations:
     def test_conversation_with_metadata(self, tmp_path: Path) -> None:
         """Test saving and preserving conversation with metadata (early termination)."""
         conversation = [
-            {"speaker": "persona", "response": "I need help"},
-            {"speaker": "provider", "response": "I'm here to help."},
+            {"speaker": "user", "response": "I need help"},
+            {"speaker": "chatbot", "response": "I'm here to help."},
             {
-                "speaker": "persona",
+                "speaker": "user",
                 "response": "Thank you",
                 "early_termination": True,
             },
@@ -189,8 +189,8 @@ class TestConversationFileOperations:
     def test_format_conversation_summary_basic(self) -> None:
         """Test formatting conversation summary with basic messages."""
         conversation = [
-            {"speaker": "persona", "response": "Hello"},
-            {"speaker": "provider", "response": "Hi there!"},
+            {"speaker": "user", "response": "Hello"},
+            {"speaker": "chatbot", "response": "Hi there!"},
         ]
 
         summary = format_conversation_summary(conversation)
@@ -209,9 +209,9 @@ class TestConversationFileOperations:
     def test_format_conversation_summary_persona_as_user(self) -> None:
         """Test formatting conversation summary: persona as user, else as chatbot."""
         conversation = [
-            {"speaker": "persona", "response": "Hello, I need support."},
-            {"speaker": "provider", "response": "Hi, I'm here to help."},
-            {"speaker": "persona", "response": "Nice to meet you."},
+            {"speaker": "user", "response": "Hello, I need support."},
+            {"speaker": "chatbot", "response": "Hi, I'm here to help."},
+            {"speaker": "user", "response": "Nice to meet you."},
         ]
 
         summary = format_conversation_summary(conversation)
@@ -245,8 +245,8 @@ class TestConversationFileOperations:
         """Test saving conversation with very long messages."""
         long_message = "This is a very long message. " * 100
         conversation = [
-            {"speaker": "persona", "response": long_message},
-            {"speaker": "provider", "response": "I understand your concern."},
+            {"speaker": "user", "response": long_message},
+            {"speaker": "chatbot", "response": "I understand your concern."},
         ]
 
         filename = "long_message.txt"
@@ -261,14 +261,14 @@ class TestConversationFileOperations:
         """Test saving conversation with special characters in messages."""
         conversation = [
             {
-                "speaker": "persona",
+                "speaker": "user",
                 "response": (
                     "I have questions about: 1) stress, 2) anxiety, 3) depression"
                 ),
             },
-            {"speaker": "provider", "response": "Let's tackle these one by one."},
+            {"speaker": "chatbot", "response": "Let's tackle these one by one."},
             {
-                "speaker": "persona",
+                "speaker": "user",
                 "response": "Great! (I'm) [really] {glad} you're helping... ~excited~",
             },
         ]
@@ -288,13 +288,13 @@ class TestConversationFileOperations:
         """Test handling conversation with newline characters in messages."""
         conversation = [
             {
-                "speaker": "persona",
+                "speaker": "user",
                 "response": (
                     "I have multiple concerns:\n1. Sleep\n2. Appetite\n3. Focus"
                 ),
             },
             {
-                "speaker": "provider",
+                "speaker": "chatbot",
                 "response": "Let's discuss each:\n- Sleep patterns\n- Eating habits",
             },
         ]
@@ -311,8 +311,8 @@ class TestConversationFileOperations:
     def test_conversation_user_chatbot_labels_by_role(self, tmp_path: Path) -> None:
         """Test that conversation uses user:/chatbot: labels by role."""
         conversation = [
-            {"speaker": "persona", "response": "I can help with that."},
-            {"speaker": "provider", "response": "Thank you for your help."},
+            {"speaker": "user", "response": "I can help with that."},
+            {"speaker": "chatbot", "response": "Thank you for your help."},
         ]
 
         filename = "speaker_roles.txt"
