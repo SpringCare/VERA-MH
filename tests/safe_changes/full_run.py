@@ -56,6 +56,7 @@ import argparse
 import ast
 import asyncio
 import csv
+import difflib
 import hashlib
 import io
 import json
@@ -522,7 +523,9 @@ def outputs(output: Path, work: Path) -> dict[str, str]:
     """
     found: dict[str, str] = {}
     for path in sorted(output.rglob("*")):
-        if not path.is_file() or "logs" in path.parts or path.suffix == ".png":
+        if not _compared(path):
+            continue
+        if "logs" in path.parts or path.suffix == ".png":
             continue
         if path.name == "pool_metadata.json":  # paths and a creation time only
             continue
@@ -551,6 +554,39 @@ def outputs(output: Path, work: Path) -> dict[str, str]:
         text = text.replace(str(REPO_ROOT), "<REPO>")
         found[name] = TIMESTAMP.sub("<TS>", text)
     return found
+
+
+# How much of each differing output a failed check shows.
+DIFFS_SHOWN = 5
+DIFF_LINES = 20
+DIFF_LINE_WIDTH = 200
+
+
+def _short_diff(expected: str, produced: str) -> str:
+    """The changed lines, baseline first, cut to a readable size."""
+    lines = list(
+        difflib.unified_diff(
+            expected.splitlines(),
+            produced.splitlines(),
+            "baseline",
+            "this run",
+            lineterm="",
+            n=0,
+        )
+    )
+    shown = [
+        line if len(line) <= DIFF_LINE_WIDTH else line[:DIFF_LINE_WIDTH] + "..."
+        for line in lines[:DIFF_LINES]
+    ]
+    if len(lines) > DIFF_LINES:
+        shown.append(f"... {len(lines) - DIFF_LINES} more diff lines")
+    return "\n".join(shown)
+
+
+def _compared(path: Path) -> bool:
+    """A file, and not a hidden one: macOS Finder writes a binary `.DS_Store`
+    into every folder it opens, which is no output of a run."""
+    return path.is_file() and not path.name.startswith(".")
 
 
 def _normalized_rows(text: str, delimiter: str) -> str:
@@ -709,16 +745,22 @@ def check(baseline: Path) -> list[str]:
     expected = {
         path.relative_to(expected_root).as_posix(): path.read_text(encoding="utf-8")
         for path in sorted(expected_root.rglob("*"))
-        if path.is_file()
+        if _compared(path)
     }
     problems = []
+    differing = 0
     for name in sorted(set(expected) | set(produced)):
         if name not in produced:
             problems.append(f"missing output: {name}")
         elif name not in expected:
             problems.append(f"unexpected output: {name}")
         elif produced[name] != expected[name]:
-            problems.append(f"output differs: {name}")
+            differing += 1
+            if differing <= DIFFS_SHOWN:
+                diff = _short_diff(expected[name], produced[name])
+                problems.append(f"output differs: {name}\n{diff}")
+            else:
+                problems.append(f"output differs: {name}")
     if replayer.unused_replies():
         problems.append(f"{replayer.unused_replies()} recorded calls were never made")
     return problems
@@ -762,8 +804,10 @@ def main() -> int:
         if reason:
             print(f"Seeded {args.baseline} first: {reason}")
     problems = check(args.baseline)
-    for problem in problems:
-        print(problem, file=sys.stderr)
+    # The pipeline's own progress goes to stdout, which is buffered when
+    # redirected; flush it so the result comes last.
+    sys.stdout.flush()
+    print("\n\n".join(problems), file=sys.stderr)
     print("matches the baseline" if not problems else f"{len(problems)} differences")
     return 1 if problems else 0
 
