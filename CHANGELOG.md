@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Testing and CI
 
+- **PRs need a CHANGELOG entry**—A new check fails a pull request that doesn't change `CHANGELOG.md`. Changes nobody would notice, such as a typo fix or a refactor with no import or behavior change, take the `no-changelog` label instead. `/create-pr` now drafts the entry, or adds the label, before opening the PR.
 - **Guards against changed scores**—Unit tests pin results with fixed inputs, so a code change can't move scores unnoticed. One per stage: golden persona prompts and a replay of recorded user and chatbot replies (generate), scripted answers walking the SI rubric (judge), and golden `scores.json` files (score); plus a replay of the whole recorded pipeline. None calls a model. See [docs/safe-changes.md](docs/safe-changes.md).
 
 ### Documentation and development workflow
