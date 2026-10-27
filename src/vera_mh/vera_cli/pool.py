@@ -28,6 +28,7 @@ from typing import Any
 
 from vera_mh.score import run_pooling
 from vera_mh.utils.config_schema import InvocationConfig, PoolingConfig, RunConfig
+from vera_mh.utils.run_record import build_run_record
 
 from .config import (
     ConfigError,
@@ -192,6 +193,7 @@ def _execute(run_configs: list[RunConfig]) -> int:
                 output_parent=pooling.output,
                 personas_tsv=pooling.personas,
                 skip_risk_analysis=pooling.skip_risk_analysis,
+                run_record=build_run_record(run_config),
             )
         except (FileNotFoundError, ValueError) as error:
             raise ConfigError(str(error)) from error

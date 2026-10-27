@@ -33,6 +33,7 @@ from vera_mh.score.aggregate import (
 from vera_mh.score.utils import ensure_results_csv
 from vera_mh.score.viz import create_risk_level_visualizations, create_visualizations
 from vera_mh.utils.naming import parse_generation_run_folder_name
+from vera_mh.utils.run_record import require_run_record, with_start_time
 from vera_mh.utils.run_root import create_run_root, run_started_at
 
 # ``j_{judge_info}_{timestamp}__p_...`` or ``...__conversations`` (legacy flat layout)
@@ -313,6 +314,7 @@ def run_pooling(
     personas_tsv: str | Path | None,
     skip_risk_analysis: bool,
     judge_slug: str | None = None,
+    run_record: dict[str, Any] | None = None,
 ) -> Path:
     """
     Merge several judge runs into one ``results.csv`` and compute VERA artifacts.
@@ -329,6 +331,8 @@ def run_pooling(
             step, as in `score.run.run_scoring`.
         skip_risk_analysis: When True, skip ``score_results_by_risk`` and risk charts.
         judge_slug: Optional override for the judge name (e.g. ``gpt-5.4x1+sonnet5x1``).
+        run_record: Written to the pooled folder as ``config.json``; see
+            ``utils/run_record.py``.
 
     Returns:
         Path to the synthetic evaluation folder (``results.csv`` and ``scores/``).
@@ -375,7 +379,8 @@ def run_pooling(
     synth_name = _synthetic_pooled_folder_basename(
         eval_dirs, combined, started_at=started_at, judge_slug=judge_slug
     )
-    out_eval = create_run_root(Path(output_parent).resolve(), synth_name)
+    record = with_start_time(require_run_record(run_record), started_at)
+    out_eval = create_run_root(Path(output_parent).resolve(), synth_name, record)
     results_csv = out_eval / "results.csv"
     combined.to_csv(results_csv, index=False)
 

@@ -17,6 +17,7 @@ import pandas as pd
 import pytest
 
 from tests.mocks.mock_llm import MockLLM
+from tests.mocks.run_record import minimal_run_record
 from vera_mh.judge.answers import (
     answer_column,
     answers_tsv_path,
@@ -465,6 +466,7 @@ class TestJudgeConversations:
         )
 
         results, _ = await judge_conversations(
+            run_record=minimal_run_record(),
             judge_models={"mock-judge": 1},
             conversations=conversations,
             rubric_config=rubric_config,
@@ -525,6 +527,7 @@ class TestJudgeConversations:
         )
 
         await judge_conversations(
+            run_record=minimal_run_record(),
             judge_models={"mock-judge": 1},
             conversations=conversations,
             rubric_config=rubric_config,
@@ -583,6 +586,7 @@ class TestJudgeConversations:
         )
 
         _, output_folder = await judge_conversations(
+            run_record=minimal_run_record(),
             judge_models={"mock-judge": 1},
             conversations=conversations,
             rubric_config=rubric_config,
@@ -689,6 +693,7 @@ class TestJudgeConversations:
         )
 
         results, _ = await judge_conversations(
+            run_record=minimal_run_record(),
             judge_models={"mock-judge": 1},
             conversations=conversations,
             rubric_config=rubric_config,
@@ -763,6 +768,7 @@ class TestJudgeConversations:
         )
 
         await judge_conversations(
+            run_record=minimal_run_record(),
             judge_models={"mock-judge": 1},
             conversations=conversations,
             rubric_config=rubric_config,
@@ -805,6 +811,7 @@ class TestJudgeConversations:
         )
 
         await judge_conversations(
+            run_record=minimal_run_record(),
             judge_models={"mock-judge": 1},
             conversations=conversations,
             rubric_config=rubric_config,
@@ -1518,6 +1525,7 @@ class TestMultipleJudgeModels:
         )
 
         results, _ = await judge_conversations(
+            run_record=minimal_run_record(),
             judge_models={"mock-judge-1": 2, "mock-judge-2": 1},
             conversations=conversations,
             rubric_config=rubric_config,

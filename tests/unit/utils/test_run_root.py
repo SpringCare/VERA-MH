@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.mocks.run_record import minimal_run_record
 from vera_mh.utils.run_root import RunRootExistsError, create_run_root
 
 SRC = Path(__file__).resolve().parents[3] / "src" / "vera_mh"
@@ -85,17 +86,18 @@ def _calls(attribute: str, receiver: str | None = None) -> set[tuple[str, str]]:
 
 
 def test_creates_the_run_folder_and_its_parents(tmp_path: Path) -> None:
-    root = create_run_root(tmp_path / "output" / "nested", "run_1")
+    parent = tmp_path / "output" / "nested"
+    root = create_run_root(parent, "run_1", minimal_run_record())
 
     assert root == tmp_path / "output" / "nested" / "run_1"
     assert root.is_dir()
 
 
 def test_refuses_a_run_folder_that_already_exists(tmp_path: Path) -> None:
-    create_run_root(tmp_path, "run_1")
+    create_run_root(tmp_path, "run_1", minimal_run_record())
 
     with pytest.raises(RunRootExistsError, match="run_1"):
-        create_run_root(tmp_path, "run_1")
+        create_run_root(tmp_path, "run_1", minimal_run_record())
 
 
 def test_folders_are_created_only_in_allowed_places() -> None:

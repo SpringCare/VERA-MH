@@ -41,6 +41,7 @@ async def run_judging(
     resume: bool,
     personas: Optional[List[str]] = None,
     persona_annotation_columns: Optional[List[str]] = None,
+    run_record: Optional[Dict[str, Any]] = None,
 ) -> tuple[List[Dict[str, Any]], str]:
     """Evaluate a folder of conversations from fully resolved inputs.
 
@@ -72,6 +73,8 @@ async def run_judging(
             None when the caller selected only a rubric component
         persona_annotation_columns: Persona columns to copy into results.csv,
             named by the target manifest. Empty or None annotates nothing.
+        run_record: Written to the new evaluation folder as `config.json`;
+            see `utils/run_record.py`. Unused when `is_existing_run`.
 
     Returns:
         Tuple of (results, output_folder) where output_folder is where the
@@ -121,5 +124,6 @@ async def run_judging(
         resume=resume,
         personas=personas,
         persona_annotation_columns=persona_annotation_columns,
+        run_record=run_record,
         **output_target,
     )

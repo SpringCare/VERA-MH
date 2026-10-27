@@ -33,6 +33,7 @@ from vera_mh.utils.config_schema import (
     RunConfig,
 )
 from vera_mh.utils.debug import set_debug
+from vera_mh.utils.run_record import RECORD_ONLY_KEYS, check_record_inputs
 
 ROOT = Path(__file__).resolve().parents[3]
 VERA_RUN_CONFIG_ENV = "VERA_RUN_CONFIG"
@@ -335,11 +336,19 @@ def resolve_input(
 
     persisted: dict[str, Any] = {}
     if config is not None:
-        unknown = set(config).difference(allowed_config_fields | {"invocation"})
+        # A run record (`<run>/config.json`) is also a valid config, so the keys
+        # a record adds are accepted too.
+        unknown = set(config).difference(
+            allowed_config_fields | {"invocation"} | RECORD_ONLY_KEYS
+        )
         if unknown:
             raise ConfigError(
                 f"unknown top-level config field(s): {', '.join(sorted(unknown))}"
             )
+        try:
+            check_record_inputs(config)
+        except ValueError as error:
+            raise ConfigError(str(error)) from error
         value = config.get("invocation", {})
         if not isinstance(value, dict):
             raise ConfigError("invocation must be an object")

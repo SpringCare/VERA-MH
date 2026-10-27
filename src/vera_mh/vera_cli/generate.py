@@ -30,6 +30,7 @@ from typing import Any
 
 from vera_mh.generate import run_for_user_models
 from vera_mh.utils.config_schema import GenerationConfig, InvocationConfig, RunConfig
+from vera_mh.utils.run_record import build_run_record
 from vera_mh.utils.utils import parse_key_value_list
 
 from .config import (
@@ -331,11 +332,14 @@ async def _execute(run_configs: list[RunConfig]) -> list[str]:
         generation = run_config.generation
         if generation is None:  # pragma: no cover - resolve_configs always sets it
             raise ConfigError("generate produced a run with no generation section")
+        into = run_config.invocation.into
         run_folders.extend(
             await run_for_user_models(
                 generation,
                 max_personas=run_config.invocation.sample,
-                into=run_config.invocation.into,
+                into=into,
+                # A continued run keeps the record it started with.
+                run_record=build_run_record(run_config) if into is None else None,
             )
         )
     return run_folders

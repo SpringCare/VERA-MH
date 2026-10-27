@@ -302,6 +302,9 @@ def _fake_stages(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
     pool_calls: list[dict] = []
 
     def fake_run_pooling(**kwargs):
+        # The pooled folder's record names the same evaluations being pooled.
+        record = kwargs.pop("run_record")
+        assert record["pooling"]["evaluations"] == kwargs["evaluations"]
         pool_calls.append(kwargs)
         return Path("pooled/j_pooled")
 

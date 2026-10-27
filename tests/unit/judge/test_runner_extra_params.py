@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pandas as pd
 import pytest
 
+from tests.mocks.run_record import minimal_run_record
 from vera_mh.judge.rubric_config import ConversationData
 from vera_mh.judge.runner import (
     _create_evaluation_jobs,
@@ -128,6 +129,7 @@ class TestRunnerExtraParams:
                 }
             ]
             results, _ = await judge_conversations(
+                run_record=minimal_run_record(),
                 judge_models={"claude-sonnet-4-5": 1},
                 conversations=[_conversation(tmp_path)],
                 rubric_config=rubric_config,
@@ -160,6 +162,7 @@ class TestRunnerExtraParams:
                 }
             ]
             results, _ = await judge_conversations(
+                run_record=minimal_run_record(),
                 judge_models={"claude-sonnet-4-5": 1},
                 conversations=[_conversation(tmp_path)],
                 rubric_config=rubric_config,

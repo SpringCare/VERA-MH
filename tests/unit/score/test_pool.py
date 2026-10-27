@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from tests.mocks.run_record import minimal_run_record
 from vera_mh.score import pool
 from vera_mh.utils.naming import build_generation_run_folder_name
 
@@ -135,6 +136,7 @@ def test_pooling_refuses_evaluations_with_different_rubrics(
 
     with pytest.raises(ValueError, match="different rubrics"):
         pool.run_pooling(
+            run_record=minimal_run_record(),
             evaluations=[a, b],
             output_parent=tmp_path / "out",
             personas_tsv=None,

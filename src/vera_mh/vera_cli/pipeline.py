@@ -69,11 +69,13 @@ from vera_mh.score import run_pooling, run_scoring
 from vera_mh.utils.config_schema import (
     InvocationConfig,
     JudgingSpec,
+    PoolingConfig,
     RubricFiles,
     RunConfig,
     ScoringSpec,
 )
 from vera_mh.utils.conversation_layout import resolve_conversation_input
+from vera_mh.utils.run_record import build_run_record
 from vera_mh.utils.utils import parse_key_value_list
 
 from . import generate as generate_command
@@ -351,11 +353,23 @@ async def _execute(runs: list[PipelineRun]) -> None:
                 print(f"  {evaluation}")
             generation = pipeline_run.generation.generation
             assert generation is not None  # generate.resolve_configs always sets it
-            pooled = run_pooling(
+            pooling = PoolingConfig(
                 evaluations=evaluations,
-                output_parent=generation.output,
-                personas_tsv=pipeline_run.scoring.personas,
+                output=generation.output,
+                personas=pipeline_run.scoring.personas,
                 skip_risk_analysis=pipeline_run.scoring.skip_risk_analysis,
+            )
+            pooled = run_pooling(
+                evaluations=list(pooling.evaluations),
+                output_parent=pooling.output,
+                personas_tsv=pooling.personas,
+                skip_risk_analysis=pooling.skip_risk_analysis,
+                run_record=build_run_record(
+                    RunConfig(
+                        invocation=pipeline_run.generation.invocation,
+                        pooling=pooling,
+                    )
+                ),
             )
             print(f"\nHeadline (pooled) score: {pooled}")
 
@@ -418,6 +432,9 @@ async def _judge_and_score(pipeline_run: PipelineRun, run_folder: str) -> str:
         resume=False,
         personas=list(judging.personas),
         persona_annotation_columns=list(judging.persona_annotation_columns),
+        run_record=build_run_record(
+            RunConfig(invocation=pipeline_run.generation.invocation, judging=judging)
+        ),
     )
 
     scoring = pipeline_run.scoring.complete(

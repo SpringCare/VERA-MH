@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 import pandas as pd
 
 from vera_mh.utils.judge_results import build_dataframe_from_tsv_files
+from vera_mh.utils.run_record import require_run_record, with_start_time
 from vera_mh.utils.run_root import create_run_root, run_started_at
 
 from .answers import conversation_answers_dir, write_answers_tsv
@@ -551,6 +552,7 @@ async def judge_conversations(
     resume: bool = False,
     personas: Optional[List[str]] = None,
     persona_annotation_columns: Optional[List[str]] = None,
+    run_record: Optional[Dict[str, Any]] = None,
 ) -> tuple[List[Dict[str, Any]], str]:
     """
     Judge conversations with multiple judge models.
@@ -573,6 +575,8 @@ async def judge_conversations(
         persona_annotation_columns: Persona columns to copy into the aggregated
             CSV, joined on the persona name parsed from each conversation
             filename. Empty or None annotates nothing.
+        run_record: Written to a new evaluation folder as `config.json` (see
+            `utils/run_record.py`); unused when continuing `output_folder`.
 
     Returns:
         Tuple of (results, output_folder) where results is a flattened list of
@@ -580,7 +584,8 @@ async def judge_conversations(
         tuple, and output_folder is the path where evaluations were saved
     """
     if output_folder is None:
-        timestamp = run_started_at().strftime("%Y%m%d_%H%M%S_%f")[:-3]
+        started_at = run_started_at()
+        timestamp = started_at.strftime("%Y%m%d_%H%M%S_%f")[:-3]
         judges_str = "_".join(
             f"{model}x{count}" for model, count in judge_models.items()
         )
@@ -603,7 +608,8 @@ async def judge_conversations(
         new_folder = build_evaluation_run_folder_path(
             output_root, judge_info, timestamp, folder_name
         )
-        output_folder = str(create_run_root(output_root, Path(new_folder).name))
+        record = with_start_time(require_run_record(run_record), started_at)
+        output_folder = str(create_run_root(output_root, Path(new_folder).name, record))
     else:
         # An existing run being continued (`--into`), not a new run root.
         os.makedirs(output_folder, exist_ok=True)

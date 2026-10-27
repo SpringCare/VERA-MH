@@ -7,7 +7,8 @@ given the same name silently wrote into one folder. Now:
 
 - `run_started_at` is the run's single clock read. Every timestamp the run
   writes (its folder name, its metadata) comes from that one value.
-- `create_run_root` creates the folder and fails if it already exists (AD-24).
+- `create_run_root` creates the folder, fails if it already exists (AD-24),
+  and writes the run record (`config.json`, see `utils/run_record.py`).
 
 Continuing a run (`--into`) opens a folder that already exists, so it does not
 come through here.
@@ -19,6 +20,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from typing import Any
+
+from vera_mh.utils.run_record import write_run_record
 
 
 class RunRootExistsError(FileExistsError):
@@ -37,8 +41,8 @@ def run_started_at() -> datetime:
     return datetime.now()
 
 
-def create_run_root(parent: str | Path, name: str) -> Path:
-    """Create the folder for a new run and return its path.
+def create_run_root(parent: str | Path, name: str, record: dict[str, Any]) -> Path:
+    """Create the folder for a new run, write its record, and return its path.
 
     `parent` is where the run goes and `name` is the run's folder name, which
     the caller builds with the run's timestamp. Today's names, one per kind of
@@ -54,6 +58,10 @@ def create_run_root(parent: str | Path, name: str) -> Path:
       `output/j_gpt-5.4x1__p_claude_opus_4_5+gpt_5_2__a_gpt_5_4__t30__r1__20261015_191923/`,
       which gets the merged `results.csv`, `pool_metadata.json`, and `scores/`
 
+    Each starts with `config.json` and `config.json.sha256`, written from
+    `record`. A new run can't start without one, so every run folder says what
+    ran; continuing a run (`--into`) opens its existing folder instead.
+
     The parent folders are created as needed. The run folder itself must not
     exist yet: `mkdir` without `exist_ok` checks and creates in one step, so two
     processes starting the same run cannot both succeed.
@@ -67,4 +75,5 @@ def create_run_root(parent: str | Path, name: str) -> Path:
             f"run folder already exists: {root}. Two runs got the same name; "
             "start the run again, or pass --into to continue that run."
         ) from error
+    write_run_record(root, record)
     return root
