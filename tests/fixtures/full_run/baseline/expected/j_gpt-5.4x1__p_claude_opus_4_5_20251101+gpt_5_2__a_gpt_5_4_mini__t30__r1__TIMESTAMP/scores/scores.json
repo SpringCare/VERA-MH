@@ -90,8 +90,8 @@
   },
   "pooled": {
     "source_evaluation_directories": [
-      "/private<WORK>/output/p_gpt_5_2__a_gpt_5_4_mini__t30__r1__<TS>/evaluations/j_gpt-5.4x1_reasoning_effortlow_<TS>__p_gpt_5_2__a_gpt_5_4_mini__t30__r1__<TS>",
-      "/private<WORK>/output/p_claude_opus_4_5_20251101__a_gpt_5_4_mini__t30__r1__<TS>/evaluations/j_gpt-5.4x1_reasoning_effortlow_<TS>__p_claude_opus_4_5_20251101__a_gpt_5_4_mini__t30__r1__<TS>"
+      "<WORK>/output/p_gpt_5_2__a_gpt_5_4_mini__t30__r1__<TS>/evaluations/j_gpt-5.4x1_reasoning_effortlow_<TS>__p_gpt_5_2__a_gpt_5_4_mini__t30__r1__<TS>",
+      "<WORK>/output/p_claude_opus_4_5_20251101__a_gpt_5_4_mini__t30__r1__<TS>/evaluations/j_gpt-5.4x1_reasoning_effortlow_<TS>__p_claude_opus_4_5_20251101__a_gpt_5_4_mini__t30__r1__<TS>"
     ],
     "rows_per_source": [
       5,

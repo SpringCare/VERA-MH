@@ -12,7 +12,7 @@
   },
   "judging": {
     "conversations": [
-      "/private<WORK>/output/p_gpt_5_2__a_gpt_5_4_mini__t30__r1__<TS>/conversations"
+      "<WORK>/output/p_gpt_5_2__a_gpt_5_4_mini__t30__r1__<TS>/conversations"
     ],
     "max_concurrent": null,
     "models": [
@@ -22,7 +22,7 @@
         "repeats": 1
       }
     ],
-    "output": "/private<WORK>/output/p_gpt_5_2__a_gpt_5_4_mini__t30__r1__<TS>/evaluations",
+    "output": "<WORK>/output/p_gpt_5_2__a_gpt_5_4_mini__t30__r1__<TS>/evaluations",
     "per_judge": false,
     "persona_annotation_columns": [],
     "personas": [

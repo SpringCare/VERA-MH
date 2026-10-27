@@ -545,7 +545,10 @@ def outputs(output: Path, work: Path) -> dict[str, str]:
             text = _without_provenance(text)
         # Run records hold absolute paths: the temporary work folder's, and the
         # repository's for input files, which differs on every machine.
-        text = text.replace(str(work), "<WORK>").replace(str(REPO_ROOT), "<REPO>")
+        # The resolved path first: on macOS the temporary folder is a symlink
+        # (/var -> /private/var), and the run writes the resolved path.
+        text = text.replace(str(work.resolve()), "<WORK>").replace(str(work), "<WORK>")
+        text = text.replace(str(REPO_ROOT), "<REPO>")
         found[name] = TIMESTAMP.sub("<TS>", text)
     return found
 

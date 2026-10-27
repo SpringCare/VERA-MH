@@ -8,7 +8,7 @@
     "first_speaker": "user",
     "max_concurrent": null,
     "max_total_words": null,
-    "output": "/private<WORK>/output",
+    "output": "<WORK>/output",
     "persona_context_template": "<REPO>/data/SI/persona_context_template.txt",
     "personas": [
       "<REPO>/data/SI/personas.tsv"
