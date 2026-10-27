@@ -44,7 +44,6 @@ CLOCK_ALLOWED = {
     ("judge/runner.py", "_worker"): "log line timestamps",
     ("judge/runner.py", "_run_workers_with_queue"): "log line timestamps",
     ("judge/runner.py", "judge_conversations"): "batch duration",
-    ("judge/utils.py", "build_single_conversation_judge_run_key"): "single mode",
     ("llm_clients/llm_interface.py", "_set_response_metadata"): "response time",
     ("utils/naming.py", "add_timestamp_to_path"): "comparison chart file names",
     ("utils/run_root.py", "run_started_at"): "the run's one clock read",

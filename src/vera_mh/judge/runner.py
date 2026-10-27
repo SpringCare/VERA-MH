@@ -747,30 +747,3 @@ async def judge_conversations(
             print(f"  ({skipped_error_n} skipped due to errors)")
 
     return results, output_folder
-
-
-async def judge_single_conversation(
-    judge: LLMJudge,
-    conversation: ConversationData,
-    output_folder: str,
-) -> Optional[Dict[str, Any]]:
-    """
-    Judge a single conversation.
-
-    Args:
-        judge: LLMJudge instance
-        conversation: ConversationData with content and metadata
-        output_folder: Output folder for results
-
-    Returns:
-        Evaluation results or None if failed
-    """
-    conversation_filename = conversation.metadata.get("filename", "unknown.txt")
-    print(f"📄 Judging: {conversation_filename}")
-
-    result = await judge.evaluate_conversation_question_flow(
-        conversation, output_folder=output_folder, auto_save=True
-    )
-
-    print(f"🟢 Done: {conversation_filename}")
-    return result

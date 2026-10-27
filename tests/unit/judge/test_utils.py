@@ -1,12 +1,10 @@
 """Unit tests for judge utility functions."""
 
 import argparse
-from datetime import datetime
 
 import pytest
 
 from vera_mh.judge.utils import (
-    build_single_conversation_judge_run_key,
     parse_judge_models,
 )
 
@@ -129,17 +127,3 @@ class TestJudgeModelParsing:
         judge_model = _setup_judge_model_arg(["-j", "gpt-4o:2x"])
         with pytest.raises(ValueError, match="must be an integer"):
             parse_judge_models(judge_model)
-
-
-@pytest.mark.unit
-class TestBuildSingleConversationJudgeRunKey:
-    """Tests for build_single_conversation_judge_run_key."""
-
-    def test_format_matches_cli_single_mode(self):
-        """Stem and truncated microsecond field match prior judge.py inline logic."""
-        fixed = datetime(2026, 4, 20, 15, 30, 45, 123456)
-        key = build_single_conversation_judge_run_key(
-            "/tmp/foo/Amelia_conv.txt",
-            now=fixed,
-        )
-        assert key == "single_20260420_153045_123__Amelia_conv"

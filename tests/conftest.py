@@ -8,27 +8,20 @@ import pytest
 from tests.mocks.mock_llm import MockLLM
 from vera_mh.judge.rubric_config import RubricConfig
 
-_judge_logs_temp: Path | None = None
 _adhoc_temp: Path | None = None
 
 
 def pytest_sessionstart(session: pytest.Session) -> None:
-    """Point judge file logs and adhoc outputs at temp dirs (cleaned in finish)."""
-    global _judge_logs_temp, _adhoc_temp
-    _judge_logs_temp = Path(tempfile.mkdtemp(prefix="vera_judge_logs_"))
-    os.environ["VERA_JUDGE_LOGS_ROOT"] = str(_judge_logs_temp)
+    """Point adhoc outputs, including unscoped judge logs, at a temp dir."""
+    global _adhoc_temp
     _adhoc_temp = Path(tempfile.mkdtemp(prefix="vera_adhoc_"))
     os.environ["VERA_ADHOC_PARENT"] = str(_adhoc_temp)
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
-    """Remove temp dirs; clear env so CLI uses normal defaults."""
-    global _judge_logs_temp, _adhoc_temp
-    os.environ.pop("VERA_JUDGE_LOGS_ROOT", None)
+    """Remove the temp dir; clear env so CLI uses normal defaults."""
+    global _adhoc_temp
     os.environ.pop("VERA_ADHOC_PARENT", None)
-    if _judge_logs_temp is not None and _judge_logs_temp.exists():
-        shutil.rmtree(_judge_logs_temp, ignore_errors=True)
-    _judge_logs_temp = None
     if _adhoc_temp is not None and _adhoc_temp.exists():
         shutil.rmtree(_adhoc_temp, ignore_errors=True)
     _adhoc_temp = None

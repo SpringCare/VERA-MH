@@ -32,7 +32,6 @@ from vera_mh.judge.rubric_config import (
 from vera_mh.judge.runner import (
     batch_evaluate_with_individual_judges,
     judge_conversations,
-    judge_single_conversation,
 )
 from vera_mh.utils.judge_results import build_dataframe_from_tsv_files
 
@@ -165,56 +164,6 @@ def mock_llm_factory_for_judge():
         "vera_mh.judge.llm_judge.LLMFactory.create_llm", side_effect=create_mock_judge
     ):
         yield
-
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-class TestJudgeSingleConversation:
-    """Tests for judge_single_conversation function.
-
-    Note: judge_single_conversation calls evaluate_conversation method
-    which doesn't exist in LLMJudge (it uses evaluate_conversation_question_flow).
-    This appears to be dead/unused code. Tests focus on actual working paths.
-    """
-
-    async def test_judge_single_conversation_file_not_found(
-        self,
-        mock_rubric_files: str,
-        mock_llm_factory_for_judge,
-        tmp_path: Path,
-    ):
-        """Test handling of missing conversation file.
-
-        Arrange: Create judge with valid rubric, use non-existent file
-        Act: Call judge_single_conversation with missing file
-        Assert: Raises FileNotFoundError when loading conversation
-        """
-        from vera_mh.judge.llm_judge import LLMJudge
-
-        output_folder = str(tmp_path / "evaluations")
-        missing_file = str(tmp_path / "nonexistent.txt")
-
-        # Load rubric config
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        judge = LLMJudge(
-            judge_model="mock-judge",
-            rubric_config=rubric_config,
-        )
-
-        # Should raise FileNotFoundError when trying to load missing file
-        with pytest.raises(FileNotFoundError):
-            conversation = await ConversationData.load(missing_file)
-            await judge_single_conversation(
-                judge=judge,
-                conversation=conversation,
-                output_folder=output_folder,
-            )
 
 
 @pytest.mark.integration
