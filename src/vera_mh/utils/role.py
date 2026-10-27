@@ -8,4 +8,3 @@ class Role(Enum):
 
     PERSONA = "persona"  # User roleplaying as a human seeking help
     PROVIDER = "provider"  # Chatbot providing support
-    JUDGE = "judge"  # Judge role, used for judge operations

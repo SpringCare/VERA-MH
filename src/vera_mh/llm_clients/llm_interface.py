@@ -133,7 +133,7 @@ class LLMInterface(ABC):
     def __init__(
         self,
         name: str,
-        role: Role,
+        role: Optional[Role],
         system_prompt: Optional[str] = None,
         first_message: Optional[str] = None,
         start_prompt: Optional[str] = None,
@@ -155,6 +155,11 @@ class LLMInterface(ABC):
         self.retry_max_delay_seconds = retry_max_delay_seconds
         self._last_response_metadata: Dict[str, Any] = {}
         self.conversation_id = self.create_conversation_id()
+
+    @property
+    def role_label(self) -> str:
+        """The role for logs. A judge has no role: it is not in the conversation."""
+        return self.role.value if self.role else "judge"
 
     @property
     def last_response_metadata(self) -> Dict[str, Any]:
@@ -338,7 +343,7 @@ class LLMInterface(ABC):
             "response_id": extra.pop("response_id", None),
             "model": extra.pop("model", getattr(self, "model_name", None)),
             "provider": provider,
-            "role": self.role.value,
+            "role": self.role_label,
             "timestamp": datetime.now().isoformat(),
             "usage": extra.pop("usage", {}),
             **extra,

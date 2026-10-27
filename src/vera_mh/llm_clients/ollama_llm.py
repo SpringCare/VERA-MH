@@ -25,7 +25,7 @@ class OllamaLLM(LLMInterface):
     def __init__(
         self,
         name: str,
-        role: Role,
+        role: Optional[Role],
         system_prompt: Optional[str] = None,
         model_name: Optional[str] = None,
         base_url: Optional[str] = None,
@@ -119,7 +119,7 @@ class OllamaLLM(LLMInterface):
             system_prompt=self.system_prompt,
         )
 
-        debug_print(f"\n[DEBUG {self.name} - {self.role.value}] Message sent to LLM:")
+        debug_print(f"\n[DEBUG {self.name} - {self.role_label}] Message sent to LLM:")
         preview = full_message[:100]
         content_preview = preview + "..." if len(full_message) > 100 else full_message
         debug_print(f"  {content_preview}")

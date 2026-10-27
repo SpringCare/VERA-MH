@@ -86,7 +86,7 @@ class OpenAILLM(JudgeLLM):
     def __init__(
         self,
         name: str,
-        role: Role,
+        role: Optional[Role],
         system_prompt: Optional[str] = None,
         model_name: Optional[str] = None,
         **kwargs,
@@ -218,7 +218,7 @@ class OpenAILLM(JudgeLLM):
             messages.append(SystemMessage(content=self.system_prompt))
 
         # Debug: Print input parameters
-        debug_print(f"\n[DEBUG {self.name} - {self.role.value}] Input parameters:")
+        debug_print(f"\n[DEBUG {self.name} - {self.role_label}] Input parameters:")
         hist_len = len(conversation_history) if conversation_history else 0
         debug_print(f"  - conversation_history length: {hist_len}")
 
@@ -226,7 +226,7 @@ class OpenAILLM(JudgeLLM):
         messages.extend(build_langchain_messages(self.role, conversation_history))
 
         # Debug: Print messages being sent to LLM
-        debug_print(f"\n[DEBUG {self.name} - {self.role.value}] Messages sent to LLM:")
+        debug_print(f"\n[DEBUG {self.name} - {self.role_label}] Messages sent to LLM:")
         for i, msg in enumerate(messages):
             msg_type = type(msg).__name__
             preview = msg.text[:100]

@@ -18,7 +18,6 @@ from vera_mh.judge.utils import (
 from vera_mh.llm_clients import LLMFactory
 from vera_mh.llm_clients.llm_interface import JudgeLLM, LLMGenerationFailed
 from vera_mh.utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL
-from vera_mh.utils.role import Role
 
 
 class LLMJudge:
@@ -151,7 +150,7 @@ class LLMJudge:
         llm = LLMFactory.create_llm(
             model_name=self.judge_model,
             name="Question Flow Evaluator",
-            role=Role.JUDGE,
+            role=None,
             system_prompt=conversation_context_prompt,
             **self.judge_model_extra_params,
         )

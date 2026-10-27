@@ -157,7 +157,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
             ClaudeLLM(
                 name="TestClaude",
-                role=Role.JUDGE,
+                role=None,
                 model_name="claude-opus-4-8",
                 **default_llm_kwargs,
             )
@@ -178,7 +178,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
             ClaudeLLM(
                 name="TestClaude",
-                role=Role.JUDGE,
+                role=None,
                 model_name="claude-opus-4-7",
                 **default_llm_kwargs,
             )
@@ -199,7 +199,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
             ClaudeLLM(
                 name="TestClaude",
-                role=Role.JUDGE,
+                role=None,
                 model_name="claude-fable-5",
                 **default_llm_kwargs,
             )
@@ -213,7 +213,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         with patch("vera_mh.llm_clients.claude_llm.ChatAnthropic"):
             llm = ClaudeLLM(
                 name="TestClaude",
-                role=Role.JUDGE,
+                role=None,
                 model_name="claude-opus-4-8",
                 **default_llm_kwargs,
             )
@@ -225,7 +225,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         with patch("vera_mh.llm_clients.claude_llm.ChatAnthropic"):
             llm = ClaudeLLM(
                 name="TestClaude",
-                role=Role.JUDGE,
+                role=None,
                 model_name="claude-opus-4-8",
                 **default_llm_kwargs,
             )
@@ -237,7 +237,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
         with patch("vera_mh.llm_clients.claude_llm.ChatAnthropic"):
             llm = ClaudeLLM(
                 name="TestClaude",
-                role=Role.JUDGE,
+                role=None,
                 model_name="claude-opus-4-8",
                 **default_llm_kwargs,
             )
@@ -354,7 +354,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
             ClaudeLLM(
                 name="TestClaude",
-                role=Role.JUDGE,
+                role=None,
                 model_name="claude-sonnet-5",
                 thinking_effort="high",
             )
@@ -375,7 +375,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
             ClaudeLLM(
                 name="TestClaude",
-                role=Role.JUDGE,
+                role=None,
                 model_name="claude-haiku-4-5",
                 thinking_effort="high",
             )
@@ -389,7 +389,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
     def test_unsupported_model_params_covers_all_adaptive_markers(self):
         with patch("vera_mh.llm_clients.claude_llm.ChatAnthropic"):
-            llm = ClaudeLLM(name="TestClaude", role=Role.JUDGE)
+            llm = ClaudeLLM(name="TestClaude", role=None)
         unsupported = llm._unsupported_model_params()
         assert unsupported == {
             "opus-4-7": frozenset({"temperature", "top_p", "top_k"}),
@@ -434,7 +434,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
         # Verify metadata was extracted
         metadata = assert_metadata_structure(
-            llm, expected_provider="claude", expected_role=Role.PERSONA
+            llm, expected_provider="claude", expected_role="persona"
         )
         assert metadata["response_id"] == "msg_12345"
         assert metadata["model"] == "claude-sonnet-4-5-20250929"
@@ -1013,9 +1013,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
             mock_chat_anthropic.return_value = mock_llm
 
-            llm = ClaudeLLM(
-                name="TestClaude", role=Role.JUDGE, system_prompt="Test prompt"
-            )
+            llm = ClaudeLLM(name="TestClaude", role=None, system_prompt="Test prompt")
             response = await llm.generate_structured_response(
                 "What is the answer?", TestResponse
             )
@@ -1026,7 +1024,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
             # Verify metadata was stored
             metadata = assert_metadata_structure(
-                llm, expected_provider="claude", expected_role=Role.JUDGE
+                llm, expected_provider="claude", expected_role="judge"
             )
             # No model in the response, so this is the configured default.
             assert metadata["model"] == Config.DEFAULT_CLAUDE_MODEL
@@ -1072,7 +1070,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
             )
             mock_chat_anthropic.return_value = mock_llm
 
-            llm = ClaudeLLM(name="TestClaude", role=Role.JUDGE)
+            llm = ClaudeLLM(name="TestClaude", role=None)
             response = await llm.generate_structured_response("Test", TestResponse)
 
             assert response == test_response
@@ -1110,7 +1108,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
             )
             mock_chat_anthropic.return_value = mock_llm
 
-            llm = ClaudeLLM(name="TestClaude", role=Role.JUDGE)
+            llm = ClaudeLLM(name="TestClaude", role=None)
 
             with pytest.raises(LLMGenerationFailed) as exc_info:
                 await llm.generate_structured_response("Test", TestResponse)
@@ -1161,7 +1159,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
             mock_chat_anthropic.return_value = mock_llm
 
-            llm = ClaudeLLM(name="TestClaude", role=Role.JUDGE)
+            llm = ClaudeLLM(name="TestClaude", role=None)
             response = await llm.generate_structured_response(
                 "Evaluate this.", ComplexResponse
             )
@@ -1198,7 +1196,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
             mock_chat_anthropic.return_value = mock_llm
 
-            llm = ClaudeLLM(name="TestClaude", role=Role.JUDGE)
+            llm = ClaudeLLM(name="TestClaude", role=None)
 
             with pytest.raises(LLMGenerationFailed) as exc_info:
                 await llm.generate_structured_response("Test", TestResponse)
@@ -1233,7 +1231,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
             mock_chat_anthropic.return_value = mock_llm
 
-            llm = ClaudeLLM(name="TestClaude", role=Role.JUDGE)
+            llm = ClaudeLLM(name="TestClaude", role=None)
             await llm.generate_structured_response("Test", SimpleResponse)
 
             metadata = llm.last_response_metadata

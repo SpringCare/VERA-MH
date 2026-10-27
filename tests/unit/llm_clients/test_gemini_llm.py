@@ -164,7 +164,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         ) as mock_chat:
             GeminiLLM(
                 name="TestGemini",
-                role=Role.JUDGE,
+                role=None,
                 model_name="gemini-3-pro-preview",
                 **default_llm_kwargs,
             )
@@ -181,7 +181,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         ) as mock_chat:
             GeminiLLM(
                 name="TestGemini",
-                role=Role.JUDGE,
+                role=None,
                 model_name="gemini-2.5-pro",
                 **default_llm_kwargs,
             )
@@ -194,7 +194,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         with patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"):
             llm = GeminiLLM(
                 name="TestGemini",
-                role=Role.JUDGE,
+                role=None,
                 model_name="gemini-3-pro-preview",
                 **default_llm_kwargs,
             )
@@ -213,7 +213,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
         with patch("vera_mh.llm_clients.gemini_llm.ChatGoogleGenerativeAI"):
             llm = GeminiLLM(
                 name="TestGemini",
-                role=Role.JUDGE,
+                role=None,
                 model_name="gemini-3-pro-preview",
                 **default_llm_kwargs,
             )
@@ -284,7 +284,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
         # Verify metadata extraction
         metadata = assert_metadata_structure(
-            llm, expected_provider="gemini", expected_role=Role.PERSONA
+            llm, expected_provider="gemini", expected_role="persona"
         )
         assert metadata["response_id"] == "gemini-12345"
         assert metadata["model"] == "gemini-1.5-pro-001"
@@ -784,9 +784,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
             mock_chat.return_value = mock_llm
 
-            llm = GeminiLLM(
-                name="TestGemini", role=Role.JUDGE, system_prompt="Test prompt"
-            )
+            llm = GeminiLLM(name="TestGemini", role=None, system_prompt="Test prompt")
             response = await llm.generate_structured_response(
                 "What is the answer?", TestResponse
             )
@@ -802,7 +800,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
             # Verify metadata was stored
             metadata = assert_metadata_structure(
-                llm, expected_provider="gemini", expected_role=Role.JUDGE
+                llm, expected_provider="gemini", expected_role="judge"
             )
             # No model in the response, so this is the configured default.
             assert metadata["model"] == Config.DEFAULT_GEMINI_MODEL
@@ -853,7 +851,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
             mock_chat.return_value = mock_llm
 
-            llm = GeminiLLM(name="TestGemini", role=Role.JUDGE)
+            llm = GeminiLLM(name="TestGemini", role=None)
             response = await llm.generate_structured_response(
                 "Evaluate this.", ComplexResponse
             )
@@ -889,7 +887,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
             mock_chat.return_value = mock_llm
 
-            llm = GeminiLLM(name="TestGemini", role=Role.JUDGE)
+            llm = GeminiLLM(name="TestGemini", role=None)
 
             with pytest.raises(LLMGenerationFailed) as exc_info:
                 await llm.generate_structured_response("Test", TestResponse)
@@ -932,7 +930,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
             )
             mock_chat.return_value = mock_llm
 
-            llm = GeminiLLM(name="TestGemini", role=Role.JUDGE)
+            llm = GeminiLLM(name="TestGemini", role=None)
 
             with pytest.raises(LLMGenerationFailed) as exc_info:
                 await llm.generate_structured_response("Test", TestResponse)
@@ -969,7 +967,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
             )
             mock_chat.return_value = mock_llm
 
-            llm = GeminiLLM(name="TestGemini", role=Role.JUDGE)
+            llm = GeminiLLM(name="TestGemini", role=None)
 
             with pytest.raises(LLMGenerationFailed):
                 await llm.generate_structured_response("Test", TestResponse)
@@ -1018,7 +1016,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
             )
             mock_chat.return_value = mock_llm
 
-            llm = GeminiLLM(name="TestGemini", role=Role.JUDGE)
+            llm = GeminiLLM(name="TestGemini", role=None)
             llm.max_llm_retries = 1
 
             with pytest.raises(LLMGenerationFailed) as exc_info:
@@ -1052,7 +1050,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
             mock_chat.return_value = mock_llm
 
-            llm = GeminiLLM(name="TestGemini", role=Role.JUDGE)
+            llm = GeminiLLM(name="TestGemini", role=None)
             await llm.generate_structured_response("Test", SimpleResponse)
 
             metadata = llm.last_response_metadata

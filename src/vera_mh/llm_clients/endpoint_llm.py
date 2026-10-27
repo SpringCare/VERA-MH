@@ -27,7 +27,7 @@ class EndpointLLM(LLMInterface):
     def __init__(
         self,
         name: str,
-        role: Role,
+        role: Optional[Role],
         system_prompt: Optional[str] = None,
         model_name: Optional[str] = None,
         base_url: Optional[str] = None,

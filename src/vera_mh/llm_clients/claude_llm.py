@@ -135,7 +135,7 @@ class ClaudeLLM(JudgeLLM):
     def __init__(
         self,
         name: str,
-        role: Role,
+        role: Optional[Role],
         system_prompt: Optional[str] = None,
         model_name: Optional[str] = None,
         caching: bool = True,
@@ -283,7 +283,7 @@ class ClaudeLLM(JudgeLLM):
         messages.extend(build_langchain_messages(self.role, conversation_history))
 
         # Debug: Print messages being sent to LLM
-        debug_print(f"\n[DEBUG {self.name} - {self.role.value}] Messages sent to LLM:")
+        debug_print(f"\n[DEBUG {self.name} - {self.role_label}] Messages sent to LLM:")
         for i, msg in enumerate(messages):
             msg_type = type(msg).__name__
             preview = msg.text[:100]

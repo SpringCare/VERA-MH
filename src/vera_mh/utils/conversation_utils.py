@@ -157,7 +157,7 @@ def apply_persona_role_reminder(
 
 
 def build_langchain_messages(
-    role: Role,
+    role: Optional[Role],
     conversation_history: Optional[List[Dict[str, Any]]] = None,
 ) -> List[BaseMessage]:
     """
@@ -227,7 +227,7 @@ def build_langchain_messages(
 
 
 def format_conversation_as_string(
-    role: Role,
+    role: Optional[Role],
     conversation_history: Optional[List[Dict[str, Any]]] = None,
     system_prompt: Optional[str] = None,
 ) -> str:
@@ -238,7 +238,7 @@ def format_conversation_as_string(
     a string format with Human/Assistant labels.
 
     Args:
-        role: Role of the LLM (Role.PERSONA or Role.PROVIDER)
+        role: Role of the LLM (Role.PERSONA, Role.PROVIDER, or None)
         conversation_history: Optional list of previous conversation turns
         system_prompt: Optional system prompt to prepend
 
