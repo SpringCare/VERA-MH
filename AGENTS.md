@@ -2,6 +2,10 @@
 
 Framework for generating and evaluating LLM conversations in mental health contexts. This file is for **any coding agent** (Cursor, Copilot, etc.). For Claude Code slash commands and `.claude/` maintenance, see [CLAUDE.md](./CLAUDE.md).
 
+## Act only when asked
+
+Do nothing the user hasn't explicitly asked for: no commands, file reads, edits, commits, pushes, or PRs on your own initiative. A command the user runs themselves (for example `open .`) is not a request. When a next step looks useful, propose it and wait for a yes.
+
 ## Quick Start
 
 ```bash
