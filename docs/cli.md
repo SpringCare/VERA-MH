@@ -55,7 +55,7 @@ A few **invocation controls** describe how to run, not what the run is, so they 
 | `--print` | Print the fully resolved invocation (as a `VERA_RUN_CONFIG=...` command) and exit without running anything |
 | `--into <folder>` | Continue an existing run (`generate`, `judge`); see [below](#continuing-an-interrupted-run---into) |
 
-Flag defaults (30 turns, `output/`, unlimited concurrency, persona speaks first) are a CLI convenience only. **A config must state every behavior field explicitly**, including `null` where no limit is intended, so a stored config fully describes a run. Unknown fields are rejected.
+A config file must state every field that changes what a run produces: the models, the personas, conversations, or rubric (or a `target` that supplies them), and for `generate` also `turns`, `user_language`, `persona_speaks_first`, `sessions`, and `max_total_words` (`null` where no limit is intended). For `score` and `pool`, `personas` and `skip_risk_analysis` are required, because they decide whether the risk breakdown exists. Fields that only change where output goes or how fast a run goes (`output`, `max_concurrent`, `per_judge`) may be left out and get the same default as the flag. Unknown fields are rejected.
 
 Every command prints its resolved config when it starts, so the log of a run shows exactly what it did.
 

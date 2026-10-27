@@ -79,10 +79,11 @@ the command's invocation-only flags, rather than each command maintaining a
 second list. A flag added to a command's parser is covered by the rule
 automatically.
 
-**Config-driven runs state every behavior field.** Defaults are a CLI
-convenience; a stored config is meant to be a complete, reproducible
-description, so a missing field is an error rather than something the code
-fills in.
+**Config files state what changes the results.** Every field that changes
+what a run produces is required (for `generate`, see `RESULT_FIELDS`), so a
+config alone says what a run produces. Fields that only change where output
+goes or how fast a run goes may be left out and get the command's `DEFAULTS`,
+so adding such an option doesn't break existing configs.
 
 **Unknown config fields are rejected, not ignored.** A typo, or a section
 belonging to a command that does not exist yet, fails loudly.

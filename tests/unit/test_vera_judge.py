@@ -565,3 +565,50 @@ def test_into_continues_an_existing_evaluation_run(tmp_path: Path) -> None:
     assert kwargs["output_dir"] == str(evaluation.resolve())
     assert kwargs["is_existing_run"] is True
     assert kwargs["resume"] is True
+
+
+def test_config_without_behavior_fields_gets_the_cli_defaults(
+    tmp_path: Path,
+) -> None:
+    """A config that states only models, conversations, and target matches the flags.
+
+    That includes `output`, which lands beside the conversation run either way.
+    """
+    run = _generation_run(tmp_path)
+    config = _write_config(
+        tmp_path,
+        {
+            "target": "SI",
+            "judging": {
+                "models": [{"name": "gpt-4o", "repeats": 1}],
+                "conversations": [str(run)],
+            },
+        },
+    )
+    parser = vera.build_parser()
+
+    from_config = judge.resolve_configs(
+        parser.parse_args(["judge", "--config", str(config)])
+    )
+    from_cli = judge.resolve_configs(
+        parser.parse_args(
+            ["judge", "-j", "gpt-4o", "--conversations", str(run), "--target", "SI"]
+        )
+    )
+
+    assert from_config == from_cli
+    assert from_config[0].judging is not None
+    assert from_config[0].judging.output == str((run / "evaluations").resolve())
+
+
+@pytest.mark.parametrize("field", ["models", "conversations"])
+def test_config_requires_models_and_conversations(tmp_path: Path, field: str) -> None:
+    data = _judging_config(tmp_path)
+    del data["judging"][field]  # type: ignore[union-attr]
+    config = _write_config(tmp_path, data)
+    parser = vera.build_parser()
+
+    with pytest.raises(
+        cli_config.ConfigError, match=f"missing required field: {field}"
+    ):
+        judge.resolve_configs(parser.parse_args(["judge", "--config", str(config)]))

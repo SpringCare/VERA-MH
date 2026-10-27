@@ -134,9 +134,11 @@ def _from_config(
 ) -> list[RunConfig]:
     """Resolve a config object into one canonical run.
 
-    Every field is required, as in the other commands: a stored config fully
-    describes a run. Paths resolve against the repository root, and explicit
-    `null` is how a config says "no personas file".
+    `evaluations`, `personas`, and `skip_risk_analysis` are required: the last
+    two decide whether the risk-level breakdown exists, so a config must say,
+    with an explicit `null` for no personas file. `output` only says where the
+    pooled folder goes, so it takes the CLI default when left out. Paths
+    resolve against the repository root.
     """
     pooling = config_section(config, "pooling", command="pool")
 
@@ -145,7 +147,7 @@ def _from_config(
         isinstance(path, str) and path for path in evaluations
     ):
         raise ConfigError("pooling.evaluations must be a list of paths")
-    output = required(pooling, "output", section="pooling config")
+    output = pooling.get("output", DEFAULTS["output"])
     if not isinstance(output, str) or not output:
         raise ConfigError("pooling.output must be a path string")
     personas = required(pooling, "personas", section="pooling config")

@@ -118,11 +118,9 @@ def test_config_paths_resolve_from_repository_root(tmp_path: Path) -> None:
     assert resolved.scoring.personas == str(PERSONAS_FIXTURE.resolve())
 
 
-@pytest.mark.parametrize(
-    "field", ["results", "output", "personas", "skip_risk_analysis"]
-)
-def test_config_requires_every_scoring_field(tmp_path: Path, field: str) -> None:
-    """A stored config states every value; nothing is filled in behind the caller."""
+@pytest.mark.parametrize("field", ["results", "personas", "skip_risk_analysis"])
+def test_config_requires_results_and_risk_fields(tmp_path: Path, field: str) -> None:
+    """`personas` and `skip_risk_analysis` decide whether a risk breakdown exists."""
     results = _evaluation_run(tmp_path) / "results.csv"
     data = _scoring_config(results)
     del data["scoring"][field]  # type: ignore[union-attr]
@@ -133,6 +131,24 @@ def test_config_requires_every_scoring_field(tmp_path: Path, field: str) -> None
         cli_config.ConfigError, match=f"missing required field: {field}"
     ):
         score.resolve_configs(parser.parse_args(["score", "--config", str(config)]))
+
+
+def test_config_without_behavior_fields_gets_the_cli_defaults(
+    tmp_path: Path,
+) -> None:
+    """A config without `output` matches `vera score -r` alone."""
+    results = _evaluation_run(tmp_path) / "results.csv"
+    data = _scoring_config(results)
+    del data["scoring"]["output"]  # type: ignore[union-attr]
+    config = _write_config(tmp_path, data)
+    parser = vera.build_parser()
+
+    from_config = score.resolve_configs(
+        parser.parse_args(["score", "--config", str(config)])
+    )
+    from_cli = score.resolve_configs(parser.parse_args(["score", "-r", str(results)]))
+
+    assert from_config == from_cli
 
 
 @pytest.mark.parametrize(

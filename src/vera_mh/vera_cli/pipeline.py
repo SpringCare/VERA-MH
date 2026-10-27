@@ -220,9 +220,8 @@ def _from_config(
     """Resolve a config object into canonical pipelines.
 
     As with the CLI path, the generation half is handed to `generate`'s own
-    resolver. Judging behavior fields are required rather than defaulted,
-    matching every other config-mode command: a stored config is a complete
-    description of a run.
+    resolver. Judging behavior fields take `judge`'s defaults when left out,
+    as in every other config-mode command.
     """
     judging = config_section(config, "judging", command="pipeline")
     if "conversations" in judging:
@@ -245,8 +244,10 @@ def _from_config(
             field="judging.models",
         ),
         rubrics=[_rubric_from_config(judging, target)],
-        max_concurrent=required(judging, "max_concurrent", section="judging config"),
-        per_judge=required(judging, "per_judge", section="judging config"),
+        max_concurrent=judging.get(
+            "max_concurrent", judge_command.DEFAULTS["max_concurrent"]
+        ),
+        per_judge=judging.get("per_judge", judge_command.DEFAULTS["per_judge"]),
     )
 
     scoring = config.get("scoring") or {}

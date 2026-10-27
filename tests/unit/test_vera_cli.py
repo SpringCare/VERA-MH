@@ -299,15 +299,53 @@ def test_each_user_model_gets_one_generate_main_call(tmp_path: Path) -> None:
     )
 
 
-def test_config_requires_all_generation_behavior_fields(tmp_path: Path) -> None:
+@pytest.mark.parametrize("field", ["chatbot", "user", *generate.RESULT_FIELDS])
+def test_config_requires_the_models_and_result_fields(
+    tmp_path: Path, field: str
+) -> None:
+    """Anything that changes the conversations must be stated in the file."""
     config_data = _generation_config()
-    del config_data["generation"]["turns"]
+    del config_data["generation"][field]
     config = _write_config(tmp_path, config_data)
 
     with pytest.raises(SystemExit) as error:
         vera.main(["generate", "--config", str(config)])
 
     assert error.value.code == 2
+
+
+def test_config_without_output_or_speed_fields_gets_the_cli_defaults(
+    tmp_path: Path,
+) -> None:
+    """Leaving out `output` and `max_concurrent` matches the same flags."""
+    config = _write_config(
+        tmp_path,
+        {
+            "target": "SI",
+            "generation": {
+                "chatbot": {"name": "gpt-5", "repeats": 1},
+                "user": [{"name": "claude-sonnet-5", "repeats": 1}],
+                "turns": 30,
+                "user_language": "English",
+                "persona_speaks_first": True,
+                "sessions": None,
+                "max_total_words": None,
+            },
+        },
+    )
+    assert set(generate.OPTIONAL_FIELDS) == {"output", "max_concurrent"}
+    parser = vera.build_parser()
+
+    from_config = generate.resolve_configs(
+        parser.parse_args(["generate", "--config", str(config)])
+    )
+    from_cli = generate.resolve_configs(
+        parser.parse_args(
+            ["generate", "-c", "gpt-5", "-u", "claude-sonnet-5", "--target", "SI"]
+        )
+    )
+
+    assert from_config == from_cli
 
 
 def test_config_paths_resolve_from_repository_root(tmp_path: Path) -> None:

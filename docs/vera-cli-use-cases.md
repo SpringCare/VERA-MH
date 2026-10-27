@@ -339,9 +339,12 @@ each entry identifies a target name or manifest and consumes only its rubric and
 judging prompts. In the persisted canonical config, those entries contain the
 resolved concrete paths rather than a manifest reference.
 
-These generation behavior fields are required in config mode, including
-explicit `null` where no limit or session list is intended. Config mode never
-inherits the CLI defaults. Top-level `target` expands a complete manifest into
+In config mode, the generation fields that change the conversations (`turns`,
+`user_language`, `persona_speaks_first`, `sessions`, `max_total_words`) are
+required, including explicit `null` where no limit or session list is intended.
+`output` and `max_concurrent` only change where and how fast a run goes, so a
+config may leave them to the CLI defaults.
+Top-level `target` expands a complete manifest into
 the concrete generation and judging fields before the canonical config is
 printed or persisted. Explicit `generation.personas` and `judging.rubrics`
 remain supported when no top-level target is set.
