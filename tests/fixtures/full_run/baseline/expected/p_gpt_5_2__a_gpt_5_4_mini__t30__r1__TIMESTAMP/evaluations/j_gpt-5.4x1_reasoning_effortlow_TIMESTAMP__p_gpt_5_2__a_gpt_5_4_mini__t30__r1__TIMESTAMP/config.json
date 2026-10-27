@@ -1,0 +1,39 @@
+{
+  "format_version": 1,
+  "inputs": {
+    "<REPO>/data/SI/personas.tsv": "sha256:07f0aa92cde50469d18aff640ed03e0df93e8863aed75ea102e4ba97a124330b",
+    "<REPO>/data/SI/question_prompt.txt": "sha256:6c7487face8e9e2e2348cce03afb713f8586b06f62627f1bab01a146a5b8e584",
+    "<REPO>/data/SI/rubric.tsv": "sha256:86c4d0623c49668c6fbe91bba614c111d0001a9c50eddbe5bda9d7a9e8ae19dc",
+    "<REPO>/data/SI/rubric_prompt_beginning.txt": "sha256:9c5d1d6099a89b4d66cabef8320bb455732e80940a2e40b4baebb1f37f1e31f0"
+  },
+  "invocation": {
+    "debug": false,
+    "sample": 5
+  },
+  "judging": {
+    "conversations": [
+      "<WORK>/output/p_gpt_5_2__a_gpt_5_4_mini__t30__r1__<TS>/conversations"
+    ],
+    "max_concurrent": null,
+    "models": [
+      {
+        "name": "gpt-5.4",
+        "reasoning_effort": "low",
+        "repeats": 1
+      }
+    ],
+    "output": "<WORK>/output/p_gpt_5_2__a_gpt_5_4_mini__t30__r1__<TS>/evaluations",
+    "per_judge": false,
+    "persona_annotation_columns": [],
+    "personas": [
+      "<REPO>/data/SI/personas.tsv"
+    ],
+    "rubrics": [
+      {
+        "question_prompt_file": "<REPO>/data/SI/question_prompt.txt",
+        "rubric_file": "<REPO>/data/SI/rubric.tsv",
+        "rubric_prompt_beginning_file": "<REPO>/data/SI/rubric_prompt_beginning.txt"
+      }
+    ]
+  }
+}
