@@ -262,36 +262,6 @@ class ConversationRunner:
             out["skip_reason"] = skip_reason
         return out
 
-    def _create_conversation_jobs(
-        self, persona_names: Optional[List[str]] = None
-    ) -> List[Tuple[dict, int, int, int]]:
-        """Create job tuples for all persona/run combinations."""
-        personas = load_prompts_from_csv(
-            persona_names,
-            prompt_path=self.persona_prompt_path,
-            persona_context_template_path=self.persona_context_template_path,
-            user_language=self.user_language,
-            max_personas=self.max_personas,
-        )
-        jobs: List[Tuple[dict, int, int, int]] = []
-        conversation_index = 1
-        for persona in personas:
-            for run in range(1, self.runs_per_prompt + 1):
-                jobs.append(
-                    (
-                        {
-                            "prompt": persona["prompt"],
-                            "name": persona["Name"],
-                            "run": run,
-                        },
-                        self.max_turns,
-                        conversation_index,
-                        run,
-                    )
-                )
-                conversation_index += 1
-        return jobs
-
     async def _worker(
         self,
         worker_id: int,

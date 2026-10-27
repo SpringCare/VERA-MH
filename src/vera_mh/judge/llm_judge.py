@@ -43,7 +43,7 @@ class LLMJudge:
             verbose: Whether to print verbose output during initialization
         """
 
-        # Setup logger: batch judging and `judge.py` pass an explicit path from
+        # Setup logger: batch judging passes an explicit path from
         # build_judge_task_log_path (scoped to the run). Omitted log_file is only
         # for direct construction, tests, etc.—then judge_unscoped/ under
         # default_adhoc_parent(); UUID stem avoids concurrent overwrites.
@@ -63,7 +63,7 @@ class LLMJudge:
 
         # One log path per batch job: stem matches the evaluation TSV (see
         # build_judge_task_log_path). Different evaluation runs use different
-        # output folders, so run_key differs and logs do not collide across runs.
+        # output folders, so logs do not collide across runs.
         # mode="w" truncates on each job start; re-running the same job in the
         # same folder replaces the log (and TSV), which is intentional.
         file_handler = logging.FileHandler(log_file, mode="w", encoding="utf-8")

@@ -279,23 +279,6 @@ class TestRunnerResumeSkip:
 class TestJudgeTaskLogPath:
     """Per-task log paths align with evaluation TSV basenames."""
 
-    def test_build_judge_task_log_path_matches_tsv_stem(self, tmp_path: Path) -> None:
-        """Log file stem matches TSV basename from judge_evaluation_tsv_filename."""
-        conv = "subdir/abc.txt"
-        model = "gpt-4o"
-        tsv_name = judge_evaluation_tsv_filename(conv, model, 3)
-        expected_stem = Path(tsv_name).stem
-
-        log_path = build_judge_task_log_path(
-            conv,
-            model,
-            3,
-            run_key="j_run__convfolder",
-            logs_root=str(tmp_path),
-        )
-
-        assert log_path == str(tmp_path / "j_run__convfolder" / f"{expected_stem}.log")
-
     def test_build_judge_task_log_path_under_output_folder(
         self, tmp_path: Path
     ) -> None:
@@ -314,13 +297,3 @@ class TestJudgeTaskLogPath:
         )
 
         assert log_path == str(eval_dir / "logs" / f"{expected_stem}.log")
-
-    def test_build_judge_task_log_path_requires_run_key_for_legacy_layout(
-        self, tmp_path: Path
-    ) -> None:
-        with pytest.raises(ValueError, match="run_key"):
-            build_judge_task_log_path(
-                "a.txt",
-                "gpt-4o",
-                logs_root=str(tmp_path),
-            )
