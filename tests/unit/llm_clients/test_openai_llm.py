@@ -246,7 +246,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
         # Verify comprehensive metadata extraction
         metadata = assert_metadata_structure(
-            llm, expected_provider="openai", expected_role="persona"
+            llm, expected_provider="openai", expected_role=Role.PERSONA
         )
         assert metadata["response_id"] == "chatcmpl-12345"
         assert metadata["model"] == "gpt-4o-0613"
@@ -809,9 +809,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
             assert response.reasoning == "Because it's correct"
 
             # Verify metadata was stored
-            metadata = assert_metadata_structure(
-                llm, expected_provider="openai", expected_role="judge"
-            )
+            metadata = assert_metadata_structure(llm, expected_provider="openai")
             # No model in the response, so this is the configured default.
             assert metadata["model"] == Config.DEFAULT_OPENAI_MODEL
             assert metadata["structured_output"] is True

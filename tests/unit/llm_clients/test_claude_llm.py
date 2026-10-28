@@ -434,7 +434,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
 
         # Verify metadata was extracted
         metadata = assert_metadata_structure(
-            llm, expected_provider="claude", expected_role="persona"
+            llm, expected_provider="claude", expected_role=Role.PERSONA
         )
         assert metadata["response_id"] == "msg_12345"
         assert metadata["model"] == "claude-sonnet-4-5-20250929"
@@ -1023,9 +1023,7 @@ class TestClaudeLLM(TestJudgeLLMBase):
             assert response.reasoning == "Because it's correct"
 
             # Verify metadata was stored
-            metadata = assert_metadata_structure(
-                llm, expected_provider="claude", expected_role="judge"
-            )
+            metadata = assert_metadata_structure(llm, expected_provider="claude")
             # No model in the response, so this is the configured default.
             assert metadata["model"] == Config.DEFAULT_CLAUDE_MODEL
             assert metadata["structured_output"] is True

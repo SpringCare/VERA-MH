@@ -24,6 +24,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 from vera_mh.llm_clients.llm_interface import LLMGenerationFailed, LLMInterface
+from vera_mh.utils.role import Role
 
 # ============================================================================
 # Metadata Assertions
@@ -33,7 +34,7 @@ from vera_mh.llm_clients.llm_interface import LLMGenerationFailed, LLMInterface
 def assert_metadata_structure(
     llm: LLMInterface,
     expected_provider: str,
-    expected_role: Optional[str] = None,
+    expected_role: Optional[Role] = None,
     require_response_id: bool = False,
     require_usage: bool = False,
 ) -> Dict[str, Any]:
@@ -67,8 +68,8 @@ def assert_metadata_structure(
     # Check role if provided
     if expected_role is not None:
         assert "role" in metadata, "Metadata missing 'role' field"
-        assert metadata["role"] == expected_role, (
-            f"Expected role '{expected_role}', got '{metadata['role']}'"
+        assert metadata["role"] == expected_role.value, (
+            f"Expected role '{expected_role.value}', got '{metadata['role']}'"
         )
 
     # Check response_id if required

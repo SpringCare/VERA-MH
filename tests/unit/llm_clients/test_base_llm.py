@@ -199,7 +199,7 @@ class TestLLMBase(ABC):
             metadata = assert_metadata_structure(
                 llm,
                 expected_provider=self.get_provider_name(),
-                expected_role="provider",
+                expected_role=Role.PROVIDER,
             )
 
             assert "timestamp" in metadata
@@ -301,7 +301,6 @@ class TestJudgeLLMBase(TestLLMBase):
             metadata = assert_metadata_structure(
                 llm,
                 expected_provider=self.get_provider_name(),
-                expected_role="judge",
             )
             assert metadata.get("structured_output") is True
             assert_response_timing(metadata)
@@ -429,7 +428,6 @@ class TestJudgeLLMBase(TestLLMBase):
             metadata = assert_metadata_structure(
                 llm,
                 expected_provider=provider,
-                expected_role="judge",
                 require_response_id=True,
                 require_usage=True,
             )

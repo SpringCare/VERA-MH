@@ -85,16 +85,12 @@ class ConversationSimulator:
             f"[SIM] Starting conversation: persona_speaks_first={persona_speaks_first},"
             f"max_turns={max_turns}"
         )
-        debug_print(
-            f"[SIM] persona={self.persona.name} ({self.persona.role_label}), "
-            f"agent={self.agent.name} ({self.agent.role_label})"
-        )
+        debug_print(f"[SIM] persona={self.persona.name}, agent={self.agent.name}")
 
         total_words = 0
         for turn in range(max_turns):
             debug_print(
-                f"[SIM] Turn {turn + 1}/{max_turns}: "
-                f"{current_speaker.name} ({current_speaker.role_label}) speaking"
+                f"[SIM] Turn {turn + 1}/{max_turns}: {current_speaker.name} speaking"
             )
             self.last_active_speaker = current_speaker
             # start or continue the conversation
@@ -178,10 +174,7 @@ class ConversationSimulator:
 
             # Switch speakers for next turn
             current_speaker, next_speaker = next_speaker, current_speaker
-            debug_print(
-                f"[SIM]   next speaker → {current_speaker.name} "
-                f"({current_speaker.role_label})"
-            )
+            debug_print(f"[SIM]   next speaker → {current_speaker.name}")
 
         # Return dict format for backward compatibility
         return [t.to_dict() for t in self.conversation_history]

@@ -311,7 +311,7 @@ class TestAzureLLM(TestJudgeLLMBase):
 
         # Verify metadata was extracted
         metadata = assert_metadata_structure(
-            llm, expected_provider="azure", expected_role="persona"
+            llm, expected_provider="azure", expected_role=Role.PERSONA
         )
         assert metadata["response_id"] == "chatcmpl-12345"
         assert metadata["model"] == "gpt-5.2"
@@ -570,7 +570,7 @@ class TestAzureLLM(TestJudgeLLMBase):
 
             # Verify metadata was stored
             metadata = assert_metadata_structure(
-                llm, expected_provider="azure", expected_role="persona"
+                llm, expected_provider="azure", expected_role=Role.PERSONA
             )
             # No model in the response, so this is the configured default.
             assert metadata["model"] == _DEFAULT_DEPLOYMENT
