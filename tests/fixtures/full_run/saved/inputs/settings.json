@@ -1,0 +1,26 @@
+{
+  "clients": {
+    "chatbot gpt-5.4-mini": {
+      "model_name": "gpt-5.4-mini",
+      "name": "gpt-5.4-mini"
+    },
+    "judge gpt-5.4": {
+      "model_name": "gpt-5.4",
+      "name": "Question Flow Evaluator",
+      "reasoning_effort": "low",
+      "temperature": 0
+    },
+    "user claude-opus-4-5-20251101": {
+      "model": "claude-opus-4-5-20251101",
+      "model_name": "claude-opus-4-5-20251101",
+      "name": "claude-opus-4-5-20251101 <persona>"
+    },
+    "user gpt-5.2": {
+      "model": "gpt-5.2",
+      "model_name": "gpt-5.2",
+      "name": "gpt-5.2 <persona>"
+    }
+  },
+  "frozen_from": "932d97237bad716a383fb2d231bdea868f6d6fd3",
+  "sample": 5
+}
