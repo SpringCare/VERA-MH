@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 from tests.mocks.mock_llm import MockLLM
-from vera_mh.llm_clients import Role
 from vera_mh.utils.debug import set_debug
 from vera_mh.utils.logging_utils import (
     cleanup_logger,
@@ -19,6 +18,7 @@ from vera_mh.utils.logging_utils import (
     log_llm_response_metadata,
     setup_conversation_logger,
 )
+from vera_mh.utils.role import Role
 
 
 @pytest.mark.unit

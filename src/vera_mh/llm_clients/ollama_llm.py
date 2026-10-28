@@ -5,9 +5,10 @@ from langchain_ollama import OllamaLLM as LangChainOllamaLLM
 
 from vera_mh.utils.conversation_utils import format_conversation_as_string
 from vera_mh.utils.debug import debug_print
+from vera_mh.utils.role import Role
 
 from .config import Config
-from .llm_interface import LLMInterface, Role
+from .llm_interface import LLMInterface
 
 
 class OllamaLLM(LLMInterface):

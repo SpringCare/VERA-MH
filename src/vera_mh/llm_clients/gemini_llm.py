@@ -9,11 +9,11 @@ from pydantic import BaseModel
 
 from vera_mh.utils.conversation_utils import build_langchain_messages
 from vera_mh.utils.debug import debug_print
+from vera_mh.utils.role import Role
 
 from .config import Config
 from .llm_interface import (
     JudgeLLM,
-    Role,
     ensure_pydantic_response,
     extract_structured_invoke_result,
 )

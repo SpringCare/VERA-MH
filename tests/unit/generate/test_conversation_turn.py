@@ -3,7 +3,7 @@
 from langchain_core.messages import AIMessage, HumanMessage
 
 from vera_mh.generate.conversation_turn import ConversationTurn
-from vera_mh.llm_clients import Role
+from vera_mh.utils.role import Role
 
 
 class TestConversationTurnCreation:

@@ -11,13 +11,12 @@ Provides unified interface for different LLM providers
 
 from .config import Config
 from .llm_factory import LLMFactory
-from .llm_interface import JudgeLLM, LLMGenerationFailed, LLMInterface, Role
+from .llm_interface import JudgeLLM, LLMGenerationFailed, LLMInterface
 
 __all__ = [
     "LLMInterface",
     "JudgeLLM",
     "LLMFactory",
     "Config",
-    "Role",
     "LLMGenerationFailed",
 ]

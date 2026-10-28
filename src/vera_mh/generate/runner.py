@@ -17,7 +17,7 @@ from datetime import datetime
 from typing import AbstractSet, Any, Dict, List, Optional, Tuple
 
 from vera_mh.llm_clients import LLMFactory
-from vera_mh.llm_clients.llm_interface import LLMGenerationFailed, Role
+from vera_mh.llm_clients.llm_interface import LLMGenerationFailed
 from vera_mh.utils.conversation_layout import resolve_conversation_input
 from vera_mh.utils.logging_utils import (
     cleanup_logger,
@@ -31,6 +31,7 @@ from vera_mh.utils.naming import (
     TRANSCRIPT_RUN_SUFFIX_RE,
     persona_token_for_transcript_stem,
 )
+from vera_mh.utils.role import Role
 
 from .conversation_simulator import ConversationSimulator
 from .utils import DEFAULT_USER_LANGUAGE, load_prompts_from_csv

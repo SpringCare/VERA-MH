@@ -87,8 +87,9 @@ from vera_mh.judge.answers import (
 )
 from vera_mh.judge.rubric_config import RubricConfig
 from vera_mh.llm_clients.llm_factory import LLMFactory
-from vera_mh.llm_clients.llm_interface import JudgeLLM, Role
+from vera_mh.llm_clients.llm_interface import JudgeLLM
 from vera_mh.utils.conversation_utils import format_conversation_summary
+from vera_mh.utils.role import Role
 from vera_mh.vera_cli import config as cli_config
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

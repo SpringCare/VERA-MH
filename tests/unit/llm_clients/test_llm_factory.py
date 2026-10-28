@@ -2,13 +2,13 @@ from unittest.mock import patch
 
 import pytest
 
-from vera_mh.llm_clients import Role
 from vera_mh.llm_clients.azure_llm import AzureLLM
 from vera_mh.llm_clients.claude_llm import ClaudeLLM
 from vera_mh.llm_clients.gemini_llm import GeminiLLM
 from vera_mh.llm_clients.llm_factory import LLMFactory
 from vera_mh.llm_clients.ollama_llm import OllamaLLM
 from vera_mh.llm_clients.openai_llm import OpenAILLM
+from vera_mh.utils.role import Role
 
 
 @pytest.fixture

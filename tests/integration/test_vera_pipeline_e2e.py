@@ -26,9 +26,9 @@ import pytest
 
 from tests.mocks.mock_llm import MockLLM
 from vera_mh import cli as vera
-from vera_mh.llm_clients import Role
 from vera_mh.llm_clients.config import Config
 from vera_mh.llm_clients.llm_factory import LLMFactory
+from vera_mh.utils.role import Role
 from vera_mh.vera_cli import config as cli_config
 
 # Read from Config so tests/integration/test_model_availability.py catches a

@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pydantic import BaseModel, Field
 
-from vera_mh.llm_clients import Role
 from vera_mh.llm_clients.azure_llm import AzureLLM
 from vera_mh.llm_clients.config import Config
 from vera_mh.llm_clients.llm_interface import LLMGenerationFailed
+from vera_mh.utils.role import Role
 
 from .test_base_llm import TestJudgeLLMBase
 from .test_helpers import (

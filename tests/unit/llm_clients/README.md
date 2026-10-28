@@ -67,8 +67,8 @@ from unittest.mock import patch
 
 import pytest
 
-from vera_mh.llm_clients import Role
 from vera_mh.llm_clients.my_provider_llm import MyProviderLLM
+from vera_mh.utils.role import Role
 
 from .test_base_llm import TestJudgeLLMBase
 from .test_helpers import (

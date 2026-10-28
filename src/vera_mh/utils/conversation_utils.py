@@ -6,8 +6,8 @@ from typing import Any, Dict, List, Optional
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
-from vera_mh.llm_clients.llm_interface import Role
 from vera_mh.utils.naming import add_timestamp_to_path
+from vera_mh.utils.role import Role
 
 from .debug import debug_print
 
