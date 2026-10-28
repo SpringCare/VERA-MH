@@ -341,9 +341,7 @@ class Seeder:
             )
         return found[0]
 
-    def text_reply(
-        self, key: tuple[str, str], role: Optional[Role], history: list
-    ) -> str:
+    def text_reply(self, key: tuple[str, str], role: Role, history: list) -> str:
         turns = self.saved.turns[key]
         sent = [(t["speaker"], t["response"]) for t in history if "speaker" in t]
         n = len(sent)
@@ -352,7 +350,7 @@ class Seeder:
         if n >= len(turns):
             raise self._fail(f"{key}: asked for turn {n + 1} of {len(turns)}")
         speaker, reply = turns[n]
-        if role is None or speaker != role.value:
+        if speaker != role.value:
             raise self._fail(f"{key}: turn {n + 1} belongs to {speaker}, not {role}")
         self.used_turns[key] = n + 1
         return reply
@@ -442,7 +440,7 @@ class SeedLLM(JudgeLLM):
     async def generate_response(self, conversation_history=None) -> str:
         sent = what_the_model_sees(conversation_history)
         self._set_response_metadata("replay")
-        reply = self.seeder.text_reply(self.key, self.role, sent or [])
+        reply = self.seeder.text_reply(self.key, self.conversation_role(), sent or [])
         call = describe_call(self.model_name, self.system_prompt, "text", sent)
         self.seeder.record(call, reply)
         return reply

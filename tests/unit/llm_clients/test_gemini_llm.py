@@ -282,7 +282,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
 
         # Verify metadata extraction
         metadata = assert_metadata_structure(
-            llm, expected_provider="gemini", expected_role="persona"
+            llm, expected_provider="gemini", expected_role=Role.USER
         )
         assert metadata["response_id"] == "gemini-12345"
         assert metadata["model"] == "gemini-1.5-pro-001"
@@ -795,9 +795,7 @@ class TestGeminiLLM(TestJudgeLLMBase):
             )
 
             # Verify metadata was stored
-            metadata = assert_metadata_structure(
-                llm, expected_provider="gemini", expected_role="judge"
-            )
+            metadata = assert_metadata_structure(llm, expected_provider="gemini")
             # No model in the response, so this is the configured default.
             assert metadata["model"] == Config.DEFAULT_GEMINI_MODEL
             assert metadata["structured_output"] is True

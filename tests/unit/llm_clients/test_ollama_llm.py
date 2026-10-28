@@ -105,7 +105,7 @@ class TestOllamaLLM(TestLLMBase):
             metadata = assert_metadata_structure(
                 llm,
                 expected_provider=self.get_provider_name(),
-                expected_role="provider",
+                expected_role=Role.CHATBOT,
             )
 
             assert "timestamp" in metadata
@@ -631,7 +631,7 @@ class TestOllamaLLM(TestLLMBase):
 
         # Verify metadata was extracted
         metadata = assert_metadata_structure(
-            llm, expected_provider="ollama", expected_role="provider"
+            llm, expected_provider="ollama", expected_role=Role.CHATBOT
         )
         assert metadata["response_id"] is None
         assert metadata["model"] == "llama3:8b"
@@ -710,7 +710,7 @@ class TestOllamaLLM(TestLLMBase):
 
         # Verify all expected fields are present using helper
         assert_metadata_structure(
-            llm, expected_provider="ollama", expected_role="provider"
+            llm, expected_provider="ollama", expected_role=Role.CHATBOT
         )
 
         # Verify field types

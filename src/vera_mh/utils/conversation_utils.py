@@ -161,7 +161,7 @@ def apply_persona_role_reminder(
 
 
 def build_langchain_messages(
-    role: Optional[Role],
+    role: Role,
     conversation_history: Optional[List[Dict[str, Any]]] = None,
 ) -> List[BaseMessage]:
     """
@@ -171,7 +171,7 @@ def build_langchain_messages(
         conversation_history: Optional list of previous conversation turns.
             Each turn is a dict with keys: 'turn', 'speaker', 'response'.
             Turn 0 contains the initial message with speaker="system".
-        role: Optional role of the LLM (Role.USER, Role.CHATBOT, or None).
+        role: Role of the LLM (Role.USER or Role.CHATBOT).
             Messages from the same role are converted to AIMessage (what "I"
             said), messages from the other role are converted to HumanMessage
             (what "they" said).
@@ -231,7 +231,7 @@ def build_langchain_messages(
 
 
 def format_conversation_as_string(
-    role: Optional[Role],
+    role: Role,
     conversation_history: Optional[List[Dict[str, Any]]] = None,
     system_prompt: Optional[str] = None,
 ) -> str:
@@ -242,7 +242,7 @@ def format_conversation_as_string(
     a string format with Human/Assistant labels.
 
     Args:
-        role: Role of the LLM (Role.USER, Role.CHATBOT, or None)
+        role: Role of the LLM (Role.USER or Role.CHATBOT)
         conversation_history: Optional list of previous conversation turns
         system_prompt: Optional system prompt to prepend
 

@@ -106,7 +106,7 @@ class TestEndpointLLM(TestLLMBase):
         metadata = assert_metadata_structure(
             llm,
             expected_provider=self.get_provider_name(),
-            expected_role="provider",
+            expected_role=Role.CHATBOT,
         )
         assert "timestamp" in metadata
         assert_iso_timestamp(metadata["timestamp"])

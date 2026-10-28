@@ -180,7 +180,9 @@ class EndpointLLM(LLMInterface):
         if not conversation_history or len(conversation_history) == 0:
             return await self.start_conversation()
 
-        messages = build_langchain_messages(self.role, conversation_history)
+        messages = build_langchain_messages(
+            self.conversation_role(), conversation_history
+        )
         last_message = messages[-1].text  # no system_prompt in payload by design
 
         async def _invoke() -> str:
