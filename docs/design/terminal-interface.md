@@ -1,6 +1,6 @@
 # What `vera` shows while it runs
 
-**Status:** draft for discussion. Builds on the event stream in [job-loop.md](./job-loop.md) (decision 4) and the run record in [run-lifecycle.md](./run-lifecycle.md).
+**Status:** draft for discussion. Builds on the event stream in the job-loop design ([#266](https://github.com/SpringCare/VERA-MH/pull/266), `docs/design/job-loop.md`, decision 4) and the run record in the run-lifecycle design ([#268](https://github.com/SpringCare/VERA-MH/pull/268), `docs/design/run-lifecycle.md`); both are still in review.
 
 ## Problem
 
@@ -39,13 +39,13 @@ FileNotFoundError: No .txt files found in: output/p_gpt_5_2__a_<chatbot model>__
 | A person debugging | log files in the run folder | Everything: client settings, raw calls, retries, tracebacks (per-job logs already exist) |
 | A script or notebook | `events.jsonl` in the run folder | One JSON line per event, the same events the display shows |
 
-**Domain code stops printing.** Generation, judging, and scoring emit events to a reporter (job-loop.md, decision 4); the reporter decides what to show. Client setup details (`Creating OpenAI LLM with parameters…`) and worker chatter go to the log files, not stdout.
+**Domain code stops printing.** Generation, judging, and scoring emit events to a reporter (job-loop design, [#266](https://github.com/SpringCare/VERA-MH/pull/266), decision 4); the reporter decides what to show. Client setup details (`Creating OpenAI LLM with parameters…`) and worker chatter go to the log files, not stdout.
 
 ## What it looks like
 
 ### Start of run
 
-The 40-line config dump becomes a header. The full resolved config is written to the run folder (`config.json`, run-lifecycle.md) and still shown by `--print`.
+The 40-line config dump becomes a header. The full resolved config is written to the run folder (`config.json`, run-lifecycle design, [#268](https://github.com/SpringCare/VERA-MH/pull/268)) and still shown by `--print`.
 
 ```
 vera pipeline | SI | Mexican Spanish
@@ -99,7 +99,7 @@ The run stops at the stage that broke, names the cause once, and exits non-zero.
 ### End of run
 
 ```
-Done in 1:52:40 | 198 conversations | 1 failed (rerun with --into to finish it)
+Done in 1:52:40 | 198 conversations | 1 failed (rerun with: vera pipeline --into output/SI/...)
 Tokens: generate 6.2M, judge 11.4M | est. cost $51.30
 
                    conversations   VERA   Best practice   Harm
@@ -131,7 +131,7 @@ Tokens: generate 6.2M, judge 11.4M | est. cost $51.30
 1. **Events and a reporter interface, built into the job loop** (#266): job started, job finished, job failed, turn started (user/chatbot), judge question asked, stage finished, with token usage on each finished call. Each stage gets them as it moves onto the loop, so no hooks are added to the runners the loop deletes.
 2. **Plain-line reporter, `events.jsonl`, fail-fast, and the end summary.** This alone fixes buffering, the buried cause, and the missing summary, and works without a terminal.
 3. **Move the ~290 `print()` calls to logging or events.** Mechanical, package by package; client setup and worker chatter go to the log files.
-4. **The live terminal display**, using [rich](https://github.com/Textualize/rich) (`Progress`, `Live`, `Table`; it detects terminals and degrades to plain lines itself).
+4. **The live terminal display**, using [rich](https://github.com/Textualize/rich) (`Progress`, `Live`, `Table`), in a terminal only. When stdout isn't a terminal, the plain-line reporter from step 2 stays in charge: rich's `Live` doesn't turn updates into lines there, it shows only its final frame, which would bring back the silent-until-finished output under `| tee`.
 
 Steps 1 and 2 land with the loop: its first PR ships the plain-line reporter and `events.jsonl`, so each stage is readable under `| tee` and in CI as soon as it runs on the loop. Steps 3 and 4 follow, each its own PR.
 
@@ -145,3 +145,4 @@ Settled in review on #271.
    - **First Ctrl-C** stops starting new jobs and cancels the running ones, keeps everything already finished, prints the `--into` command that resumes the run, and exits with 130 (the shell's code for an interrupt). It doesn't wait for running jobs to finish: a 30-turn conversation can take minutes, and `--into` reruns an unfinished conversation from the start anyway, so waiting buys nothing.
    - **A second Ctrl-C** exits immediately.
 4. **ASCII only, for now.** No emoji or other Unicode symbols on stdout: `#`/`.` progress bars, `FAIL` instead of a cross, `|` as a separator, `...` instead of an ellipsis. Output reads the same in every terminal, CI log, and file.
+5. **Resuming a pipeline needs `vera pipeline --into`.** Today only `generate` and `judge` take `--into`. The end summary and the Ctrl-C message print the command that resumes the run, so for `vera pipeline` that command has to exist first. It comes with the pipeline's single job list (#266): the run's `config.json` fixes every job, so resuming the pipeline is the same skip-what's-done as for `generate` and `judge`, followed by scoring and pooling. Until then, a pipeline's summary prints the `generate --into` and `judge --into` commands for each unfinished run folder.
