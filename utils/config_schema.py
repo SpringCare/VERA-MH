@@ -184,6 +184,7 @@ class GenerationConfig:
     persona_speaks_first: bool
     sessions: list[str] | None
     persona_context_template: str
+    user_language: str
 
     def __post_init__(self) -> None:
         if self.chatbot.repeats != 1:
@@ -229,6 +230,8 @@ class GenerationConfig:
                 )
         if not self.persona_context_template:
             raise ValueError("generation.persona_context_template is required")
+        if not isinstance(self.user_language, str) or not self.user_language.strip():
+            raise ValueError("generation.user_language must be a non-empty string")
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -242,6 +245,7 @@ class GenerationConfig:
             "persona_speaks_first": self.persona_speaks_first,
             "sessions": list(self.sessions) if self.sessions is not None else None,
             "persona_context_template": self.persona_context_template,
+            "user_language": self.user_language,
         }
 
 

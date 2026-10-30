@@ -25,13 +25,13 @@ from typing import Any
 
 import pandas as pd
 
-from judge.score_utils import ensure_results_csv
 from score.aggregate import (
     print_scores,
     save_results_json,
     score_results,
     score_results_by_risk,
 )
+from score.utils import ensure_results_csv
 from score.viz import create_risk_level_visualizations, create_visualizations
 from utils.naming import parse_generation_run_folder_name
 
@@ -120,7 +120,7 @@ def _persona_slug_for_pool(source_eval_dirs: list[Path]) -> str:
 
 def _judge_slug_from_dataframe(df: Any) -> str:
     """
-    Build a judge segment like ``gpt-5.4x1`` or ``gpt-4ox2+claude-sonnet-4-5x1``.
+    Build a judge segment like ``gpt-5.4x1`` or ``gpt-5.4x2+claude-sonnet-5x1``.
 
     Matches ``judge.py`` / ``judge.runner`` folder naming (``modelx<count>`` per
     judge). Multiple judges are joined with ``+`` (stable sorted order).
@@ -326,7 +326,7 @@ def run_pooling(
         personas_tsv: Personas file for risk-level analysis, or None to skip that
             step, as in `score.run.run_scoring`.
         skip_risk_analysis: When True, skip ``score_results_by_risk`` and risk charts.
-        judge_slug: Optional override for the judge name (e.g. ``gpt-4ox1+sonnet45x1``).
+        judge_slug: Optional override for the judge name (e.g. ``gpt-5.4x1+sonnet5x1``).
 
     Returns:
         Path to the synthetic evaluation folder (``results.csv`` and ``scores/``).
@@ -395,10 +395,7 @@ def run_pooling(
     print_scores(results)
 
     viz_path = out_eval / "scores" / "scores_visualization.png"
-    try:
-        create_visualizations(results, viz_path)
-    except Exception as e:
-        print(f"Warning: could not create standard visualizations: {e}")
+    create_visualizations(results, viz_path)
 
     if not skip_risk_analysis:
         if personas_tsv is None:

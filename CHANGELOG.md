@@ -4,28 +4,59 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Runtime, CLI, and pipeline
+
+- **A `vera` command**—`uv sync` now installs a `vera` command, so `uv run vera …` (or `vera …` in an activated environment) works from anywhere in the repository; `uv run python vera.py …` still works. Generation now finds its shared prompt files relative to the repository instead of the working directory. The Docker image installs the command and runs it by default; its previous `CMD` used the system Python, which lacked the dependencies.
+- **User-side language**—`vera generate --user-language <language>` (config: `generation.user_language`, now required in config files) has the user-side LLM write in that language. Non-English adds one line to the persona prompt; English, the default, leaves the prompt unchanged.
+
+### Testing and CI
+
+- **PRs need a CHANGELOG entry**—A new check fails a pull request that doesn't change `CHANGELOG.md`. Changes nobody would notice, such as a typo fix or a refactor with no import or behavior change, take the `no-changelog` label instead. `/create-pr` now drafts the entry, or adds the label, before opening the PR.
+- **Guards against changed scores**—Unit tests pin results with fixed inputs, so a code change can't move scores unnoticed. One per stage: golden persona prompts and a replay of recorded user and chatbot replies (generate), scripted answers walking the SI rubric (judge), and golden `scores.json` files (score); plus a replay of the whole recorded pipeline. None calls a model. See [docs/safe-changes.md](docs/safe-changes.md).
+
+### Documentation and development workflow
+
+- **Release 2.1 plan**—[`docs/roadmap.md`](docs/roadmap.md#release-21-plan) lists the steps for 2.1 in dependency order with their PRs: safety net, data contracts, job loop, terminal output, then removing `legacy/`, with the judge-flow rewrite in parallel. They accumulate on a `release/2.1` branch that merges into `main` once, at the 2.1.0 tag, so `main` stays releasable; CI now also runs for `release/2.1`.
+
+## [v2.0.4](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.4) \- 2026-10-20
+
 ### Breaking / migration
 
+- **Last release with the legacy scripts**—2.0.4 is the last release that ships [`legacy/`](legacy/) (`legacy.generate`, `legacy.judge`, `legacy.score`, `legacy.run_pipeline`, `legacy.pool_vera_scores`, `run_recommended_vera_pipeline.sh`). 2.1.0 removes them; move to the `vera` commands before upgrading. [`docs/legacy-scripts.md`](docs/legacy-scripts.md) maps each script's flags to `vera`.
+- **`utils.model_config_loader` removed**—`load_model_config`, `get_model_for_prompt`, and the root `model_config.json` (which listed retired Claude 3 and GPT-4 IDs) are gone; nothing in the repo used them. Model defaults live in `llm_clients/config.py`.
+- **Scoring helpers left `judge/`**—`judge/score_utils.py` and `judge/constants.py` are gone. The rating labels (`BEST_PRACTICE`, `NEUTRAL`, `DAMAGING`, `NOT_RELEVANT`) are in `utils/ratings.py`; parsing judge TSVs and rebuilding `results.csv` (plus `DIMENSIONS`, `load_rubric_structure`, `load_persona_column`, `extract_persona_name_from_filename`) is in `utils/judge_results.py`; score math, risk levels, `ensure_results_csv`, and `extract_model_names_from_path` are in `score/utils.py`. `add_persona_columns_to_dataframe` moved to `judge/utils.py`. Update imports; there are no re-export shims.
+- **Comparison chart moved**—`python -m judge.score_comparison` is now `python -m score.compare`. `judge/score_comparison_from_export_summary.py` was deleted: nothing called it and its input script isn't in the repo.
 - **Pool script moved to [`legacy/`](legacy/)**—`scripts/pool_vera_scores.py` is now `legacy/pool_vera_scores.py`; run it as `uv run python -m legacy.pool_vera_scores`. Its flags and defaults are unchanged. Prefer `vera pool`.
 - **`generate.main` is now `generate.run`**—The generation entry module follows the package naming convention. `from generate import run_generation` is unchanged; update direct imports and `patch()` targets that name `generate.main`.
 
 ### Runtime, CLI, and pipeline
 
+- **Comparison chart text**—`python -m score.compare` no longer says "suicide risk" (the subtitle reads "Scores indicate how well models detect and respond to risk", the header bar "Safety measures"), and long dimension names in its column headers wrap onto two lines instead of running into each other. Numbers, colors, and CSV columns are unchanged.
+- **Chart failures are errors**—If a score chart can't be drawn, `vera score` and `vera pool` now fail instead of printing a warning and carrying on, so a broken chart can't go unnoticed. The optional risk-level chart still only warns.
 - **`vera pipeline` ends with the pooled score**—With more than one user model, the pipeline now pools the per-model evaluations and prints `Headline (pooled) score: <folder>`, using the `scoring` section's personas settings and writing under `generation.output`. It used to print the folders and leave pooling to you.
 - **Pooling checks rubrics**—`vera pool` and the pipeline refuse to pool evaluations whose dimension columns differ, since scores from different rubrics aren't comparable.
 - **`vera pool`**—Merges two or more judge evaluations into one scored result (`vera pool --evaluations <a> <b>`), replacing the pool script. Pooling now lives in [`score/pool.py`](score/pool.py) (`from score import run_pooling`). Like `vera score`, it skips the risk breakdown unless `--personas` is given.
 
 ### Testing and CI
 
+- **Cheap-tier models on `Config`**—The live end-to-end test reads its models from `Config.CHEAP_*`, and `test_model_availability.py` now checks those IDs too, so a retirement fails the availability check instead of partway through a run.
+- **Score charts checked**—The `vera score` tests now check that `scores_visualization.png` and `scores_by_risk_visualization.png` are written. The chart code itself was consolidated (one stacked-bar function instead of four copies) and renders byte-identical images.
+- **Import contracts**—CI runs `lint-imports` and fails if `judge/` and `score/` import each other, or if `score/` imports `llm_clients/` (`[tool.importlinter]` in `pyproject.toml`). `utils/__init__.py` no longer imports its submodules, so `import score` loads neither the judge nor the LLM stack; a unit test checks this in a fresh interpreter.
 - **Pyright gate**—CI now fails on type errors in `generate/`, `score/`, `utils/`, `vera_cli/`, and `vera.py`, which have none today. The full-repo pyright run still reports without failing.
 
 ### Documentation and development workflow
 
 - **Terminal-interface proposal**—[`docs/design/terminal-interface.md`](docs/design/terminal-interface.md) outlines progress reporting, event logs, run summaries, verbosity, and interruption handling. This is a draft design, not an implemented CLI change.
+- **Current model IDs in examples**—README, AGENTS.md, and `docs/` no longer use `gpt-4o` or `claude-sonnet-4-5-20250929`, and the `-u gpt:1` / `-c sonnet` short forms (which never resolved; there is no alias table) are full IDs.
+- **Create your own evaluation**—[`docs/create-an-evaluation.md`](docs/create-an-evaluation.md) is a short walkthrough for writing a new target: how to change the personas and the rubric, then run and validate it. Linked from the README.
+- **How to read a rubric**—[`docs/reading-a-rubric.md`](docs/reading-a-rubric.md) explains, for readers rather than rubric authors, the structure every VERA-MH rubric shares (in-scope check, five dimensions, the risk level that picks which Guides to Human Care items apply), how answers become ratings, and the rubric file's columns, with the matching SI and HFO question IDs. Linked from `docs/targets.md` and `docs/judge.md`.
 - **Wider maintainer review**—[`.github/CODEOWNERS`](.github/CODEOWNERS) now also covers `score/`, `vera_cli/`, `vera.py`, `utils/`, `scripts/`, `.github/`, and `docs/roadmap.md`, and [`AGENTS.md`](AGENTS.md) asks agents not to change public signatures or unrelated files unless the task calls for it.
 
 ### Fixed
 
+- **Legacy live tests run again**—`tests/integration/test_scoring.py` had been unable to start any legacy script since the scripts moved to `legacy/`: its commands ran `uv run python3 python -m legacy.…` (one interpreter too many), two tests imported `run_pipeline` instead of `legacy.run_pipeline`, and their fake `sys.argv` passed `-m legacy.run_pipeline` to the script's own argument parser. The file only runs in the manual full live suite, so nothing caught it.
+- **Judging with `max_concurrent=0`**—Judging now treats `max_concurrent=0` as no limit, as generation does. It used to start no workers and judge nothing (#261).
+- **SI rubric renders on GitHub**—Every row of [`data/SI/rubric.tsv`](data/SI/rubric.tsv) now has the header's 11 columns (most rows lacked the trailing `Auto Answer` cell), line endings are LF throughout, and cells containing double quotes use standard CSV quoting, which GitHub's strict parser requires. No cell content changed; the judge parses the file identically.
 - **Recommended pipeline pooling**—[`legacy/run_recommended_vera_pipeline.sh`](legacy/run_recommended_vera_pipeline.sh) runs its pooling step again: it looked for the pool script next to itself after moving to `legacy/`, where the script was not yet. It now runs `python -m legacy.pool_vera_scores`.
 
 ### Documentation and development workflow

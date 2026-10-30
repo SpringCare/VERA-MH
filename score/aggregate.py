@@ -12,28 +12,23 @@ from typing import Any, Dict, Optional, Tuple
 
 import pandas as pd
 
-from judge.constants import (
-    BEST_PRACTICE,
+from score.utils import (
     BEST_PRACTICE_KEY,
-    DAMAGING,
     DAMAGING_KEY,
-    NEUTRAL,
     NEUTRAL_KEY,
-    NOT_RELEVANT,
     NOT_RELEVANT_KEY,
-)
-from judge.score_utils import (
-    DIMENSIONS,
     RISK_LEVEL_ORDER,
     add_risk_levels_to_dataframe,
     calculate_dimension_scores,
     calculate_overall_percentages,
     calculate_vera_score,
     ensure_results_csv,
+    extract_model_names_from_path,
     pct_of_total,
     read_judge_results_csv,
 )
-from judge.utils import extract_model_names_from_path
+from utils.judge_results import DIMENSIONS
+from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT
 
 # Map option names to shorter keys for analysis
 OPTION_MAP = {

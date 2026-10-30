@@ -20,6 +20,7 @@ from utils.naming import (
 )
 
 from .runner import ConversationRunner
+from .utils import DEFAULT_USER_LANGUAGE
 
 
 async def run_generation(
@@ -42,6 +43,7 @@ async def run_generation(
     session_types: Optional[List[str]],
     resume: bool,
     persona_context_template_path: str,
+    user_language: str = DEFAULT_USER_LANGUAGE,
 ) -> tuple[List[Dict[str, Any]], str]:
     """Generate conversations from already-resolved runtime values."""
     if verbose:
@@ -59,6 +61,7 @@ async def run_generation(
         print(f"  - Max total words: {max_total_words}")
         print(f"  - Max personas: {max_personas}")
         print(f"  - Persona speaks first: {persona_speaks_first}")
+        print(f"  - User language: {user_language}")
         print(f"  - Resume: {resume}")
 
     if not persona_files:
@@ -135,6 +138,7 @@ async def run_generation(
         resume=resume,
         persona_prompt_path=persona_prompt_path,
         persona_context_template_path=persona_context_template_path,
+        user_language=user_language,
     )
     results = await runner.run_conversations(persona_names=persona_names)
 
@@ -208,6 +212,7 @@ async def run_for_user_models(
             session_types=generation.sessions,
             resume=into is not None,
             persona_context_template_path=generation.persona_context_template,
+            user_language=generation.user_language,
         )
         run_folders.append(run_folder)
     return run_folders

@@ -39,6 +39,7 @@ def _generation_config(**overrides: object) -> dict:
         "max_concurrent": None,
         "max_total_words": None,
         "persona_speaks_first": True,
+        "user_language": "English",
         "sessions": None,
         "persona_context_template": "data/SI/persona_context_template.txt",
     }

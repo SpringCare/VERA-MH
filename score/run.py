@@ -14,18 +14,15 @@ import traceback
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-from judge.score_utils import (
-    build_dataframe_from_tsv_files,
-    has_dimension_data,
-    read_judge_results_csv,
-)
 from score.aggregate import (
     print_scores,
     score_results,
     score_results_by_risk,
     scores_output_dir,
 )
+from score.utils import has_dimension_data, read_judge_results_csv
 from score.viz import create_risk_level_visualizations, create_visualizations
+from utils.judge_results import build_dataframe_from_tsv_files
 
 
 def _rebuild_dataframe_if_needed(results_csv_path: Path) -> bool:
@@ -127,11 +124,7 @@ def run_scoring(
     json_path = Path(output_json) if output_json else scores_dir / "scores.json"
     print(f"\n✅ Scores saved to: {json_path}")
 
-    viz_path = scores_dir / "scores_visualization.png"
-    try:
-        create_visualizations(results, viz_path)
-    except Exception as e:
-        print(f"⚠️  Warning: Could not create standard visualizations: {e}")
+    create_visualizations(results, scores_dir / "scores_visualization.png")
 
     if skip_risk_analysis:
         return results, scores_dir

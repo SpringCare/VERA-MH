@@ -10,11 +10,9 @@ import pandas as pd
 import pytest
 
 from judge.runner import _annotate_with_personas
-from judge.score_utils import (
-    add_persona_columns_to_dataframe,
-    load_persona_column,
-    load_personas_risk_levels,
-)
+from judge.utils import add_persona_columns_to_dataframe
+from score.utils import load_personas_risk_levels
+from utils.judge_results import load_persona_column
 
 # Two targets with deliberately different persona schemas: the point of the
 # generic loader is that neither column name is privileged in code.
