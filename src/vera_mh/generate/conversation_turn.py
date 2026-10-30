@@ -19,7 +19,7 @@ class ConversationTurn:
 
     Attributes:
         turn (int): Sequential turn number (1-indexed).
-        speaker (Role): Role identifier of the speaker (Role.PERSONA or Role.PROVIDER).
+        speaker (Role): Role identifier of the speaker (Role.USER or Role.CHATBOT).
         input_message (Optional[str]): The message string that prompted the
             response_message, or None if the response did not come from a prompt.
         response_message (BaseMessage): The LangChain message object
@@ -77,9 +77,9 @@ class ConversationTurn:
         Otherwise, it's a HumanMessage (what "they" said) for the requested role.
 
         For example:
-        If the requested for_role is Role.PERSONA, and speaker is Role.PROVIDER,
+        If the requested for_role is Role.USER, and speaker is Role.CHATBOT,
         then the message is a HumanMessage (what "they" said).
-        If the requested for_role is Role.PROVIDER, and speaker is Role.PROVIDER,
+        If the requested for_role is Role.CHATBOT, and speaker is Role.CHATBOT,
         then the message is an AIMessage (what "I" said).
 
         Args:

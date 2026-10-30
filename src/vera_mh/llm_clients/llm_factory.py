@@ -28,7 +28,7 @@ class LLMFactory:
                 (e.g., "claude-sonnet-5", "gpt-5.4")
             name: Display name for this LLM instance
             system_prompt: Optional system prompt
-            role: Role of the LLM (Role.PERSONA, Role.PROVIDER), or None for a judge
+            role: Role of the LLM (Role.USER, Role.CHATBOT), or None for a judge
             **kwargs: Additional model-specific parameters
                 (temperature, max_tokens, etc.)
 

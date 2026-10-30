@@ -222,7 +222,7 @@ class TestConversationRunnerInit:
                 run_number=1,
             )
 
-        agent_calls = [c for c in create_llm_calls if c.get("role") == Role.PROVIDER]
+        agent_calls = [c for c in create_llm_calls if c.get("role") == Role.CHATBOT]
         assert len(agent_calls) == 1
         assert agent_calls[0]["system_prompt"] == custom_prompt
 
@@ -269,7 +269,7 @@ class TestConversationRunnerInit:
                 run_number=1,
             )
 
-        agent_calls = [c for c in create_llm_calls if c.get("role") == Role.PROVIDER]
+        agent_calls = [c for c in create_llm_calls if c.get("role") == Role.CHATBOT]
         assert len(agent_calls) == 1
         assert agent_calls[0]["system_prompt"] == default_prompt
 
@@ -371,8 +371,8 @@ class TestConversationRunnerSingle:
 
         conv = result["sessions"][0]["conversation"]
         assert len(conv) == 3
-        assert conv[0]["speaker"] == "provider"
-        assert conv[-1]["speaker"] == "provider"
+        assert conv[0]["speaker"] == "chatbot"
+        assert conv[-1]["speaker"] == "chatbot"
 
     async def test_run_single_conversation_logging(
         self,
@@ -1023,13 +1023,13 @@ class TestConversationRunnerMultiple:
 
         agent_mock = MockLLM(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["reply"] * 10,
             model_name="mock-agent-model",
         )
         persona_mock = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["hi"] * 10,
             model_name="mock-persona-model",
         )
@@ -1535,13 +1535,13 @@ class TestMultiSessionRunner:
         conv_folder = tmp_path / "conversations"
         tracking_agent = SessionTrackingAgent(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["reply"] * 10,
             model_name="mock-agent-model",
         )
         persona_mock = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["hi"] * 10,
             model_name="mock-persona-model",
         )
@@ -1587,13 +1587,13 @@ class TestMultiSessionRunner:
         conv_folder = tmp_path / "conversations"
         tracking_agent = SessionTrackingAgent(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["reply"] * 10,
             model_name="mock-agent-model",
         )
         persona_mock = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["hi"] * 10,
             model_name="mock-persona-model",
         )
@@ -1642,14 +1642,14 @@ class TestMultiSessionRunner:
         # Agent prepends "intake" to any session list
         tracking_agent = SessionTrackingAgent(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["reply"] * 10,
             model_name="mock-agent-model",
             extra_sessions=["intake"],
         )
         persona_mock = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["hi"] * 10,
             model_name="mock-persona-model",
         )
@@ -1700,14 +1700,14 @@ class TestMultiSessionRunner:
         conv_folder = tmp_path / "conversations"
         tracking_agent = SessionTrackingAgent(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["provider opening"] + ["reply"] * 10,
             model_name="mock-agent-model",
-            first_speaker_role=Role.PROVIDER,
+            first_speaker_role=Role.CHATBOT,
         )
         persona_mock = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["persona reply"] * 10,
             model_name="mock-persona-model",
         )
@@ -1744,7 +1744,7 @@ class TestMultiSessionRunner:
             )
 
         # Despite persona_speaks_first=True, agent.first_speaker=PROVIDER wins
-        assert result["sessions"][0]["conversation"][0]["speaker"] == "provider"
+        assert result["sessions"][0]["conversation"][0]["speaker"] == "chatbot"
 
     async def test_session_suffix_in_filenames_when_session_types_set(
         self,
@@ -1756,13 +1756,13 @@ class TestMultiSessionRunner:
         conv_folder = tmp_path / "conversations"
         agent_mock = MockLLM(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["reply"] * 10,
             model_name="mock-agent-model",
         )
         persona_mock = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["hi"] * 10,
             model_name="mock-persona-model",
         )
@@ -1813,13 +1813,13 @@ class TestMultiSessionRunner:
         conv_folder = tmp_path / "conversations"
         agent_mock = MockLLM(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["reply"] * 20,
             model_name="mock-agent-model",
         )
         persona_mock = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["hi"] * 20,
             model_name="mock-persona-model",
         )

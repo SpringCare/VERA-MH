@@ -111,7 +111,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         """Test that missing AZURE_API_KEY raises ValueError."""
         with patch("vera_mh.llm_clients.azure_llm.Config.AZURE_API_KEY", None):
             with pytest.raises(ValueError) as exc_info:
-                AzureLLM(name="TestAzure", role=Role.PERSONA)
+                AzureLLM(name="TestAzure", role=Role.USER)
 
             assert "AZURE_API_KEY not found" in str(exc_info.value)
 
@@ -122,13 +122,13 @@ class TestAzureLLM(TestJudgeLLMBase):
             patch("vera_mh.llm_clients.azure_llm.Config.AZURE_API_KEY", "test-key"),
         ):
             with pytest.raises(ValueError) as exc_info:
-                AzureLLM(name="TestAzure", role=Role.PERSONA)
+                AzureLLM(name="TestAzure", role=Role.USER)
 
             assert "AZURE_ENDPOINT not found" in str(exc_info.value)
 
     def test_init_with_default_model(self):
         """Test initialization with default model from config."""
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA, system_prompt="Test prompt")
+        llm = AzureLLM(name="TestAzure", role=Role.USER, system_prompt="Test prompt")
 
         assert llm.name == "TestAzure"
         assert llm.system_prompt == "Test prompt"
@@ -138,7 +138,7 @@ class TestAzureLLM(TestJudgeLLMBase):
     def test_init_with_custom_model(self):
         """Test initialization with custom model name instead of config default."""
         llm = AzureLLM(
-            name="TestAzure", role=Role.PERSONA, model_name="azure-some-made-up-model"
+            name="TestAzure", role=Role.USER, model_name="azure-some-made-up-model"
         )
 
         assert llm.model_name == "some-made-up-model"  # azure- prefix should be removed
@@ -150,7 +150,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         ) as mock_model:
             AzureLLM(
                 name="TestAzure",
-                role=Role.PERSONA,
+                role=Role.USER,
                 temperature=0.5,
                 max_tokens=500,
                 top_p=0.9,
@@ -173,7 +173,7 @@ class TestAzureLLM(TestJudgeLLMBase):
                 "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
             ) as mock_model,
         ):
-            llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+            llm = AzureLLM(name="TestAzure", role=Role.USER)
 
             assert llm.api_version == "2024-05-01-preview"
             call_kwargs = mock_model.call_args[1]
@@ -187,7 +187,7 @@ class TestAzureLLM(TestJudgeLLMBase):
                 "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
             ) as mock_model,
         ):
-            llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+            llm = AzureLLM(name="TestAzure", role=Role.USER)
 
             assert llm.api_version == AzureLLM.DEFAULT_API_VERSION
             call_kwargs = mock_model.call_args[1]
@@ -204,7 +204,7 @@ class TestAzureLLM(TestJudgeLLMBase):
                 "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
             ) as mock_model,
         ):
-            llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+            llm = AzureLLM(name="TestAzure", role=Role.USER)
 
             assert llm.endpoint == "https://test.openai.azure.com"
             call_kwargs = mock_model.call_args[1]
@@ -221,7 +221,7 @@ class TestAzureLLM(TestJudgeLLMBase):
                 "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
             ) as mock_model,
         ):
-            llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+            llm = AzureLLM(name="TestAzure", role=Role.USER)
 
             assert llm.endpoint == "https://test.services.ai.azure.com/models"
             call_kwargs = mock_model.call_args[1]
@@ -240,7 +240,7 @@ class TestAzureLLM(TestJudgeLLMBase):
                 "vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"
             ) as mock_model,
         ):
-            llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+            llm = AzureLLM(name="TestAzure", role=Role.USER)
 
             assert llm.endpoint == "https://test.services.ai.azure.com/models"
             call_kwargs = mock_model.call_args[1]
@@ -258,7 +258,7 @@ class TestAzureLLM(TestJudgeLLMBase):
             patch("vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"),
         ):
             with pytest.raises(ValueError) as exc_info:
-                AzureLLM(name="TestAzure", role=Role.PERSONA)
+                AzureLLM(name="TestAzure", role=Role.USER)
 
             assert "must start with 'https://'" in str(exc_info.value)
 
@@ -272,7 +272,7 @@ class TestAzureLLM(TestJudgeLLMBase):
             patch("vera_mh.llm_clients.azure_llm.AzureAIChatCompletionsModel"),
         ):
             with pytest.raises(ValueError) as exc_info:
-                AzureLLM(name="TestAzure", role=Role.PERSONA)
+                AzureLLM(name="TestAzure", role=Role.USER)
 
             assert "must match expected patterns" in str(exc_info.value)
             assert ".openai.azure.com" in str(exc_info.value)
@@ -302,7 +302,7 @@ class TestAzureLLM(TestJudgeLLMBase):
 
         llm = AzureLLM(
             name="TestAzure",
-            role=Role.PERSONA,
+            role=Role.USER,
             system_prompt="You are a helpful assistant.",
         )
         response = await llm.generate_response(conversation_history=mock_system_message)
@@ -311,7 +311,7 @@ class TestAzureLLM(TestJudgeLLMBase):
 
         # Verify metadata was extracted
         metadata = assert_metadata_structure(
-            llm, expected_provider="azure", expected_role=Role.PERSONA
+            llm, expected_provider="azure", expected_role=Role.USER
         )
         assert metadata["response_id"] == "chatcmpl-12345"
         assert metadata["model"] == "gpt-5.2"
@@ -338,7 +338,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_azure_model.return_value = mock_llm
 
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA, system_prompt="Test")
+        llm = AzureLLM(name="TestAzure", role=Role.USER, system_prompt="Test")
         response = await llm.start_conversation()
 
         assert response == "Response"
@@ -363,7 +363,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_azure_model.return_value = mock_llm
 
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA)  # No system prompt
+        llm = AzureLLM(name="TestAzure", role=Role.USER)  # No system prompt
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response without system prompt"
@@ -389,7 +389,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_azure_model.return_value = mock_llm
 
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+        llm = AzureLLM(name="TestAzure", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response"
@@ -413,7 +413,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_azure_model.return_value = mock_llm
 
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+        llm = AzureLLM(name="TestAzure", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Response"
@@ -438,7 +438,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_azure_model.return_value = mock_llm
 
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA, model_name="gpt-5.2")
+        llm = AzureLLM(name="TestAzure", role=Role.USER, model_name="gpt-5.2")
         await llm.generate_response(conversation_history=mock_system_message)
 
         assert llm.last_response_metadata["model"] == "gpt-4o-deployment"
@@ -455,7 +455,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(side_effect=Exception("API rate limit exceeded"))
         mock_azure_model.return_value = mock_llm
 
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+        llm = AzureLLM(name="TestAzure", role=Role.USER)
         with pytest.raises(LLMGenerationFailed) as exc_info:
             await llm.generate_response(conversation_history=mock_system_message)
 
@@ -486,7 +486,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(side_effect=error)
         mock_azure_model.return_value = mock_llm
 
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+        llm = AzureLLM(name="TestAzure", role=Role.USER)
         with pytest.raises(LLMGenerationFailed) as exc_info:
             await llm.generate_response(conversation_history=mock_system_message)
 
@@ -510,7 +510,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_azure_model.return_value = mock_llm
 
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+        llm = AzureLLM(name="TestAzure", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -518,13 +518,13 @@ class TestAzureLLM(TestJudgeLLMBase):
 
     def test_last_response_metadata_copy_returns_copy(self):
         """Test that last_response_metadata.copy() returns a copy, not the original."""
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+        llm = AzureLLM(name="TestAzure", role=Role.USER)
         assert_metadata_copy_behavior(llm)
 
     def test_set_system_prompt(self):
         """Test set_system_prompt method."""
         llm = AzureLLM(
-            role=Role.PERSONA,
+            role=Role.USER,
             model_name="azure-gpt-5.2",
             name="TestAzure",
             system_prompt="Initial prompt",
@@ -558,7 +558,7 @@ class TestAzureLLM(TestJudgeLLMBase):
             mock_model.return_value = mock_llm
 
             llm = AzureLLM(
-                name="TestAzure", role=Role.PERSONA, system_prompt="Test prompt"
+                name="TestAzure", role=Role.USER, system_prompt="Test prompt"
             )
             response = await llm.generate_structured_response(
                 "What is the answer?", TestResponse
@@ -570,7 +570,7 @@ class TestAzureLLM(TestJudgeLLMBase):
 
             # Verify metadata was stored
             metadata = assert_metadata_structure(
-                llm, expected_provider="azure", expected_role=Role.PERSONA
+                llm, expected_provider="azure", expected_role=Role.USER
             )
             # No model in the response, so this is the configured default.
             assert metadata["model"] == _DEFAULT_DEPLOYMENT
@@ -599,7 +599,7 @@ class TestAzureLLM(TestJudgeLLMBase):
 
             mock_model.return_value = mock_llm
 
-            llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+            llm = AzureLLM(name="TestAzure", role=Role.USER)
 
             with pytest.raises(LLMGenerationFailed) as exc_info:
                 await llm.generate_structured_response("Test", TestResponse)
@@ -633,13 +633,13 @@ class TestAzureLLM(TestJudgeLLMBase):
             mock_llm.ainvoke = AsyncMock(return_value=mock_response)
             mock_model.return_value = mock_llm
 
-            llm = AzureLLM(name="TestAzure", role=Role.PERSONA, system_prompt="Test")
+            llm = AzureLLM(name="TestAzure", role=Role.USER, system_prompt="Test")
 
             # Provide conversation history
             history = [
                 {
                     "turn": 1,
-                    "speaker": Role.PERSONA,
+                    "speaker": Role.USER,
                     "input": "Start",
                     "response": "Hello",
                     "early_termination": False,
@@ -647,7 +647,7 @@ class TestAzureLLM(TestJudgeLLMBase):
                 },
                 {
                     "turn": 2,
-                    "speaker": Role.PROVIDER,
+                    "speaker": Role.CHATBOT,
                     "input": "Hello",
                     "response": "Hi there",
                     "early_termination": False,
@@ -678,7 +678,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_azure_model.return_value = mock_llm
 
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+        llm = AzureLLM(name="TestAzure", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -701,9 +701,7 @@ class TestAzureLLM(TestJudgeLLMBase):
 
         # Persona system prompt should trigger message type flipping
         persona_prompt = "You are roleplaying as a human user"
-        llm = AzureLLM(
-            name="TestAzure", system_prompt=persona_prompt, role=Role.PERSONA
-        )
+        llm = AzureLLM(name="TestAzure", system_prompt=persona_prompt, role=Role.USER)
 
         response = await llm.generate_response(
             conversation_history=sample_conversation_history
@@ -736,7 +734,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_azure_model.return_value = mock_llm
 
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+        llm = AzureLLM(name="TestAzure", role=Role.USER)
         response = await llm.generate_response(conversation_history=mock_system_message)
 
         assert response == "Partial usage response"
@@ -758,7 +756,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_azure_model.return_value = mock_llm
 
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+        llm = AzureLLM(name="TestAzure", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -782,7 +780,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_azure_model.return_value = mock_llm
 
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+        llm = AzureLLM(name="TestAzure", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata
@@ -811,7 +809,7 @@ class TestAzureLLM(TestJudgeLLMBase):
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_azure_model.return_value = mock_llm
 
-        llm = AzureLLM(name="TestAzure", role=Role.PERSONA)
+        llm = AzureLLM(name="TestAzure", role=Role.USER)
         await llm.generate_response(conversation_history=mock_system_message)
 
         metadata = llm.last_response_metadata

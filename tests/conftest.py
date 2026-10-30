@@ -137,7 +137,7 @@ def mock_persona() -> MockLLM:
 
     return MockLLM(
         name="mock-persona",
-        role=Role.PERSONA,
+        role=Role.USER,
         responses=["Hello, I need help", "I'm feeling anxious"],
     )
 
@@ -149,7 +149,7 @@ def mock_agent() -> MockLLM:
 
     return MockLLM(
         name="mock-agent",
-        role=Role.PROVIDER,
+        role=Role.CHATBOT,
         responses=["How can I help you?", "Tell me more"],
     )
 
@@ -158,6 +158,6 @@ def mock_agent() -> MockLLM:
 def sample_conversation() -> list[dict]:
     """Sample conversation history."""
     return [
-        {"turn": 1, "speaker": "persona", "response": "Hello"},
-        {"turn": 2, "speaker": "provider", "response": "Hi, how can I help?"},
+        {"turn": 1, "speaker": "user", "response": "Hello"},
+        {"turn": 2, "speaker": "chatbot", "response": "Hi, how can I help?"},
     ]

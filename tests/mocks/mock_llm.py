@@ -15,7 +15,7 @@ class MockLLM(JudgeLLM):
     def __init__(
         self,
         name: str = "mock-llm",
-        role: Role = Role.PROVIDER,
+        role: Role = Role.CHATBOT,
         responses: Optional[List[str]] = None,
         model_name: str = "mock-model",
         system_prompt: Optional[str] = None,

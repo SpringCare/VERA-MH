@@ -138,7 +138,7 @@ class ConversationSimulator:
             # TODO: each client already knows its side of the conversation, so
             # `current_speaker.conversation_role()` could replace this and the
             # other `self.persona`/`self.agent` comparisons in this loop.
-            speaker = Role.PROVIDER if current_speaker == self.agent else Role.PERSONA
+            speaker = Role.CHATBOT if current_speaker == self.agent else Role.USER
             turn_obj = ConversationTurn(
                 turn=turn + 1,
                 speaker=speaker,

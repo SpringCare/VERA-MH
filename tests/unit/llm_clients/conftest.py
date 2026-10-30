@@ -171,13 +171,13 @@ def sample_conversation_history():
     - Standard conversation history handling
     - Persona role message type flipping
 
-    The conversation alternates between PERSONA and PROVIDER speakers,
+    The conversation alternates between USER and CHATBOT speakers,
     which allows testing of role-based message transformations.
     """
     return [
         {
             "turn": 1,
-            "speaker": Role.PERSONA,
+            "speaker": Role.USER,
             "input": "Start",
             "response": "Hello",
             "early_termination": False,
@@ -185,7 +185,7 @@ def sample_conversation_history():
         },
         {
             "turn": 2,
-            "speaker": Role.PROVIDER,
+            "speaker": Role.CHATBOT,
             "input": "Hello",
             "response": "Hi there",
             "early_termination": False,
@@ -193,7 +193,7 @@ def sample_conversation_history():
         },
         {
             "turn": 3,
-            "speaker": Role.PERSONA,
+            "speaker": Role.USER,
             "input": "Hi there",
             "response": "How are you?",
             "early_termination": False,

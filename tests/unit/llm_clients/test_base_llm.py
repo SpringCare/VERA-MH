@@ -74,7 +74,7 @@ class TestLLMBase(ABC):
         """Create an instance of the LLM implementation being tested.
 
         Args:
-            role: The role for the LLM (PERSONA, PROVIDER, or None for a judge)
+            role: The role for the LLM (USER, CHATBOT, or None for a judge)
             **kwargs: Additional arguments to pass to LLM constructor
 
         Returns:
@@ -122,11 +122,11 @@ class TestLLMBase(ABC):
         """Test basic initialization with role and system prompt."""
         with self.get_mock_patches():  # pyright: ignore[reportGeneralTypeIssues]
             llm = self.create_llm(
-                role=Role.PERSONA, name="TestLLM", system_prompt="Test prompt"
+                role=Role.USER, name="TestLLM", system_prompt="Test prompt"
             )
 
             assert llm.name == "TestLLM"
-            assert llm.role == Role.PERSONA
+            assert llm.role == Role.USER
             assert llm.system_prompt == "Test prompt"
             assert llm.last_response_metadata == {}
 
@@ -134,7 +134,7 @@ class TestLLMBase(ABC):
         """Test setting and updating system prompt."""
         with self.get_mock_patches():  # pyright: ignore[reportGeneralTypeIssues]
             llm = self.create_llm(
-                role=Role.PERSONA, name="TestLLM", system_prompt="Initial prompt"
+                role=Role.USER, name="TestLLM", system_prompt="Initial prompt"
             )
 
             assert llm.system_prompt == "Initial prompt"
@@ -162,7 +162,7 @@ class TestLLMBase(ABC):
             )
             mock_llm_client = mock_llm_factory(response=mock_response)
 
-            llm = self.create_llm(role=Role.PROVIDER, name="TestLLM")
+            llm = self.create_llm(role=Role.CHATBOT, name="TestLLM")
             llm.llm = mock_llm_client  # pyright: ignore[reportAttributeAccessIssue]
 
             response = await llm.generate_response(
@@ -185,7 +185,7 @@ class TestLLMBase(ABC):
 
             mock_llm_client = mock_llm_factory(response=mock_response)
 
-            llm = self.create_llm(role=Role.PROVIDER, name="TestLLM")
+            llm = self.create_llm(role=Role.CHATBOT, name="TestLLM")
             llm.llm = mock_llm_client  # pyright: ignore[reportAttributeAccessIssue]
 
             response = await llm.generate_response(
@@ -199,7 +199,7 @@ class TestLLMBase(ABC):
             metadata = assert_metadata_structure(
                 llm,
                 expected_provider=self.get_provider_name(),
-                expected_role=Role.PROVIDER,
+                expected_role=Role.CHATBOT,
             )
 
             assert "timestamp" in metadata
@@ -209,7 +209,7 @@ class TestLLMBase(ABC):
     def test_last_response_metadata_copy_returns_copy(self):
         """Test that last_response_metadata.copy() returns a copy, not the original."""
         with self.get_mock_patches():  # pyright: ignore[reportGeneralTypeIssues]
-            llm = self.create_llm(role=Role.PROVIDER, name="TestLLM")
+            llm = self.create_llm(role=Role.CHATBOT, name="TestLLM")
 
             assert_metadata_copy_behavior(llm)
 
@@ -224,7 +224,7 @@ class TestLLMBase(ABC):
                 response=None, side_effect=Exception("API Error")
             )
 
-            llm = self.create_llm(role=Role.PROVIDER, name="TestLLM")
+            llm = self.create_llm(role=Role.CHATBOT, name="TestLLM")
             llm.llm = mock_llm_client  # pyright: ignore[reportAttributeAccessIssue]
 
             with pytest.raises(LLMGenerationFailed) as exc_info:
@@ -251,7 +251,7 @@ class TestJudgeLLMBase(TestLLMBase):
         """Create an instance of the JudgeLLM implementation being tested.
 
         Args:
-            role: The role for the LLM (PERSONA, PROVIDER, or None for a judge)
+            role: The role for the LLM (USER, CHATBOT, or None for a judge)
             **kwargs: Additional arguments to pass to LLM constructor
 
         Returns:

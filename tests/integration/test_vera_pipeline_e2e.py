@@ -97,7 +97,7 @@ def _mock_llm(**kwargs) -> MockLLM:
     the judge answers every question with `MockLLM`'s schema example.
     """
     role = kwargs["role"]
-    tag = {Role.PERSONA: "persona", Role.PROVIDER: "chatbot"}.get(role, "judge")
+    tag = {Role.USER: "persona", Role.CHATBOT: "chatbot"}.get(role, "judge")
     return MockLLM(
         name=kwargs["name"],
         role=role,

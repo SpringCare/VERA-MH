@@ -1,4 +1,4 @@
-"""Who is speaking in a conversation, or judging one."""
+"""Who is speaking in a conversation."""
 
 from enum import Enum
 
@@ -6,5 +6,5 @@ from enum import Enum
 class Role(Enum):
     """Role of the LLM in a conversation."""
 
-    PERSONA = "persona"  # User roleplaying as a human seeking help
-    PROVIDER = "provider"  # Chatbot providing support
+    USER = "user"  # The persona: an LLM roleplaying a person seeking help
+    CHATBOT = "chatbot"  # The chatbot under test

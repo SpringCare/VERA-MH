@@ -22,12 +22,12 @@ class TestConversationSimulator:
         """Test basic conversation flow: correct # of turns and speaker alternation."""
         persona = MockLLM(
             name="test-persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["First", "Second", "Third"],
         )
         agent = MockLLM(
             name="test-agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["Reply 1", "Reply 2", "Reply 3"],
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
@@ -37,14 +37,14 @@ class TestConversationSimulator:
         assert len(history) == 6
         for i in range(6):
             if i % 2 == 0:
-                assert history[i]["speaker"] == "persona"
+                assert history[i]["speaker"] == "user"
             else:
-                assert history[i]["speaker"] == "provider"
+                assert history[i]["speaker"] == "chatbot"
 
     async def test_max_turns_respected(self):
         """Test that conversation stops at max_turns (provider speaks last)."""
-        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["msg"] * 10)
-        agent = MockLLM(name="agent", role=Role.PROVIDER, responses=["reply"] * 10)
+        persona = MockLLM(name="persona", role=Role.USER, responses=["msg"] * 10)
+        agent = MockLLM(name="agent", role=Role.CHATBOT, responses=["reply"] * 10)
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         # Use even max_turns so no normalization (persona_speaks_first=True)
@@ -52,18 +52,18 @@ class TestConversationSimulator:
 
         assert len(history) == 6
         assert history[-1]["turn"] == 6
-        assert history[-1]["speaker"] == "provider"
+        assert history[-1]["speaker"] == "chatbot"
 
     async def test_provider_speaks_first(self):
         """persona_speaks_first=False: provider speaks first & last (odd max_turns)."""
         persona = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["P1", "P2", "P3"],
         )
         agent = MockLLM(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["A1", "A2", "A3"],
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
@@ -74,22 +74,22 @@ class TestConversationSimulator:
         )
 
         assert len(history) == 5
-        assert history[0]["speaker"] == "provider"
-        assert history[-1]["speaker"] == "provider"
+        assert history[0]["speaker"] == "chatbot"
+        assert history[-1]["speaker"] == "chatbot"
         for i in range(5):
             if i % 2 == 0:
-                assert history[i]["speaker"] == "provider"
+                assert history[i]["speaker"] == "chatbot"
             else:
-                assert history[i]["speaker"] == "persona"
+                assert history[i]["speaker"] == "user"
 
     async def test_early_termination_detection(self):
         """Test that conversation detects early termination signals."""
         persona = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["Hello", "Goodbye, I have to go now", "Should not appear"],
         )
-        agent = MockLLM(name="agent", role=Role.PROVIDER, responses=["Hi there"] * 5)
+        agent = MockLLM(name="agent", role=Role.CHATBOT, responses=["Hi there"] * 5)
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         simulator.termination_signal = "Goodbye"
@@ -104,10 +104,10 @@ class TestConversationSimulator:
         """Test that conversation detects default early termination signals."""
         persona = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["Hello", "<END OF CONVERSATION>", "Should not appear"],
         )
-        agent = MockLLM(name="agent", role=Role.PROVIDER, responses=["Hi there"] * 5)
+        agent = MockLLM(name="agent", role=Role.CHATBOT, responses=["Hi there"] * 5)
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         history = await simulator.generate_conversation(max_turns=10)
@@ -118,8 +118,8 @@ class TestConversationSimulator:
 
     async def test_conversation_history_structure(self):
         """Test that conversation history has correct structure."""
-        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["Test message"])
-        agent = MockLLM(name="agent", role=Role.PROVIDER, responses=["Test reply"])
+        persona = MockLLM(name="persona", role=Role.USER, responses=["Test message"])
+        agent = MockLLM(name="agent", role=Role.CHATBOT, responses=["Test reply"])
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         history = await simulator.generate_conversation(max_turns=2)
@@ -139,9 +139,9 @@ class TestConversationSimulator:
     async def test_empty_initial_input(self):
         """Test default handling of None/empty initial input."""
         persona = MockLLM(
-            name="persona", role=Role.PERSONA, responses=["Started conversation"]
+            name="persona", role=Role.USER, responses=["Started conversation"]
         )
-        agent = MockLLM(name="agent", role=Role.PROVIDER, responses=["Acknowledged"])
+        agent = MockLLM(name="agent", role=Role.CHATBOT, responses=["Acknowledged"])
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         history = await simulator.generate_conversation(max_turns=2)
@@ -156,12 +156,12 @@ class TestConversationSimulator:
         """Test conversation with static initial message (no LLM call for 1st turn)."""
         persona = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["Response to custom message"],
             first_message="Custom start",
         )
         agent = MockLLM(
-            name="agent", role=Role.PROVIDER, responses=["Acknowledged custom"]
+            name="agent", role=Role.CHATBOT, responses=["Acknowledged custom"]
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
@@ -177,10 +177,10 @@ class TestConversationSimulator:
     async def test_llm_error_handling(self):
         """Test handling of LLM errors gracefully."""
         persona = MockLLM(
-            name="persona", role=Role.PERSONA, responses=["Hello"], simulate_error=False
+            name="persona", role=Role.USER, responses=["Hello"], simulate_error=False
         )
         agent = MockLLM(
-            name="agent", role=Role.PROVIDER, responses=[], simulate_error=True
+            name="agent", role=Role.CHATBOT, responses=[], simulate_error=True
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
@@ -194,13 +194,13 @@ class TestConversationSimulator:
         persona = MockLLM(
             name="persona",
             model_name="persona-model",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["Test"],
         )
         agent = MockLLM(
             name="agent",
             model_name="agent-model",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["Reply"],
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
@@ -218,11 +218,11 @@ class TestConversationSimulator:
     async def test_termination_only_by_persona(self):
         """Test that only persona can trigger early termination, not agent."""
         persona = MockLLM(
-            name="persona", role=Role.PERSONA, responses=["Continue talking"] * 5
+            name="persona", role=Role.USER, responses=["Continue talking"] * 5
         )
         agent = MockLLM(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["Goodbye, bye", "Another reply", "More replies"],
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
@@ -236,10 +236,10 @@ class TestConversationSimulator:
     async def test_response_used_as_next_input(self):
         """Test that each response becomes the next speaker's input."""
         persona = MockLLM(
-            name="persona", role=Role.PERSONA, responses=["Message A", "Message C"]
+            name="persona", role=Role.USER, responses=["Message A", "Message C"]
         )
         agent = MockLLM(
-            name="agent", role=Role.PROVIDER, responses=["Message B", "Message D"]
+            name="agent", role=Role.CHATBOT, responses=["Message B", "Message D"]
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
@@ -255,9 +255,9 @@ class TestConversationSimulator:
     async def test_early_termination_flag_only_on_last_turn(self):
         """Test early_termination False for all turns except last."""
         persona = MockLLM(
-            name="persona", role=Role.PERSONA, responses=["Hello", "Goodbye"]
+            name="persona", role=Role.USER, responses=["Hello", "Goodbye"]
         )
-        agent = MockLLM(name="agent", role=Role.PROVIDER, responses=["Hi"])
+        agent = MockLLM(name="agent", role=Role.CHATBOT, responses=["Hi"])
         simulator = ConversationSimulator(persona=persona, agent=agent)
         simulator.termination_signal = "Goodbye"  # Must match exact case
 
@@ -270,8 +270,8 @@ class TestConversationSimulator:
 
     async def test_conversation_history_reset_on_new_conversation(self):
         """Test that simulator clears history on each new generate_conversation call."""
-        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["First"] * 10)
-        agent = MockLLM(name="agent", role=Role.PROVIDER, responses=["Reply"] * 10)
+        persona = MockLLM(name="persona", role=Role.USER, responses=["First"] * 10)
+        agent = MockLLM(name="agent", role=Role.CHATBOT, responses=["Reply"] * 10)
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         history1 = await simulator.generate_conversation(max_turns=2)
@@ -288,9 +288,9 @@ class TestConversationSimulator:
     async def test_case_insensitive_termination(self):
         """Test that termination signal is detected even if case doesn't match."""
         persona = MockLLM(
-            name="persona", role=Role.PERSONA, responses=["Hello", "GOODBYE and thanks"]
+            name="persona", role=Role.USER, responses=["Hello", "GOODBYE and thanks"]
         )
-        agent = MockLLM(name="agent", role=Role.PROVIDER, responses=["Hi"] * 5)
+        agent = MockLLM(name="agent", role=Role.CHATBOT, responses=["Hi"] * 5)
         simulator = ConversationSimulator(persona=persona, agent=agent)
         simulator.termination_signal = "goodbye"
 
@@ -303,12 +303,12 @@ class TestConversationSimulator:
         """Test that conversation stops when max_total_words is reached."""
         persona = MockLLM(
             name="User",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["Hello there", "How are you", "Great thanks", "Goodbye"],
         )
         agent = MockLLM(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=[
                 "I am doing well today",  # 5 words
                 "Very good indeed",  # 3 words
@@ -328,7 +328,7 @@ class TestConversationSimulator:
         # Turn 4: agent says "Very good indeed" (3 words, total: 13)
         # Should stop after turn 4 since agent exceeded max_total_words
         assert len(history) == 4
-        assert history[-1]["speaker"] == "provider"
+        assert history[-1]["speaker"] == "chatbot"
 
         total_words = sum(len(turn["response"].split()) for turn in history)
         assert total_words >= 10
@@ -337,12 +337,12 @@ class TestConversationSimulator:
         """Test that max_total_words only checks after provider speaks."""
         persona = MockLLM(
             name="User",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["This is a very long message with many words here"] * 5,
         )
         agent = MockLLM(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["OK"] * 5,
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
@@ -353,18 +353,18 @@ class TestConversationSimulator:
         # Should complete at least 2 turns (user then provider)
         assert len(history) >= 2
         # Last turn should be from provider since that's when the check happens
-        assert history[-1]["speaker"] == "provider"
+        assert history[-1]["speaker"] == "chatbot"
 
     async def test_max_total_words_none_runs_to_max_turns(self):
         """Test that when max_total_words is None, conversation runs to max_turns."""
         persona = MockLLM(
             name="User",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["Long message with many words"] * 10,
         )
         agent = MockLLM(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["Even longer response with many many words"] * 10,
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
@@ -377,8 +377,8 @@ class TestConversationSimulator:
 
     async def test_save_conversation(self):
         """Test saving conversation to file."""
-        persona = MockLLM(name="test-persona", role=Role.PERSONA, responses=["Hello"])
-        agent = MockLLM(name="test-agent", role=Role.PROVIDER, responses=["Hi there"])
+        persona = MockLLM(name="test-persona", role=Role.USER, responses=["Hello"])
+        agent = MockLLM(name="test-agent", role=Role.CHATBOT, responses=["Hi there"])
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         await simulator.generate_conversation(max_turns=2)
@@ -409,45 +409,45 @@ class TestFirstSpeakerAndFirstMessageCombinations:
         """
         persona = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["Hello from persona"],
         )
         agent = MockLLM(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["Hi back"],
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         history = await simulator.generate_conversation(max_turns=2)
 
-        assert history[0]["speaker"] == "persona"
+        assert history[0]["speaker"] == "user"
         assert history[0]["input"] == DEFAULT_START_PROMPT
         assert history[0]["response"] == "Hello from persona"
-        assert history[1]["speaker"] == "provider"
+        assert history[1]["speaker"] == "chatbot"
 
     async def test_persona_first_first_message(self):
         """Persona first + first_message: first turn input None, static response."""
         persona = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["Second message"],
             first_message="Static hello",
         )
         agent = MockLLM(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["Reply to static"],
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         history = await simulator.generate_conversation(max_turns=2)
 
-        assert history[0]["speaker"] == "persona"
+        assert history[0]["speaker"] == "user"
         assert history[0]["input"] is None
         assert history[0]["response"] == "Static hello"
         assert "Static hello" in agent.calls
-        assert history[1]["speaker"] == "provider"
+        assert history[1]["speaker"] == "chatbot"
 
     async def test_provider_first_start_prompt(self):
         """Provider first, no first_message:
@@ -455,12 +455,12 @@ class TestFirstSpeakerAndFirstMessageCombinations:
         """
         persona = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["User reply"],
         )
         agent = MockLLM(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["Provider opening"],
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
@@ -471,11 +471,11 @@ class TestFirstSpeakerAndFirstMessageCombinations:
         )
 
         assert len(history) == 3  # assert max_turns + 1 because provider speaks first
-        assert history[0]["speaker"] == "provider"
+        assert history[0]["speaker"] == "chatbot"
         assert history[0]["input"] == DEFAULT_START_PROMPT
         assert history[0]["response"] == "Provider opening"
-        assert history[1]["speaker"] == "persona"
-        assert history[2]["speaker"] == "provider"
+        assert history[1]["speaker"] == "user"
+        assert history[2]["speaker"] == "chatbot"
         assert "Provider opening" in persona.calls
 
     async def test_provider_first_first_message(self):
@@ -484,12 +484,12 @@ class TestFirstSpeakerAndFirstMessageCombinations:
         """
         persona = MockLLM(
             name="persona",
-            role=Role.PERSONA,
+            role=Role.USER,
             responses=["User reply to provider"],
         )
         agent = MockLLM(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["Second provider line"],
             first_message="Provider says hello first",
         )
@@ -501,11 +501,11 @@ class TestFirstSpeakerAndFirstMessageCombinations:
         )
 
         assert len(history) == 3  # assert max_turns + 1 because provider speaks first
-        assert history[0]["speaker"] == "provider"
+        assert history[0]["speaker"] == "chatbot"
         assert history[0]["input"] is None
         assert history[0]["response"] == "Provider says hello first"
-        assert history[1]["speaker"] == "persona"
-        assert history[2]["speaker"] == "provider"
+        assert history[1]["speaker"] == "user"
+        assert history[2]["speaker"] == "chatbot"
         assert "Provider says hello first" in persona.calls
 
 
@@ -522,17 +522,17 @@ class TestBespokeTerminationAndPostProcessing:
             def custom_termination_signals(self):
                 return ["[SESSION_ENDED]"]
 
-        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["hello"] * 5)
+        persona = MockLLM(name="persona", role=Role.USER, responses=["hello"] * 5)
         agent = SignalAgent(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["normal reply", "closing [SESSION_ENDED]", "unreachable"],
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         history = await simulator.generate_conversation(max_turns=10)
 
-        assert history[-1]["speaker"] == "provider"
+        assert history[-1]["speaker"] == "chatbot"
         assert history[-1]["early_termination"] is True
 
     async def test_discard_response_removes_turn_from_history(self):
@@ -546,10 +546,10 @@ class TestBespokeTerminationAndPostProcessing:
             def _should_discard_response(self, extracted_signals):
                 return "[ERROR]" in extracted_signals
 
-        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["hello"])
+        persona = MockLLM(name="persona", role=Role.USER, responses=["hello"])
         agent = ErrorAgent(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["[ERROR] server failure"],
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
@@ -558,7 +558,7 @@ class TestBespokeTerminationAndPostProcessing:
 
         # Agent's error turn was discarded; only persona's hello remains.
         assert len(history) == 1
-        assert history[0]["speaker"] == "persona"
+        assert history[0]["speaker"] == "user"
         assert history[-1]["early_termination"] is True
 
     async def test_raw_response_stored_in_agent_logging(self):
@@ -568,15 +568,15 @@ class TestBespokeTerminationAndPostProcessing:
             def _post_process_response(self, response: str) -> str:
                 return response.replace("[META]", "").strip()
 
-        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["hi"])
+        persona = MockLLM(name="persona", role=Role.USER, responses=["hi"])
         agent = StrippingAgent(
-            name="agent", role=Role.PROVIDER, responses=["hello [META]"]
+            name="agent", role=Role.CHATBOT, responses=["hello [META]"]
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         history = await simulator.generate_conversation(max_turns=2)
 
-        agent_turn = next(t for t in history if t["speaker"] == "provider")
+        agent_turn = next(t for t in history if t["speaker"] == "chatbot")
         assert agent_turn["logging"]["raw_response"] == "hello [META]"
 
     async def test_post_process_applied_to_stored_response(self):
@@ -586,29 +586,29 @@ class TestBespokeTerminationAndPostProcessing:
             def _post_process_response(self, response: str) -> str:
                 return response.replace("<INTERNAL>", "").strip()
 
-        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["hi"])
+        persona = MockLLM(name="persona", role=Role.USER, responses=["hi"])
         agent = StrippingAgent(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["hello there <INTERNAL>"],
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         history = await simulator.generate_conversation(max_turns=2)
 
-        agent_turn = next(t for t in history if t["speaker"] == "provider")
+        agent_turn = next(t for t in history if t["speaker"] == "chatbot")
         assert agent_turn["response"] == "hello there"
         assert "<INTERNAL>" not in agent_turn["response"]
 
     async def test_raw_response_not_in_persona_logging(self):
         """raw_response is NOT added to persona turn's logging metadata."""
-        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["hi"])
-        agent = MockLLM(name="agent", role=Role.PROVIDER, responses=["hello"])
+        persona = MockLLM(name="persona", role=Role.USER, responses=["hi"])
+        agent = MockLLM(name="agent", role=Role.CHATBOT, responses=["hello"])
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         history = await simulator.generate_conversation(max_turns=2)
 
-        persona_turn = next(t for t in history if t["speaker"] == "persona")
+        persona_turn = next(t for t in history if t["speaker"] == "user")
         assert "raw_response" not in persona_turn["logging"]
 
     async def test_bespoke_signal_checked_against_raw_response(self):
@@ -623,10 +623,10 @@ class TestBespokeTerminationAndPostProcessing:
                 # Strip the signal so it won't appear in the stored response
                 return response.replace("[SESSION_ENDED]", "").strip()
 
-        persona = MockLLM(name="persona", role=Role.PERSONA, responses=["hi"])
+        persona = MockLLM(name="persona", role=Role.USER, responses=["hi"])
         agent = SignalStrippingAgent(
             name="agent",
-            role=Role.PROVIDER,
+            role=Role.CHATBOT,
             responses=["goodbye [SESSION_ENDED]"],
         )
         simulator = ConversationSimulator(persona=persona, agent=agent)
@@ -634,7 +634,7 @@ class TestBespokeTerminationAndPostProcessing:
         history = await simulator.generate_conversation(max_turns=10)
 
         # Signal was present in raw response → termination triggered
-        assert history[-1]["speaker"] == "provider"
+        assert history[-1]["speaker"] == "chatbot"
         assert history[-1]["early_termination"] is True
         # But the stored response has been stripped
         assert "[SESSION_ENDED]" not in history[-1]["response"]
