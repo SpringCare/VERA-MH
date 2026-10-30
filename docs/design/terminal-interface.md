@@ -48,9 +48,9 @@ FileNotFoundError: No .txt files found in: output/p_gpt_5_2__a_<chatbot model>__
 The 40-line config dump becomes a header. The full resolved config is written to the run folder (`config.json`, run-lifecycle.md) and still shown by `--print`.
 
 ```
-vera pipeline · SI · Mexican Spanish
+vera pipeline | SI | Mexican Spanish
   chatbot  gpt-5.4
-  users    gpt-5.2, claude-opus-4-5     99 personas × 1 repeat, 30 turns
+  users    gpt-5.2, claude-opus-4-5     99 personas x 1 repeat, 30 turns
   judge    gpt-5.4
   output   output/SI/c_gpt-5.4/u_gpt-5.2_3f9a1c_20261015_194125
 ```
@@ -58,18 +58,18 @@ vera pipeline · SI · Mexican Spanish
 ### During the run, in a terminal
 
 ```
-vera pipeline · SI · gpt-5.4                                         elapsed 0:42:10
+vera pipeline | SI | gpt-5.4                                         elapsed 0:42:10
 
-  Generate  ██████████████░░░░░░  148/198   ✗ 2
-  Judge     █████████░░░░░░░░░░░   91/198
+  Generate  [##############......]  148/198   2 failed   3.1M tokens  est. $9.40
+  Judge     [#########...........]   91/198              5.6M tokens  est. $14.10
   Score     waiting for all conversations
 
-  gpt-5.2          Brian     turn 14/30   chatbot responding…        1m12s
-  gpt-5.2          Sarah     turn  6/30   user responding…           0m31s
+  gpt-5.2          Brian     turn 14/30   chatbot responding...      1m12s
+  gpt-5.2          Sarah     turn  6/30   user responding...         0m31s
   claude-opus-4-5  Emma      judging      Q23 Supportive Conversation
   claude-opus-4-5  Levi      judging      Q9  Guides to Human Care
 
-  ✗ claude-opus-4-5 · Abigail   rate limited after 4 attempts   logs/…Abigail….log
+  FAIL claude-opus-4-5 | Abigail   rate limited after 4 attempts   logs/...Abigail....log
 ```
 
 One progress bar per stage, one line per job in flight saying what it's doing, and failures listed as they happen with a pointer to their log.
@@ -81,7 +81,7 @@ One progress bar per stage, one line per job in flight saying what it's doing, a
 19:44:06 generate  done   gpt-5.2          Brian     30 turns   2m41s
 19:44:07 judge     start  gpt-5.2          Brian
 19:44:52 judge     done   gpt-5.2          Brian     45s
-19:45:10 generate  FAIL   claude-opus-4-5  Abigail   rate limited after 4 attempts   logs/…
+19:45:10 generate  FAIL   claude-opus-4-5  Abigail   rate limited after 4 attempts   logs/...
 ```
 
 One flushed line per event: grep-able, and never silent while work is happening.
@@ -89,9 +89,9 @@ One flushed line per event: grep-able, and never silent while work is happening.
 ### When a stage produces nothing
 
 ```
-✗ Generation produced 0 of 4 conversations. Every one failed with:
+FAIL Generation produced 0 of 4 conversations. Every one failed with:
     Unsupported model: <chatbot model>
-  Stopping before judging. Logs: output/…/conversations/logs/
+  Stopping before judging. Logs: output/.../conversations/logs/
 ```
 
 The run stops at the stage that broke, names the cause once, and exits non-zero.
@@ -99,7 +99,8 @@ The run stops at the stage that broke, names the cause once, and exits non-zero.
 ### End of run
 
 ```
-Done in 1:52:40 · 198 conversations · 1 failed (rerun with --into to finish it)
+Done in 1:52:40 | 198 conversations | 1 failed (rerun with --into to finish it)
+Tokens: generate 6.2M, judge 11.4M | est. cost $51.30
 
                    conversations   VERA   Best practice   Harm
   gpt-5.2                     99   66.1           43.0%   3.1%
@@ -111,7 +112,7 @@ Done in 1:52:40 · 198 conversations · 1 failed (rerun with --into to finish it
     Q28  not collaborative, back-and-forth        123 / 197
     Q13  resources in a long, dense list           78 / 197
 
-  Results  output/SI/c_gpt-5.4/pooled/u_gpt-5.2+claude-opus-4-5_…/
+  Results  output/SI/c_gpt-5.4/pooled/u_gpt-5.2+claude-opus-4-5_.../
 ```
 
 ## Verbosity
@@ -127,16 +128,20 @@ Done in 1:52:40 · 198 conversations · 1 failed (rerun with --into to finish it
 
 ## Implementation
 
-1. **Events and a reporter interface**, with the job loop (#266): job started, job finished, job failed, turn started (user/chatbot), judge question asked, stage finished.
+1. **Events and a reporter interface, emitted from today's runners**: job started, job finished, job failed, turn started (user/chatbot), judge question asked, stage finished, with token usage on each finished call. When the job loop (#266) replaces the runners, it emits the same events, so the reporter doesn't change.
 2. **Plain-line reporter, `events.jsonl`, fail-fast, and the end summary.** This alone fixes buffering, the buried cause, and the missing summary, and works without a terminal.
 3. **Move the ~290 `print()` calls to logging or events.** Mechanical, package by package; client setup and worker chatter go to the log files.
 4. **The live terminal display**, using [rich](https://github.com/Textualize/rich) (`Progress`, `Live`, `Table`; it detects terminals and degrades to plain lines itself).
 
-Steps 2 and 3 don't depend on the job loop and can land first, against today's runners.
+None of this waits for the job loop. Each step is its own PR, in this order; after step 2 the output is already readable under `| tee` and in CI.
 
-## Open questions
+## Decisions
 
-1. **A new dependency.** `rich` is widely used and small, but it's new to the project. Alternatively, the plain-line reporter only, with no live display.
-2. **Cost on screen.** Responses already carry token usage in their metadata. Show tokens (and an estimated cost) per stage in the display and the summary?
-3. **Ctrl-C.** Stop new jobs, let running ones finish, and print the `--into` command to resume? Or stop immediately?
-4. **Emoji.** Today's output uses them; the mockups use ✗ only. Keep, drop, or plain-ASCII only when not in a terminal?
+Settled in review on #271.
+
+1. **`rich` is added** for the live display. Its own progress bar draws Unicode, so the display uses a small custom column for the ASCII bar (see 4).
+2. **Tokens and cost are shown** per stage, in the live display and the end summary. Responses already carry token usage in their metadata, so token counts are exact. Cost is an estimate from a per-model price table next to the model defaults in `llm_clients/config.py`, labeled `est.`; a model with no price shows tokens only. Both also go into `events.jsonl`.
+3. **Ctrl-C follows the usual two-step convention** (as `docker compose`, `cargo`, and most job runners do):
+   - **First Ctrl-C** stops starting new jobs and cancels the running ones, keeps everything already finished, prints the `--into` command that resumes the run, and exits with 130 (the shell's code for an interrupt). It doesn't wait for running jobs to finish: a 30-turn conversation can take minutes, and `--into` reruns an unfinished conversation from the start anyway, so waiting buys nothing.
+   - **A second Ctrl-C** exits immediately.
+4. **ASCII only, for now.** No emoji or other Unicode symbols on stdout: `#`/`.` progress bars, `FAIL` instead of a cross, `|` as a separator, `...` instead of an ellipsis. Output reads the same in every terminal, CI log, and file.
