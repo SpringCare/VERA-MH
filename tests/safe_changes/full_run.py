@@ -16,7 +16,8 @@ scores, `results.csv`, judge TSVs, and run records.
 
 A saved run keeps its conversations and judge answers, but not the system prompts
 and client settings it was run with. `freeze-inputs` writes those once into
-`<saved run>/inputs/`, from the code at hand; `update-expected` writes the
+`<saved run>/inputs/`, from the code at hand, with a checksum of each saved
+file so an edit to the saved run fails the check; `update-expected` writes the
 expected outputs, for a change meant to alter them. See
 docs/full-run-replay.md for how it works and when to use each command.
 
@@ -32,6 +33,7 @@ import ast
 import asyncio
 import csv
 import difflib
+import hashlib
 import io
 import json
 import os
@@ -297,8 +299,9 @@ def input_label(key: InputKey) -> str:
     return f"{kind} {name}" if name else kind
 
 
-def read_inputs(folder: Path) -> tuple[Optional[int], dict[InputKey, Any]]:
-    """A saved run's frozen inputs, and the `--sample` they were frozen with."""
+def read_inputs(folder: Path) -> tuple[dict[str, Any], dict[InputKey, Any]]:
+    """A saved run's `settings.json` (the `--sample`, the commit, the saved
+    files' checksums, the client settings), and its frozen inputs."""
     if not folder.is_dir():
         raise SavedRunError(f"no frozen inputs in {folder}: run freeze-inputs first")
     settings = json.loads((folder / "settings.json").read_text(encoding="utf-8"))
@@ -311,14 +314,23 @@ def read_inputs(folder: Path) -> tuple[Optional[int], dict[InputKey, Any]]:
         pattern = INPUT_FILES[kind].format(name="*")
         for path in sorted(folder.glob(pattern)):
             inputs[(kind, path.stem)] = path.read_text(encoding="utf-8")
-    return settings["sample"], inputs
+    return settings, inputs
 
 
 def write_inputs(
-    folder: Path, inputs: dict[InputKey, Any], sample: Optional[int], frozen_from: str
+    folder: Path,
+    inputs: dict[InputKey, Any],
+    sample: Optional[int],
+    frozen_from: str,
+    saved_files: dict[str, str],
 ) -> None:
     clients = {name: value for (kind, name), value in inputs.items() if kind == CLIENT}
-    settings = {"frozen_from": frozen_from, "sample": sample, "clients": clients}
+    settings = {
+        "frozen_from": frozen_from,
+        "sample": sample,
+        "saved_files": saved_files,
+        "clients": clients,
+    }
     folder.mkdir(parents=True)
     (folder / "settings.json").write_text(
         json.dumps(settings, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -832,10 +844,13 @@ def replay(
 
 def check(saved_folder: Path, expected: Path) -> list[str]:
     """Replay a saved run and list every difference; empty means it matched."""
+    settings, frozen = read_inputs(saved_folder / INPUTS)
+    changes = saved_files_changes(saved_folder, settings["saved_files"])
+    if changes:
+        return changes
     saved = SavedRun(saved_folder)
-    sample, frozen = read_inputs(saved_folder / INPUTS)
     checker = InputsChecker(frozen)
-    produced, problems = replay(saved, checker, sample)
+    produced, problems = replay(saved, checker, settings["sample"])
     # Inputs first: a call the saved run can't answer may follow from one.
     problems = [*checker.problems.values(), *problems]
     if not produced:
@@ -844,14 +859,51 @@ def check(saved_folder: Path, expected: Path) -> list[str]:
     return [*problems, *checker.unused(), *output_differences(wanted, produced)]
 
 
+def saved_files_checksums(saved_folder: Path) -> dict[str, str]:
+    """sha256 of each saved transcript and judge answers file, by its path.
+
+    Hashed as text, with line endings normalized, so a checkout that turns
+    `\n` into `\r\n` doesn't count as a change.
+    """
+    return {
+        path.relative_to(saved_folder).as_posix(): hashlib.sha256(
+            path.read_text(encoding="utf-8").encode("utf-8")
+        ).hexdigest()
+        for pattern in SAVED_OUTPUTS
+        for path in sorted(saved_folder.glob(pattern))
+    }
+
+
+def saved_files_changes(saved_folder: Path, recorded: dict[str, str]) -> list[str]:
+    """The saved files that changed since the inputs were frozen.
+
+    The saved transcripts are both the replies the fake client gives and the
+    transcripts the run must reproduce, so an edit to one moves both sides and
+    a check would still pass. The checksums make such an edit fail instead.
+    """
+    current = saved_files_checksums(saved_folder)
+    changes = []
+    for name in sorted(set(recorded) | set(current)):
+        if name not in current:
+            changes.append(f"saved file missing since the inputs were frozen: {name}")
+        elif name not in recorded:
+            changes.append(f"saved file added since the inputs were frozen: {name}")
+        elif current[name] != recorded[name]:
+            changes.append(f"saved file changed since the inputs were frozen: {name}")
+    return changes
+
+
 def update_expected(saved_folder: Path, expected: Path) -> list[str]:
     """Write the outputs the code at hand produces from the saved run into
     `expected`. Refuses, returning why, if an input differs from the frozen ones
-    or the saved transcripts and judge answers aren't reproduced."""
+    or the saved transcripts and judge answers changed or aren't reproduced."""
+    settings, frozen = read_inputs(saved_folder / INPUTS)
+    changes = saved_files_changes(saved_folder, settings["saved_files"])
+    if changes:
+        return changes
     saved = SavedRun(saved_folder)
-    sample, frozen = read_inputs(saved_folder / INPUTS)
     checker = InputsChecker(frozen)
-    produced, problems = replay(saved, checker, sample)
+    produced, problems = replay(saved, checker, settings["sample"])
     problems = [*checker.problems.values(), *problems]
     if produced:
         from_saved = {
@@ -877,7 +929,8 @@ def update_expected(saved_folder: Path, expected: Path) -> list[str]:
 def freeze_inputs(
     saved_folder: Path, sample: Optional[int], replace: bool
 ) -> list[str]:
-    """Write what the code at hand hands the clients into `<saved run>/inputs/`.
+    """Write what the code at hand hands the clients into `<saved run>/inputs/`,
+    with a checksum of each saved transcript and judge answers file.
 
     Refuses, returning why, if the saved transcripts and judge answers aren't
     reproduced, or an input differs between two calls that should share it.
@@ -898,7 +951,13 @@ def freeze_inputs(
 
     if folder.exists():
         shutil.rmtree(folder)
-    write_inputs(folder, recorder.inputs, sample, frozen_from=current_commit())
+    write_inputs(
+        folder,
+        recorder.inputs,
+        sample,
+        frozen_from=current_commit(),
+        saved_files=saved_files_checksums(saved_folder),
+    )
     print(f"Froze {len(recorder.inputs)} inputs into {folder}")
     return []
 

@@ -68,3 +68,19 @@ def test_a_changed_input_fails_and_shows_what_changed(tmp_path: Path) -> None:
     assert problems[0].startswith("input differs: chatbot system prompt\n")
     assert "-You are a careful AI assistant." in problems[0]
     assert f"+{produced}" in problems[0]
+
+
+@pytest.mark.timeout(120)
+def test_an_edited_saved_transcript_fails(tmp_path: Path) -> None:
+    """A saved transcript is both the replies and the transcript the run must
+    reproduce, so an edit moves both sides; the checksums catch it."""
+    saved = tmp_path / "saved"
+    shutil.copytree(full_run.COMMITTED_SAVED_RUN, saved)
+    transcript = next(saved.glob("p_*/conversations/*.txt"))
+    original = transcript.read_text(encoding="utf-8")
+    transcript.write_text(original.replace("user: ", "user: not ", 1), encoding="utf-8")
+
+    problems = full_run.check(saved, full_run.COMMITTED_EXPECTED)
+
+    name = transcript.relative_to(saved).as_posix()
+    assert problems == [f"saved file changed since the inputs were frozen: {name}"]

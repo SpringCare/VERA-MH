@@ -21,7 +21,8 @@ tests/fixtures/full_run/
 │   │                                       the judge's answer to each question, in order
 │   ├── p_claude_opus_4_5_20251101__…/      the same for the other user model
 │   └── inputs/                             what each client was handed (frozen once)
-│       ├── settings.json                   each client's settings, the --sample, and the source commit
+│       ├── settings.json                   each client's settings, the --sample, the source commit,
+│       │                                   and a checksum of each saved transcript and answers file
 │       ├── chatbot_system_prompt.txt
 │       ├── persona_system_prompts/<persona>.txt
 │       ├── judge_system_prompt.txt         with <CONVERSATION> where the transcript goes
@@ -31,6 +32,8 @@ tests/fixtures/full_run/
 ```
 
 The transcripts and judge answers are the run's own files. A saved run doesn't record the system prompts or client settings, though, so `inputs/` holds them, written once by `freeze-inputs`. The committed slice's inputs were frozen from `main` (the commit is in `settings.json`), and match what `main`'s own pipeline hands its clients for these conversations.
+
+The saved transcripts play two parts: they are the replies the fake client gives, and the transcripts the run must reproduce. An edit to one moves both sides at once, so a check would still pass, and the judge would still give its saved answers, whatever the new text says. So `settings.json` keeps a checksum of each saved transcript and judge answers file, and a check refuses to run once one has changed.
 
 `expected/` holds the outputs the saved run can't supply: its scores were computed by the code of its day, and file formats have changed since.
 
@@ -70,6 +73,7 @@ Absolute paths, timestamps, and the random filename tags are ignored. Logs and c
 
 | Message | What happened |
 |---|---|
+| `saved file changed since the inputs were frozen: …` | Someone edited the saved run. The check stops before running anything |
 | `input differs: persona system prompt Luca`, with a diff | The code built a different prompt, or passed different settings (`client user gpt-5.2`) |
 | `input not in the frozen inputs: client …` | The code created a client the saved run didn't have, such as one with another model name |
 | `frozen input never handed to a client: …` | The code stopped using something it used before |
@@ -105,13 +109,15 @@ First decide whether the change was meant to alter what a run does.
 uv run python -m tests.safe_changes.full_run freeze-inputs tests/fixtures/full_run/saved --sample 5 --replace
 ```
 
+**Meant to** change the saved run itself (for example, fixing a transcript): the replay can't tell you how the models would have answered the new text, so prefer a new saved run. If you do edit it, freeze the inputs again with `--replace`, which records the new checksums.
+
 **Meant to**, and an output changed (a scoring fix, a new column): write the expected outputs again, and review the diff of `expected/`.
 
 ```bash
 uv run python -m tests.safe_changes.full_run update-expected tests/fixtures/full_run/saved tests/fixtures/full_run/expected
 ```
 
-`update-expected` refuses while any input differs from the frozen ones, or the saved transcripts and judge answers aren't reproduced. Inputs come first. Then commit the new files, and say why in the PR and the CHANGELOG, as [safe-changes.md](safe-changes.md#when-a-guard-fails) describes. Never regenerate to make a failure you can't explain go away.
+`update-expected` refuses while the saved run has changed, any input differs from the frozen ones, or the saved transcripts and judge answers aren't reproduced. Inputs come first. Then commit the new files, and say why in the PR and the CHANGELOG, as [safe-changes.md](safe-changes.md#when-a-guard-fails) describes. Never regenerate to make a failure you can't explain go away.
 
 The replies stay what the models said to the old inputs. After a prompt change, the replay still checks that the code works, but the saved conversations no longer show how the models would answer the new prompt. Judge a fresh run for that.
 
