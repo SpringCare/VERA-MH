@@ -2,6 +2,10 @@
 
 Framework for generating and evaluating LLM conversations in mental health contexts. This file is for **any coding agent** (Cursor, Copilot, etc.). For Claude Code slash commands and `.claude/` maintenance, see [CLAUDE.md](./CLAUDE.md).
 
+## Act only when asked
+
+Do nothing the user hasn't explicitly asked for: no commands, file reads, edits, commits, pushes, or PRs on your own initiative. A command the user runs themselves (for example `open .`) is not a request. When a next step looks useful, propose it and wait for a yes.
+
 ## Quick Start
 
 ```bash
@@ -64,7 +68,7 @@ consequences without duplicating that contract.
 
 The project uses [pytest](https://docs.pytest.org/) with unit and integration tests under `tests/`. Coverage is enforced (`--cov-fail-under=68` in `pyproject.toml`, set for the unit layer alone).
 
-**Changes that must not move scores.** Before changing `generate/`, `judge/`, or `score/`, read [docs/safe-changes.md](./docs/safe-changes.md). Unit tests pin results with fixed inputs, one per stage (golden persona prompts and a generation replay, scripted judge answers, golden scoring files) plus a replay of the whole recorded pipeline. A refactor must pass them unchanged; regenerating their expected data is only for changes meant to alter results, explained in the PR and the CHANGELOG.
+**Changes that must not move scores.** Before changing `generate/`, `judge/`, or `score/`, read [docs/safe-changes.md](./docs/safe-changes.md). Unit tests pin results with fixed inputs, one per stage (golden persona prompts and a generation replay, scripted judge answers, golden scoring files) plus a replay of the whole recorded pipeline. A refactor must pass them unchanged; regenerating their expected data is only for changes meant to alter results, explained in the PR and the CHANGELOG. **Agents never regenerate expected data on their own**, including re-seeding a full-run baseline (`full_run seed`, committed or local): when a check fails, stop, report what differs and why, and wait for a maintainer to decide.
 
 **Layout:**
 - `tests/unit/` — fast, isolated tests
@@ -170,7 +174,7 @@ Format: `<type>/<brief-description>` (kebab-case), e.g. `feat/add-gpt4-support`,
 
 1. Branch from `main`
 2. Make changes; run `uv run pytest -m "not live"` for code changes
-3. Record the change in [CHANGELOG.md](./CHANGELOG.md) under `## [Unreleased]`, in the matching section (e.g. "Breaking / migration", "Runtime, CLI, and pipeline", "Testing and CI"). Follow the existing entry style: `- **Short title**—one or two sentences`. Every user-visible or contributor-visible change needs an entry: behavior, CLI flags, outputs, renamed or moved modules, test/CI policy. Skip it only for changes nobody would notice, such as typo fixes or internal refactors with no import or behavior change
+3. Record the change in [CHANGELOG.md](./CHANGELOG.md) under `## [Unreleased]`, in the matching section (e.g. "Breaking / migration", "Runtime, CLI, and pipeline", "Testing and CI"). Follow the existing entry style: `- **Short title**—one or two sentences`. Every user-visible or contributor-visible change needs an entry: behavior, CLI flags, outputs, renamed or moved modules, test/CI policy. Skip it only for changes nobody would notice, such as typo fixes or internal refactors with no import or behavior change, and mark such a PR with the `no-changelog` label: CI fails a PR that has neither an entry nor the label
    - **Suggest a version bump; don't make it.** Releases are git tags (`v2.0.0`) that match a CHANGELOG heading. When `[Unreleased]` holds a "Breaking / migration" entry, or enough changes to be worth a release, say so to the human and propose the next version under [Semantic Versioning](https://semver.org/): major for breaking changes, minor for new features, patch for fixes. The human decides; don't rename the `[Unreleased]` heading or create tags yourself
 4. Atomic commits; pre-commit hooks run on commit
 5. Push and open a PR

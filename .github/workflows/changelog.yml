@@ -1,0 +1,31 @@
+name: Changelog
+
+# Every PR records its change in CHANGELOG.md (AGENTS.md, Workflow), unless it
+# carries the `no-changelog` label: for changes nobody would notice, such as a
+# typo fix or a refactor with no import or behavior change. Runs on PRs into any
+# branch, so stacked PRs are checked too.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  changelog:
+    name: CHANGELOG entry
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-changelog') }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Require a change to CHANGELOG.md
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PR: ${{ github.event.pull_request.number }}
+      run: |
+        if gh pr diff "$PR" --repo "$GITHUB_REPOSITORY" --name-only | grep -qx CHANGELOG.md; then
+          echo "CHANGELOG.md is updated."
+        else
+          echo "::error file=CHANGELOG.md::Add an entry under [Unreleased] (see AGENTS.md, Workflow), or add the no-changelog label if nobody would notice this change."
+          exit 1
+        fi
