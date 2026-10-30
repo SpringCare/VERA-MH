@@ -128,12 +128,12 @@ Tokens: generate 6.2M, judge 11.4M | est. cost $51.30
 
 ## Implementation
 
-1. **Events and a reporter interface, emitted from today's runners**: job started, job finished, job failed, turn started (user/chatbot), judge question asked, stage finished, with token usage on each finished call. When the job loop (#266) replaces the runners, it emits the same events, so the reporter doesn't change.
+1. **Events and a reporter interface, built into the job loop** (#266): job started, job finished, job failed, turn started (user/chatbot), judge question asked, stage finished, with token usage on each finished call. Each stage gets them as it moves onto the loop, so no hooks are added to the runners the loop deletes.
 2. **Plain-line reporter, `events.jsonl`, fail-fast, and the end summary.** This alone fixes buffering, the buried cause, and the missing summary, and works without a terminal.
 3. **Move the ~290 `print()` calls to logging or events.** Mechanical, package by package; client setup and worker chatter go to the log files.
 4. **The live terminal display**, using [rich](https://github.com/Textualize/rich) (`Progress`, `Live`, `Table`; it detects terminals and degrades to plain lines itself).
 
-None of this waits for the job loop. Each step is its own PR, in this order; after step 2 the output is already readable under `| tee` and in CI.
+Steps 1 and 2 land with the loop: its first PR ships the plain-line reporter and `events.jsonl`, so each stage is readable under `| tee` and in CI as soon as it runs on the loop. Steps 3 and 4 follow, each its own PR.
 
 ## Decisions
 
