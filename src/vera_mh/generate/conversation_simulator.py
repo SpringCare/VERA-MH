@@ -10,6 +10,7 @@ from vera_mh.utils.conversation_utils import (
     save_conversation_to_file,
 )
 from vera_mh.utils.debug import debug_print
+from vera_mh.utils.role import Role
 
 
 class ConversationSimulator:
@@ -84,16 +85,12 @@ class ConversationSimulator:
             f"[SIM] Starting conversation: persona_speaks_first={persona_speaks_first},"
             f"max_turns={max_turns}"
         )
-        debug_print(
-            f"[SIM] persona={self.persona.name} ({self.persona.role.value}), "
-            f"agent={self.agent.name} ({self.agent.role.value})"
-        )
+        debug_print(f"[SIM] persona={self.persona.name}, agent={self.agent.name}")
 
         total_words = 0
         for turn in range(max_turns):
             debug_print(
-                f"[SIM] Turn {turn + 1}/{max_turns}: "
-                f"{current_speaker.name} ({current_speaker.role.value}) speaking"
+                f"[SIM] Turn {turn + 1}/{max_turns}: {current_speaker.name} speaking"
             )
             self.last_active_speaker = current_speaker
             # start or continue the conversation
@@ -138,9 +135,13 @@ class ConversationSimulator:
             logging_metadata = current_speaker.last_response_metadata
             if current_speaker == self.agent:
                 logging_metadata["raw_response"] = raw_response
+            # TODO: each client already knows its side of the conversation, so
+            # `current_speaker.conversation_role()` could replace this and the
+            # other `self.persona`/`self.agent` comparisons in this loop.
+            speaker = Role.PROVIDER if current_speaker == self.agent else Role.PERSONA
             turn_obj = ConversationTurn(
                 turn=turn + 1,
-                speaker=current_speaker.role,
+                speaker=speaker,
                 input_message=input_msg,
                 response_message=lc_message,
                 early_termination=False,
@@ -176,10 +177,7 @@ class ConversationSimulator:
 
             # Switch speakers for next turn
             current_speaker, next_speaker = next_speaker, current_speaker
-            debug_print(
-                f"[SIM]   next speaker → {current_speaker.name} "
-                f"({current_speaker.role.value})"
-            )
+            debug_print(f"[SIM]   next speaker → {current_speaker.name}")
 
         # Return dict format for backward compatibility
         return [t.to_dict() for t in self.conversation_history]

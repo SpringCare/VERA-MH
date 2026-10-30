@@ -12,7 +12,7 @@ class LLMFactory:
     def create_llm(
         model_name: str,
         name: str,
-        role: Role,
+        role: Optional[Role],
         system_prompt: Optional[str] = None,
         **kwargs,
     ) -> LLMInterface:
@@ -28,7 +28,7 @@ class LLMFactory:
                 (e.g., "claude-sonnet-5", "gpt-5.4")
             name: Display name for this LLM instance
             system_prompt: Optional system prompt
-            role: Role of the LLM (Role.PERSONA, Role.PROVIDER)
+            role: Role of the LLM (Role.PERSONA, Role.PROVIDER), or None for a judge
             **kwargs: Additional model-specific parameters
                 (temperature, max_tokens, etc.)
 
@@ -106,7 +106,7 @@ class LLMFactory:
         llm = LLMFactory.create_llm(
             model_name=model_name,
             name=name,
-            role=Role.JUDGE,
+            role=None,
             system_prompt=system_prompt,
             **kwargs,
         )

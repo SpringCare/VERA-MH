@@ -25,7 +25,7 @@ class OllamaLLM(LLMInterface):
     def __init__(
         self,
         name: str,
-        role: Role,
+        role: Optional[Role],
         system_prompt: Optional[str] = None,
         model_name: Optional[str] = None,
         base_url: Optional[str] = None,
@@ -114,12 +114,12 @@ class OllamaLLM(LLMInterface):
             return await self.start_conversation()
 
         full_message = format_conversation_as_string(
-            self.role,
+            self.conversation_role(),
             conversation_history=conversation_history,
             system_prompt=self.system_prompt,
         )
 
-        debug_print(f"\n[DEBUG {self.name} - {self.role.value}] Message sent to LLM:")
+        debug_print(f"\n[DEBUG {self.name}] Message sent to LLM:")
         preview = full_message[:100]
         content_preview = preview + "..." if len(full_message) > 100 else full_message
         debug_print(f"  {content_preview}")

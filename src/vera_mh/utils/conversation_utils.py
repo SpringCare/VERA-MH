@@ -167,7 +167,7 @@ def build_langchain_messages(
         conversation_history: Optional list of previous conversation turns.
             Each turn is a dict with keys: 'turn', 'speaker', 'response'.
             Turn 0 contains the initial message with speaker="system".
-        role: Optional role of the LLM (Role.PERSONA, Role.PROVIDER, or None).
+        role: Role of the LLM (Role.PERSONA or Role.PROVIDER).
             Messages from the same role are converted to AIMessage (what "I"
             said), messages from the other role are converted to HumanMessage
             (what "they" said).

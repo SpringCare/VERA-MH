@@ -47,7 +47,7 @@ class AzureLLM(JudgeLLM):
     def __init__(
         self,
         name: str,
-        role: Role,
+        role: Optional[Role],
         system_prompt: Optional[str] = None,
         model_name: Optional[str] = None,
         **kwargs,
@@ -208,10 +208,12 @@ class AzureLLM(JudgeLLM):
             messages.append(SystemMessage(content=self.system_prompt))
 
         # Build messages from history
-        messages.extend(build_langchain_messages(self.role, conversation_history))
+        messages.extend(
+            build_langchain_messages(self.conversation_role(), conversation_history)
+        )
 
         # Debug: Print messages being sent to LLM
-        debug_print(f"\n[DEBUG {self.name} - {self.role.value}] Messages sent to LLM:")
+        debug_print(f"\n[DEBUG {self.name}] Messages sent to LLM:")
         for i, msg in enumerate(messages):
             msg_type = type(msg).__name__
             preview = msg.text[:100]
@@ -219,7 +221,7 @@ class AzureLLM(JudgeLLM):
             debug_print(f"  {i + 1}. {msg_type}: {content_preview}")
 
         async def _invoke() -> str:
-            debug_print(f"\n[DEBUG {self.name} - {self.role.value}] Calling Azure:")
+            debug_print(f"\n[DEBUG {self.name}] Calling Azure:")
             debug_print(f"  Model: {self.model_name}")
             debug_print(f"  Endpoint: {self.endpoint}")
             debug_print(f"  API Version: {self.api_version}")
@@ -256,9 +258,7 @@ class AzureLLM(JudgeLLM):
                         "with current credentials\n"
                         f"\n  Error details: {error_details}"
                     )
-                    debug_print(
-                        f"\n[DEBUG {self.name} - {self.role.value}] {helpful_msg}"
-                    )
+                    debug_print(f"\n[DEBUG {self.name}] {helpful_msg}")
                     raise LLMGenerationFailed(helpful_msg) from e
                 raise
 

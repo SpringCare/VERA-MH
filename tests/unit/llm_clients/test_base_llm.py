@@ -27,6 +27,7 @@ and make get_mock_patches() return a simple no-op context manager.
 """
 
 from abc import ABC, abstractmethod
+from typing import Optional
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -69,11 +70,11 @@ class TestLLMBase(ABC):
     # ============================================================================
 
     @abstractmethod
-    def create_llm(self, role: Role, **kwargs) -> LLMInterface:
+    def create_llm(self, role: Optional[Role], **kwargs) -> LLMInterface:
         """Create an instance of the LLM implementation being tested.
 
         Args:
-            role: The role for the LLM (PERSONA, PROVIDER, or JUDGE)
+            role: The role for the LLM (PERSONA, PROVIDER, or None for a judge)
             **kwargs: Additional arguments to pass to LLM constructor
 
         Returns:
@@ -246,11 +247,11 @@ class TestJudgeLLMBase(TestLLMBase):
 
     # Override return type hint for create_llm
     @abstractmethod
-    def create_llm(self, role: Role, **kwargs) -> JudgeLLM:
+    def create_llm(self, role: Optional[Role], **kwargs) -> JudgeLLM:
         """Create an instance of the JudgeLLM implementation being tested.
 
         Args:
-            role: The role for the LLM (PERSONA, PROVIDER, or JUDGE)
+            role: The role for the LLM (PERSONA, PROVIDER, or None for a judge)
             **kwargs: Additional arguments to pass to LLM constructor
 
         Returns:
@@ -284,7 +285,7 @@ class TestJudgeLLMBase(TestLLMBase):
                 return_value=mock_structured_llm
             )
 
-            llm = self.create_llm(role=Role.JUDGE, name="TestLLM")
+            llm = self.create_llm(role=None, name="TestLLM")
             llm.llm = mock_llm_client  # pyright: ignore[reportAttributeAccessIssue]
 
             response = await llm.generate_structured_response(
@@ -300,7 +301,6 @@ class TestJudgeLLMBase(TestLLMBase):
             metadata = assert_metadata_structure(
                 llm,
                 expected_provider=self.get_provider_name(),
-                expected_role=Role.JUDGE,
             )
             assert metadata.get("structured_output") is True
             assert_response_timing(metadata)
@@ -340,7 +340,7 @@ class TestJudgeLLMBase(TestLLMBase):
                 return_value=mock_structured_llm
             )
 
-            llm = self.create_llm(role=Role.JUDGE, name="TestLLM")
+            llm = self.create_llm(role=None, name="TestLLM")
             llm.llm = mock_llm_client  # pyright: ignore[reportAttributeAccessIssue]
 
             response = await llm.generate_structured_response(
@@ -373,7 +373,7 @@ class TestJudgeLLMBase(TestLLMBase):
                 return_value=mock_structured_llm
             )
 
-            llm = self.create_llm(role=Role.JUDGE, name="TestLLM")
+            llm = self.create_llm(role=None, name="TestLLM")
             llm.llm = mock_llm_client  # pyright: ignore[reportAttributeAccessIssue]
 
             with pytest.raises(LLMGenerationFailed) as exc_info:
@@ -416,7 +416,7 @@ class TestJudgeLLMBase(TestLLMBase):
                 return_value=mock_structured_llm
             )
 
-            llm = self.create_llm(role=Role.JUDGE, name="TestLLM")
+            llm = self.create_llm(role=None, name="TestLLM")
             llm.llm = mock_llm_client  # pyright: ignore[reportAttributeAccessIssue]
 
             await llm.generate_structured_response("Evaluate", TestResponse)
@@ -428,7 +428,6 @@ class TestJudgeLLMBase(TestLLMBase):
             metadata = assert_metadata_structure(
                 llm,
                 expected_provider=provider,
-                expected_role=Role.JUDGE,
                 require_response_id=True,
                 require_usage=True,
             )
@@ -453,7 +452,7 @@ class TestJudgeLLMBase(TestLLMBase):
                 return_value=mock_structured_llm
             )
 
-            llm = self.create_llm(role=Role.JUDGE, name="TestLLM")
+            llm = self.create_llm(role=None, name="TestLLM")
             llm.llm = mock_llm_client  # pyright: ignore[reportAttributeAccessIssue]
 
             with pytest.raises(LLMGenerationFailed) as exc_info:

@@ -440,7 +440,7 @@ class SeedLLM(JudgeLLM):
     async def generate_response(self, conversation_history=None) -> str:
         sent = what_the_model_sees(conversation_history)
         self._set_response_metadata("replay")
-        reply = self.seeder.text_reply(self.key, self.role, sent or [])
+        reply = self.seeder.text_reply(self.key, self.conversation_role(), sent or [])
         call = describe_call(self.model_name, self.system_prompt, "text", sent)
         self.seeder.record(call, reply)
         return reply

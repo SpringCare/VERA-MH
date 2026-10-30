@@ -129,7 +129,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock_chat:
             OpenAILLM(
                 name="TestOpenAI",
-                role=Role.JUDGE,
+                role=None,
                 model_name="gpt-5.4",
                 **default_llm_kwargs,
             )
@@ -144,7 +144,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI") as mock_chat:
             OpenAILLM(
                 name="TestOpenAI",
-                role=Role.JUDGE,
+                role=None,
                 model_name="gpt-5-chat",
                 **default_llm_kwargs,
             )
@@ -157,7 +157,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI"):
             llm = OpenAILLM(
                 name="TestOpenAI",
-                role=Role.JUDGE,
+                role=None,
                 model_name="gpt-5.4",
                 **default_llm_kwargs,
             )
@@ -176,7 +176,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI"):
             llm = OpenAILLM(
                 name="TestOpenAI",
-                role=Role.JUDGE,
+                role=None,
                 model_name="gpt-5.4",
                 **default_llm_kwargs,
             )
@@ -188,7 +188,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
         with patch("vera_mh.llm_clients.openai_llm.ChatOpenAI"):
             llm = OpenAILLM(
                 name="TestOpenAI",
-                role=Role.JUDGE,
+                role=None,
                 model_name="gpt-5.4",
                 **default_llm_kwargs,
             )
@@ -794,9 +794,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
             mock_chat.return_value = mock_llm
 
-            llm = OpenAILLM(
-                name="TestOpenAI", role=Role.JUDGE, system_prompt="Test prompt"
-            )
+            llm = OpenAILLM(name="TestOpenAI", role=None, system_prompt="Test prompt")
             expected_cache_key = llm.conversation_id
             response = await llm.generate_structured_response(
                 "What is the answer?", TestResponse
@@ -811,9 +809,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
             assert response.reasoning == "Because it's correct"
 
             # Verify metadata was stored
-            metadata = assert_metadata_structure(
-                llm, expected_provider="openai", expected_role=Role.JUDGE
-            )
+            metadata = assert_metadata_structure(llm, expected_provider="openai")
             # No model in the response, so this is the configured default.
             assert metadata["model"] == Config.DEFAULT_OPENAI_MODEL
             assert metadata["structured_output"] is True
@@ -858,7 +854,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
             mock_chat.return_value = mock_llm
 
-            llm = OpenAILLM(name="TestOpenAI", role=Role.JUDGE)
+            llm = OpenAILLM(name="TestOpenAI", role=None)
             response = await llm.generate_structured_response(
                 "Evaluate this.", ComplexResponse
             )
@@ -892,7 +888,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
             mock_chat.return_value = mock_llm
 
-            llm = OpenAILLM(name="TestOpenAI", role=Role.JUDGE)
+            llm = OpenAILLM(name="TestOpenAI", role=None)
 
             with pytest.raises(LLMGenerationFailed) as exc_info:
                 await llm.generate_structured_response("Test", TestResponse)
@@ -924,7 +920,7 @@ class TestOpenAILLM(TestJudgeLLMBase):
 
             mock_chat.return_value = mock_llm
 
-            llm = OpenAILLM(name="TestOpenAI", role=Role.JUDGE)
+            llm = OpenAILLM(name="TestOpenAI", role=None)
             await llm.generate_structured_response("Test", SimpleResponse)
 
             metadata = llm.last_response_metadata
