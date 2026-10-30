@@ -46,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Documentation and development workflow
 
+- **Terminal-interface proposal**—[`docs/design/terminal-interface.md`](docs/design/terminal-interface.md) outlines progress reporting, event logs, run summaries, verbosity, and interruption handling. This is a draft design, not an implemented CLI change.
 - **Current model IDs in examples**—README, AGENTS.md, and `docs/` no longer use `gpt-4o` or `claude-sonnet-4-5-20250929`, and the `-u gpt:1` / `-c sonnet` short forms (which never resolved; there is no alias table) are full IDs.
 - **Create your own evaluation**—[`docs/create-an-evaluation.md`](docs/create-an-evaluation.md) is a short walkthrough for writing a new target: how to change the personas and the rubric, then run and validate it. Linked from the README.
 - **How to read a rubric**—[`docs/reading-a-rubric.md`](docs/reading-a-rubric.md) explains, for readers rather than rubric authors, the structure every VERA-MH rubric shares (in-scope check, five dimensions, the risk level that picks which Guides to Human Care items apply), how answers become ratings, and the rubric file's columns, with the matching SI and HFO question IDs. Linked from `docs/targets.md` and `docs/judge.md`.
