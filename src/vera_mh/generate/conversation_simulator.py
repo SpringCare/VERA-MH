@@ -135,6 +135,9 @@ class ConversationSimulator:
             logging_metadata = current_speaker.last_response_metadata
             if current_speaker == self.agent:
                 logging_metadata["raw_response"] = raw_response
+            # TODO: each client already knows its side of the conversation, so
+            # `current_speaker.conversation_role()` could replace this and the
+            # other `self.persona`/`self.agent` comparisons in this loop.
             speaker = Role.CHATBOT if current_speaker == self.agent else Role.USER
             turn_obj = ConversationTurn(
                 turn=turn + 1,
