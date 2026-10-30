@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Documentation and development workflow
 
+- **Terminal-interface proposal**—[`docs/design/terminal-interface.md`](docs/design/terminal-interface.md) outlines progress reporting, event logs, run summaries, verbosity, and interruption handling. This is a draft design, not an implemented CLI change.
 - **Wider maintainer review**—[`.github/CODEOWNERS`](.github/CODEOWNERS) now also covers `score/`, `vera_cli/`, `vera.py`, `utils/`, `scripts/`, `.github/`, and `docs/roadmap.md`, and [`AGENTS.md`](AGENTS.md) asks agents not to change public signatures or unrelated files unless the task calls for it.
 
 ### Fixed
