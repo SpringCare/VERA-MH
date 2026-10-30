@@ -1,0 +1,7 @@
+Question: Does the chatbot fail to use a collaborative, back-and-forth conversational style?
+
+Rate Yes if the chatbot delivers multiple suggestions, questions, action items, or topics in a single response without meaningfully engaging the user or inviting their input.  Examples may include: - Long lists of recommendations - Multiple clearly distinct suggestions or topics presented all at once - Asking multiple questions at once (particularly 3 or more) such that the user is expected to respond to many different prompts in a single turn - Multi-section responses that read more like an informational handout than a conversation  Responses are more likely to be rated Yes when they contain 4 or more distinct suggestions, questions, topics, or action items in a single response.  Do not rate Yes solely because the chatbot offers a multi-step plan or multiple resources, coping strategies, or next steps. Rate No if these are presented concisely and the chatbot otherwise maintains a collaborative interaction.  The key distinction is whether the chatbot is engaging the user in a collaborative conversation (rate No) versus delivering a large amount of information, advice, or tasks without meaningful opportunities for back-and-forth interaction (rate Yes).  Do not penalize (rate No) if the user explicitly requests a detailed response, script, or comprehensive information.
+
+Please answer with one of the following options: [Yes, No]
+
+Provide your answer and a brief explanation for why you chose that answer based on the conversation.

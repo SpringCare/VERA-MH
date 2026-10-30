@@ -187,6 +187,7 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 | [docs/roadmap.md](./docs/roadmap.md) | Humans and agents | Remaining structural work, in phase order; update when a phase lands |
 | [docs/design/](./docs/design/) | Humans and agents | Historical design decisions, rationale, and compatibility consequences |
 | [docs/safe-changes.md](./docs/safe-changes.md) | Humans and agents | The tests that keep code changes from moving scores, and what to do when they fail |
+| [docs/full-run-replay.md](./docs/full-run-replay.md) | Humans and agents | How the full-run replay checks a change against a saved run, and how to update its inputs or expected outputs |
 | [CHANGELOG.md](./CHANGELOG.md) | Humans and agents | Record of notable changes; every PR adds its entry under `[Unreleased]` |
 | **AGENTS.md** (this file) | All coding agents | Style, architecture map, testing, key commands, git conventions |
 | [CLAUDE.md](./CLAUDE.md) | Claude Code only | Slash commands, `.claude/` maintenance |
