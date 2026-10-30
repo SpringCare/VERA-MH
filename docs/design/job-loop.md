@@ -115,6 +115,8 @@ A conversation's last session returns that conversation's `Evaluation` jobs as f
 
 What this needs: the judge's run folder and rubric must exist before generation starts, which the run-lifecycle order already gives (all run roots are created before any job runs).
 
+It also gives the pipeline the resume that `generate` and `judge` have. `vera pipeline` takes no `--into` today. With one job list fixed by the run's `config.json`, `vera pipeline --into <run>` reopens the run roots, skips every job that's done (decision 5), and then runs scoring and pooling as usual. The end summary and the Ctrl-C message of the terminal interface ([#271](https://github.com/SpringCare/VERA-MH/pull/271)) print this command.
+
 ## Decisions from review
 
 1. **A job is one session.** Sessions must run in order, so session *k* is a follow-up of session *k − 1*: its `run()` returns the next session's job. Generation lists only the first unfinished session of each conversation. `done()` stays a single file check, and resume restarts exactly at the first missing session.
