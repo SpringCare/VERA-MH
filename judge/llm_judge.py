@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from judge.answers import conversation_answers_dir, write_conversation_answers
-from judge.constants import BEST_PRACTICE, DAMAGING, NEUTRAL
 from judge.question_navigator import QuestionNavigator
 from judge.response_models import QuestionResponse
 from judge.rubric_config import ConversationData, RubricConfig
@@ -18,6 +17,7 @@ from judge.utils import (
 )
 from llm_clients import LLMFactory, Role
 from llm_clients.llm_interface import JudgeLLM, LLMGenerationFailed
+from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL
 
 
 class LLMJudge:

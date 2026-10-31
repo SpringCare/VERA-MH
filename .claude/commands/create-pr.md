@@ -29,7 +29,13 @@ Create a GitHub pull request with auto-generated summary from branch commits:
    - Group TODOs by category or file if helpful
    - If no TODOs found, omit the TODOs section entirely
 
-5. **Generate PR Content**
+5. **Check the CHANGELOG**
+   - If `CHANGELOG.md` is not in `git diff <base>...HEAD --name-only`, decide whether the change needs an entry, using the rule in AGENTS.md (Workflow, step 3): anything that changes behavior, CLI flags, outputs, imports, or call signatures does
+   - If it does: draft the entry under `## [Unreleased]` in the matching section, show it to the user, and commit it before creating the PR
+   - If it doesn't: say why, and add `--label no-changelog` to `gh pr create`
+   - CI (`.github/workflows/changelog.yml`) fails a PR with neither
+
+6. **Generate PR Content**
    - **Title**:
      - If single commit: Use that commit message
      - If multiple commits of same type: `<type>: <summary of changes>`
@@ -49,10 +55,10 @@ Create a GitHub pull request with auto-generated summary from branch commits:
      - [ ] <TODO item 2 with file reference>
      ```
 
-6. **Present for Review**
+7. **Present for Review**
    - Show generated PR title and body
    - Ask user: "Create PR with this content? (yes/edit/cancel)"
-   - If "yes": Proceed to step 7
+   - If "yes": Proceed to step 8
    - If "edit":
      - Ask for new title (or keep current)
      - Ask for new description (or keep current)
@@ -60,7 +66,7 @@ Create a GitHub pull request with auto-generated summary from branch commits:
      - Ask again: "Create PR with this content? (yes/cancel)"
    - If "cancel": Exit without creating PR
 
-7. **Create Pull Request**
+8. **Create Pull Request**
    - Use GitHub CLI: `gh pr create --title "..." --body "..."`
    - Use heredoc for multiline body:
      ```bash
@@ -73,7 +79,7 @@ Create a GitHub pull request with auto-generated summary from branch commits:
    - Capture PR URL from output
    - Display success message with PR URL
 
-8. **Error Handling**
+9. **Error Handling**
    - Check if `gh` CLI is installed: `gh --version`
    - If not installed: "GitHub CLI (gh) is not installed. Install from: https://cli.github.com/"
    - Check if authenticated: `gh auth status`

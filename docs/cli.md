@@ -77,6 +77,7 @@ Paths inside a config resolve against the repository root, not the working direc
     "max_concurrent": 10,
     "max_total_words": null,
     "persona_speaks_first": true,
+    "user_language": "English",
     "sessions": null
   },
   "judging": {
@@ -99,8 +100,8 @@ Simulates conversations. Requires `-c`, at least one `-u`, and `--target` or `--
 
 ```bash
 uv run python vera.py generate \
-  -c gpt-4o \
-  -u claude-sonnet-4-5-20250929:1 \
+  -c gpt-5.4 \
+  -u claude-opus-4-5:1 \
   --target SI
 ```
 
@@ -115,6 +116,7 @@ uv run python vera.py generate \
 | `--max-concurrent` | Maximum concurrent conversations; set this if the chatbot times out or rate-limits | unlimited |
 | `--max-total-words` | Cap on total response words per conversation | unlimited |
 | `--provider-speaks-first` | Chatbot speaks first | persona speaks first |
+| `--user-language` | Language the user-side LLM writes in, e.g. `"Mexican Spanish"`; see [user-language.md](user-language.md) | English |
 | `--sessions` | Comma-separated session types run in order per persona (e.g. `intake,coaching`) | one session |
 | `--user-params` | `k=v,...` provider parameters for every `-u` model | none |
 | `--chatbot-params` | `k=v,...` provider parameters for the `-c` model | none |
@@ -200,7 +202,7 @@ Runs generate, judge, and score in sequence, then pools the evaluations when the
 
 ```bash
 uv run python vera.py pipeline \
-  -c gpt-4o \
+  -c gpt-5.4 \
   -u gpt-5.2:1 claude-opus-4-5:1 \
   -j gpt-5.4:1 \
   --judge-params reasoning_effort=low \
@@ -225,11 +227,11 @@ Generation and judging both spend real LLM calls, so a run that dies partway sho
 
 ```bash
 # The original run. Creates a new folder under output/ and prints its path.
-uv run python vera.py generate -c gpt-4o -u claude-sonnet-4-5-20250929:1 --target SI
+uv run python vera.py generate -c gpt-5.4 -u claude-opus-4-5:1 --target SI
 
 # It died partway. Same command, plus --into naming the folder it created:
-uv run python vera.py generate -c gpt-4o -u claude-sonnet-4-5-20250929:1 --target SI \
-  --into output/p_claude_sonnet_4_5_20250929__a_gpt_4o__t30__r1__20260713_153000
+uv run python vera.py generate -c gpt-5.4 -u claude-opus-4-5:1 --target SI \
+  --into output/p_claude_opus_4_5__a_gpt_5_4__t30__r1__20260713_153000
 ```
 
 `vera judge` takes the same flag, pointed at the evaluation folder it was writing:

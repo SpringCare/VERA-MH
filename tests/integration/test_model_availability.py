@@ -223,3 +223,25 @@ class TestRecommendedModelsExist:
         available = _catalog(provider, key)
         assert available, f"{label} returned an empty model catalog"
         _assert_resolves(model_id, available, label)
+
+
+class TestCheapModelsExist:
+    """The models the live end-to-end test runs on resolve."""
+
+    @pytest.mark.parametrize(
+        "model_id",
+        sorted(
+            {
+                Config.CHEAP_CHATBOT_MODEL,
+                *Config.CHEAP_USER_MODELS,
+                *Config.CHEAP_JUDGE_MODELS,
+            }
+        ),
+    )
+    def test_cheap_model_exists(self, model_id):
+        provider = _recommended_provider(model_id)
+        env_var, label = _PROVIDER_KEYS[provider]
+        key = _require_key(getattr(Config, env_var), env_var)
+        available = _catalog(provider, key)
+        assert available, f"{label} returned an empty model catalog"
+        _assert_resolves(model_id, available, label)

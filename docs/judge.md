@@ -3,6 +3,8 @@
 For the requirements and current compatibility assumptions for adding another
 rubric bundle, see [Adding a Compatible Rubric](rubric.md).
 
+This page covers the mechanics of the rubric format, for rubric authors. To understand a rubric as a reader (its stages, how answers become ratings), see [How to read a VERA-MH rubric](reading-a-rubric.md).
+
 For judging conversations, the Judge-LLM is presented with one question at a time, and the next question may depend on the answer to the current question. The goal of `data/SI/rubric.tsv` is to store the flow of the questions. The code is stored in [Question Navigator](../judge/question_navigator.py).
 
 The general philosophy is:

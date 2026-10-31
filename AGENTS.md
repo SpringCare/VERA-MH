@@ -2,6 +2,10 @@
 
 Framework for generating and evaluating LLM conversations in mental health contexts. This file is for **any coding agent** (Cursor, Copilot, etc.). For Claude Code slash commands and `.claude/` maintenance, see [CLAUDE.md](./CLAUDE.md).
 
+## Act only when asked
+
+Do nothing the user hasn't explicitly asked for: no commands, file reads, edits, commits, pushes, or PRs on your own initiative. A command the user runs themselves (for example `open .`) is not a request. When a next step looks useful, propose it and wait for a yes.
+
 ## Quick Start
 
 ```bash
@@ -40,20 +44,16 @@ cp .env.example .env       # Add API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, et
 | **Pipeline helpers** | `scripts/` | Batch and reporting helpers |
 | **Data** | `data/` (personas, rubrics) | Evaluation inputs (committed) |
 | **Output** | `output/` (gitignored) | Generated transcripts, evaluations, logs |
-| **Config** | `utils/model_config_loader.py`, `llm_clients/config.py` | Model name resolution, API keys |
+| **Config** | `llm_clients/config.py` | Default and recommended model IDs, API keys |
 | **Shared utils** | `utils/` | Naming, logging, conversation layout |
 
 **Entry points:** `vera.py` (`generate`, `judge`, `score`, `pipeline`) is the only
 supported entry point. The old scripts live in [`legacy/`](legacy/); they are
-deprecated but kept for now, and their removal is deferred (see
-[docs/roadmap.md](docs/roadmap.md#deferred)).
+no longer supported, and removing them is the first step of the 2.1 release
+(see [docs/roadmap.md](docs/roadmap.md#release-21-plan)).
 
-**Legacy adapts; the domain doesn't bend.** `legacy/` may import domain packages
-and `utils/`, never the reverse. When a change alters a domain signature or a
-`utils/` helper that a legacy script uses, put the old-shape adapter in `legacy/`
-rather than keeping a compatibility stopgap in the domain. The parity tests
-(`tests/integration/test_cli_parity.py`, `tests/integration/test_score_parity.py`)
-must stay green.
+**Don't keep legacy working.** Don't add adapters or compatibility stopgaps for
+the legacy scripts, and don't shape a domain change around them.
 
 **Temporary experiments:** `tmp_tests/` (not committed). **Permanent tests:** `tests/`.
 
@@ -70,6 +70,8 @@ consequences without duplicating that contract.
 ## Testing
 
 The project uses [pytest](https://docs.pytest.org/) with unit and integration tests under `tests/`. Coverage is enforced (`--cov-fail-under=68` in `pyproject.toml`, set for the unit layer alone).
+
+**Changes that must not move scores.** Before changing `generate/`, `judge/`, or `score/`, read [docs/safe-changes.md](./docs/safe-changes.md). Unit tests pin results with fixed inputs, one per stage (golden persona prompts and a generation replay, scripted judge answers, golden scoring files) plus a replay of the whole recorded pipeline. A refactor must pass them unchanged; regenerating their expected data is only for changes meant to alter results, explained in the PR and the CHANGELOG. **Agents never regenerate expected data on their own**, including re-seeding a full-run baseline (`full_run seed`, committed or local): when a check fails, stop, report what differs and why, and wait for a maintainer to decide.
 
 **Layout:**
 - `tests/unit/` — fast, isolated tests
@@ -115,15 +117,15 @@ Full reference: [docs/cli.md](docs/cli.md).
 ```bash
 # Generate, judge, and score in one run (smoke test on 3 personas)
 uv run python vera.py pipeline \
-  -c gpt-4o \
-  -u claude-sonnet-4-5-20250929:1 \
+  -c gpt-5.4 \
+  -u claude-opus-4-5:1 \
   -j gpt-5.4:1 \
   --judge-params reasoning_effort=low \
   --target SI \
   --sample 3
 
 # Single stages
-uv run python vera.py generate -c gpt-4o -u claude-sonnet-4-5-20250929:1 --target SI
+uv run python vera.py generate -c gpt-5.4 -u claude-opus-4-5:1 --target SI
 uv run python vera.py judge -j gpt-5.4:1 --judge-params reasoning_effort=low \
   --conversations output/{YOUR_P_RUN} --target SI
 uv run python vera.py score -r output/{YOUR_P_RUN}/evaluations/{YOUR_J_RUN}/results.csv
@@ -144,9 +146,9 @@ uv run pyright
 pre-commit run --all-files
 ```
 
-The scripts in [`legacy/`](legacy/) (`generate.py`, `judge.py`, `score.py`, `run_pipeline.py`, `run_recommended_vera_pipeline.sh`) are deprecated and may be removed at any time; don't build on them, and never import them from `vera_cli/` or the domain packages. Their flags and `vera` equivalents are in [docs/legacy-scripts.md](docs/legacy-scripts.md).
+The scripts in [`legacy/`](legacy/) (`generate.py`, `judge.py`, `score.py`, `run_pipeline.py`, `run_recommended_vera_pipeline.sh`) are no longer supported and are removed in 2.1; don't build on them, and never import them from `vera_cli/` or the domain packages. Their flags and `vera` equivalents are in [docs/legacy-scripts.md](docs/legacy-scripts.md).
 
-Use dated model IDs (e.g. `claude-sonnet-4-5-20250929`) as in README; shorthand aliases may not resolve.
+Use full provider model IDs (e.g. `claude-opus-4-5`, `gpt-5.4`) as in README. There are no aliases: `sonnet` or `gpt` alone won't resolve. Current defaults and the recommended models are in `llm_clients/config.py`.
 
 ## Code Quality Tools
 
@@ -176,7 +178,7 @@ Format: `<type>/<brief-description>` (kebab-case), e.g. `feat/add-gpt4-support`,
 
 1. Branch from `main`
 2. Make changes; run `uv run pytest -m "not live"` for code changes
-3. Record the change in [CHANGELOG.md](./CHANGELOG.md) under `## [Unreleased]`, in the matching section (e.g. "Breaking / migration", "Runtime, CLI, and pipeline", "Testing and CI"). Follow the existing entry style: `- **Short title**—one or two sentences`. Every user-visible or contributor-visible change needs an entry: behavior, CLI flags, outputs, renamed or moved modules, test/CI policy. Skip it only for changes nobody would notice, such as typo fixes or internal refactors with no import or behavior change
+3. Record the change in [CHANGELOG.md](./CHANGELOG.md) under `## [Unreleased]`, in the matching section (e.g. "Breaking / migration", "Runtime, CLI, and pipeline", "Testing and CI"). Follow the existing entry style: `- **Short title**—one or two sentences`. Every user-visible or contributor-visible change needs an entry: behavior, CLI flags, outputs, renamed or moved modules, test/CI policy. Skip it only for changes nobody would notice, such as typo fixes or internal refactors with no import or behavior change, and mark such a PR with the `no-changelog` label: CI fails a PR that has neither an entry nor the label
    - **Suggest a version bump; don't make it.** Releases are git tags (`v2.0.0`) that match a CHANGELOG heading. When `[Unreleased]` holds a "Breaking / migration" entry, or enough changes to be worth a release, say so to the human and propose the next version under [Semantic Versioning](https://semver.org/): major for breaking changes, minor for new features, patch for fixes. The human decides; don't rename the `[Unreleased]` heading or create tags yourself
 4. Atomic commits; pre-commit hooks run on commit
 5. Push and open a PR
@@ -192,6 +194,7 @@ One canonical home per concern — cross-link, don't copy paragraphs.
 | [docs/architecture.md](./docs/architecture.md) | Humans and agents | Target architecture, invariants, layer model |
 | [docs/roadmap.md](./docs/roadmap.md) | Humans and agents | Remaining structural work, in phase order; update when a phase lands |
 | [docs/design/](./docs/design/) | Humans and agents | Historical design decisions, rationale, and compatibility consequences |
+| [docs/safe-changes.md](./docs/safe-changes.md) | Humans and agents | The tests that keep code changes from moving scores, and what to do when they fail |
 | [CHANGELOG.md](./CHANGELOG.md) | Humans and agents | Record of notable changes; every PR adds its entry under `[Unreleased]` |
 | **AGENTS.md** (this file) | All coding agents | Style, architecture map, testing, key commands, git conventions |
 | [CLAUDE.md](./CLAUDE.md) | Claude Code only | Slash commands, `.claude/` maintenance |

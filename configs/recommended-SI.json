@@ -11,6 +11,7 @@
     "max_concurrent": 10,
     "max_total_words": null,
     "persona_speaks_first": true,
+    "user_language": "English",
     "sessions": null
   },
   "judging": {
