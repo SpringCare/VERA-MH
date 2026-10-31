@@ -99,10 +99,8 @@ called as Python functions, never as subprocesses or through another parser.
 
 ## Transitional state
 
-`generate` calls into `generate/run.py`, where two stopgaps live, labeled as
-such:
-`run_for_user_models`, which expands a run's user models into individual
-generations, and `_legacy_model_config`, which flattens a `ModelSpec` into the
-dict shape the old signature expects. Both disappear when the generation domain
-accepts `ModelSpec` directly. See
+`generate` calls `generate.run_generation`, which takes the resolved
+`GenerationConfig` and expands its user models into one run each. Inside the
+domain, `ConversationRunner` still takes each model as a dict of settings; that
+goes with the job loop. See
 [../docs/architecture.md](../../../docs/architecture.md) for the boundary contract.

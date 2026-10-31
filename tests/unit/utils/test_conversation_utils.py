@@ -20,20 +20,20 @@ class TestEnsureProviderHasLastTurn:
     """Test ensure_provider_has_last_turn."""
 
     def test_persona_first_even_unchanged(self) -> None:
-        assert ensure_provider_has_last_turn(4, persona_speaks_first=True) == 4
-        assert ensure_provider_has_last_turn(6, persona_speaks_first=True) == 6
+        assert ensure_provider_has_last_turn(4, Role.USER) == 4
+        assert ensure_provider_has_last_turn(6, Role.USER) == 6
 
     def test_persona_first_odd_bumped(self) -> None:
-        assert ensure_provider_has_last_turn(3, persona_speaks_first=True) == 4
-        assert ensure_provider_has_last_turn(5, persona_speaks_first=True) == 6
+        assert ensure_provider_has_last_turn(3, Role.USER) == 4
+        assert ensure_provider_has_last_turn(5, Role.USER) == 6
 
     def test_agent_first_odd_unchanged(self) -> None:
-        assert ensure_provider_has_last_turn(3, persona_speaks_first=False) == 3
-        assert ensure_provider_has_last_turn(5, persona_speaks_first=False) == 5
+        assert ensure_provider_has_last_turn(3, Role.CHATBOT) == 3
+        assert ensure_provider_has_last_turn(5, Role.CHATBOT) == 5
 
     def test_agent_first_even_bumped(self) -> None:
-        assert ensure_provider_has_last_turn(2, persona_speaks_first=False) == 3
-        assert ensure_provider_has_last_turn(4, persona_speaks_first=False) == 5
+        assert ensure_provider_has_last_turn(2, Role.CHATBOT) == 3
+        assert ensure_provider_has_last_turn(4, Role.CHATBOT) == 5
 
 
 class TestFormatConversationSummary:

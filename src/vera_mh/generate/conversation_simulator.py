@@ -57,7 +57,7 @@ class ConversationSimulator:
         self,
         max_turns: int,
         max_total_words: Optional[int] = None,
-        persona_speaks_first: bool = True,
+        first_speaker: Role = Role.USER,
     ) -> List[Dict[str, Any]]:
         """
         Start a conversation between the two LLMs with early stopping support.
@@ -65,16 +65,16 @@ class ConversationSimulator:
         Args:
             max_turns: Maximum number of conversation turns
             max_total_words: Optional maximum total words across all responses
-            persona_speaks_first: If True, persona speaks first; else agent first.
+            first_speaker: Who opens the conversation.
 
         Returns:
             List of conversation turns with speaker and message
         """
         self.conversation_history = []
         self.last_active_speaker = None
-        max_turns = ensure_provider_has_last_turn(max_turns, persona_speaks_first)
+        max_turns = ensure_provider_has_last_turn(max_turns, first_speaker)
 
-        if persona_speaks_first:
+        if first_speaker == Role.USER:
             current_speaker = self.persona
             next_speaker = self.agent
         else:
@@ -82,7 +82,7 @@ class ConversationSimulator:
             next_speaker = self.persona
 
         debug_print(
-            f"[SIM] Starting conversation: persona_speaks_first={persona_speaks_first},"
+            f"[SIM] Starting conversation: first_speaker={first_speaker.value},"
             f"max_turns={max_turns}"
         )
         debug_print(f"[SIM] persona={self.persona.name}, agent={self.agent.name}")

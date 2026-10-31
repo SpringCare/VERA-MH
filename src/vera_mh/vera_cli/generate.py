@@ -28,7 +28,7 @@ import argparse
 from pathlib import Path
 from typing import Any
 
-from vera_mh.generate import run_for_user_models
+from vera_mh.generate import run_generation
 from vera_mh.utils.config_schema import (
     FIRST_SPEAKERS,
     GenerationConfig,
@@ -326,10 +326,10 @@ async def _execute(run_configs: list[RunConfig]) -> list[str]:
 
     Expanding a run's user models into individual generations belongs to the
     domain, not the CLI, so this passes the resolved `GenerationConfig` straight
-    through to `generate.run_for_user_models` — a stopgap wrapper, see its
-    docstring. Targets stay sequential here: `--target all` runs share chatbot,
-    user models, turns, and repeats, and run folder names carry only
-    second-granularity timestamps, so concurrent starts would collide.
+    through to `generate.run_generation`. Targets stay sequential here:
+    `--target all` runs share chatbot, user models, turns, and repeats, and run
+    folder names carry only second-granularity timestamps, so concurrent starts
+    would collide.
 
     Returns every run folder written, across all targets and user models.
     `run` discards it; `vera pipeline` reuses this function and needs to know
@@ -342,7 +342,7 @@ async def _execute(run_configs: list[RunConfig]) -> list[str]:
             raise ConfigError("generate produced a run with no generation section")
         into = run_config.invocation.into
         run_folders.extend(
-            await run_for_user_models(
+            await run_generation(
                 generation,
                 max_personas=run_config.invocation.sample,
                 into=into,

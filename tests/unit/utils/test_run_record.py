@@ -145,29 +145,32 @@ def test_a_missing_input_stops_a_rerun(tmp_path: Path) -> None:
 
 def test_each_user_model_folder_records_only_its_own_model(tmp_path: Path) -> None:
     """Rerunning one folder's record repeats that folder, not its siblings."""
-    with patch.object(
-        generation_domain, "run_generation", new_callable=AsyncMock
-    ) as run_generation:
-        run_generation.return_value = ([], str(tmp_path / "run"))
+    runner = AsyncMock()
+    runner.run_conversations.return_value = []
+    with patch.object(generation_domain, "ConversationRunner", return_value=runner):
         vera.main(
             ["generate", "-c", "gpt-5", "-u", "claude-sonnet-5", "gpt-4o"]
             + ["--target", "SI", "-o", str(tmp_path)]
         )
 
-    records = [call.kwargs["run_record"] for call in run_generation.await_args_list]
-    assert [record["generation"]["user"] for record in records] == [
-        [{"name": "claude-sonnet-5", "repeats": 1}],
-        [{"name": "gpt-4o", "repeats": 1}],
+    records = [
+        json.loads((root / RECORD_FILE).read_text(encoding="utf-8"))
+        for root in sorted(tmp_path.iterdir())
     ]
+    assert sorted(record["generation"]["user"][0]["name"] for record in records) == [
+        "claude-sonnet-5",
+        "gpt-4o",
+    ]
+    assert all(len(record["generation"]["user"]) == 1 for record in records)
 
 
 def test_continuing_a_run_writes_no_new_record(tmp_path: Path) -> None:
     run = tmp_path / "p_claude-sonnet-5__a_gpt-5__t30__r1__20260101_000000"
     run.mkdir()
     with patch.object(
-        generation_domain, "run_generation", new_callable=AsyncMock
+        generate, "run_generation", new_callable=AsyncMock
     ) as run_generation:
-        run_generation.return_value = ([], str(run))
+        run_generation.return_value = [str(run)]
         vera.main(
             ["generate", "-c", "gpt-5", "-u", "claude-sonnet-5", "--target", "SI"]
             + ["--into", str(run)]
@@ -219,7 +222,7 @@ async def test_generation_writes_the_record_with_the_folder_time(
     runner = AsyncMock()
     runner.run_conversations.return_value = []
     with patch.object(generation_domain, "ConversationRunner", return_value=runner):
-        await generation_domain.run_for_user_models(
+        await generation_domain.run_generation(
             run_config.generation,  # type: ignore[arg-type]
             max_personas=None,
             run_record=record,

@@ -485,7 +485,7 @@ class LLMInterface(ABC):
     def first_speaker(self) -> Optional["Role"]:
         """The role that should speak first in this session.
 
-        Returns None to defer to the runner's global persona_speaks_first setting.
+        Returns None to defer to the run's `first_speaker` setting.
         Override in subclasses where the session type dictates speaker order
         (e.g. INTAKE sessions are always provider-initiated).
         """

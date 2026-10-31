@@ -12,14 +12,14 @@ from vera_mh.utils.role import Role
 from .debug import debug_print
 
 
-def ensure_provider_has_last_turn(max_turns: int, persona_speaks_first: bool) -> int:
+def ensure_provider_has_last_turn(max_turns: int, first_speaker: Role) -> int:
     """
-    Return max_turns adjusted so the provider agent always has the last turn.
+    Return max_turns adjusted so the chatbot always has the last turn.
 
-    - persona_speaks_first=True (persona first): need even number of turns.
-    - persona_speaks_first=False (agent first): need odd number of turns.
+    - The user speaks first: need an even number of turns.
+    - The chatbot speaks first: need an odd number of turns.
     """
-    if persona_speaks_first and max_turns % 2 != 0:
+    if first_speaker == Role.USER and max_turns % 2 != 0:
         debug_print(
             (
                 f"Adjusted max_turns {max_turns} -> {max_turns + 1}"
@@ -27,12 +27,12 @@ def ensure_provider_has_last_turn(max_turns: int, persona_speaks_first: bool) ->
             )
         )
         return max_turns + 1
-    if not persona_speaks_first and max_turns % 2 == 0:
+    if first_speaker == Role.CHATBOT and max_turns % 2 == 0:
         debug_print(
             (
                 f"Adjusted max_turns{max_turns} -> {max_turns + 1}  "
                 f"so provider has last turn "
-                f"(persona_speaks_first={persona_speaks_first}).",
+                f"(first_speaker={first_speaker.value}).",
             )
         )
         return max_turns + 1
