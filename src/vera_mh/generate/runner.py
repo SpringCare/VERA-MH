@@ -44,7 +44,6 @@ class ConversationRunner:
         self,
         persona_model_config: Dict[str, Any],
         agent_model_config: Dict[str, Any],
-        run_id: str,
         max_turns: int = 6,
         runs_per_prompt: int = 3,
         folder_name: str = "conversations",
@@ -52,7 +51,7 @@ class ConversationRunner:
         max_total_words: Optional[int] = None,
         user_language: str = DEFAULT_USER_LANGUAGE,
         max_personas: Optional[int] = None,
-        persona_speaks_first: bool = True,
+        first_speaker: Role = Role.USER,
         session_types: Optional[List[str]] = None,
         resume: bool = False,
         persona_prompt_path: str = "data/SI/personas.tsv",
@@ -63,7 +62,6 @@ class ConversationRunner:
         self.max_turns = max_turns
         self.runs_per_prompt = runs_per_prompt
         self.folder_name = folder_name
-        self.run_id = run_id
 
         # Limit concurrent conversations to avoid overwhelming the server
         # Default: None - run all conversations concurrently
@@ -71,7 +69,7 @@ class ConversationRunner:
         self.max_total_words = max_total_words
         self.user_language = user_language
         self.max_personas = max_personas
-        self.persona_speaks_first = persona_speaks_first
+        self.first_speaker = first_speaker
         self.session_types = session_types
         self.resume = resume
         self.persona_prompt_path = persona_prompt_path
@@ -460,12 +458,8 @@ class ConversationRunner:
 
                 await agent.enter_session(session_type)
 
-                first_speaker = agent.first_speaker
-                psf = (
-                    (first_speaker == Role.USER)
-                    if first_speaker is not None
-                    else self.persona_speaks_first
-                )
+                # A chatbot may set who opens each of its sessions.
+                first_speaker = agent.first_speaker or self.first_speaker
 
                 session_stem = (
                     f"{filename_base}_s{i}_{session_type}"
@@ -483,7 +477,7 @@ class ConversationRunner:
                     llm2_name=agent.name,
                     llm2_model_str=getattr(agent, "model_name", "unknown"),
                     max_turns=max_turns,
-                    persona_speaks_first=psf,
+                    persona_speaks_first=first_speaker == Role.USER,
                     llm1_model=persona,
                     llm2_model=agent,
                 )
@@ -493,7 +487,7 @@ class ConversationRunner:
                     conversation = await simulator.generate_conversation(
                         max_turns=max_turns,
                         max_total_words=self.max_total_words,
-                        persona_speaks_first=psf,
+                        first_speaker=first_speaker,
                     )
                 except LLMGenerationFailed as e:
                     end_time = time.time()
@@ -636,12 +630,10 @@ class ConversationRunner:
                 logging=turn.get("logging", {}),
             )
 
-    async def run_conversations(
-        self, persona_names: Optional[List[str]] = None
-    ) -> List[Dict[str, Any]]:
+    async def run_conversations(self) -> List[Dict[str, Any]]:
         """Run multiple conversations concurrently using queue workers."""
         personas = load_prompts_from_csv(
-            persona_names,
+            None,
             prompt_path=self.persona_prompt_path,
             persona_context_template_path=self.persona_context_template_path,
             user_language=self.user_language,

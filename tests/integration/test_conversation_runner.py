@@ -23,14 +23,12 @@ from vera_mh.utils.role import Role
 def create_test_runner(
     persona_config: Dict[str, Any],
     agent_config: Dict[str, Any],
-    run_id: str,
     **kwargs: Dict[str, Any],
 ) -> ConversationRunner:
     """Helper to create runner with copied configs (no shared mutation)."""
     runner = ConversationRunner(
         persona_model_config=copy.deepcopy(persona_config),
         agent_model_config=copy.deepcopy(agent_config),
-        run_id=run_id,
         **kwargs,
     )
     return runner
@@ -138,19 +136,15 @@ class TestConversationRunnerInit:
     ) -> None:
         """Test initialization with basic configuration."""
         # Arrange
-        run_id = "test_run_123"
-
         # Act
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
-            run_id=run_id,
         )
 
         # Assert
         assert runner.persona_model_config == basic_persona_config
         assert runner.agent_model_config["model"] == basic_agent_config["model"]
-        assert runner.run_id == run_id
         assert runner.max_turns == 6
         assert runner.runs_per_prompt == 3
         assert runner.folder_name == "conversations"
@@ -166,7 +160,6 @@ class TestConversationRunnerInit:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
-            run_id="custom_run",
             max_turns=10,
             runs_per_prompt=5,
             folder_name="test_conversations",
@@ -204,7 +197,6 @@ class TestConversationRunnerInit:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=agent_config,
-            run_id="test_run",
             folder_name=str(tmp_path / "conversations"),
         )
         persona_config = {
@@ -251,7 +243,6 @@ class TestConversationRunnerInit:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=agent_config,
-            run_id="test_run",
             folder_name=str(tmp_path / "conversations"),
         )
         persona_config = {
@@ -295,7 +286,6 @@ class TestConversationRunnerSingle:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
-            run_id=run_id,
             folder_name=str(conv_folder),
         )
 
@@ -332,23 +322,21 @@ class TestConversationRunnerSingle:
         assert len(result["sessions"][0]["conversation"]) == 4
         assert Path(result["sessions"][0]["filename"]).exists()
 
-    async def test_persona_speaks_first_false_first_turn_is_provider(
+    async def test_chatbot_first_speaker_first_turn_is_provider(
         self,
         tmp_path: Path,
         basic_persona_config: Dict[str, Any],
         basic_agent_config: Dict[str, Any],
         mock_llm_factory,
     ) -> None:
-        """Test persona_speaks_first=False: first turn is from the provider."""
+        """With first_speaker=Role.CHATBOT, the first turn is the chatbot's."""
         conv_folder = tmp_path / "conversations"
-        run_id = "test_agent_first"
 
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
-            run_id=run_id,
             folder_name=str(conv_folder),
-            persona_speaks_first=False,
+            first_speaker=Role.CHATBOT,
         )
 
         persona_config = {
@@ -390,7 +378,6 @@ class TestConversationRunnerSingle:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
-            run_id=run_id,
             folder_name=str(conv_folder),
         )
 
@@ -452,7 +439,6 @@ class TestConversationRunnerSingle:
         runner = ConversationRunner(
             persona_model_config=persona_model_config,
             agent_model_config=basic_agent_config,
-            run_id="test_run",
             folder_name=str(conv_folder),
         )
 
@@ -494,7 +480,6 @@ class TestConversationRunnerSingle:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
-            run_id="test_run",
             folder_name=str(conv_folder),
         )
 
@@ -558,7 +543,6 @@ class TestConversationRunnerSingle:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
-            run_id="test_run",
             folder_name=str(conv_folder),
         )
 
@@ -618,7 +602,6 @@ class TestConversationRunnerMultiple:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=2,
             folder_name=str(conv_folder),
@@ -640,9 +623,7 @@ class TestConversationRunnerMultiple:
                 mock_logger.return_value = logger
 
                 # Act
-                results = await runner.run_conversations(
-                    persona_names=["Persona1", "Persona2"]
-                )
+                results = await runner.run_conversations()
 
         # Assert - should run 2 personas * 2 runs each = 4 conversations
         assert len(results) == 4
@@ -662,7 +643,6 @@ class TestConversationRunnerMultiple:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=1,
             folder_name=str(conv_folder),
@@ -674,7 +654,7 @@ class TestConversationRunnerMultiple:
             mock_load.return_value = [{"Name": "Persona1", "prompt": "Prompt 1"}]
 
             with patch("vera_mh.generate.runner.setup_conversation_logger"):
-                await runner.run_conversations(persona_names=["Persona1"])
+                await runner.run_conversations()
 
         assert mock_load.call_args.kwargs["prompt_path"] == "data/personas_custom.tsv"
         assert (
@@ -695,7 +675,6 @@ class TestConversationRunnerMultiple:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=3,
             folder_name=str(conv_folder),
@@ -734,7 +713,7 @@ class TestConversationRunnerMultiple:
                 mock_logger.return_value = logger
 
                 # Act
-                results = await runner.run_conversations(persona_names=None)
+                results = await runner.run_conversations()
 
         # Assert - should respect max_concurrent
         assert len(results) == 6  # 2 personas * 3 runs
@@ -754,7 +733,6 @@ class TestConversationRunnerMultiple:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=2,
             folder_name=str(conv_folder),
@@ -773,7 +751,7 @@ class TestConversationRunnerMultiple:
                 mock_logger.return_value = logger
 
                 # Act
-                results = await runner.run_conversations(persona_names=None)
+                results = await runner.run_conversations()
 
         # Assert
         assert len(results) == 2  # 1 persona * 2 runs
@@ -791,7 +769,6 @@ class TestConversationRunnerMultiple:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=2,
             folder_name=str(conv_folder),
@@ -812,7 +789,7 @@ class TestConversationRunnerMultiple:
                 mock_logger.return_value = logger
 
                 # Act
-                results = await runner.run_conversations(persona_names=None)
+                results = await runner.run_conversations()
 
         # Assert - indices should be 1, 2, 3, 4
         indices = sorted([r["index"] for r in results])
@@ -836,7 +813,6 @@ class TestConversationRunnerMultiple:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=2,
             folder_name=str(conv_folder),
@@ -850,7 +826,7 @@ class TestConversationRunnerMultiple:
                 "vera_mh.generate.runner.setup_conversation_logger"
             ) as mock_logger:
                 mock_logger.return_value = MagicMock()
-                results = await runner.run_conversations(persona_names=None)
+                results = await runner.run_conversations()
 
         assert len(results) == 2
         assert sum(1 for r in results if r.get("skipped")) == 1
@@ -873,7 +849,6 @@ class TestConversationRunnerMultiple:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=2,
             folder_name=str(conv_folder),
@@ -887,7 +862,7 @@ class TestConversationRunnerMultiple:
                 "vera_mh.generate.runner.setup_conversation_logger"
             ) as mock_logger:
                 mock_logger.return_value = MagicMock()
-                results = await runner.run_conversations(persona_names=None)
+                results = await runner.run_conversations()
 
         assert len(results) == 2
         assert all(not r.get("skipped") for r in results)
@@ -910,7 +885,6 @@ class TestConversationRunnerMultiple:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=1,
             folder_name=str(conv_folder),
@@ -924,7 +898,7 @@ class TestConversationRunnerMultiple:
                 "vera_mh.generate.runner.setup_conversation_logger"
             ) as mock_logger:
                 mock_logger.return_value = MagicMock()
-                results = await runner.run_conversations(persona_names=None)
+                results = await runner.run_conversations()
 
         assert len(results) == 1
         assert results[0].get("skipped") is True
@@ -946,7 +920,6 @@ class TestConversationRunnerMultiple:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=2,
             folder_name=str(conv_folder),
@@ -960,7 +933,7 @@ class TestConversationRunnerMultiple:
                 "vera_mh.generate.runner.setup_conversation_logger"
             ) as mock_logger:
                 mock_logger.return_value = MagicMock()
-                results = await runner.run_conversations(persona_names=None)
+                results = await runner.run_conversations()
 
         assert len(results) == 2
         assert sum(1 for r in results if r.get("skipped")) == 1
@@ -986,7 +959,6 @@ class TestConversationRunnerMultiple:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=1,
             folder_name=str(conv_folder),
@@ -1001,7 +973,7 @@ class TestConversationRunnerMultiple:
                 "vera_mh.generate.runner.setup_conversation_logger"
             ) as mock_logger:
                 mock_logger.return_value = MagicMock()
-                results = await runner.run_conversations(persona_names=None)
+                results = await runner.run_conversations()
 
         assert len(results) == 1
         assert results[0].get("skipped") is True
@@ -1037,7 +1009,6 @@ class TestConversationRunnerMultiple:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config={"model": "mock-agent-model", "name": "agent"},
-            run_id="test_partial_resume",
             folder_name=str(conv_folder),
             max_turns=2,
             runs_per_prompt=1,
@@ -1107,7 +1078,6 @@ class TestConversationRunnerMultiple:
         runner = create_test_runner(
             basic_persona_config,
             agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=2,
             folder_name=str(conv_folder),
@@ -1123,7 +1093,7 @@ class TestConversationRunnerMultiple:
         ):
             mock_load.return_value = mock_personas
             mock_logger.return_value = MagicMock()
-            await runner.run_conversations(persona_names=None)
+            await runner.run_conversations()
 
         assert runner.agent_model_config["name"] == expected_name
         assert runner.agent_model_config["system_prompt"] == expected_prompt
@@ -1160,7 +1130,6 @@ class TestConversationRunnerFileOperations:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
-            run_id="test_run",
             folder_name=str(conv_folder),
         )
 
@@ -1199,7 +1168,6 @@ class TestConversationRunnerFileOperations:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=3,
             folder_name=str(conv_folder),
@@ -1217,7 +1185,7 @@ class TestConversationRunnerFileOperations:
                 mock_logger.return_value = logger
 
                 # Act
-                results = await runner.run_conversations(persona_names=None)
+                results = await runner.run_conversations()
 
         # Assert - should create 3 conversation files (nested layout)
         assert len(results) == 3
@@ -1237,7 +1205,6 @@ class TestConversationRunnerFileOperations:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=3,
             folder_name=str(conv_folder),
@@ -1255,7 +1222,7 @@ class TestConversationRunnerFileOperations:
                 mock_logger.return_value = logger
 
                 # Act
-                results = await runner.run_conversations(persona_names=None)
+                results = await runner.run_conversations()
 
         # Assert - all filenames should be unique
         filenames = [r["sessions"][0]["filename"] for r in results]
@@ -1279,7 +1246,6 @@ class TestConversationRunnerErrorHandling:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
-            run_id="test_run",
             folder_name=str(conv_folder),
         )
 
@@ -1340,7 +1306,6 @@ class TestConversationRunnerErrorHandling:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             folder_name=str(conv_folder),
         )
 
@@ -1354,7 +1319,7 @@ class TestConversationRunnerErrorHandling:
                 mock_logger.return_value = logger
 
                 # Act
-                results = await runner.run_conversations(persona_names=None)
+                results = await runner.run_conversations()
 
         # Assert - should return empty list
         assert results == []
@@ -1372,7 +1337,6 @@ class TestConversationRunnerErrorHandling:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
-            run_id="test_run",
             folder_name=str(conv_folder),
         )
 
@@ -1417,7 +1381,6 @@ class TestConversationRunnerPerformance:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config=basic_agent_config,
-            run_id="test_run",
             folder_name=str(conv_folder),
         )
 
@@ -1458,7 +1421,6 @@ class TestConversationRunnerPerformance:
         runner = create_test_runner(
             basic_persona_config,
             basic_agent_config,
-            "test_run",
             max_turns=2,
             runs_per_prompt=2,
             folder_name=str(conv_folder),
@@ -1480,7 +1442,7 @@ class TestConversationRunnerPerformance:
 
                 # Act
                 start = time.time()
-                results = await runner.run_conversations(persona_names=None)
+                results = await runner.run_conversations()
                 duration = time.time() - start
 
         # Assert - should complete quickly with mocks
@@ -1549,7 +1511,6 @@ class TestMultiSessionRunner:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config={"model": "mock-agent-model", "name": "agent"},
-            run_id="test_setup",
             folder_name=str(conv_folder),
         )
         persona_config = {
@@ -1601,7 +1562,6 @@ class TestMultiSessionRunner:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config={"model": "mock-agent-model", "name": "agent"},
-            run_id="test_reset",
             folder_name=str(conv_folder),
             session_types=["intake", "coaching"],
         )
@@ -1657,7 +1617,6 @@ class TestMultiSessionRunner:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config={"model": "mock-agent-model", "name": "agent"},
-            run_id="test_prepare",
             folder_name=str(conv_folder),
             session_types=["coaching"],
         )
@@ -1690,13 +1649,13 @@ class TestMultiSessionRunner:
         assert tracking_agent.enter_session_calls == ["intake", "coaching"]
         assert len(result["sessions"]) == 2
 
-    async def test_first_speaker_overrides_persona_speaks_first(
+    async def test_chatbot_first_speaker_overrides_the_run_setting(
         self,
         tmp_path: Path,
         basic_persona_config: Dict[str, Any],
     ) -> None:
         """agent.first_speaker returning PROVIDER forces provider-first even when
-        runner.persona_speaks_first is True."""
+        runner.first_speaker is Role.USER."""
         conv_folder = tmp_path / "conversations"
         tracking_agent = SessionTrackingAgent(
             name="agent",
@@ -1715,9 +1674,8 @@ class TestMultiSessionRunner:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config={"model": "mock-agent-model", "name": "agent"},
-            run_id="test_first_speaker",
             folder_name=str(conv_folder),
-            persona_speaks_first=True,  # runner default: persona first
+            first_speaker=Role.USER,  # runner default: the user first
         )
         persona_config = {
             "model": "mock-persona-model",
@@ -1743,7 +1701,7 @@ class TestMultiSessionRunner:
                 run_number=1,
             )
 
-        # Despite persona_speaks_first=True, agent.first_speaker=PROVIDER wins
+        # Despite the runner's Role.USER, the chatbot's first_speaker wins
         assert result["sessions"][0]["conversation"][0]["speaker"] == "chatbot"
 
     async def test_session_suffix_in_filenames_when_session_types_set(
@@ -1770,7 +1728,6 @@ class TestMultiSessionRunner:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config={"model": "mock-agent-model", "name": "agent"},
-            run_id="test_suffix",
             folder_name=str(conv_folder),
             session_types=["intake", "coaching"],
         )
@@ -1827,7 +1784,6 @@ class TestMultiSessionRunner:
         runner = ConversationRunner(
             persona_model_config=basic_persona_config,
             agent_model_config={"model": "mock-agent-model", "name": "agent"},
-            run_id="test_concat",
             folder_name=str(conv_folder),
             session_types=["intake", "coaching"],
         )
