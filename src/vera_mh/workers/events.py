@@ -58,18 +58,23 @@ class Reporter(Protocol):
     def emit(self, event: Event) -> None: ...
 
 
-# The reporter and job of the job running in the current asyncio task. The loop
+@dataclass(frozen=True)
+class _RunningJob:
+    reporter: Reporter
+    label: str
+    kind: str
+
+
+# The job running in the current asyncio task, and where its events go. The loop
 # sets it around each job's `run()`; each job runs in its own task, so
 # concurrent jobs don't see each other's.
-_running: ContextVar[tuple[Reporter, str, str] | None] = ContextVar(
-    "running_job", default=None
-)
+_running: ContextVar[_RunningJob | None] = ContextVar("running_job", default=None)
 
 
 @contextlib.contextmanager
 def running_job(reporter: Reporter, label: str, kind: str) -> Iterator[None]:
     """While inside, `report()` emits events for this job to `reporter`."""
-    token = _running.set((reporter, label, kind))
+    token = _running.set(_RunningJob(reporter, label, kind))
     try:
         yield
     finally:
@@ -81,8 +86,6 @@ def report(event_type: str, **data: Any) -> None:
 
     Outside a job (a unit test calling the code directly, say) it does nothing.
     """
-    running = _running.get()
-    if running is None:
-        return
-    reporter, label, kind = running
-    reporter.emit(Event(event_type, job=label, kind=kind, data=data))
+    job = _running.get()
+    if job is not None:
+        job.reporter.emit(Event(event_type, job=job.label, kind=job.kind, data=data))

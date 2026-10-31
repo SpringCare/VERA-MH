@@ -78,18 +78,6 @@ class Outcome:
     attempts: int = 0
     seconds: float = 0.0
 
-    @property
-    def finished(self) -> bool:
-        return self.status == "finished"
-
-    @property
-    def failed(self) -> bool:
-        return self.status == "failed"
-
-    @property
-    def skipped(self) -> bool:
-        return self.status == "skipped"
-
 
 async def run_jobs(
     jobs: Iterable[Job],
@@ -118,30 +106,17 @@ async def run_jobs(
 
     async def run_one(job: Job) -> list[Outcome]:
         try:
-            is_done = job.done()
-        except Exception as error:
-            outcome = Outcome(job, "failed", error=error)
-        else:
-            if is_done:
+            if job.done():
                 outcome = Outcome(job, "skipped")
             else:
                 async with limits[job.kind]:
                     outcome = await _run_with_retries(job, attempts, report)
-
-        follow_ups: list[Job] = []
-        if not outcome.failed:
-            try:
-                follow_ups = job.follow_ups()
-            except Exception as error:
-                # The jobs waiting on this one can't be listed, so they would be
-                # missing without a trace: count the job as failed instead.
-                outcome = Outcome(
-                    job,
-                    "failed",
-                    error=error,
-                    attempts=outcome.attempts,
-                    seconds=outcome.seconds,
-                )
+            follow_ups = job.follow_ups() if outcome.status != "failed" else []
+        except Exception as error:
+            # `done()` or `follow_ups()` crashed, on a corrupt file say. Count the
+            # job as failed rather than stop the run, or lose the jobs waiting on it
+            # without a trace.
+            outcome, follow_ups = Outcome(job, "failed", error=error), []
         _emit_outcome(report, outcome)
         return [
             outcome,
@@ -167,10 +142,12 @@ async def run_jobs(
 async def _run_with_retries(job: Job, attempts: int, report: Reporter) -> Outcome:
     report.emit(Event(JOB_STARTED, job=job.label, kind=job.kind))
     start = time.monotonic()
+    attempt = 1
     with running_job(report, job.label, job.kind):
-        for attempt in range(1, attempts + 1):
+        while True:
             try:
                 await job.run()
+                return Outcome(job, "finished", attempts=attempt, seconds=_since(start))
             except Exception as error:
                 if attempt == attempts or not job.retryable(error):
                     return Outcome(
@@ -184,16 +161,14 @@ async def _run_with_retries(job: Job, attempts: int, report: Reporter) -> Outcom
                 report.emit(
                     Event(JOB_RETRYING, job=job.label, kind=job.kind, data=retry)
                 )
-            else:
-                return Outcome(job, "finished", attempts=attempt, seconds=_since(start))
-    raise AssertionError("unreachable: run_jobs checks attempts >= 1")
+                attempt += 1
 
 
 def _emit_outcome(report: Reporter, outcome: Outcome) -> None:
     job = outcome.job
-    if outcome.skipped:
+    if outcome.status == "skipped":
         report.emit(Event(JOB_SKIPPED, job=job.label, kind=job.kind))
-    elif outcome.finished:
+    elif outcome.status == "finished":
         data = {"seconds": round(outcome.seconds, 3), "attempts": outcome.attempts}
         report.emit(Event(JOB_FINISHED, job=job.label, kind=job.kind, data=data))
     else:

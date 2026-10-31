@@ -87,9 +87,8 @@ class PlainLineReporter:
         if event.type == STAGE_FINISHED:
             counts = event.data
             return (
-                f"{clock} {counts.get('stage', '')} finished: "
-                f"{counts.get('done', 0)} done, {counts.get('failed', 0)} failed, "
-                f"{counts.get('skipped', 0)} skipped"
+                f"{clock} {counts['stage']} finished: {counts['done']} done, "
+                f"{counts['failed']} failed, {counts['skipped']} skipped"
             )
         if event.type in JOB_WORDS:
             word = JOB_WORDS[event.type]
@@ -105,15 +104,15 @@ class PlainLineReporter:
 def _detail(event: Event) -> str:
     data = event.data
     if event.type == JOB_FINISHED:
-        return duration(data.get("seconds", 0))
+        return duration(data["seconds"])
     if event.type == JOB_FAILED:
-        return str(data.get("error", ""))
+        return data["error"]
     if event.type == JOB_RETRYING:
-        return f"attempt {data.get('attempt')} failed: {data.get('error', '')}"
+        return f"attempt {data['attempt']} failed: {data['error']}"
     if event.type == TURN_STARTED:
-        return f"turn {data.get('turn')} {data.get('speaker')} responding"
+        return f"turn {data['turn']} {data['speaker']} responding"
     if event.type == QUESTION_ASKED:
-        return f"question {data.get('question_id')}"
+        return f"question {data['question_id']}"
     return ""
 
 

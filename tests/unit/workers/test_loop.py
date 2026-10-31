@@ -105,7 +105,7 @@ async def test_each_kind_has_its_own_cap() -> None:
         [*sessions, *evaluations], {"session": 2, "evaluation": 3}
     )
 
-    assert all(outcome.finished for outcome in outcomes)
+    assert all(outcome.status == "finished" for outcome in outcomes)
     assert tracker.peak == Counter({"session": 2, "evaluation": 3})
 
 
@@ -117,7 +117,7 @@ async def test_a_failure_is_an_outcome_not_an_exception() -> None:
     outcomes = await run_jobs([bad, good], UNLIMITED)
 
     assert statuses(outcomes) == {"bad": "failed", "good": "finished"}
-    failed = next(outcome for outcome in outcomes if outcome.failed)
+    failed = next(outcome for outcome in outcomes if outcome.status == "failed")
     assert isinstance(failed.error, ValueError)
 
 
@@ -127,7 +127,7 @@ async def test_retries_stop_at_attempts() -> None:
 
     (outcome,) = await run_jobs([job], UNLIMITED, attempts=3)
 
-    assert outcome.failed
+    assert outcome.status == "failed"
     assert job.runs == 3
     assert outcome.attempts == 3
 
@@ -138,7 +138,7 @@ async def test_a_retry_can_succeed() -> None:
 
     (outcome,) = await run_jobs([job], UNLIMITED, attempts=3)
 
-    assert outcome.finished
+    assert outcome.status == "finished"
     assert outcome.attempts == 2
 
 
@@ -148,7 +148,7 @@ async def test_an_error_that_isnt_retryable_is_not_retried() -> None:
 
     (outcome,) = await run_jobs([job], UNLIMITED, attempts=3)
 
-    assert outcome.failed
+    assert outcome.status == "failed"
     assert job.runs == 1
 
 
@@ -340,5 +340,5 @@ async def test_a_job_survives_a_json_round_trip_and_runs(tmp_path: Path) -> None
 
     assert copy == job
     (outcome,) = await run_jobs([copy], UNLIMITED)
-    assert outcome.finished
+    assert outcome.status == "finished"
     assert job.done()
