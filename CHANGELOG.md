@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Documentation and development workflow
 
+- **Job-loop proposal**—[`docs/design/job-loop.md`](docs/design/job-loop.md) proposes one job loop for generation and judging: jobs as plain data, resume by skipping what's on disk, retries, one concurrency cap per job kind, and the pipeline as a single job list with `vera pipeline --into`. This is a draft design, not an implemented change.
 - **Release 2.1 plan**—[`docs/roadmap.md`](docs/roadmap.md#release-21-plan) lists the steps for 2.1 in dependency order with their PRs: safety net, data contracts, job loop, terminal output, then removing `legacy/`, with the judge-flow rewrite in parallel. They accumulate on a `release/2.1` branch that merges into `main` once, at the 2.1.0 tag, so `main` stays releasable; CI now also runs for `release/2.1`.
 
 ## [v2.0.4](https://github.com/SpringCare/VERA-MH/releases/tag/v2.0.4) \- 2026-10-20
