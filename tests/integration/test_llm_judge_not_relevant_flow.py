@@ -56,7 +56,6 @@ class TestNotRelevantGotoIntegrationAdvanced:
             answer="Rate this dimension Not Relevant",
             current_dimension="Detects Risk",
             dimension_answers=dimension_answers,
-            verbose=False,
         )
 
         # Verify the entry was overwritten with NOT_RELEVANT marker
@@ -67,5 +66,5 @@ class TestNotRelevantGotoIntegrationAdvanced:
         assert dimension_entry[0]["answer"] == "Not Relevant"
 
         # Verify scoring recognizes the marker
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
         assert results["Detects Risk"]["score"] == NOT_RELEVANT

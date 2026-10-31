@@ -1,4 +1,5 @@
-"""Integration tests for judge/runner.py (EvaluationRunner).
+"""Integration tests for judging: judge/run.py (`run_judging`) and the worker
+pool in judge/runner.py.
 
 Tests the full workflow of evaluating conversations including:
 - Conversation file loading and parsing
@@ -10,7 +11,7 @@ Tests the full workflow of evaluating conversations including:
 """
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from unittest.mock import patch
 
 import pandas as pd
@@ -29,11 +30,62 @@ from vera_mh.judge.rubric_config import (
     RubricConfig,
     load_conversations,
 )
-from vera_mh.judge.runner import (
-    batch_evaluate_with_individual_judges,
-    judge_conversations,
-)
+from vera_mh.judge.run import run_judging
+from vera_mh.judge.runner import _create_evaluation_jobs, _run_workers_with_queue
+from vera_mh.utils.config_schema import JudgingConfig, ModelSpec, RubricFiles
 from vera_mh.utils.judge_results import build_dataframe_from_tsv_files
+
+
+def judging_config(
+    conversations: str,
+    rubric_folder: str,
+    output: str = "unused-with-into",
+    judge_models: Optional[Dict[str, int]] = None,
+    max_concurrent: Optional[int] = None,
+    per_judge: bool = False,
+) -> JudgingConfig:
+    """A judging config for the conversations in `conversations`, judged with
+    the rubric files in `rubric_folder` (see the `mock_rubric_files` fixture).
+
+    `output` is where a new run folder goes; a call that passes `into` writes
+    there instead and never reads it.
+    """
+    rubric = Path(rubric_folder).resolve()
+    return JudgingConfig(
+        models=[
+            ModelSpec(name=name, repeats=count, extra_params={})
+            for name, count in (judge_models or {"mock-judge": 1}).items()
+        ],
+        rubrics=[
+            RubricFiles(
+                rubric_file=str(rubric / "rubric.tsv"),
+                rubric_prompt_beginning_file=str(
+                    rubric / "rubric_prompt_beginning.txt"
+                ),
+                question_prompt_file=str(rubric / "question_prompt.txt"),
+            )
+        ],
+        max_concurrent=max_concurrent,
+        per_judge=per_judge,
+        conversations=[conversations],
+        output=output,
+    )
+
+
+async def evaluate_all(
+    conversations: List[ConversationData],
+    judge_models: Dict[str, int],
+    output_folder: str,
+    rubric_config: RubricConfig,
+    max_concurrent: Optional[int],
+    per_judge: bool,
+) -> List[Dict[str, Any]]:
+    """Every (conversation, judge model, instance) evaluation, run through the
+    worker pool, as `run_judging` does once it has loaded its inputs."""
+    jobs = _create_evaluation_jobs(
+        conversations, judge_models, output_folder, rubric_config
+    )
+    return await _run_workers_with_queue(jobs, max_concurrent, per_judge)
 
 
 @pytest.fixture
@@ -168,8 +220,8 @@ def mock_llm_factory_for_judge():
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-class TestBatchEvaluateWithIndividualJudges:
-    """Tests for batch_evaluate_with_individual_judges function."""
+class TestWorkerPoolEvaluation:
+    """Tests for evaluating every job through the worker pool (`evaluate_all`)."""
 
     async def test_batch_evaluate_multiple_conversations(
         self,
@@ -181,7 +233,7 @@ class TestBatchEvaluateWithIndividualJudges:
         """Test batch evaluation of multiple conversations.
 
         Arrange: Create multiple conversation files and output folder
-        Act: Call batch_evaluate_with_individual_judges
+        Act: Call evaluate_all
         Assert: Returns list with results for all conversations
         """
         output_folder = str(tmp_path / "batch_evaluations")
@@ -199,7 +251,7 @@ class TestBatchEvaluateWithIndividualJudges:
             question_prompt_file="question_prompt.txt",
         )
 
-        results = await batch_evaluate_with_individual_judges(
+        results = await evaluate_all(
             conversations=conversations,
             judge_models={"mock-judge": 1},
             output_folder=output_folder,
@@ -233,7 +285,7 @@ class TestBatchEvaluateWithIndividualJudges:
         """Test batch evaluation respects limit parameter.
 
         Arrange: Create 3 conversation files, set limit to 2
-        Act: Call batch_evaluate_with_individual_judges with only 2 conversations
+        Act: Call evaluate_all with only 2 conversations
         Assert: Only 2 conversations are evaluated
         """
         output_folder = str(tmp_path / "limited_evaluations")
@@ -252,7 +304,7 @@ class TestBatchEvaluateWithIndividualJudges:
             question_prompt_file="question_prompt.txt",
         )
 
-        results = await batch_evaluate_with_individual_judges(
+        results = await evaluate_all(
             conversations=conversations,
             judge_models={"mock-judge": 1},
             output_folder=output_folder,
@@ -273,7 +325,7 @@ class TestBatchEvaluateWithIndividualJudges:
         """Test that run_id is extracted from parent directory.
 
         Arrange: Create conversations in a folder with specific name
-        Act: Call batch_evaluate_with_individual_judges
+        Act: Call evaluate_all
         Assert: run_id matches parent folder name
         """
         # Create a run folder with a specific name
@@ -296,7 +348,7 @@ class TestBatchEvaluateWithIndividualJudges:
             question_prompt_file="question_prompt.txt",
         )
 
-        results = await batch_evaluate_with_individual_judges(
+        results = await evaluate_all(
             conversations=conversations,
             judge_models={"mock-judge": 1},
             output_folder=output_folder,
@@ -318,7 +370,7 @@ class TestBatchEvaluateWithIndividualJudges:
         """Test batch evaluation handles malformed evaluation results.
 
         Arrange: Mock evaluate_conversation_question_flow to return bad dict
-        Act: Call batch_evaluate_with_individual_judges
+        Act: Call evaluate_all
         Assert: Returns results with empty evaluation_dict for errors
         """
 
@@ -354,7 +406,7 @@ class TestBatchEvaluateWithIndividualJudges:
             ):
                 output_folder = str(tmp_path / "error_evaluations")
 
-                results = await batch_evaluate_with_individual_judges(
+                results = await evaluate_all(
                     conversations=conversations,
                     judge_models={"mock-judge": 1},
                     output_folder=output_folder,
@@ -376,19 +428,19 @@ class TestBatchEvaluateWithIndividualJudges:
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-class TestJudgeConversations:
-    """Tests for judge_conversations function (main batch workflow)."""
+class TestRunJudging:
+    """Tests for run_judging (main batch workflow)."""
 
-    async def test_judge_conversations_basic_workflow(
+    async def test_run_judging_basic_workflow(
         self,
         tmp_path: Path,
         mock_rubric_files: str,
         mock_llm_factory_for_judge,
     ):
-        """Test complete judge_conversations workflow with file I/O.
+        """Test complete run_judging workflow with file I/O.
 
         Arrange: Create conversation folder with files
-        Act: Call judge_conversations
+        Act: Call run_judging
         Assert: Creates output folder with results.csv
         """
         # Create conversation folder
@@ -405,24 +457,14 @@ class TestJudgeConversations:
 
         output_root = str(tmp_path / "evaluation_output")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        results, _ = await judge_conversations(
+        results, _ = await run_judging(
+            judging_config(
+                str(conv_folder),
+                mock_rubric_files,
+                output=output_root,
+                judge_models={"mock-judge": 1},
+            ),
             run_record=minimal_run_record(),
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            output_root=output_root,
-            conversation_folder_name="conversations",
-            verbose=False,
-            save_aggregated_results=True,
         )
 
         # Verify results returned
@@ -444,7 +486,7 @@ class TestJudgeConversations:
         assert "judge_model" in df.columns
         assert "judge_instance" in df.columns
 
-    async def test_judge_conversations_writes_per_question_answers(
+    async def test_run_judging_writes_per_question_answers(
         self,
         tmp_path: Path,
         mock_rubric_files: str,
@@ -453,7 +495,7 @@ class TestJudgeConversations:
         """The run writes answers/answers.tsv beside results.csv.
 
         Arrange: two conversations
-        Act: judge_conversations
+        Act: run_judging
         Assert: one wide answers row per conversation, rubric-ordered question
         columns, and nothing stray in the evaluation folder's own *.tsv glob
         """
@@ -475,15 +517,14 @@ class TestJudgeConversations:
             question_prompt_file="question_prompt.txt",
         )
 
-        await judge_conversations(
+        await run_judging(
+            judging_config(
+                str(conv_folder),
+                mock_rubric_files,
+                output=output_root,
+                judge_models={"mock-judge": 1},
+            ),
             run_record=minimal_run_record(),
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            output_root=output_root,
-            conversation_folder_name="conversations",
-            verbose=False,
-            save_aggregated_results=True,
         )
 
         output_folder = next(Path(output_root).glob("j_mock-judgex1_*"))
@@ -526,23 +567,15 @@ class TestJudgeConversations:
         )
 
         output_root = str(tmp_path / "evaluation_output")
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
 
-        _, output_folder = await judge_conversations(
+        _, output_folder = await run_judging(
+            judging_config(
+                str(conv_folder),
+                mock_rubric_files,
+                output=output_root,
+                judge_models={"mock-judge": 1},
+            ),
             run_record=minimal_run_record(),
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            output_root=output_root,
-            conversation_folder_name="conversations",
-            verbose=False,
-            save_aggregated_results=True,
         )
 
         eval_dir = Path(output_folder)
@@ -566,16 +599,16 @@ class TestJudgeConversations:
             check_dtype=False,
         )
 
-    async def test_judge_conversations_custom_output_folder(
+    async def test_run_judging_custom_output_folder(
         self,
         tmp_path: Path,
         mock_rubric_files: str,
         mock_llm_factory_for_judge,
     ):
-        """Test judge_conversations with custom output folder.
+        """Test run_judging with custom output folder.
 
         Arrange: Create conversations, specify custom output folder
-        Act: Call judge_conversations with output_folder parameter
+        Act: Call run_judging with `into`
         Assert: Uses specified output folder instead of generated one
         """
         conv_folder = tmp_path / "conversations"
@@ -586,21 +619,11 @@ class TestJudgeConversations:
 
         custom_output = str(tmp_path / "custom_output_folder")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        results, output_folder = await judge_conversations(
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            output_folder=custom_output,
-            save_aggregated_results=True,
+        results, output_folder = await run_judging(
+            judging_config(
+                str(conv_folder), mock_rubric_files, judge_models={"mock-judge": 1}
+            ),
+            into=custom_output,
         )
 
         assert len(results) == 1
@@ -609,16 +632,16 @@ class TestJudgeConversations:
         # Should have results.csv in custom folder
         assert (Path(custom_output) / "results.csv").exists()
 
-    async def test_judge_conversations_with_limit(
+    async def test_run_judging_with_limit(
         self,
         tmp_path: Path,
         mock_rubric_files: str,
         mock_llm_factory_for_judge,
     ):
-        """Test judge_conversations respects limit parameter.
+        """Test run_judging respects `sample`.
 
         Arrange: Create 5 conversation files
-        Act: Call judge_conversations with only 3 loaded conversations
+        Act: Call run_judging with sample=3
         Assert: Only processes 3 files, prints debug message
         """
         conv_folder = tmp_path / "conversations"
@@ -632,29 +655,21 @@ class TestJudgeConversations:
 
         output_root = str(tmp_path / "limited_output")
 
-        # Load only 3 conversations (limit applied at load time)
-        conversations = await load_conversations(str(conv_folder), limit=3)
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        results, _ = await judge_conversations(
+        results, _ = await run_judging(
+            judging_config(
+                str(conv_folder),
+                mock_rubric_files,
+                output=output_root,
+                judge_models={"mock-judge": 1},
+            ),
+            sample=3,
             run_record=minimal_run_record(),
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            output_root=output_root,
-            conversation_folder_name="conversations",
-            verbose=True,
         )
 
         # Should only process 3 files
         assert len(results) == 3
 
-    async def test_judge_conversations_folder_not_found(
+    async def test_run_judging_folder_not_found(
         self,
         tmp_path: Path,
     ):
@@ -669,7 +684,7 @@ class TestJudgeConversations:
         with pytest.raises(FileNotFoundError, match="Folder not found"):
             await load_conversations(missing_folder)
 
-    async def test_judge_conversations_no_txt_files(
+    async def test_run_judging_no_txt_files(
         self,
         tmp_path: Path,
     ):
@@ -687,17 +702,17 @@ class TestJudgeConversations:
         with pytest.raises(FileNotFoundError, match="No .txt files found"):
             await load_conversations(str(empty_folder))
 
-    async def test_judge_conversations_verbose_output(
+    async def test_run_judging_prints_status(
         self,
         tmp_path: Path,
         mock_rubric_files: str,
         mock_llm_factory_for_judge,
         capsys,
     ):
-        """Test verbose output prints status messages.
+        """Test that judging prints status messages.
 
-        Arrange: Create conversation files, set verbose=True
-        Act: Call judge_conversations with verbose=True
+        Arrange: Create conversation files
+        Act: Call run_judging
         Assert: Prints found files count and completion message
         """
         conv_folder = tmp_path / "conversations"
@@ -707,23 +722,14 @@ class TestJudgeConversations:
 
         output_root = str(tmp_path / "output")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        await judge_conversations(
+        await run_judging(
+            judging_config(
+                str(conv_folder),
+                mock_rubric_files,
+                output=output_root,
+                judge_models={"mock-judge": 1},
+            ),
             run_record=minimal_run_record(),
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            conversation_folder_name=conv_folder.name,
-            output_root=output_root,
-            verbose=True,
         )
 
         captured = capsys.readouterr()
@@ -732,7 +738,7 @@ class TestJudgeConversations:
         # Should print completion message
         assert "Completed" in captured.out
 
-    async def test_judge_conversations_creates_timestamped_folder(
+    async def test_run_judging_creates_timestamped_folder(
         self,
         tmp_path: Path,
         mock_rubric_files: str,
@@ -741,7 +747,7 @@ class TestJudgeConversations:
         """Test that output folder includes timestamp when not specified.
 
         Arrange: Create conversation folder
-        Act: Call judge_conversations without output_folder
+        Act: Call run_judging without output_folder
         Assert: Creates folder with timestamp in name
         """
         conv_folder = tmp_path / "conversations"
@@ -750,22 +756,14 @@ class TestJudgeConversations:
 
         output_root = str(tmp_path / "output")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        await judge_conversations(
+        await run_judging(
+            judging_config(
+                str(conv_folder),
+                mock_rubric_files,
+                output=output_root,
+                judge_models={"mock-judge": 1},
+            ),
             run_record=minimal_run_record(),
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            conversation_folder_name=conv_folder.name,
-            output_root=output_root,
         )
 
         # Find generated output folder
@@ -777,47 +775,6 @@ class TestJudgeConversations:
         assert "mock-judgex1" in folder_name
         # Should contain conversation folder name
         assert "conversations" in folder_name
-
-    async def test_judge_conversations_no_save_aggregated(
-        self,
-        tmp_path: Path,
-        mock_rubric_files: str,
-        mock_llm_factory_for_judge,
-    ):
-        """Test judge_conversations with save_aggregated_results=False.
-
-        Arrange: Create conversation files
-        Act: Call judge_conversations with save_aggregated_results=False
-        Assert: Returns results but doesn't create results.csv
-        """
-        conv_folder = tmp_path / "conversations"
-        conv_folder.mkdir()
-        (conv_folder / "test.txt").write_text("user: test\nchatbot: ok")
-
-        output_folder = str(tmp_path / "output_no_save")
-
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        results, _ = await judge_conversations(
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            conversation_folder_name=conv_folder.name,
-            output_folder=output_folder,
-            save_aggregated_results=False,
-        )
-
-        # Should return results
-        assert len(results) == 1
-        # Should NOT create results.csv
-        assert not (Path(output_folder) / "results.csv").exists()
 
 
 @pytest.mark.integration
@@ -847,21 +804,11 @@ class TestConversationFileLoading:
 
         output_folder = str(tmp_path / "unicode_output")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(tmp_path))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        results, _ = await judge_conversations(
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            output_folder=output_folder,
-            save_aggregated_results=False,
+        results, _ = await run_judging(
+            judging_config(
+                str(tmp_path), mock_rubric_files, judge_models={"mock-judge": 1}
+            ),
+            into=output_folder,
         )
 
         assert len(results) == 1
@@ -891,20 +838,11 @@ class TestConversationFileLoading:
 
         output_folder = str(tmp_path / "multiline_output")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(tmp_path))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        results, _ = await judge_conversations(
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            output_folder=output_folder,
+        results, _ = await run_judging(
+            judging_config(
+                str(tmp_path), mock_rubric_files, judge_models={"mock-judge": 1}
+            ),
+            into=output_folder,
         )
 
         assert len(results) == 1
@@ -933,21 +871,11 @@ class TestEvaluationResultFormat:
 
         output_folder = str(tmp_path / "tsv_test")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        await judge_conversations(
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            conversation_folder_name=conv_folder.name,
-            output_folder=output_folder,
+        await run_judging(
+            judging_config(
+                str(conv_folder), mock_rubric_files, judge_models={"mock-judge": 1}
+            ),
+            into=output_folder,
         )
 
         # Find generated TSV file(s)
@@ -982,22 +910,11 @@ class TestEvaluationResultFormat:
 
         output_folder = str(tmp_path / "csv_test")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        _, _ = await judge_conversations(
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            conversation_folder_name=conv_folder.name,
-            output_folder=output_folder,
-            save_aggregated_results=True,
+        _, _ = await run_judging(
+            judging_config(
+                str(conv_folder), mock_rubric_files, judge_models={"mock-judge": 1}
+            ),
+            into=output_folder,
         )
 
         results_csv = Path(output_folder) / "results.csv"
@@ -1033,21 +950,11 @@ class TestEvaluationResultFormat:
 
         output_folder = str(tmp_path / "metadata_test")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        results, _ = await judge_conversations(
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            conversation_folder_name=conv_folder.name,
-            output_folder=output_folder,
+        results, _ = await run_judging(
+            judging_config(
+                str(conv_folder), mock_rubric_files, judge_models={"mock-judge": 1}
+            ),
+            into=output_folder,
         )
 
         assert len(results) == 1
@@ -1082,21 +989,12 @@ class TestErrorHandlingAndEdgeCases:
         output_folder = str(tmp_path / "empty_test")
 
         # Should not crash, may return results or handle gracefully
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
 
-        results, _ = await judge_conversations(
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            conversation_folder_name=conv_folder.name,
-            output_folder=output_folder,
+        results, _ = await run_judging(
+            judging_config(
+                str(conv_folder), mock_rubric_files, judge_models={"mock-judge": 1}
+            ),
+            into=output_folder,
         )
 
         # Should complete without crashing
@@ -1126,21 +1024,12 @@ class TestErrorHandlingAndEdgeCases:
         output_folder = str(tmp_path / "malformed_test")
 
         # Should not crash
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
 
-        results, _ = await judge_conversations(
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            conversation_folder_name=conv_folder.name,
-            output_folder=output_folder,
+        results, _ = await run_judging(
+            judging_config(
+                str(conv_folder), mock_rubric_files, judge_models={"mock-judge": 1}
+            ),
+            into=output_folder,
         )
 
         assert isinstance(results, list)
@@ -1163,21 +1052,11 @@ class TestErrorHandlingAndEdgeCases:
 
         output_folder = str(tmp_path / "special_chars_output")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        results, _ = await judge_conversations(
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            conversation_folder_name=conv_folder.name,
-            output_folder=output_folder,
+        results, _ = await run_judging(
+            judging_config(
+                str(conv_folder), mock_rubric_files, judge_models={"mock-judge": 1}
+            ),
+            into=output_folder,
         )
 
         assert len(results) == 1
@@ -1208,21 +1087,11 @@ class TestErrorHandlingAndEdgeCases:
 
         output_folder = str(tmp_path / "long_test")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        results, _ = await judge_conversations(
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            conversation_folder_name=conv_folder.name,
-            output_folder=output_folder,
+        results, _ = await run_judging(
+            judging_config(
+                str(conv_folder), mock_rubric_files, judge_models={"mock-judge": 1}
+            ),
+            into=output_folder,
         )
 
         assert len(results) == 1
@@ -1250,22 +1119,11 @@ class TestErrorHandlingAndEdgeCases:
 
         output_folder = str(tmp_path / "concurrent_test")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        results, _ = await judge_conversations(
-            judge_models={"mock-judge": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            conversation_folder_name=conv_folder.name,
-            output_folder=output_folder,
-            save_aggregated_results=True,
+        results, _ = await run_judging(
+            judging_config(
+                str(conv_folder), mock_rubric_files, judge_models={"mock-judge": 1}
+            ),
+            into=output_folder,
         )
 
         # All evaluations should complete
@@ -1296,7 +1154,7 @@ class TestMultipleJudgeModels:
         """Test evaluation with multiple different judge models.
 
         Arrange: Create conversations, specify 2 different judge models
-        Act: Call batch_evaluate_with_individual_judges with multiple models
+        Act: Call evaluate_all with multiple models
         Assert: Each conversation evaluated by both judge models
         """
         output_folder = str(tmp_path / "multi_judge_test")
@@ -1315,7 +1173,7 @@ class TestMultipleJudgeModels:
         # Use 2 different judge models (1 instance each)
         judge_models = {"mock-judge-1": 1, "mock-judge-2": 1}
 
-        results = await batch_evaluate_with_individual_judges(
+        results = await evaluate_all(
             conversations=conversations,
             judge_models=judge_models,
             output_folder=output_folder,
@@ -1348,7 +1206,7 @@ class TestMultipleJudgeModels:
         """Test evaluation with multiple instances of the same judge model.
 
         Arrange: Create conversations, specify 3 instances of same model
-        Act: Call batch_evaluate_with_individual_judges
+        Act: Call evaluate_all
         Assert: Each conversation evaluated 3 times with different instances
         """
         output_folder = str(tmp_path / "multi_instance_test")
@@ -1367,7 +1225,7 @@ class TestMultipleJudgeModels:
         # Use 3 instances of the same judge model
         judge_models = {"mock-judge": 3}
 
-        results = await batch_evaluate_with_individual_judges(
+        results = await evaluate_all(
             conversations=conversations,
             judge_models=judge_models,
             output_folder=output_folder,
@@ -1398,7 +1256,7 @@ class TestMultipleJudgeModels:
         """Test evaluation with multiple models having different instance counts.
 
         Arrange: Create conversations, specify different instance counts per model
-        Act: Call batch_evaluate_with_individual_judges
+        Act: Call evaluate_all
         Assert: Correct number of evaluations per model
         """
         output_folder = str(tmp_path / "mixed_judges_test")
@@ -1417,7 +1275,7 @@ class TestMultipleJudgeModels:
         # Model A: 2 instances, Model B: 3 instances
         judge_models = {"mock-judge-a": 2, "mock-judge-b": 3}
 
-        results = await batch_evaluate_with_individual_judges(
+        results = await evaluate_all(
             conversations=conversations,
             judge_models=judge_models,
             output_folder=output_folder,
@@ -1445,16 +1303,16 @@ class TestMultipleJudgeModels:
             instances = sorted([r["judge_instance"] for r in conv_a_results])
             assert instances == [1, 2]
 
-    async def test_judge_conversations_with_multiple_models(
+    async def test_run_judging_with_multiple_models(
         self,
         tmp_path: Path,
         mock_rubric_files: str,
         mock_llm_factory_for_judge,
     ):
-        """Test full judge_conversations workflow with multiple judge models.
+        """Test full run_judging workflow with multiple judge models.
 
         Arrange: Create conversation folder with files
-        Act: Call judge_conversations with multiple models
+        Act: Call run_judging with multiple models
         Assert: Creates results.csv with all model evaluations
         """
         conv_folder = tmp_path / "conversations"
@@ -1464,23 +1322,14 @@ class TestMultipleJudgeModels:
 
         output_root = str(tmp_path / "multi_judge_output")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        results, _ = await judge_conversations(
+        results, _ = await run_judging(
+            judging_config(
+                str(conv_folder),
+                mock_rubric_files,
+                output=output_root,
+                judge_models={"mock-judge-1": 2, "mock-judge-2": 1},
+            ),
             run_record=minimal_run_record(),
-            judge_models={"mock-judge-1": 2, "mock-judge-2": 1},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            conversation_folder_name=conv_folder.name,
-            output_root=output_root,
-            save_aggregated_results=True,
         )
 
         # 2 conversations × (2 + 1) judge instances = 6 results
@@ -1521,7 +1370,7 @@ class TestConcurrencyControl:
         """Test max_concurrent limits total number of workers.
 
         Arrange: Create 3 conversations, set max_concurrent=2
-        Act: Call batch_evaluate_with_individual_judges
+        Act: Call evaluate_all
         Assert: Completes successfully (concurrency respected)
         """
         output_folder = str(tmp_path / "concurrent_limit_test")
@@ -1537,7 +1386,7 @@ class TestConcurrencyControl:
             question_prompt_file="question_prompt.txt",
         )
 
-        results = await batch_evaluate_with_individual_judges(
+        results = await evaluate_all(
             conversations=conversations,
             judge_models={"mock-judge": 1},
             output_folder=output_folder,
@@ -1576,7 +1425,7 @@ class TestConcurrencyControl:
         )
 
         # 2 models, max_concurrent=2 per judge
-        results = await batch_evaluate_with_individual_judges(
+        results = await evaluate_all(
             conversations=conversations,
             judge_models={"mock-judge-1": 1, "mock-judge-2": 1},
             output_folder=output_folder,
@@ -1614,7 +1463,7 @@ class TestConcurrencyControl:
             question_prompt_file="question_prompt.txt",
         )
 
-        results = await batch_evaluate_with_individual_judges(
+        results = await evaluate_all(
             conversations=conversations,
             judge_models={"mock-judge": 2},
             output_folder=output_folder,
@@ -1626,16 +1475,16 @@ class TestConcurrencyControl:
         # 3 conversations × 2 instances = 6 results
         assert len(results) == 6
 
-    async def test_judge_conversations_passes_concurrency_params(
+    async def test_run_judging_passes_concurrency_params(
         self,
         tmp_path: Path,
         mock_rubric_files: str,
         mock_llm_factory_for_judge,
     ):
-        """Test judge_conversations passes concurrency params correctly.
+        """Test run_judging passes concurrency params correctly.
 
         Arrange: Create conversation folder
-        Act: Call judge_conversations with concurrency params
+        Act: Call run_judging with concurrency params
         Assert: Parameters accepted and evaluation completes
         """
         conv_folder = tmp_path / "conversations"
@@ -1644,23 +1493,15 @@ class TestConcurrencyControl:
 
         output_folder = str(tmp_path / "concurrency_test")
 
-        # Load conversations and rubric config
-        conversations = await load_conversations(str(conv_folder))
-        rubric_config = await RubricConfig.load(
-            rubric_folder=mock_rubric_files,
-            rubric_file="rubric.tsv",
-            rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-            question_prompt_file="question_prompt.txt",
-        )
-
-        results, _ = await judge_conversations(
-            judge_models={"mock-judge": 2},
-            conversations=conversations,
-            rubric_config=rubric_config,
-            conversation_folder_name=conv_folder.name,
-            output_folder=output_folder,
-            max_concurrent=5,
-            per_judge=True,
+        results, _ = await run_judging(
+            judging_config(
+                str(conv_folder),
+                mock_rubric_files,
+                judge_models={"mock-judge": 2},
+                max_concurrent=5,
+                per_judge=True,
+            ),
+            into=output_folder,
         )
 
         # 1 conversation × 2 instances = 2 results
@@ -1698,7 +1539,7 @@ class TestWorkerQueueSystem:
             question_prompt_file="question_prompt.txt",
         )
 
-        results = await batch_evaluate_with_individual_judges(
+        results = await evaluate_all(
             conversations=conversations,
             judge_models={"mock-judge-1": 2, "mock-judge-2": 1},
             output_folder=output_folder,
@@ -1740,7 +1581,7 @@ class TestWorkerQueueSystem:
             question_prompt_file="question_prompt.txt",
         )
 
-        results = await batch_evaluate_with_individual_judges(
+        results = await evaluate_all(
             conversations=conversations,
             judge_models={"mock-judge": 1},
             output_folder=output_folder,
@@ -1780,7 +1621,7 @@ class TestWorkerQueueSystem:
             question_prompt_file="question_prompt.txt",
         )
 
-        results = await batch_evaluate_with_individual_judges(
+        results = await evaluate_all(
             conversations=conversations,
             judge_models={"mock-judge-1": 1, "mock-judge-2": 1},
             output_folder=output_folder,
@@ -1838,7 +1679,7 @@ class TestErrorHandlingAndCoverage:
             with patch("vera_mh.judge.llm_judge.LLMFactory.create_llm"):
                 output_folder = str(tmp_path / "error_test")
 
-                results = await batch_evaluate_with_individual_judges(
+                results = await evaluate_all(
                     conversations=conversations,
                     judge_models={"mock-judge": 1},
                     output_folder=output_folder,
@@ -1879,7 +1720,7 @@ class TestErrorHandlingAndCoverage:
             question_prompt_file="question_prompt.txt",
         )
 
-        await batch_evaluate_with_individual_judges(
+        await evaluate_all(
             conversations=conversations,
             judge_models={"model-a": 1, "model-b": 1},
             output_folder=output_folder,
@@ -1895,46 +1736,33 @@ class TestErrorHandlingAndCoverage:
         assert "Starting 2 workers for model-b" in captured.out
         assert "3 jobs" in captured.out  # 3 conversations per model
 
-    async def test_judge_conversations_handles_empty_results(
+    async def test_run_judging_handles_empty_results(
         self,
         tmp_path: Path,
         mock_rubric_files: str,
     ):
-        """Test judge_conversations handles empty results without crashing.
+        """Test run_judging handles empty results without crashing.
 
-        Arrange: Mock batch_evaluate to return empty list
-        Act: Call judge_conversations with save_aggregated_results=True
+        Arrange: Mock the worker pool to return an empty list
+        Act: Call run_judging
         Assert: Handles empty results, no CSV created
         """
 
-        async def mock_batch_evaluate_empty(*args, **kwargs):
+        async def mock_pool_empty(*args, **kwargs):
             return []
 
-        with patch(
-            "vera_mh.judge.runner.batch_evaluate_with_individual_judges",
-            mock_batch_evaluate_empty,
-        ):
+        with patch("vera_mh.judge.run._run_workers_with_queue", mock_pool_empty):
             conv_folder = tmp_path / "conversations"
             conv_folder.mkdir()
             (conv_folder / "test.txt").write_text("user: hi\nchatbot: hello")
 
             output_folder = str(tmp_path / "output")
 
-            conversations = await load_conversations(str(conv_folder))
-            rubric_config = await RubricConfig.load(
-                rubric_folder=mock_rubric_files,
-                rubric_file="rubric.tsv",
-                rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
-                question_prompt_file="question_prompt.txt",
-            )
-
-            results, _ = await judge_conversations(
-                judge_models={"mock-judge": 1},
-                conversations=conversations,
-                rubric_config=rubric_config,
-                conversation_folder_name=conv_folder.name,
-                output_folder=output_folder,
-                save_aggregated_results=True,
+            results, _ = await run_judging(
+                judging_config(
+                    str(conv_folder), mock_rubric_files, judge_models={"mock-judge": 1}
+                ),
+                into=output_folder,
             )
 
             # should handle empty results without crashing

@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from vera_mh.judge.rubric_config import ConversationData
-from vera_mh.judge.runner import batch_evaluate_with_individual_judges
+from vera_mh.judge.runner import _create_evaluation_jobs, _run_workers_with_queue
 
 MOCK_EVALUATION_RESULT = {
     "Safety": {
@@ -54,13 +54,11 @@ class TestMaxConcurrentZero:
     ):
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
 
-        results = await batch_evaluate_with_individual_judges(
-            conversations=_conversations(tmp_path, 3),
-            judge_models={"gpt-5.4": 1},
-            output_folder=str(tmp_path),
-            rubric_config=rubric_config,
-            max_concurrent=0,
-            per_judge=per_judge,
+        jobs = _create_evaluation_jobs(
+            _conversations(tmp_path, 3), {"gpt-5.4": 1}, str(tmp_path), rubric_config
+        )
+        results = await _run_workers_with_queue(
+            jobs, max_concurrent=0, per_judge=per_judge
         )
 
         assert len(results) == 3

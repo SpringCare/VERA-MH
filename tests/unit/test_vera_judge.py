@@ -10,6 +10,7 @@ import pytest
 
 from vera_mh import cli as vera
 from vera_mh.utils.config_schema import RubricFiles
+from vera_mh.utils.conversation_layout import resolve_conversation_input
 from vera_mh.vera_cli import config as cli_config
 from vera_mh.vera_cli import judge
 
@@ -463,7 +464,7 @@ def test_sample_caps_conversations_judged(tmp_path: Path) -> None:
 
     assert run_judging.await_count == 1
     assert run_judging.await_args is not None
-    assert run_judging.await_args.kwargs["limit"] == 2
+    assert run_judging.await_args.kwargs["sample"] == 2
 
 
 def test_execution_forwards_resolved_values(tmp_path: Path) -> None:
@@ -485,16 +486,17 @@ def test_execution_forwards_resolved_values(tmp_path: Path) -> None:
         )
 
     assert result == 0
-    kwargs = run_judging.await_args.kwargs
-    assert kwargs["judge_models"] == {"gpt-4o": 3}
-    assert kwargs["max_concurrent"] == 4
-    assert kwargs["per_judge"] is True
-    assert kwargs["output_dir"] == str((run / "evaluations").resolve())
+    assert run_judging.await_args is not None
+    (judging,) = run_judging.await_args.args
+    assert {model.name: model.repeats for model in judging.models} == {"gpt-4o": 3}
+    assert judging.max_concurrent == 4
+    assert judging.per_judge is True
+    assert judging.output == str((run / "evaluations").resolve())
     # A parent to mint a new `j_*` run under, not an existing run to land in.
-    assert kwargs["is_existing_run"] is False
-    assert kwargs["resume"] is False
-    assert kwargs["transcripts_dir"] == str(run / "conversations")
-    assert kwargs["rubric_file"] == str(
+    assert run_judging.await_args.kwargs["into"] is None
+    transcripts_dir, _, _ = resolve_conversation_input(judging.conversations[0])
+    assert transcripts_dir == str(run / "conversations")
+    assert judging.rubrics[0].rubric_file == str(
         (cli_config.ROOT / "data/SI/rubric.tsv").resolve()
     )
 
@@ -536,11 +538,8 @@ def test_config_target_resolves_the_rubric_bundle(tmp_path: Path) -> None:
 
 
 def test_into_continues_an_existing_evaluation_run(tmp_path: Path) -> None:
-    """Judge gets the same flag, mapping onto the same domain parameters.
-
-    `is_existing_run` flips with it: without `--into` the output is a parent to
-    mint a new `j_*` run under, with it the exact folder to land back in.
-    """
+    """Judge gets the same flag, and passes it on as `into`: the exact folder
+    to land back in, rather than a parent to mint a new `j_*` run under."""
     run = _generation_run(tmp_path)
     evaluation = tmp_path / "j_gpt_4o__existing"
     evaluation.mkdir()
@@ -562,9 +561,9 @@ def test_into_continues_an_existing_evaluation_run(tmp_path: Path) -> None:
 
     assert result == 0
     kwargs = run_judging.await_args.kwargs
-    assert kwargs["output_dir"] == str(evaluation.resolve())
-    assert kwargs["is_existing_run"] is True
-    assert kwargs["resume"] is True
+    assert kwargs["into"] == str(evaluation.resolve())
+    # A continued run keeps the record it started with.
+    assert kwargs["run_record"] is None
 
 
 def test_config_without_behavior_fields_gets_the_cli_defaults(

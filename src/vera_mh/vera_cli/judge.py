@@ -330,39 +330,10 @@ async def _execute(run_configs: list[RunConfig]) -> None:
         if judging is None:  # pragma: no cover - resolve_configs always sets it
             raise ConfigError("judge produced a run with no judging section")
         into = run_config.invocation.into
-        # Exactly one of each, enforced by `JudgingConfig.__post_init__`; the
-        # unpacking fails loudly rather than judging only the first if that
-        # changes.
-        (conversations,) = judging.conversations
-        (rubric,) = judging.rubrics
-
-        # Discovery of the transcripts directory is idempotent, so deriving it
-        # here keeps the resolved config stating the folder the user named rather
-        # than an internal subdirectory.
-        transcripts_dir, _, folder_name = resolve_conversation_input(conversations)
         await run_judging(
-            judge_models={model.name: model.repeats for model in judging.models},
-            rubric_file=rubric.rubric_file,
-            rubric_prompt_beginning_file=rubric.rubric_prompt_beginning_file,
-            question_prompt_file=rubric.question_prompt_file,
-            transcripts_dir=transcripts_dir,
-            conversation_folder_name=folder_name,
-            limit=run_config.invocation.sample,
-            # Without `--into`, a parent to mint a new `j_*` run under; with
-            # it, the exact existing run folder to land back in.
-            output_dir=into or judging.output,
-            is_existing_run=into is not None,
-            # Every judge model shares one parameter dict
-            # (`JudgingSpec.__post_init__` rejects anything else), so the first
-            # model's stands for all of them.
-            judge_model_extra_params=dict(judging.models[0].extra_params),
-            max_concurrent=judging.max_concurrent,
-            per_judge=judging.per_judge,
-            verbose_workers=False,
-            verbose=True,
-            resume=into is not None,
-            personas=list(judging.personas),
-            persona_annotation_columns=list(judging.persona_annotation_columns),
+            judging,
+            into=into,
+            sample=run_config.invocation.sample,
             # A continued run keeps the record it started with.
             run_record=build_run_record(run_config) if into is None else None,
         )

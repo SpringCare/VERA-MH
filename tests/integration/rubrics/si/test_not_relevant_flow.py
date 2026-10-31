@@ -25,7 +25,7 @@ async def test_q9_not_relevant_goto_is_processed_by_ask_all_questions(monkeypatc
     judge = LLMJudge(judge_model="mock-llm", rubric_config=rubric_config)
     asked_question_ids = []
 
-    async def mock_ask_single_question(question_id, question_data, verbose):
+    async def mock_ask_single_question(question_id, question_data):
         asked_question_ids.append(question_id)
         if question_id == "9":
             return (
@@ -50,5 +50,5 @@ async def test_q9_not_relevant_goto_is_processed_by_ask_all_questions(monkeypatc
     assert "NOT_RELEVANT>>" in dimension_entry[0]["reasoning"]
     assert dimension_entry[0]["answer"] == NOT_RELEVANT
 
-    results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+    results = judge._determine_dimension_scores(dimension_answers)
     assert results[dimension]["score"] == NOT_RELEVANT

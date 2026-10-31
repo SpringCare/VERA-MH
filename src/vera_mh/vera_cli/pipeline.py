@@ -74,7 +74,6 @@ from vera_mh.utils.config_schema import (
     RunConfig,
     ScoringSpec,
 )
-from vera_mh.utils.conversation_layout import resolve_conversation_input
 from vera_mh.utils.run_record import build_run_record
 from vera_mh.utils.utils import parse_key_value_list
 
@@ -407,31 +406,9 @@ async def _judge_and_score(pipeline_run: PipelineRun, run_folder: str) -> str:
         # default `vera judge` applies when `--output` is omitted.
         output=str(Path(run_folder) / "evaluations"),
     )
-    # Exactly one of each, enforced by `JudgingConfig.__post_init__`; the
-    # unpacking fails loudly rather than judging only the first if that changes.
-    (conversations,) = judging.conversations
-    (rubric,) = judging.rubrics
-    transcripts_dir, _, folder_name = resolve_conversation_input(conversations)
     _, evaluation_folder = await run_judging(
-        judge_models={model.name: model.repeats for model in judging.models},
-        rubric_file=rubric.rubric_file,
-        rubric_prompt_beginning_file=rubric.rubric_prompt_beginning_file,
-        question_prompt_file=rubric.question_prompt_file,
-        transcripts_dir=transcripts_dir,
-        conversation_folder_name=folder_name,
-        limit=pipeline_run.generation.invocation.sample,
-        output_dir=judging.output,
-        is_existing_run=False,
-        # Every judge model shares one parameter dict (`JudgingSpec.__post_init__`
-        # rejects anything else), so the first model's stands for all of them.
-        judge_model_extra_params=dict(judging.models[0].extra_params),
-        max_concurrent=judging.max_concurrent,
-        per_judge=judging.per_judge,
-        verbose_workers=False,
-        verbose=True,
-        resume=False,
-        personas=list(judging.personas),
-        persona_annotation_columns=list(judging.persona_annotation_columns),
+        judging,
+        sample=pipeline_run.generation.invocation.sample,
         run_record=build_run_record(
             RunConfig(invocation=pipeline_run.generation.invocation, judging=judging)
         ),
