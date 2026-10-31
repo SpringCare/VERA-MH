@@ -2,14 +2,14 @@
 
 Covers the join that copies target-declared persona columns into results.csv
 (`add_persona_columns_to_dataframe`), the generic loader behind it
-(`load_persona_column`), and the runner wrapper that must never fail a paid
+(`load_persona_column`), and the judging wrapper that must never fail a paid
 judging run over a reporting convenience (`_annotate_with_personas`).
 """
 
 import pandas as pd
 import pytest
 
-from vera_mh.judge.runner import _annotate_with_personas
+from vera_mh.judge.run import _annotate_with_personas
 from vera_mh.judge.utils import add_persona_columns_to_dataframe
 from vera_mh.score.utils import load_personas_risk_levels
 from vera_mh.utils.judge_results import load_persona_column
@@ -152,7 +152,7 @@ class TestRunnerAnnotationIsNonFatal:
 
     def test_annotates_when_configured(self, results_df, hfo_personas):
         out = _annotate_with_personas(
-            results_df, [str(hfo_personas)], ["Active Life Threat"], verbose=False
+            results_df, [str(hfo_personas)], ["Active Life Threat"]
         )
         assert list(out["Active Life Threat"]) == ["Present", "Absent"]
 
@@ -160,7 +160,7 @@ class TestRunnerAnnotationIsNonFatal:
         self, results_df, hfo_personas, capsys
     ):
         out = _annotate_with_personas(
-            results_df, [str(hfo_personas)], ["Nonexistent Column"], verbose=True
+            results_df, [str(hfo_personas)], ["Nonexistent Column"]
         )
         assert list(out.columns) == list(results_df.columns)
         assert "Skipping persona annotation" in capsys.readouterr().out
@@ -170,16 +170,13 @@ class TestRunnerAnnotationIsNonFatal:
             results_df,
             [str(tmp_path / "gone.tsv")],
             ["Active Life Threat"],
-            verbose=False,
         )
         assert list(out.columns) == list(results_df.columns)
 
     def test_no_personas_or_columns_is_a_no_op(self, results_df, hfo_personas):
+        assert list(_annotate_with_personas(results_df, None, None).columns) == list(
+            results_df.columns
+        )
         assert list(
-            _annotate_with_personas(results_df, None, None, verbose=False).columns
-        ) == list(results_df.columns)
-        assert list(
-            _annotate_with_personas(
-                results_df, [str(hfo_personas)], [], verbose=False
-            ).columns
+            _annotate_with_personas(results_df, [str(hfo_personas)], []).columns
         ) == list(results_df.columns)
