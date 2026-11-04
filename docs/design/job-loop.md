@@ -35,7 +35,7 @@ Judging is the same shape: `vera_cli/judge.py` → `judge/run.py` (`run_judging`
 
 ### The loop
 
-All the concurrency code in the repo, in one class. Each job kind (`session`, `evaluation`) has its own queue and its own cap. Everything that adds work goes through `submit`, which never waits: the stage loading its first jobs, a finished job handing on its follow-ups, and a failed job going back for another try.
+All the concurrency code in the repo, in one class. It's a class rather than a function because `submit` is called from three places (the stage, a finished job's follow-ups, a retry) and they all need the same queues, so the queues live on an object instead of in a closure. Each job kind (`session`, `evaluation`) has its own queue and its own cap. Everything that adds work goes through `submit`, which never waits: the stage loading its first jobs, a finished job handing on its follow-ups, and a failed job going back for another try.
 
 ```python
 # workers/loop.py
@@ -114,7 +114,8 @@ A stage only loads the queue and runs the loop:
 loop = JobLoop(max_concurrent)
 for persona in personas:
     for repeat in repeats:
-        loop.submit(Session(persona, repeat, session=1, run_dir=run_dir, max_attempts=config.attempts))
+        loop.submit(Session(persona, repeat, session_types=config.sessions, position=0,
+                            run_dir=run_dir, max_attempts=config.attempts))
 report(await loop.run())
 
 # judge/run.py
@@ -127,11 +128,11 @@ report(await loop.run())
 write_results_csv(run_dir)
 ```
 
-`session` is the session's number within its conversation, so generation loads only each conversation's first session; session 2 arrives as session 1's follow-up, and so on. `Session.run()` is today's per-session body of `run_single_conversation`; `Evaluation.run()` is today's `_evaluate_single_conversation_with_judge`. One `JobLoop` replaces both queue-and-worker pools: no worker IDs, no `get_nowait` loop, no shared results list.
+Sessions are named, not numbered: `session_types` is the configured list (`--sessions intake,coaching`; one unnamed session when unset), and `position` says which entry this job runs. Generation loads only each conversation's first session; `coaching` arrives as `intake`'s follow-up. That's a different thing from `attempt`, which counts tries at the same session. `Session.run()` is today's per-session body of `run_single_conversation`; `Evaluation.run()` is today's `_evaluate_single_conversation_with_judge`. One `JobLoop` replaces both queue-and-worker pools: no worker IDs, no `get_nowait` loop, no shared results list.
 
 ### The pipeline: one job list
 
-`vera pipeline` can make several runs at once: one per user model (`-u gpt-5.4 -u claude-sonnet-5` makes two runs, whose scores are then pooled), and one per target when there are several. Today it runs a generation pool for one run, then a judging pool for it, then the next run, then pools the results: one pool after another, with idle capacity in between. With the loop it becomes one loop for every run:
+`vera pipeline` can make several runs at once: one per user model (`-u gpt-5.4 -u claude-sonnet-5` makes two runs, whose scores are then pooled), and one per target when there are several. Today it runs a generation pool for one run, then a judging pool for it, then the next run, then pools the results: one pool after another, with idle capacity in between. With the loop it becomes one loop for every run: the first session of every conversation of every run goes on the session queue up front, and evaluations join the evaluation queue as conversations finish.
 
 ```python
 # vera_cli/pipeline.py, after creating every run root up front (run-lifecycle.md, step 5)
@@ -139,8 +140,9 @@ loop = JobLoop(max_concurrent)
 for user_model in user_models:
     for persona in personas:
         for repeat in repeats:
-            loop.submit(Session(persona, repeat, session=1, run_dir=run_dir_for(user_model),
-                                judges=judges, max_attempts=config.attempts))
+            loop.submit(Session(persona, repeat, session_types=config.sessions, position=0,
+                                run_dir=run_dir_for(user_model), judges=judges,
+                                max_attempts=config.attempts))
 report(await loop.run())
 for run_dir in run_dirs:
     write_results_csv(evaluation_dir_for(run_dir))
