@@ -22,11 +22,11 @@ On top of that, each stage has 4–5 layers that mostly forward arguments: `vera
 vera_cli/generate.py     resolve and validate settings → RunConfig        (no jobs, no I/O beyond reading inputs)
         │
         ▼
-generate/run.py          run_generation(config): load the queue with the first jobs, run the loop, report
+generate/run.py          run_generation(config): submit the first jobs, run the loop, report
 generate/conversation.py the Session job: what generating one session means
         │
         ▼
-workers/loop.py          JobLoop: one queue and one cap per job kind; skip done jobs, run the rest, collect outcomes
+workers/loop.py          JobLoop: one cap per job kind; skip done jobs, run the rest, collect outcomes
 ```
 
 Judging is the same shape: `vera_cli/judge.py` → `judge/run.py` (`run_judging`) → `judge/evaluation.py` (the `Evaluation` job) → `workers/loop.py`. The CLI never calls the loop directly; it resolves everything up front and calls one domain entry point, which keeps the layer rule in [architecture.md](../architecture.md) (`vera_cli` → domain → `workers/`).
@@ -35,63 +35,52 @@ Judging is the same shape: `vera_cli/judge.py` → `judge/run.py` (`run_judging`
 
 ### The loop
 
-All the concurrency code in the repo, in one class. It's a class rather than a function because `submit` is called from two places (the stage, and a finished job handing on its follow-ups) and both need the same queues, so the queues live on an object instead of in a closure; it also gives an external queue one thing to replace, anything with `submit` and `run` (decision 7). Each job kind (`session`, `evaluation`) has its own queue and its own cap. Everything that adds work goes through `submit`, which never waits: the stage loading its first jobs, and a finished job handing on its follow-ups. The loop never retries a job: retries happen per call, inside it (decision 2).
+All the concurrency code in the repo, in one class. It's a class rather than a function because `submit` is called from two places (the stage, and a finished job handing on its follow-ups) and both need the same caps and the same set of running jobs; it also gives an external queue one thing to replace, anything with `submit` and `run` (decision 7). Each job kind (`session`, `evaluation`) has its own cap, an `asyncio.Semaphore`. Everything that adds work goes through `submit`, which never waits: it starts the job as a task, and the task waits for a free slot of its kind. The tasks waiting on a kind's semaphore are that kind's queue, served in order. The loop never retries a job: retries happen per call, inside it (decision 2).
 
 ```python
 # workers/loop.py
 class JobLoop:
-    def __init__(self, max_concurrent: dict[str, int | None]):
-        self.caps = max_concurrent                            # per kind; None or 0 means no limit
-        self.queues = {kind: deque() for kind in max_concurrent}
-        self.running: dict[asyncio.Task, Job] = {}
+    def __init__(self, max_concurrent: dict[str, int | None], reporters=()):
+        self.limits = {kind: asyncio.Semaphore(cap) if cap else contextlib.nullcontext()
+                       for kind, cap in max_concurrent.items()}  # None or 0: no limit
+        self.tasks: set[asyncio.Task] = set()
         self.outcomes: list[Outcome] = []
 
     def submit(self, job: Job) -> None:
-        """Put a job on its kind's queue. Never waits."""
-        if job.done():                                        # resume: its output is already on disk,
-            self.outcomes.append(Outcome.skipped(job))
-            for next_job in job.follow_ups():                 # but the jobs after it may not be
-                self.submit(next_job)
-        else:
-            self.queues[job.kind].append(job)
+        """Start a job; it waits for a free slot of its kind. Never waits itself."""
+        self.tasks.add(asyncio.create_task(self.run_one(job)))
 
     async def run(self) -> list[Outcome]:
-        """Run until every queue is empty and nothing is running."""
-        while True:
-            self.start_jobs_that_fit()
-            if not self.running:
-                return self.outcomes
-            finished, _ = await asyncio.wait(self.running, return_when=asyncio.FIRST_COMPLETED)
-            for task in finished:
-                self.record(self.running.pop(task), task.exception())
+        """Wait until every job has finished, follow-ups included."""
+        while self.tasks:                                     # follow-ups add tasks while we wait
+            finished, _ = await asyncio.wait(self.tasks)
+            self.tasks -= finished
+        return self.outcomes
 
-    def start_jobs_that_fit(self) -> None:
-        for kind, queue in self.queues.items():
-            while queue and self.has_room(kind):
-                job = queue.popleft()
-                self.running[asyncio.create_task(job.run())] = job
-
-    def has_room(self, kind: str) -> bool:
-        cap = self.caps[kind]
-        running = sum(1 for job in self.running.values() if job.kind == kind)
-        return not cap or running < cap
-
-    def record(self, job: Job, error: BaseException | None) -> None:
-        if error is None:
-            self.outcomes.append(Outcome.ok(job))
-            for next_job in job.follow_ups():
-                self.submit(next_job)
-        else:
-            self.outcomes.append(Outcome.failed(job, error))           # rerun later with --into
+    async def run_one(self, job: Job) -> None:
+        try:                                                  # any error is this job's outcome
+            if job.done():                                    # resume: its output is already on disk,
+                status = "skipped"
+            else:
+                async with self.limits[job.kind]:
+                    await job.run()
+                status = "finished"
+            follow_ups = job.follow_ups()                     # but the jobs after it may not be
+        except Exception as error:
+            self.outcomes.append(Outcome(job, "failed", error))   # rerun later with --into
+            return
+        self.outcomes.append(Outcome(job, status))
+        for next_job in follow_ups:
+            self.submit(next_job)
 ```
 
-A done job is skipped in `submit` but still hands on its follow-ups, and each of those is checked in turn, so resume reaches every missing job however far down the chain it is, and redoes nothing. Because the cap is checked when a job starts, not sized from the first jobs, follow-ups are never throttled by how few jobs the stage loaded.
+A done job is skipped but still hands on its follow-ups, and each of those is checked in turn, so resume reaches every missing job however far down the chain it is, and redoes nothing. Because a job takes a slot when it starts, follow-ups are never throttled by how few jobs the stage loaded.
 
 A job is plain data plus three methods:
 
 ```python
 class Job(Protocol):
-    kind: str                                         # "session" or "evaluation": picks the queue and the cap
+    kind: str                                         # "session" or "evaluation": picks the cap
                                                       # (and the code a remote worker would run)
     label: str
     def done(self) -> bool: ...                       # is my output already on disk?
@@ -102,7 +91,7 @@ class Job(Protocol):
 
 ### Each stage
 
-A stage only loads the queue and runs the loop:
+A stage only submits its first jobs and runs the loop:
 
 ```python
 # generate/run.py
@@ -127,7 +116,7 @@ Sessions are named, not numbered: `session_types` is the configured list (`--ses
 
 ### The pipeline: one job list
 
-`vera pipeline` can make several runs at once: one per user model (`-u gpt-5.4 -u claude-sonnet-5` makes two runs, whose scores are then pooled), and one per target when there are several. Today it runs a generation pool for one run, then a judging pool for it, then the next run, then pools the results: one pool after another, with idle capacity in between. With the loop it becomes one loop for every run: the first session of every conversation of every run goes on the session queue up front, and evaluations join the evaluation queue as conversations finish.
+`vera pipeline` can make several runs at once: one per user model (`-u gpt-5.4 -u claude-sonnet-5` makes two runs, whose scores are then pooled), and one per target when there are several. Today it runs a generation pool for one run, then a judging pool for it, then the next run, then pools the results: one pool after another, with idle capacity in between. With the loop it becomes one loop for every run: the first session of every conversation of every run is submitted up front, and evaluations are submitted as conversations finish, each kind under its own cap.
 
 ```python
 # vera_cli/pipeline.py, after creating every run root up front (run-lifecycle.md, step 5)
@@ -144,7 +133,7 @@ for run_dir in run_dirs:
 pool(run_dirs)
 ```
 
-A conversation's last session hands on that conversation's `Evaluation` jobs as follow-ups (the `judges` field says which; `vera generate` leaves it empty). They go on the evaluation queue, so the conversation is judged as soon as it exists, while other conversations are still being generated. Resume works through the same chain: if a run stopped after a conversation's last transcript but before its judging finished, every session of it is skipped as done, and its unfinished evaluations are reached and run. Every user model shares the same caps (decision 6), and the slowest persona no longer holds up the next model's start. Run-level steps (`results.csv`, scores, pooling) still wait for every job, because they need all the rows.
+A conversation's last session hands on that conversation's `Evaluation` jobs as follow-ups (the `judges` field says which; `vera generate` leaves it empty). They wait for an evaluation slot, so the conversation is judged as soon as it exists, while other conversations are still being generated. Resume works through the same chain: if a run stopped after a conversation's last transcript but before its judging finished, every session of it is skipped as done, and its unfinished evaluations are reached and run. Every user model shares the same caps (decision 6), and the slowest persona no longer holds up the next model's start. Run-level steps (`results.csv`, scores, pooling) still wait for every job, because they need all the rows.
 
 What this needs: the judge's run folder and rubric must exist before generation starts, which the run-lifecycle order already gives (all run roots are created before any job runs).
 
@@ -162,8 +151,8 @@ It also gives the pipeline the resume that `generate` and `judge` have. `vera pi
 4. **Progress display is a separate PR** ([terminal-interface.md](./terminal-interface.md), #271). The loop emits events (job started, job finished, and from inside a job: user responding, chatbot responding, judge on question *n*, a call retrying) to a reporter. The first reporter prints one flushed line per event, which fixes the "looks hung under redirection" backlog item. A later PR adds a live display: a progress bar per stage and a box per model saying what it's doing.
 5. **Missing work is re-done, not fatal.** The run's `config.json` (see [run-lifecycle.md](./run-lifecycle.md)) fixes the job list, so `done()` over that list is the manifest: rerunning with `--into` does exactly the missing jobs. A stage still stops the pipeline when it produced nothing (nothing to judge), with a message naming the run folder and the failure count; partial failures warn and continue.
    - **Unfinished judging works the same way.** An `Evaluation` is done when its TSV exists, and the TSV is written only after the judge has answered every question it needed. A judging stopped partway through a conversation leaves no TSV, so rerunning with `--into` judges that conversation again from its first question; conversations already judged are skipped. `results.csv` and the scores are rebuilt from the TSVs after the loop, so they always reflect exactly the finished evaluations. Saving progress question by question isn't worth it: one conversation is a few dozen short judge calls.
-6. **One cap per job kind.** The config already sets two: `generation.max_concurrent` caps `Session` jobs and `judging.max_concurrent` caps `Evaluation` jobs, so in the pipeline a burst of short judge calls can't crowd out the long generation calls. The loop keeps one queue and one cap per job kind instead of one in total. The per-judge-model cap (`per_judge`) still comes later (decision 3).
-7. **Jobs stay serializable, so an external queue stays possible.** Jobs are plain data (paths, model names, indices), not closures, so they can be serialized as JSON. A closure would carry live state with it (an LLM client's HTTP session, its API key), which can't or shouldn't travel; instead each job names its `kind`, and the worker looks up the code to run and builds its own clients. That keeps an external queue (a cloud task queue, a cluster scheduler) possible: the in-memory queues are the seam. An external version keeps `submit` and `run`, but `submit` sends the job's JSON to the external queue, workers elsewhere pull from it, and the cap becomes how many workers pull. Stages don't change, since they only call `submit` and `run`. The interface isn't built until there's a concrete need, same rule as the roadmap's Storage phase. What keeps it possible is enforced, not assumed: each job type is a dataclass of JSON-safe fields plus `kind`, and a unit test round-trips every job type through JSON and runs the copy.
+6. **One cap per job kind.** The config already sets two: `generation.max_concurrent` caps `Session` jobs and `judging.max_concurrent` caps `Evaluation` jobs, so in the pipeline a burst of short judge calls can't crowd out the long generation calls. The loop keeps one cap per job kind instead of one in total. The per-judge-model cap (`per_judge`) still comes later (decision 3).
+7. **Jobs stay serializable, so an external queue stays possible.** Jobs are plain data (paths, model names, indices), not closures, so they can be serialized as JSON. A closure would carry live state with it (an LLM client's HTTP session, its API key), which can't or shouldn't travel; instead each job names its `kind`, and the worker looks up the code to run and builds its own clients. That keeps an external queue (a cloud task queue, a cluster scheduler) possible: `submit` is the seam. An external version keeps `submit` and `run`, but `submit` sends the job's JSON to the external queue, workers elsewhere pull from it, and the cap becomes how many workers pull. Stages don't change, since they only call `submit` and `run`. The interface isn't built until there's a concrete need, same rule as the roadmap's Storage phase. What keeps it possible is enforced, not assumed: each job type is a dataclass of JSON-safe fields plus `kind`, and a unit test round-trips every job type through JSON and runs the copy.
 
 ## What this removes
 
