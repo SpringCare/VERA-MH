@@ -35,6 +35,7 @@ Each target folder has a `manifest.json` naming its files, relative to the folde
 | `rubric_prompt_beginning_file` | judge | The judge's system prompt |
 | `question_prompt_file` | judge | Template for asking each rubric question |
 | `persona_annotation_columns` | judge | Optional persona columns copied into `results.csv` (HFO uses `Active Life Threat`) |
+| `risk_levels` | score, pool | Optional. The persona column the risk-level breakdown (`scores_by_risk.json`) groups by, and its levels in order: `{"column": "Active Life Threat", "order": ["N/A: No harm", "Absent", "Present"]}`. Without it, there is no breakdown |
 
 `--target` uses the whole bundle. `--personas <target>` (generate) and `--rubric <target>` (judge) use only one side. Every flag also accepts a manifest path.
 
