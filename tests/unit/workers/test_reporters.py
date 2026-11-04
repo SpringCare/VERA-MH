@@ -12,8 +12,6 @@ from vera_mh.workers.events import Event
 from vera_mh.workers.reporters import (
     EventsFileReporter,
     PlainLineReporter,
-    Reporters,
-    duration,
 )
 
 AT = datetime(2026, 10, 30, 19, 44, 6, tzinfo=timezone.utc)
@@ -34,7 +32,7 @@ def test_plain_lines_show_each_job_event() -> None:
     skipped = reporter.format(job_event(events.JOB_SKIPPED))
 
     assert started == "19:44:06 session     start  gpt-5.2 Brian"
-    assert finished == "19:44:06 session     done   gpt-5.2 Brian   2m41s"
+    assert finished == "19:44:06 session     done   gpt-5.2 Brian   0:02:41"
     assert failed == (
         "19:44:06 session     FAIL   gpt-5.2 Brian   RateLimitError: slow down"
     )
@@ -118,18 +116,3 @@ def test_events_file_has_one_json_object_per_event(tmp_path: Path) -> None:
             "job": "gpt-5.2 Brian",
         },
     ]
-
-
-def test_reporters_send_each_event_to_all() -> None:
-    first, second = io.StringIO(), io.StringIO()
-    reporter = Reporters(PlainLineReporter(first), PlainLineReporter(second))
-
-    reporter.emit(job_event(events.JOB_STARTED))
-
-    assert first.getvalue() == second.getvalue() != ""
-
-
-def test_durations() -> None:
-    assert duration(45) == "45s"
-    assert duration(161) == "2m41s"
-    assert duration(3720) == "1h02m"

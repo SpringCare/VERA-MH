@@ -16,7 +16,7 @@ import contextlib
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Iterator, Protocol
+from typing import Any, Callable, Iterator, Protocol
 
 # Emitted by the loop.
 JOB_STARTED = "job_started"
@@ -64,34 +64,55 @@ class Reporter(Protocol):
     def emit(self, event: Event) -> None: ...
 
 
+# Reporting from inside a job
+#
+# Code deep inside a job, such as an LLM client retrying a call, has no handle
+# on the loop, and passing one down through the simulator, the judge, and every
+# client would touch all of them. Instead the loop records which job the
+# current asyncio task is running, and `report()` reads it back:
+#
+#     # in the loop, around each job (each job runs in its own task)
+#     with reporting_for(loop.emit, "gpt-5.2 Brian", "session"):
+#         await job.run()
+#
+#     # anywhere inside that job, however deep
+#     report(CALL_RETRYING, attempt=2, max_attempts=4, error="RateLimitError")
+#
+#     # every reporter then receives
+#     Event(type="call_retrying", job="gpt-5.2 Brian", kind="session",
+#           data={"attempt": 2, "max_attempts": 4, "error": "RateLimitError"})
+#
+# A `ContextVar` is a variable whose value is per asyncio task, so ten jobs
+# running at once each see their own job, never another's.
+
+
 @dataclass(frozen=True)
-class _RunningJob:
-    reporter: Reporter
+class _CurrentJob:
+    emit: Callable[[Event], None]
     label: str
     kind: str
 
 
-# The job running in the current asyncio task, and where its events go. The loop
-# sets it around each job's `run()`; each job runs in its own task, so
-# concurrent jobs don't see each other's.
-_running: ContextVar[_RunningJob | None] = ContextVar("running_job", default=None)
+_current_job: ContextVar[_CurrentJob | None] = ContextVar("current_job", default=None)
 
 
 @contextlib.contextmanager
-def running_job(reporter: Reporter, label: str, kind: str) -> Iterator[None]:
-    """While inside, `report()` emits events for this job to `reporter`."""
-    token = _running.set(_RunningJob(reporter, label, kind))
+def reporting_for(
+    emit: Callable[[Event], None], label: str, kind: str
+) -> Iterator[None]:
+    """Inside this block, `report()` sends events to `emit`, as this job's."""
+    token = _current_job.set(_CurrentJob(emit, label, kind))
     try:
         yield
     finally:
-        _running.reset(token)
+        _current_job.reset(token)
 
 
 def report(event_type: str, **data: Any) -> None:
-    """Emit an event from inside a running job, such as `TURN_STARTED`.
+    """Emit an event from inside a running job, such as `CALL_RETRYING`.
 
     Outside a job (a unit test calling the code directly, say) it does nothing.
     """
-    job = _running.get()
+    job = _current_job.get()
     if job is not None:
-        job.reporter.emit(Event(event_type, job=job.label, kind=job.kind, data=data))
+        job.emit(Event(event_type, job=job.label, kind=job.kind, data=data))

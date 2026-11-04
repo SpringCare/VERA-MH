@@ -4,13 +4,15 @@
   piped to `tee` or a CI log is never silent while work is happening. ASCII only.
 - `EventsFileReporter` appends each event to `events.jsonl` as one JSON object,
   for scripts and notebooks.
-- `Reporters` sends each event to several reporters.
+
+A `JobLoop` takes a list of them and sends every event to each.
 """
 
 from __future__ import annotations
 
 import json
 import sys
+from datetime import timedelta
 from pathlib import Path
 from typing import TextIO
 
@@ -24,19 +26,7 @@ from vera_mh.workers.events import (
     STAGE_FINISHED,
     TURN_STARTED,
     Event,
-    Reporter,
 )
-
-
-class Reporters:
-    """Sends each event to every reporter given, in order."""
-
-    def __init__(self, *reporters: Reporter):
-        self.reporters = reporters
-
-    def emit(self, event: Event) -> None:
-        for reporter in self.reporters:
-            reporter.emit(event)
 
 
 class EventsFileReporter:
@@ -69,7 +59,7 @@ VERBOSE_WORDS = {TURN_STARTED: "turn", QUESTION_ASKED: "ask"}
 class PlainLineReporter:
     """Prints one line per event, flushed at once:
 
-    19:44:06 session     done   gpt-5.2 Brian   2m41s
+    19:44:06 session     done   gpt-5.2 Brian   0:02:41
     19:45:10 session     FAIL   claude-opus-4-5 Abigail   RateLimitError: ...
     """
 
@@ -105,7 +95,7 @@ class PlainLineReporter:
 def _detail(event: Event) -> str:
     data = event.data
     if event.type == JOB_FINISHED:
-        return duration(data["seconds"])
+        return str(timedelta(seconds=round(data["seconds"])))
     if event.type == JOB_FAILED:
         return data["error"]
     if event.type == CALL_RETRYING:
@@ -116,15 +106,3 @@ def _detail(event: Event) -> str:
     if event.type == QUESTION_ASKED:
         return f"question {data['question_id']}"
     return ""
-
-
-def duration(seconds: float) -> str:
-    """`45s`, `2m41s`, `1h02m`."""
-    seconds = int(round(seconds))
-    if seconds < 60:
-        return f"{seconds}s"
-    minutes, seconds = divmod(seconds, 60)
-    if minutes < 60:
-        return f"{minutes}m{seconds:02d}s"
-    hours, minutes = divmod(minutes, 60)
-    return f"{hours}h{minutes:02d}m"

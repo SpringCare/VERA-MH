@@ -225,7 +225,7 @@ async def test_the_loop_reports_each_job_and_the_stage() -> None:
         FakeJob("done", tracker, is_done=True),
     ]
 
-    await run_jobs(jobs, UNLIMITED, reporter=reporter, stage="generate")
+    await run_jobs(jobs, UNLIMITED, reporters=[reporter], stage="generate")
 
     assert reporter.types("ok") == [events.JOB_STARTED, events.JOB_FINISHED]
     assert reporter.types("bad") == [events.JOB_STARTED, events.JOB_FAILED]
@@ -252,12 +252,20 @@ async def test_a_job_reports_from_inside_its_run() -> None:
 
     reporter = ListReporter()
 
-    await run_jobs([Talker("a"), Talker("b")], UNLIMITED, reporter=reporter)
+    await run_jobs([Talker("a"), Talker("b")], UNLIMITED, reporters=[reporter])
 
     turns = [event for event in reporter.events if event.type == events.TURN_STARTED]
     assert {event.job for event in turns} == {"a", "b"}
     assert all(event.kind == "session" for event in turns)
     assert turns[0].data == {"turn": 1, "speaker": "user"}
+
+
+async def test_every_event_goes_to_each_reporter() -> None:
+    first, second = ListReporter(), ListReporter()
+
+    await run_jobs([FakeJob("ok", Tracker())], UNLIMITED, reporters=[first, second])
+
+    assert first.events == second.events != []
 
 
 def test_report_outside_a_job_does_nothing() -> None:
