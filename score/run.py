@@ -21,10 +21,9 @@ from score.aggregate import (
     scores_output_dir,
 )
 from score.utils import (
-    RISK_LEVELS,
     has_dimension_data,
+    load_risk_levels,
     read_judge_results_csv,
-    risk_level_column,
 )
 from score.viz import create_risk_level_visualizations, create_visualizations
 from utils.judge_results import build_dataframe_from_tsv_files
@@ -151,10 +150,10 @@ def run_scoring(
         )
         return results, scores_dir
 
-    if risk_level_column(personas_tsv_path) is None:
+    if load_risk_levels(personas_tsv_path) is None:
         print(
-            f"No risk-level column in {personas_tsv_path.name} "
-            f"(one of: {', '.join(RISK_LEVELS)}); skipping risk-level analysis."
+            f"No risk_levels for {personas_tsv_path.name} in its target's "
+            "manifest.json; skipping risk-level analysis."
         )
         return results, scores_dir
 

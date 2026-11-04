@@ -248,7 +248,7 @@ def _create_risk_dimension_chart(ax, dimension: str, risk_level_scores: Dict):
     risk_levels = []
     percentages: Dict[str, list] = {segment.key: [] for segment in ALL_SEGMENTS}
 
-    # Scoring lists the levels in their target's order (`RISK_LEVELS`).
+    # Scoring lists the levels in their target's order (its manifest's `risk_levels`).
     for risk_level, level_scores in risk_level_scores.items():
         dim_scores = level_scores.get("dimensions", {}).get(dimension)
         if not dim_scores:

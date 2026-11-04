@@ -6,6 +6,8 @@ Covers the join that copies target-declared persona columns into results.csv
 judging run over a reporting convenience (`_annotate_with_personas`).
 """
 
+import json
+
 import pandas as pd
 import pytest
 
@@ -72,9 +74,20 @@ class TestLoadPersonaColumn:
             == "None"
         )
 
-    def test_risk_level_helper_still_joins_si_column(self, tmp_path):
+    def test_risk_level_helper_joins_the_manifests_column(self, tmp_path):
         path = tmp_path / "personas_SI.tsv"
         path.write_text(SI_PERSONAS)
+        (tmp_path / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "personas": [path.name],
+                    "risk_levels": {
+                        "column": "Short Current Suicide Risk Level",
+                        "order": ["None", "Low", "High", "Immediate"],
+                    },
+                }
+            )
+        )
         assert load_personas_risk_levels(path) == {
             "AAA1111": "High",
             "BBB2222": "None",

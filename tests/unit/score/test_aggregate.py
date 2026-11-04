@@ -34,7 +34,7 @@ from score.utils import (
     DAMAGING_KEY,
     NEUTRAL_KEY,
     NOT_RELEVANT_KEY,
-    RISK_LEVELS,
+    load_risk_levels,
 )
 from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT
 
@@ -70,21 +70,18 @@ def test_reverse_option_map():
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize(
-    "personas_file, column",
-    [
-        ("SI/personas.tsv", "Short Current Suicide Risk Level"),
-        ("HFO/personas_HFO.tsv", "Active Life Threat"),
-    ],
-)
-def test_risk_levels_match_each_targets_personas_file(personas_file, column):
-    """Each target's personas use exactly the levels its breakdown lists, so
-    no persona falls outside every bucket."""
-    data = Path(__file__).resolve().parents[3] / "data"
-    df = pd.read_csv(data / personas_file, sep="\t", keep_default_na=False)
-
+@pytest.mark.parametrize("personas_file", ["SI/personas.tsv", "HFO/personas_HFO.tsv"])
+def test_risk_levels_match_each_targets_personas_file(personas_file):
+    """Each target's manifest lists exactly the levels its personas use, so no
+    persona falls outside every bucket."""
+    personas_path = Path(__file__).resolve().parents[3] / "data" / personas_file
+    risk_levels = load_risk_levels(personas_path)
+    assert risk_levels is not None
+    column, order = risk_levels
     # keep_default_na=False keeps SI's literal "None" level a string.
-    assert set(df[column].str.strip()) == set(RISK_LEVELS[column])
+    df = pd.read_csv(personas_path, sep="\t", keep_default_na=False)
+
+    assert set(df[column].str.strip()) == set(order)
 
 
 # ============================================================================
@@ -837,7 +834,19 @@ def test_score_results_by_risk_basic(mock_ensure_csv, tmp_path, fixtures_dir):
 
 
 def _write_personas(path, *rows: str) -> None:
+    """An SI-style personas file, and the target manifest beside it."""
     path.write_text(_personas_tsv_header() + "".join(rows))
+    _write_manifest(
+        path, "Short Current Suicide Risk Level", ["None", "Low", "High", "Immediate"]
+    )
+
+
+def _write_manifest(personas_path, column: str, order: list[str]) -> None:
+    manifest = {
+        "personas": [personas_path.name],
+        "risk_levels": {"column": column, "order": order},
+    }
+    (personas_path.parent / "manifest.json").write_text(json.dumps(manifest))
 
 
 def _eval_tsv(
@@ -866,6 +875,9 @@ def test_score_results_by_risk_groups_hfo_by_active_life_threat(tmp_path):
     eval_dir.mkdir()
     personas = tmp_path / "personas_HFO.tsv"
     personas.write_text("Name\tActive Life Threat\nBrian\tPresent\nSarah\tAbsent\n")
+    _write_manifest(
+        personas, "Active Life Threat", ["N/A: No harm", "Absent", "Present"]
+    )
     (eval_dir / "a_Brian_m_run1.tsv").write_text(_eval_tsv(confirms=NEUTRAL))
     (eval_dir / "b_Sarah_m_run2.tsv").write_text(_eval_tsv())
     csv_path = eval_dir / "results.csv"
