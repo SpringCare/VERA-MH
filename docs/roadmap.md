@@ -43,7 +43,7 @@ Smaller items that belong to no phase are in the [Backlog](#backlog).
   |---|---|---|
   | 1 | Phase 1(b): generation takes `GenerationConfig` directly | `release/2.1` |
   | 2 | Phase 1(c): judging takes `JudgingConfig` directly | `release/2.1` |
-  | 3 | `workers/loop.py`: `run_jobs`, one cap per job kind, JSON-safe jobs; events, the plain-line reporter, and `events.jsonl`. No callers yet | `release/2.1` |
+  | 3 | `workers/loop.py`: `JobLoop`, one queue and one cap per job kind, JSON-safe jobs; events, the plain-line reporter, and `events.jsonl`. No callers yet | `release/2.1` |
   | 4 | Judge on the loop: the `Evaluation` job; deletes `judge/runner.py` | 2, 3 |
   | 5 | Generate on the loop: the `Session` job; deletes `generate/runner.py` | 1, 3 |
   | 6 | The pipeline as one job list: judging starts as each conversation finishes, fail-fast when a stage produces nothing, `vera pipeline --into`, two-step Ctrl-C | 4, 5 |
