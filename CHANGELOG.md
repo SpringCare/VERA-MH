@@ -27,6 +27,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **PRs need a CHANGELOG entry**—A new check fails a pull request that doesn't change `CHANGELOG.md`. Changes nobody would notice, such as a typo fix or a refactor with no import or behavior change, take the `no-changelog` label instead. `/create-pr` now drafts the entry, or adds the label, before opening the PR.
 - **Guards against changed scores**—Unit tests pin results with fixed inputs, so a code change can't move scores unnoticed. One per stage: golden persona prompts and a replay of recorded user and chatbot replies (generate), scripted answers walking the SI rubric (judge), and golden `scores.json` files (score); plus a replay of the whole recorded pipeline. None calls a model. See [docs/safe-changes.md](docs/safe-changes.md).
 
+### Fixed
+
+- **HFO runs get a risk-level breakdown instead of a traceback**—Scoring grouped conversations by SI's `Short Current Suicide Risk Level` persona column for every target, so on HFO, whose personas file doesn't have it, `vera pipeline`, `vera score`, and `vera pool` printed a `KeyError` traceback and skipped `scores_by_risk.json`. Each target's `manifest.json` now says how to break its scores down, in an optional `risk_levels` section with the persona column and its levels in order ([docs/targets.md](docs/targets.md)): SI groups by `Short Current Suicide Risk Level` (`None`, `Low`, `High`, `Immediate`), HFO by `Active Life Threat` (`N/A: No harm`, `Absent`, `Present`), which matches the HFO rubric's danger tiers. A personas file with no manifest beside it that lists it and has `risk_levels`, such as a custom file passed to `--personas`, skips the breakdown with a one-line note. `score.utils.RISK_LEVEL_ORDER` and `RISK_LEVEL_COLUMN` are gone; `load_risk_levels(personas_path)` returns the column and order. SI scores are unchanged.
+
 ### Documentation and development workflow
 
 - **Release 2.1 plan**—[`docs/roadmap.md`](docs/roadmap.md#release-21-plan) lists the steps for 2.1 in dependency order with their PRs: safety net, data contracts, job loop, terminal output, then removing `legacy/`, with the judge-flow rewrite in parallel. They accumulate on a `release/2.1` branch that merges into `main` once, at the 2.1.0 tag, so `main` stays releasable; CI now also runs for `release/2.1`.
@@ -59,6 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Documentation and development workflow
 
+- **Terminal-interface proposal**—[`docs/design/terminal-interface.md`](docs/design/terminal-interface.md) outlines progress reporting, event logs, run summaries, verbosity, and interruption handling. This is a draft design, not an implemented CLI change.
 - **Current model IDs in examples**—README, AGENTS.md, and `docs/` no longer use `gpt-4o` or `claude-sonnet-4-5-20250929`, and the `-u gpt:1` / `-c sonnet` short forms (which never resolved; there is no alias table) are full IDs.
 - **Create your own evaluation**—[`docs/create-an-evaluation.md`](docs/create-an-evaluation.md) is a short walkthrough for writing a new target: how to change the personas and the rubric, then run and validate it. Linked from the README.
 - **How to read a rubric**—[`docs/reading-a-rubric.md`](docs/reading-a-rubric.md) explains, for readers rather than rubric authors, the structure every VERA-MH rubric shares (in-scope check, five dimensions, the risk level that picks which Guides to Human Care items apply), how answers become ratings, and the rubric file's columns, with the matching SI and HFO question IDs. Linked from `docs/targets.md` and `docs/judge.md`.

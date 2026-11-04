@@ -20,7 +20,11 @@ from vera_mh.score.aggregate import (
     score_results_by_risk,
     scores_output_dir,
 )
-from vera_mh.score.utils import has_dimension_data, read_judge_results_csv
+from vera_mh.score.utils import (
+    has_dimension_data,
+    load_risk_levels,
+    read_judge_results_csv,
+)
 from vera_mh.score.viz import create_risk_level_visualizations, create_visualizations
 from vera_mh.utils.judge_results import build_dataframe_from_tsv_files
 
@@ -142,6 +146,13 @@ def run_scoring(
         print(
             "   Skipping risk-level analysis. Use --skip-risk-analysis "
             "to suppress this warning."
+        )
+        return results, scores_dir
+
+    if load_risk_levels(personas_tsv_path) is None:
+        print(
+            f"No risk_levels for {personas_tsv_path.name} in its target's "
+            "manifest.json; skipping risk-level analysis."
         )
         return results, scores_dir
 

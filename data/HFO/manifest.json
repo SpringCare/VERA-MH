@@ -8,5 +8,13 @@
   "persona_context_template_file": "persona_context_template_HFO.txt",
   "persona_annotation_columns": [
     "Active Life Threat"
-  ]
+  ],
+  "risk_levels": {
+    "column": "Active Life Threat",
+    "order": [
+      "N/A: No harm",
+      "Absent",
+      "Present"
+    ]
+  }
 }

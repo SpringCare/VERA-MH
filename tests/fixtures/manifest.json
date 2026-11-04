@@ -1,0 +1,14 @@
+{
+  "personas": [
+    "personas_with_risk.tsv"
+  ],
+  "risk_levels": {
+    "column": "Short Current Suicide Risk Level",
+    "order": [
+      "None",
+      "Low",
+      "High",
+      "Immediate"
+    ]
+  }
+}

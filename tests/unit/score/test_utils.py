@@ -1,5 +1,7 @@
 """Unit tests for score/utils.py: percentages, VERA scores, risk levels."""
 
+import json
+
 import pandas as pd
 import pytest
 
@@ -18,6 +20,7 @@ from vera_mh.score.utils import (
     ensure_results_csv,
     extract_model_names_from_path,
     load_personas_risk_levels,
+    load_risk_levels,
     pct_of_total,
     read_judge_results_csv,
 )
@@ -258,6 +261,22 @@ def test_calculate_overall_percentages_custom_decimals():
     assert percentages["overall_bp_pct"] == pytest.approx(33.3333, abs=0.0001)
 
 
+SI_RISK_LEVELS = {
+    "column": "Short Current Suicide Risk Level",
+    "order": ["None", "Low", "High", "Immediate"],
+}
+
+
+def write_personas(path, text, risk_levels=SI_RISK_LEVELS):
+    """Write a personas file, and the target manifest beside it that lists it
+    and says how its risk levels go (None: a target without `risk_levels`)."""
+    path.write_text(text)
+    manifest = {"personas": [path.name]}
+    if risk_levels is not None:
+        manifest["risk_levels"] = risk_levels
+    (path.parent / "manifest.json").write_text(json.dumps(manifest))
+
+
 # ============================================================================
 # load_personas_risk_levels() Tests
 # ============================================================================
@@ -267,12 +286,13 @@ def test_calculate_overall_percentages_custom_decimals():
 def test_load_personas_risk_levels_basic(tmp_path):
     """Test loading persona risk levels from TSV file."""
     personas_path = tmp_path / "personas.tsv"
-    personas_path.write_text(
+    write_personas(
+        personas_path,
         "Name\tAge\tGender\tShort Current Suicide Risk Level\tCrisis History\n"
         "Brian\t30\tMale\tHigh\tPast crisis\n"
         "Sarah\t25\tFemale\tLow\tNone\n"
         "Mike\t35\tMale\tImmediate\tMultiple\n"
-        "Emma\t28\tFemale\tNone\tNone\n"
+        "Emma\t28\tFemale\tNone\tNone\n",
     )
 
     risk_map = load_personas_risk_levels(personas_path)
@@ -285,12 +305,79 @@ def test_load_personas_risk_levels_basic(tmp_path):
 
 
 @pytest.mark.unit
+def test_load_risk_levels_reads_the_targets_manifest(tmp_path):
+    personas_path = tmp_path / "personas_HFO.tsv"
+    hfo = {
+        "column": "Active Life Threat",
+        "order": ["N/A: No harm", "Absent", "Present"],
+    }
+    write_personas(personas_path, "Name\tActive Life Threat\n", risk_levels=hfo)
+
+    assert load_risk_levels(personas_path) == (
+        "Active Life Threat",
+        ["N/A: No harm", "Absent", "Present"],
+    )
+
+
+@pytest.mark.unit
+def test_load_risk_levels_is_none_without_a_section_or_manifest(tmp_path):
+    with_manifest = tmp_path / "target" / "personas.tsv"
+    with_manifest.parent.mkdir()
+    write_personas(with_manifest, "Name\tAge\n", risk_levels=None)
+    no_manifest = tmp_path / "personas.tsv"
+    no_manifest.write_text("Name\tAge\n")
+
+    assert load_risk_levels(with_manifest) is None
+    assert load_risk_levels(no_manifest) is None
+
+
+@pytest.mark.unit
+def test_load_risk_levels_ignores_a_manifest_that_lists_other_personas(tmp_path):
+    personas_path = tmp_path / "my_personas.tsv"
+    write_personas(personas_path, "Name\tShort Current Suicide Risk Level\n")
+    (tmp_path / "manifest.json").write_text(
+        json.dumps({"personas": ["personas.tsv"], "risk_levels": SI_RISK_LEVELS})
+    )
+
+    assert load_risk_levels(personas_path) is None
+
+
+@pytest.mark.unit
+def test_load_personas_risk_levels_reads_hfo_active_life_threat(tmp_path):
+    personas_path = tmp_path / "personas_HFO.tsv"
+    hfo = {
+        "column": "Active Life Threat",
+        "order": ["N/A: No harm", "Absent", "Present"],
+    }
+    write_personas(
+        personas_path,
+        "Name\tActive Life Threat\nAna\tPresent\nBen\tN/A: No harm\n",
+        risk_levels=hfo,
+    )
+
+    assert load_personas_risk_levels(personas_path) == {
+        "Ana": "Present",
+        "Ben": "N/A: No harm",
+    }
+
+
+@pytest.mark.unit
+def test_load_personas_risk_levels_without_risk_levels_fails(tmp_path):
+    personas_path = tmp_path / "personas.tsv"
+    write_personas(personas_path, "Name\tHarm imminence\nAna\tImminent\n", None)
+
+    with pytest.raises(KeyError, match="no risk_levels"):
+        load_personas_risk_levels(personas_path)
+
+
+@pytest.mark.unit
 def test_load_personas_risk_levels_preserves_none_string(tmp_path):
     """Test that 'None' risk level is preserved as string, not NaN."""
     personas_path = tmp_path / "personas.tsv"
-    personas_path.write_text(
+    write_personas(
+        personas_path,
         "Name\tAge\tGender\tShort Current Suicide Risk Level\tCrisis History\n"
-        "Emma\t28\tFemale\tNone\tNone\n"
+        "Emma\t28\tFemale\tNone\tNone\n",
     )
 
     risk_map = load_personas_risk_levels(personas_path)
@@ -304,9 +391,10 @@ def test_load_personas_risk_levels_preserves_none_string(tmp_path):
 def test_load_personas_risk_levels_strips_whitespace(tmp_path):
     """Test that whitespace is stripped from risk levels."""
     personas_path = tmp_path / "personas_spaces.tsv"
-    personas_path.write_text(
+    write_personas(
+        personas_path,
         "Name\tAge\tGender\tShort Current Suicide Risk Level\tCrisis History\n"
-        "John\t30\tMale\t  High  \tPast crisis\n"
+        "John\t30\tMale\t  High  \tPast crisis\n",
     )
 
     risk_map = load_personas_risk_levels(personas_path)
@@ -323,12 +411,13 @@ def test_load_personas_risk_levels_strips_whitespace(tmp_path):
 def test_add_risk_levels_to_dataframe_basic(tmp_path):
     """Test adding risk level information to dataframe."""
     personas_path = tmp_path / "personas.tsv"
-    personas_path.write_text(
+    write_personas(
+        personas_path,
         "Name\tAge\tGender\tShort Current Suicide Risk Level\tCrisis History\n"
         "Brian\t30\tMale\tHigh\tPast crisis\n"
         "Sarah\t25\tFemale\tLow\tNone\n"
         "Mike\t35\tMale\tImmediate\tMultiple\n"
-        "Emma\t28\tFemale\tNone\tNone\n"
+        "Emma\t28\tFemale\tNone\tNone\n",
     )
 
     # Create a dataframe with filenames
@@ -352,12 +441,13 @@ def test_add_risk_levels_to_dataframe_basic(tmp_path):
 def test_add_risk_levels_to_dataframe_multiple_personas(tmp_path):
     """Test adding risk levels for multiple personas."""
     personas_path = tmp_path / "personas.tsv"
-    personas_path.write_text(
+    write_personas(
+        personas_path,
         "Name\tAge\tGender\tShort Current Suicide Risk Level\tCrisis History\n"
         "Brian\t30\tMale\tHigh\tPast crisis\n"
         "Sarah\t25\tFemale\tLow\tNone\n"
         "Mike\t35\tMale\tImmediate\tMultiple\n"
-        "Emma\t28\tFemale\tNone\tNone\n"
+        "Emma\t28\tFemale\tNone\tNone\n",
     )
 
     df = pd.DataFrame(
@@ -387,9 +477,10 @@ def test_add_risk_levels_to_dataframe_multiple_personas(tmp_path):
 def test_add_risk_levels_to_dataframe_unknown_persona(tmp_path):
     """Test handling of unknown persona names."""
     personas_path = tmp_path / "personas.tsv"
-    personas_path.write_text(
+    write_personas(
+        personas_path,
         "Name\tAge\tGender\tShort Current Suicide Risk Level\tCrisis History\n"
-        "Brian\t30\tMale\tHigh\tPast crisis\n"
+        "Brian\t30\tMale\tHigh\tPast crisis\n",
     )
 
     df = pd.DataFrame(

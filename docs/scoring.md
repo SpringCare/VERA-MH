@@ -32,7 +32,7 @@ The single source of truth for the formula is [`score/utils.py`](../src/vera_mh/
 |------|----------|
 | `scores.json` | Per-dimension and overall aggregates of each rating category, and the scores |
 | `scores_visualization.png` | High Potential for Harm, Suboptimal, and Best Practice shares per dimension and overall, excluding Not Relevant |
-| `scores_by_risk.json` | Ratings broken down by the persona's suicide risk level |
+| `scores_by_risk.json` | Ratings broken down by the persona's risk level, as the target's manifest defines it (`risk_levels`, see [targets.md](targets.md)): `Short Current Suicide Risk Level` for SI, `Active Life Threat` for HFO |
 | `scores_by_risk_visualization.png` | Chart of the above, including Not Relevant |
 
 The two risk files are written only when a personas file is given (`--personas`, or `scoring.personas` in a config). The breakdown currently works only with SI personas.

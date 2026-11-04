@@ -30,7 +30,7 @@ from vera_mh.score.aggregate import (
     score_results,
     score_results_by_risk,
 )
-from vera_mh.score.utils import ensure_results_csv
+from vera_mh.score.utils import ensure_results_csv, load_risk_levels
 from vera_mh.score.viz import create_risk_level_visualizations, create_visualizations
 from vera_mh.utils.naming import parse_generation_run_folder_name
 from vera_mh.utils.run_record import require_run_record, with_start_time
@@ -411,6 +411,11 @@ def run_pooling(
             print(
                 f"Warning: personas TSV not found ({personas_tsv}), "
                 "skipping risk analysis."
+            )
+        elif load_risk_levels(Path(personas_tsv)) is None:
+            print(
+                f"No risk_levels for {Path(personas_tsv).name} in its target's "
+                "manifest.json; skipping risk-level analysis."
             )
         else:
             try:
