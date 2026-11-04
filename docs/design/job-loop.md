@@ -35,7 +35,7 @@ Judging is the same shape: `vera_cli/judge.py` → `judge/run.py` (`run_judging`
 
 ### The loop
 
-All the concurrency code in the repo, in one class. It's a class rather than a function because `submit` is called from three places (the stage, a finished job's follow-ups, a retry) and they all need the same queues, so the queues live on an object instead of in a closure. Each job kind (`session`, `evaluation`) has its own queue and its own cap. Everything that adds work goes through `submit`, which never waits: the stage loading its first jobs, a finished job handing on its follow-ups, and a failed job going back for another try.
+All the concurrency code in the repo, in one class. It's a class rather than a function because `submit` is called from two places (the stage, and a finished job handing on its follow-ups) and both need the same queues, so the queues live on an object instead of in a closure; it also gives an external queue one thing to replace, anything with `submit` and `run` (decision 7). Each job kind (`session`, `evaluation`) has its own queue and its own cap. Everything that adds work goes through `submit`, which never waits: the stage loading its first jobs, and a finished job handing on its follow-ups. The loop never retries a job: retries happen per call, inside it (decision 2).
 
 ```python
 # workers/loop.py
@@ -81,28 +81,23 @@ class JobLoop:
             self.outcomes.append(Outcome.ok(job))
             for next_job in job.follow_ups():
                 self.submit(next_job)
-        elif job.attempt < job.max_attempts and job.retryable(error):
-            self.submit(dataclasses.replace(job, attempt=job.attempt + 1))   # back of its queue
         else:
-            self.outcomes.append(Outcome.failed(job, error))
+            self.outcomes.append(Outcome.failed(job, error))           # rerun later with --into
 ```
 
 A done job is skipped in `submit` but still hands on its follow-ups, and each of those is checked in turn, so resume reaches every missing job however far down the chain it is, and redoes nothing. Because the cap is checked when a job starts, not sized from the first jobs, follow-ups are never throttled by how few jobs the stage loaded.
 
-A job is plain data plus four methods:
+A job is plain data plus three methods:
 
 ```python
 class Job(Protocol):
     kind: str                                         # "session" or "evaluation": picks the queue and the cap
                                                       # (and the code a remote worker would run)
     label: str
-    attempt: int                                      # 1 on the first try; the loop adds 1 on each retry
-    max_attempts: int                                 # set by the stage from the config
     def done(self) -> bool: ...                       # is my output already on disk?
     async def run(self) -> None: ...                  # do the work
     def follow_ups(self) -> list["Job"]: ...          # the jobs waiting on me, from my fields and disk alone,
                                                       # so a skipped job hands them on too
-    def retryable(self, error: Exception) -> bool: ...
 ```
 
 ### Each stage
@@ -115,7 +110,7 @@ loop = JobLoop(max_concurrent)
 for persona in personas:
     for repeat in repeats:
         loop.submit(Session(persona, repeat, session_types=config.sessions, position=0,
-                            run_dir=run_dir, max_attempts=config.attempts))
+                            run_dir=run_dir))
 report(await loop.run())
 
 # judge/run.py
@@ -123,12 +118,12 @@ loop = JobLoop(max_concurrent)
 for conversation in conversations:
     for judge in judges:
         for instance in judge.instances:
-            loop.submit(Evaluation(conversation, judge, instance, run_dir, max_attempts=config.attempts))
+            loop.submit(Evaluation(conversation, judge, instance, run_dir))
 report(await loop.run())
 write_results_csv(run_dir)
 ```
 
-Sessions are named, not numbered: `session_types` is the configured list (`--sessions intake,coaching`; one unnamed session when unset), and `position` says which entry this job runs. Generation loads only each conversation's first session; `coaching` arrives as `intake`'s follow-up. That's a different thing from `attempt`, which counts tries at the same session. `Session.run()` is today's per-session body of `run_single_conversation`; `Evaluation.run()` is today's `_evaluate_single_conversation_with_judge`. One `JobLoop` replaces both queue-and-worker pools: no worker IDs, no `get_nowait` loop, no shared results list.
+Sessions are named, not numbered: `session_types` is the configured list (`--sessions intake,coaching`; one unnamed session when unset), and `position` says which entry this job runs. Generation loads only each conversation's first session; `coaching` arrives as `intake`'s follow-up. `Session.run()` is today's per-session body of `run_single_conversation`; `Evaluation.run()` is today's `_evaluate_single_conversation_with_judge`. One `JobLoop` replaces both queue-and-worker pools: no worker IDs, no `get_nowait` loop, no shared results list.
 
 ### The pipeline: one job list
 
@@ -141,8 +136,7 @@ for user_model in user_models:
     for persona in personas:
         for repeat in repeats:
             loop.submit(Session(persona, repeat, session_types=config.sessions, position=0,
-                                run_dir=run_dir_for(user_model), judges=judges,
-                                max_attempts=config.attempts))
+                                run_dir=run_dir_for(user_model), judges=judges))
 report(await loop.run())
 for run_dir in run_dirs:
     write_results_csv(evaluation_dir_for(run_dir))
@@ -159,11 +153,13 @@ It also gives the pipeline the resume that `generate` and `judge` have. `vera pi
 ## Decisions from review
 
 1. **A job is one session.** Sessions must run in order, so session *k* is a follow-up of session *k − 1*. Generation lists every conversation's first session; a done session is skipped but still hands on its successor, so resume restarts exactly at the first missing session and nothing after it is redone. `done()` stays a single file check.
-   - **Provider state crosses sessions as data.** Some chatbots keep the history server-side, under the client's `conversation_id` (`EndpointLLM`). Today that survives between sessions only because the runner reuses one client for all of a conversation's sessions, and it's lost on resume. Instead, a session saves the chatbot's `conversation_id` with its transcript, and the next session reads it from there and creates its client with it. Continuity then holds across job boundaries, retries (a retried session starts again from the previous session's state), and resume.
-2. **A failed job goes back on the queue.** LLM calls already retry per call in `llm_clients/` (3 attempts with backoff). The loop adds job-level attempts for what that doesn't cover, such as a judge answer that fails the structured-output schema. Each job carries its attempt count and its `max_attempts`; when it fails with an error its type calls worth retrying (`retryable`), the loop puts a copy with `attempt + 1` at the back of its queue, so other jobs run in the meantime and a retry doesn't hold a slot while it waits. That's how hosted queues do it too (a message carries its delivery count), so it carries over to an external queue unchanged. The stage sets `max_attempts` from the config.
-   - **No delay before a retry, on purpose.** Errors that pass with time (rate limits, timeouts, 5xx) are retried per call in `llm_clients/`, with backoff, and never reach the loop. What reaches it fails the same way however long you wait, like an answer that breaks the schema, so the retry can go straight to the back of the queue. A retried `Session` reruns the whole session, which is expensive, so the stage can give sessions fewer attempts than evaluations.
+   - **Provider state crosses sessions as data.** Some chatbots keep the history server-side, under the client's `conversation_id` (`EndpointLLM`). Today that survives between sessions only because the runner reuses one client for all of a conversation's sessions, and it's lost on resume. Instead, a session saves the chatbot's `conversation_id` with its transcript, and the next session reads it from there and creates its client with it. Continuity then holds across job boundaries and resume (a rerun session starts again from the previous session's state).
+2. **Retries happen in one place: per call, in `llm_clients/`.** Every LLM call already retries with backoff (`_run_with_retry`, up to `max_llm_retries`), and that covers the whole call, parsing included, so a structured answer that breaks the schema is re-asked too. The loop adds no second mechanism. A failed job is recorded as failed and leaves the queue for good. Its output was never written, so rerunning with `--into` picks it up like any missing job.
+   - **Why not retry the job as well.** A job fails only after one of its calls has used up its retries, so the cause is persistent (quota, auth, a model that keeps failing) and an immediate rerun rarely helps. Retrying per call also retries the smallest unit: a rate limit on turn 15 re-sends that one call, where rerunning the job would redo the whole session from turn 1.
+   - **The cost.** While a call backs off, its job keeps its slot, so one fewer job of that kind runs meanwhile. The waits are short and capped (`retry_max_delay_seconds`).
+   - **The clients still tell the loop.** Each per-call retry emits a `call_retrying` event through the same `report()` jobs use (decision 4), so the display can show "rate limited, retrying 2/4" against the right conversation. That's the only link: no retry logic is shared.
 3. **Concurrency per judge model, later.** Today's `per_judge` keeps one cap per judge model. That stays the intended behavior but isn't pressing; the first version has one cap per job kind (decision 6), and a per-model (or per-provider) cap comes with the Shared engine phase.
-4. **Progress display is a separate PR** ([terminal-interface.md](./terminal-interface.md), #271). The loop emits events (job started, job finished, and from inside a job: user responding, chatbot responding, judge on question *n*) to a reporter. The first reporter prints one flushed line per event, which fixes the "looks hung under redirection" backlog item. A later PR adds a live display: a progress bar per stage and a box per model saying what it's doing.
+4. **Progress display is a separate PR** ([terminal-interface.md](./terminal-interface.md), #271). The loop emits events (job started, job finished, and from inside a job: user responding, chatbot responding, judge on question *n*, a call retrying) to a reporter. The first reporter prints one flushed line per event, which fixes the "looks hung under redirection" backlog item. A later PR adds a live display: a progress bar per stage and a box per model saying what it's doing.
 5. **Missing work is re-done, not fatal.** The run's `config.json` (see [run-lifecycle.md](./run-lifecycle.md)) fixes the job list, so `done()` over that list is the manifest: rerunning with `--into` does exactly the missing jobs. A stage still stops the pipeline when it produced nothing (nothing to judge), with a message naming the run folder and the failure count; partial failures warn and continue.
    - **Unfinished judging works the same way.** An `Evaluation` is done when its TSV exists, and the TSV is written only after the judge has answered every question it needed. A judging stopped partway through a conversation leaves no TSV, so rerunning with `--into` judges that conversation again from its first question; conversations already judged are skipped. `results.csv` and the scores are rebuilt from the TSVs after the loop, so they always reflect exactly the finished evaluations. Saving progress question by question isn't worth it: one conversation is a few dozen short judge calls.
 6. **One cap per job kind.** The config already sets two: `generation.max_concurrent` caps `Session` jobs and `judging.max_concurrent` caps `Evaluation` jobs, so in the pipeline a burst of short judge calls can't crowd out the long generation calls. The loop keeps one queue and one cap per job kind instead of one in total. The per-judge-model cap (`per_judge`) still comes later (decision 3).
@@ -179,4 +175,4 @@ It also gives the pipeline the resume that `generate` and `judge` have. `vera pi
 
 ## Testing
 
-The roadmap's four engine-testing tiers apply (structural parity with the mock harness, live smoke, semantic similarity, manual spot-check). `JobLoop` itself gets plain unit tests: skip-on-done, each kind's concurrency cap holds, failures recorded and not raised, a retryable failure goes back on the queue with `attempt + 1` and stops at `max_attempts`, non-retryable errors aren't retried, follow-ups run after their parent and not when it fails, a skipped job still hands on its follow-ups and each is checked for done in turn, follow-ups aren't throttled when their kind has no cap, `max_concurrent` of `None` and `0` both unlimited, and every job type survives a JSON round trip (decision 7).
+The roadmap's four engine-testing tiers apply (structural parity with the mock harness, live smoke, semantic similarity, manual spot-check). `JobLoop` itself gets plain unit tests: skip-on-done, each kind's concurrency cap holds, failures recorded and not raised and never resubmitted, follow-ups run after their parent and not when it fails, a skipped job still hands on its follow-ups and each is checked for done in turn, follow-ups aren't throttled when their kind has no cap, `max_concurrent` of `None` and `0` both unlimited, and every job type survives a JSON round trip (decision 7).
