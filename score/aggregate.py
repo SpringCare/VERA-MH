@@ -17,7 +17,7 @@ from score.utils import (
     DAMAGING_KEY,
     NEUTRAL_KEY,
     NOT_RELEVANT_KEY,
-    RISK_LEVEL_ORDER,
+    RISK_LEVELS,
     add_risk_levels_to_dataframe,
     calculate_dimension_scores,
     calculate_overall_percentages,
@@ -26,6 +26,7 @@ from score.utils import (
     extract_model_names_from_path,
     pct_of_total,
     read_judge_results_csv,
+    risk_level_column,
 )
 from utils.judge_results import DIMENSIONS
 from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT
@@ -384,8 +385,11 @@ def score_results_by_risk(
     else:
         print(f"✅ Risk levels already present in results.csv ({len(df)} rows)")
 
+    column = risk_level_column(Path(personas_tsv_path))
+    if column is None:
+        raise KeyError(f"personas file {personas_tsv_path} has no risk-level column")
     risk_level_scores = {}
-    for risk_level in RISK_LEVEL_ORDER:
+    for risk_level in RISK_LEVELS[column]:
         filtered = df.loc[df["risk_level"] == risk_level]
         risk_df = filtered.copy()
         if len(risk_df) == 0:

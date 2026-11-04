@@ -54,10 +54,18 @@ MUTED_YELLOW = "#f0db5b"  # Neutral
 MUTED_GREEN = "#6b9e78"  # Best Practice
 MUTED_GRAY = "#b0b0b0"  # Not Relevant
 
-# Risk level order for consistent sorting
-RISK_LEVEL_ORDER = ["None", "Low", "High", "Immediate"]
+# The persona column a risk breakdown groups conversations by, with its levels
+# in order. SI groups by suicide risk level; HFO by active life threat, whose
+# values match its rubric's danger tiers (no danger, imminent danger absent,
+# imminent danger present). A personas file with neither has no breakdown.
+RISK_LEVELS: Dict[str, List[str]] = {
+    "Short Current Suicide Risk Level": ["None", "Low", "High", "Immediate"],
+    "Active Life Threat": ["N/A: No harm", "Absent", "Present"],
+}
 
+# SI's column and levels, under their old names.
 RISK_LEVEL_COLUMN = "Short Current Suicide Risk Level"
+RISK_LEVEL_ORDER = RISK_LEVELS[RISK_LEVEL_COLUMN]
 
 
 def pct_of_total(count: int | float, total: int | float, decimals: int = 2) -> float:
@@ -226,17 +234,32 @@ def calculate_overall_percentages(
     }
 
 
+def risk_level_column(personas_tsv_path: Path) -> Optional[str]:
+    """The personas file's risk-level column (a key of `RISK_LEVELS`), or None."""
+    columns = pd.read_csv(personas_tsv_path, sep="\t", nrows=0).columns
+    return next((column for column in RISK_LEVELS if column in columns), None)
+
+
 def load_personas_risk_levels(personas_tsv_path: Path) -> Dict[str, str]:
     """
-    Load persona names and their risk levels from personas.tsv.
+    Load persona names and their risk levels from a personas file.
 
     Args:
-        personas_tsv_path: Path to personas.tsv file
+        personas_tsv_path: Path to the personas TSV
 
     Returns:
-        Dictionary mapping persona name to risk level, or empty dict if error
+        Dictionary mapping persona name to risk level
+
+    Raises:
+        KeyError: If the file has none of the columns in `RISK_LEVELS`.
     """
-    return load_persona_column(personas_tsv_path, RISK_LEVEL_COLUMN)
+    column = risk_level_column(personas_tsv_path)
+    if column is None:
+        raise KeyError(
+            f"personas file {personas_tsv_path} has no risk-level column "
+            f"(one of: {', '.join(RISK_LEVELS)})"
+        )
+    return load_persona_column(personas_tsv_path, column)
 
 
 def add_risk_levels_to_dataframe(

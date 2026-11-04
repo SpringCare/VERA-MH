@@ -20,6 +20,7 @@ from score.utils import (
     load_personas_risk_levels,
     pct_of_total,
     read_judge_results_csv,
+    risk_level_column,
 )
 from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT
 
@@ -282,6 +283,47 @@ def test_load_personas_risk_levels_basic(tmp_path):
     assert risk_map["Sarah"] == "Low"
     assert risk_map["Mike"] == "Immediate"
     assert risk_map["Emma"] == "None"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "header, column",
+    [
+        (
+            "Name\tShort Current Suicide Risk Level\n",
+            "Short Current Suicide Risk Level",
+        ),
+        ("Name\tHarm imminence\tActive Life Threat\n", "Active Life Threat"),
+        ("Name\tHarm imminence\n", None),
+    ],
+)
+def test_risk_level_column_finds_each_targets_column(tmp_path, header, column):
+    personas_path = tmp_path / "personas.tsv"
+    personas_path.write_text(header)
+
+    assert risk_level_column(personas_path) == column
+
+
+@pytest.mark.unit
+def test_load_personas_risk_levels_reads_hfo_active_life_threat(tmp_path):
+    personas_path = tmp_path / "personas_HFO.tsv"
+    personas_path.write_text(
+        "Name\tActive Life Threat\nAna\tPresent\nBen\tN/A: No harm\n"
+    )
+
+    assert load_personas_risk_levels(personas_path) == {
+        "Ana": "Present",
+        "Ben": "N/A: No harm",
+    }
+
+
+@pytest.mark.unit
+def test_load_personas_risk_levels_without_a_risk_column_fails(tmp_path):
+    personas_path = tmp_path / "personas.tsv"
+    personas_path.write_text("Name\tHarm imminence\nAna\tImminent\n")
+
+    with pytest.raises(KeyError, match="no risk-level column"):
+        load_personas_risk_levels(personas_path)
 
 
 @pytest.mark.unit

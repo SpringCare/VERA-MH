@@ -26,7 +26,6 @@ from judge.rubric_config import (
 from score.aggregate import (
     OPTION_MAP,
     REVERSE_OPTION_MAP,
-    RISK_LEVEL_ORDER,
     score_results,
     score_results_by_risk,
 )
@@ -35,6 +34,7 @@ from score.utils import (
     DAMAGING_KEY,
     NEUTRAL_KEY,
     NOT_RELEVANT_KEY,
+    RISK_LEVELS,
 )
 from utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL, NOT_RELEVANT
 
@@ -70,16 +70,21 @@ def test_reverse_option_map():
 
 
 @pytest.mark.unit
-def test_risk_level_order_matches_personas_file():
-    """Test the personas file contains the expected unique risk levels."""
-    personas_path = Path(__file__).resolve().parents[3] / "data" / "SI" / "personas.tsv"
-    df = pd.read_csv(personas_path, sep="\t", keep_default_na=False)
-    unique_levels = df["Short Current Suicide Risk Level"].unique().tolist()
+@pytest.mark.parametrize(
+    "personas_file, column",
+    [
+        ("SI/personas.tsv", "Short Current Suicide Risk Level"),
+        ("HFO/personas_HFO.tsv", "Active Life Threat"),
+    ],
+)
+def test_risk_levels_match_each_targets_personas_file(personas_file, column):
+    """Each target's personas use exactly the levels its breakdown lists, so
+    no persona falls outside every bucket."""
+    data = Path(__file__).resolve().parents[3] / "data"
+    df = pd.read_csv(data / personas_file, sep="\t", keep_default_na=False)
 
-    # make sure "None" is loaded correctly
-    assert "None" in unique_levels
-    # make sure the unique levels match the expected order
-    assert set(unique_levels) == set(RISK_LEVEL_ORDER)
+    # keep_default_na=False keeps SI's literal "None" level a string.
+    assert set(df[column].str.strip()) == set(RISK_LEVELS[column])
 
 
 # ============================================================================
@@ -851,6 +856,25 @@ def _eval_tsv(
         f"{SUPPORTIVE_CONVERSATION}\t{supportive}\t.\n"
         f"{FOLLOWS_AI_BOUNDARIES}\t{boundaries}\t.\n"
     )
+
+
+@pytest.mark.unit
+def test_score_results_by_risk_groups_hfo_by_active_life_threat(tmp_path):
+    """HFO personas have no suicide risk level; they group by Active Life
+    Threat, in its own order."""
+    eval_dir = tmp_path / "eval_run"
+    eval_dir.mkdir()
+    personas = tmp_path / "personas_HFO.tsv"
+    personas.write_text("Name\tActive Life Threat\nBrian\tPresent\nSarah\tAbsent\n")
+    (eval_dir / "a_Brian_m_run1.tsv").write_text(_eval_tsv(confirms=NEUTRAL))
+    (eval_dir / "b_Sarah_m_run2.tsv").write_text(_eval_tsv())
+    csv_path = eval_dir / "results.csv"
+    pd.DataFrame().to_csv(csv_path, index=False)
+
+    results = score_results_by_risk(str(csv_path), str(personas))
+
+    assert list(results["risk_level_scores"]) == ["Absent", "Present"]
+    assert results["risk_level_scores"]["Present"]["total_conversations"] == 1
 
 
 @pytest.mark.unit

@@ -20,7 +20,12 @@ from score.aggregate import (
     score_results_by_risk,
     scores_output_dir,
 )
-from score.utils import has_dimension_data, read_judge_results_csv
+from score.utils import (
+    RISK_LEVELS,
+    has_dimension_data,
+    read_judge_results_csv,
+    risk_level_column,
+)
 from score.viz import create_risk_level_visualizations, create_visualizations
 from utils.judge_results import build_dataframe_from_tsv_files
 
@@ -143,6 +148,13 @@ def run_scoring(
         print(
             "   Skipping risk-level analysis. Use --skip-risk-analysis "
             "to suppress this warning."
+        )
+        return results, scores_dir
+
+    if risk_level_column(personas_tsv_path) is None:
+        print(
+            f"No risk-level column in {personas_tsv_path.name} "
+            f"(one of: {', '.join(RISK_LEVELS)}); skipping risk-level analysis."
         )
         return results, scores_dir
 

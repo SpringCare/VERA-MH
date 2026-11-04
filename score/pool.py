@@ -31,7 +31,7 @@ from score.aggregate import (
     score_results,
     score_results_by_risk,
 )
-from score.utils import ensure_results_csv
+from score.utils import RISK_LEVELS, ensure_results_csv, risk_level_column
 from score.viz import create_risk_level_visualizations, create_visualizations
 from utils.naming import parse_generation_run_folder_name
 
@@ -404,6 +404,11 @@ def run_pooling(
             print(
                 f"Warning: personas TSV not found ({personas_tsv}), "
                 "skipping risk analysis."
+            )
+        elif risk_level_column(Path(personas_tsv)) is None:
+            print(
+                f"No risk-level column in {Path(personas_tsv).name} "
+                f"(one of: {', '.join(RISK_LEVELS)}); skipping risk-level analysis."
             )
         else:
             try:
