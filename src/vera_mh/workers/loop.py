@@ -1,15 +1,17 @@
 """The job loop: all the concurrency code for generation and judging, in one place.
 
-A job is plain data (paths, model names, indices) plus four methods; see `Job`.
-`run_jobs` skips every job whose output is already on disk, runs the rest with
-one concurrency cap per job kind, retries what the job says is worth retrying,
-and records each job's outcome. A job's failure is an outcome, never an
-exception, so one bad conversation doesn't stop the others.
+A job is plain data (paths, model names, indices) plus three methods; see `Job`.
+Each job kind (`session`, `evaluation`) has its own queue and its own cap.
+Everything that adds work goes through `JobLoop.submit`, which never waits: the
+stage loading its first jobs, and a finished job handing on its follow-ups (the
+next session of a conversation, or a finished conversation's evaluations).
+`JobLoop.run` starts queued jobs while their kind has room, until nothing is
+queued or running.
 
-Jobs that wait on another job are its follow-ups: the next session of a
-conversation, or a finished conversation's evaluations. A job hands them on
-when it finishes, and also when it is skipped as done, so resuming a run
-reaches every missing job however far down the chain it is, and redoes nothing.
+A job whose output is already on disk is skipped, but still hands on its
+follow-ups, so resuming a run reaches every missing job however far down the
+chain it is, and redoes nothing. The loop never retries a job: LLM calls retry
+themselves, inside it. A failed job is recorded and rerun later with `--into`.
 
 Design: docs/design/job-loop.md.
 """
@@ -17,16 +19,14 @@ Design: docs/design/job-loop.md.
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import time
-from collections import Counter
+from collections import Counter, deque
 from dataclasses import dataclass
-from typing import Awaitable, Iterable, Literal, Mapping, Protocol
+from typing import Literal, Mapping, Protocol
 
 from vera_mh.workers.events import (
     JOB_FAILED,
     JOB_FINISHED,
-    JOB_RETRYING,
     JOB_SKIPPED,
     JOB_STARTED,
     STAGE_FINISHED,
@@ -44,7 +44,7 @@ class Job(Protocol):
     external queue one day (job-loop.md, decision 7).
     """
 
-    kind: str  # "session" or "evaluation": picks the concurrency cap
+    kind: str  # "session" or "evaluation": picks the queue and the cap
     label: str  # how the job is shown, such as "gpt-5.2 Brian"
 
     def done(self) -> bool:
@@ -60,10 +60,6 @@ class Job(Protocol):
         alone, so a job skipped as done hands them on too."""
         ...
 
-    def retryable(self, error: Exception) -> bool:
-        """Is running the job again worth it after this error?"""
-        ...
-
 
 Status = Literal["finished", "failed", "skipped"]
 
@@ -74,116 +70,122 @@ class Outcome:
 
     job: Job
     status: Status
-    error: Exception | None = None
-    attempts: int = 0
+    error: BaseException | None = None
     seconds: float = 0.0
 
 
-async def run_jobs(
-    jobs: Iterable[Job],
-    max_concurrent: Mapping[str, int | None],
-    attempts: int = 1,
-    *,
-    reporter: Reporter | None = None,
-    stage: str = "jobs",
-) -> list[Outcome]:
-    """Run `jobs` and their follow-ups; return every job's outcome.
+class JobLoop:
+    """Runs jobs with one queue and one concurrency cap per job kind.
 
-    `max_concurrent` caps how many jobs of each kind run at once; None or 0
-    means no limit. Every job's kind must have an entry. `attempts` is how many
-    times a job may run, counting the first. `stage` names the run in the
-    final `STAGE_FINISHED` event.
+    A class rather than a function because `submit` is called both by the stage
+    and by finished jobs handing on their follow-ups, and both need the same
+    queues.
     """
-    if attempts < 1:
-        raise ValueError(f"attempts must be at least 1, not {attempts}")
-    report = reporter or Reporters()
-    # No semaphore for an unlimited kind: one sized from `jobs` would throttle
-    # the follow-ups, which can outnumber them.
-    limits = {
-        kind: asyncio.Semaphore(cap) if cap else contextlib.nullcontext()
-        for kind, cap in max_concurrent.items()
-    }
 
-    async def run_one(job: Job) -> list[Outcome]:
+    def __init__(
+        self,
+        max_concurrent: Mapping[str, int | None],
+        *,
+        reporter: Reporter | None = None,
+        stage: str = "jobs",
+    ):
+        """`max_concurrent` caps how many jobs of each kind run at once; None
+        or 0 means no limit, and every job's kind must have an entry. `stage`
+        names the run in the final `STAGE_FINISHED` event."""
+        self.caps = dict(max_concurrent)
+        self.queues: dict[str, deque[Job]] = {kind: deque() for kind in self.caps}
+        self.running: dict[asyncio.Task[None], tuple[Job, float]] = {}
+        self.outcomes: list[Outcome] = []
+        self.report = reporter or Reporters()
+        self.stage = stage
+
+    def submit(self, job: Job) -> None:
+        """Put a job on its kind's queue, or skip it if its output is on disk.
+        Never waits."""
         try:
-            if job.done():
-                outcome = Outcome(job, "skipped")
-            else:
-                async with limits[job.kind]:
-                    outcome = await _run_with_retries(job, attempts, report)
-            follow_ups = job.follow_ups() if outcome.status != "failed" else []
+            is_done = job.done()
         except Exception as error:
-            # `done()` or `follow_ups()` crashed, on a corrupt file say. Count the
-            # job as failed rather than stop the run, or lose the jobs waiting on it
-            # without a trace.
-            outcome, follow_ups = Outcome(job, "failed", error=error), []
-        _emit_outcome(report, outcome)
-        return [
-            outcome,
-            *await _gather_flat(run_one(follow_up) for follow_up in follow_ups),
-        ]
+            # A corrupt file, say: fail this job rather than the whole run.
+            self._record(Outcome(job, "failed", error=error))
+            return
+        if is_done:
+            self._hand_on(Outcome(job, "skipped"))
+        else:
+            self.queues[job.kind].append(job)
 
-    outcomes = await _gather_flat(run_one(job) for job in jobs)
-    counts = Counter(outcome.status for outcome in outcomes)
-    report.emit(
-        Event(
-            STAGE_FINISHED,
-            data={
-                "stage": stage,
-                "done": counts["finished"],
-                "failed": counts["failed"],
-                "skipped": counts["skipped"],
-            },
-        )
-    )
-    return outcomes
-
-
-async def _run_with_retries(job: Job, attempts: int, report: Reporter) -> Outcome:
-    report.emit(Event(JOB_STARTED, job=job.label, kind=job.kind))
-    start = time.monotonic()
-    attempt = 1
-    with running_job(report, job.label, job.kind):
+    async def run(self) -> list[Outcome]:
+        """Run until every queue is empty and nothing is running; return every
+        job's outcome, skipped ones included."""
         while True:
-            try:
-                await job.run()
-                return Outcome(job, "finished", attempts=attempt, seconds=_since(start))
-            except Exception as error:
-                if attempt == attempts or not job.retryable(error):
-                    return Outcome(
-                        job,
-                        "failed",
-                        error=error,
-                        attempts=attempt,
-                        seconds=_since(start),
-                    )
-                retry = {"attempt": attempt, "error": _describe(error)}
-                report.emit(
-                    Event(JOB_RETRYING, job=job.label, kind=job.kind, data=retry)
-                )
-                attempt += 1
+            self._start_jobs_that_fit()
+            if not self.running:
+                break
+            finished, _ = await asyncio.wait(
+                self.running, return_when=asyncio.FIRST_COMPLETED
+            )
+            for task in finished:
+                job, started = self.running.pop(task)
+                seconds = time.monotonic() - started
+                error = task.exception()
+                if error is None:
+                    self._hand_on(Outcome(job, "finished", seconds=seconds))
+                else:
+                    self._record(Outcome(job, "failed", error=error, seconds=seconds))
 
+        counts = Counter(outcome.status for outcome in self.outcomes)
+        totals = {
+            "stage": self.stage,
+            "done": counts["finished"],
+            "failed": counts["failed"],
+            "skipped": counts["skipped"],
+        }
+        self.report.emit(Event(STAGE_FINISHED, data=totals))
+        return self.outcomes
 
-def _emit_outcome(report: Reporter, outcome: Outcome) -> None:
-    job = outcome.job
-    if outcome.status == "skipped":
-        report.emit(Event(JOB_SKIPPED, job=job.label, kind=job.kind))
-    elif outcome.status == "finished":
-        data = {"seconds": round(outcome.seconds, 3), "attempts": outcome.attempts}
-        report.emit(Event(JOB_FINISHED, job=job.label, kind=job.kind, data=data))
-    else:
-        data = {"error": _describe(outcome.error), "attempts": outcome.attempts}
-        report.emit(Event(JOB_FAILED, job=job.label, kind=job.kind, data=data))
+    def _start_jobs_that_fit(self) -> None:
+        for kind, queue in self.queues.items():
+            while queue and self._has_room(kind):
+                job = queue.popleft()
+                self.report.emit(Event(JOB_STARTED, job=job.label, kind=job.kind))
+                task = asyncio.create_task(self._run_one(job))
+                self.running[task] = (job, time.monotonic())
 
+    async def _run_one(self, job: Job) -> None:
+        # Each job runs in its own task, so `report()` inside it reaches the
+        # reporter with this job's name, and concurrent jobs don't mix.
+        with running_job(self.report, job.label, job.kind):
+            await job.run()
 
-async def _gather_flat(runs: Iterable[Awaitable[list[Outcome]]]) -> list[Outcome]:
-    results = await asyncio.gather(*runs)
-    return [outcome for result in results for outcome in result]
+    def _has_room(self, kind: str) -> bool:
+        cap = self.caps[kind]
+        running = sum(1 for job, _ in self.running.values() if job.kind == kind)
+        return not cap or running < cap
 
+    def _hand_on(self, outcome: Outcome) -> None:
+        """Record a finished or skipped job, and submit its follow-ups."""
+        try:
+            follow_ups = outcome.job.follow_ups()
+        except Exception as error:
+            # The jobs waiting on this one can't be listed, so they would go
+            # missing without a trace: count the job as failed instead.
+            outcome = Outcome(
+                outcome.job, "failed", error=error, seconds=outcome.seconds
+            )
+            follow_ups = []
+        self._record(outcome)
+        for follow_up in follow_ups:
+            self.submit(follow_up)
 
-def _since(start: float) -> float:
-    return time.monotonic() - start
-
-
-def _describe(error: BaseException | None) -> str:
-    return f"{type(error).__name__}: {error}" if error else ""
+    def _record(self, outcome: Outcome) -> None:
+        self.outcomes.append(outcome)
+        job = outcome.job
+        if outcome.status == "skipped":
+            self.report.emit(Event(JOB_SKIPPED, job=job.label, kind=job.kind))
+        elif outcome.status == "finished":
+            data = {"seconds": round(outcome.seconds, 3)}
+            self.report.emit(
+                Event(JOB_FINISHED, job=job.label, kind=job.kind, data=data)
+            )
+        else:
+            data = {"error": f"{type(outcome.error).__name__}: {outcome.error}"}
+            self.report.emit(Event(JOB_FAILED, job=job.label, kind=job.kind, data=data))

@@ -1,9 +1,10 @@
 """What happens during a run, as events a reporter shows or writes down.
 
-The loop emits the job events itself: started, finished, failed, retrying,
-skipped, and the stage finished at the end. Code running inside a job emits
-the rest through `report()` (a turn started, a judge question asked, a call's
-token usage), without the loop or the job having to pass a reporter down.
+The loop emits the job events itself: started, finished, failed, skipped, and
+the stage finished at the end. Code running inside a job emits the rest through
+`report()` (a turn started, a judge question asked, an LLM call retrying, a
+call's token usage), without the loop or the job having to pass a reporter
+down.
 
 Every event's fields are JSON-safe, so the same event can be printed as a line
 or written to `events.jsonl`.
@@ -21,14 +22,19 @@ from typing import Any, Iterator, Protocol
 JOB_STARTED = "job_started"
 JOB_FINISHED = "job_finished"
 JOB_FAILED = "job_failed"
-JOB_RETRYING = "job_retrying"
 JOB_SKIPPED = "job_skipped"
 STAGE_FINISHED = "stage_finished"
 
 # Emitted from inside a job, with `report()`.
 TURN_STARTED = "turn_started"  # data: turn, speaker ("user" or "chatbot")
 QUESTION_ASKED = "question_asked"  # data: question_id
+# LLM calls retry themselves (llm_clients/); the loop never retries a job.
+CALL_RETRYING = "call_retrying"  # data: attempt, max_attempts, error
 CALL_FINISHED = "call_finished"  # data: model, input_tokens, output_tokens
+
+
+def _now() -> datetime:
+    return datetime.now().astimezone()
 
 
 @dataclass(frozen=True)
@@ -39,7 +45,7 @@ class Event:
     job: str | None = None
     kind: str | None = None
     data: dict[str, Any] = field(default_factory=dict)
-    time: datetime = field(default_factory=lambda: datetime.now().astimezone())
+    time: datetime = field(default_factory=_now)
 
     def to_dict(self) -> dict[str, Any]:
         """The event as one flat JSON object, as written to `events.jsonl`."""

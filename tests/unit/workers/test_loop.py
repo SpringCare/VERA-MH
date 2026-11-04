@@ -1,4 +1,4 @@
-"""The job loop: skipping, concurrency caps, retries, follow-ups, and events."""
+"""The job loop: skipping, concurrency caps, follow-ups, failures, and events."""
 
 from __future__ import annotations
 
@@ -12,9 +12,17 @@ import pytest
 
 from vera_mh.workers import events
 from vera_mh.workers.events import Event
-from vera_mh.workers.loop import Job, run_jobs
+from vera_mh.workers.loop import Job, JobLoop, Outcome
 
 UNLIMITED: dict[str, int | None] = {"session": None, "evaluation": None}
+
+
+async def run_jobs(jobs, max_concurrent, **settings) -> list[Outcome]:
+    """Load `jobs` into a fresh loop, as a stage does, and run it."""
+    loop = JobLoop(max_concurrent, **settings)
+    for job in jobs:
+        loop.submit(job)
+    return await loop.run()
 
 
 class Tracker:
@@ -33,10 +41,8 @@ class FakeJob:
     tracker: Tracker
     kind: str = "session"
     is_done: bool = False
-    # run() raises this many times before it succeeds.
-    failures: int = 0
-    error: type[Exception] = RuntimeError
-    retry_on: tuple[type[Exception], ...] = (RuntimeError,)
+    # run() raises this when set.
+    error: type[Exception] | None = None
     next_jobs: list[FakeJob] = field(default_factory=list)
     # How long run() takes, so jobs overlap.
     seconds: float = 0.0
@@ -54,7 +60,7 @@ class FakeJob:
         )
         try:
             await asyncio.sleep(self.seconds)
-            if self.runs <= self.failures:
+            if self.error is not None:
                 raise self.error(f"{self.label} failed")
         finally:
             self.tracker.running[self.kind] -= 1
@@ -62,9 +68,6 @@ class FakeJob:
 
     def follow_ups(self) -> list[Job]:
         return list(self.next_jobs)
-
-    def retryable(self, error: Exception) -> bool:
-        return isinstance(error, self.retry_on)
 
 
 class ListReporter:
@@ -109,9 +112,11 @@ async def test_each_kind_has_its_own_cap() -> None:
     assert tracker.peak == Counter({"session": 2, "evaluation": 3})
 
 
-async def test_a_failure_is_an_outcome_not_an_exception() -> None:
+async def test_a_failure_is_an_outcome_and_the_job_is_not_run_again() -> None:
+    """The loop never retries: LLM calls retry themselves, and a failed job is
+    rerun later with --into."""
     tracker = Tracker()
-    bad = FakeJob("bad", tracker, failures=1, error=ValueError, retry_on=())
+    bad = FakeJob("bad", tracker, error=ValueError)
     good = FakeJob("good", tracker)
 
     outcomes = await run_jobs([bad, good], UNLIMITED)
@@ -119,37 +124,7 @@ async def test_a_failure_is_an_outcome_not_an_exception() -> None:
     assert statuses(outcomes) == {"bad": "failed", "good": "finished"}
     failed = next(outcome for outcome in outcomes if outcome.status == "failed")
     assert isinstance(failed.error, ValueError)
-
-
-async def test_retries_stop_at_attempts() -> None:
-    tracker = Tracker()
-    job = FakeJob("flaky", tracker, failures=5)
-
-    (outcome,) = await run_jobs([job], UNLIMITED, attempts=3)
-
-    assert outcome.status == "failed"
-    assert job.runs == 3
-    assert outcome.attempts == 3
-
-
-async def test_a_retry_can_succeed() -> None:
-    tracker = Tracker()
-    job = FakeJob("flaky", tracker, failures=1)
-
-    (outcome,) = await run_jobs([job], UNLIMITED, attempts=3)
-
-    assert outcome.status == "finished"
-    assert outcome.attempts == 2
-
-
-async def test_an_error_that_isnt_retryable_is_not_retried() -> None:
-    tracker = Tracker()
-    job = FakeJob("broken", tracker, failures=5, error=ValueError)
-
-    (outcome,) = await run_jobs([job], UNLIMITED, attempts=3)
-
-    assert outcome.status == "failed"
-    assert job.runs == 1
+    assert bad.runs == 1
 
 
 async def test_follow_ups_run_after_their_parent() -> None:
@@ -166,7 +141,7 @@ async def test_follow_ups_run_after_their_parent() -> None:
 async def test_follow_ups_dont_run_when_their_parent_fails() -> None:
     tracker = Tracker()
     child = FakeJob("child", tracker)
-    parent = FakeJob("parent", tracker, failures=1, next_jobs=[child])
+    parent = FakeJob("parent", tracker, error=RuntimeError, next_jobs=[child])
 
     outcomes = await run_jobs([parent], UNLIMITED)
 
@@ -197,7 +172,7 @@ async def test_a_skipped_job_hands_on_its_follow_ups_each_checked_for_done() -> 
 @pytest.mark.parametrize("unlimited", [None, 0])
 async def test_follow_ups_of_an_unlimited_kind_all_run_at_once(unlimited) -> None:
     """One job hands on five follow-ups. With no cap they must all run at
-    once, even though the list `run_jobs` was given held a single job."""
+    once, even though the stage loaded a single job."""
     tracker = Tracker()
     evaluations = [
         FakeJob(f"e{i}", tracker, kind="evaluation", seconds=0.05) for i in range(5)
@@ -235,11 +210,7 @@ async def test_done_or_follow_ups_raising_counts_the_job_as_failed() -> None:
     )
 
     assert statuses(outcomes) == {"done": "failed", "follow-ups": "failed"}
-
-
-async def test_attempts_must_be_at_least_one() -> None:
-    with pytest.raises(ValueError):
-        await run_jobs([], UNLIMITED, attempts=0)
+    assert len(outcomes) == 2  # one outcome per job, even when run() succeeded
 
 
 # ------------------------------------------------------------------------ events
@@ -250,24 +221,18 @@ async def test_the_loop_reports_each_job_and_the_stage() -> None:
     reporter = ListReporter()
     jobs = [
         FakeJob("ok", tracker),
-        FakeJob("flaky", tracker, failures=1),
-        FakeJob("bad", tracker, failures=1, error=ValueError),
+        FakeJob("bad", tracker, error=ValueError),
         FakeJob("done", tracker, is_done=True),
     ]
 
-    await run_jobs(jobs, UNLIMITED, attempts=2, reporter=reporter, stage="generate")
+    await run_jobs(jobs, UNLIMITED, reporter=reporter, stage="generate")
 
     assert reporter.types("ok") == [events.JOB_STARTED, events.JOB_FINISHED]
-    assert reporter.types("flaky") == [
-        events.JOB_STARTED,
-        events.JOB_RETRYING,
-        events.JOB_FINISHED,
-    ]
     assert reporter.types("bad") == [events.JOB_STARTED, events.JOB_FAILED]
     assert reporter.types("done") == [events.JOB_SKIPPED]
     stage = reporter.events[-1]
     assert stage.type == events.STAGE_FINISHED
-    assert stage.data == {"stage": "generate", "done": 2, "failed": 1, "skipped": 1}
+    assert stage.data == {"stage": "generate", "done": 1, "failed": 1, "skipped": 1}
 
 
 async def test_a_job_reports_from_inside_its_run() -> None:
@@ -284,9 +249,6 @@ async def test_a_job_reports_from_inside_its_run() -> None:
 
         def follow_ups(self) -> list[Job]:
             return []
-
-        def retryable(self, error: Exception) -> bool:
-            return False
 
     reporter = ListReporter()
 
@@ -307,7 +269,7 @@ def test_report_outside_a_job_does_nothing() -> None:
 
 @dataclass
 class SampleSession:
-    """What a real job looks like: JSON-safe fields, plus the four methods."""
+    """What a real job looks like: JSON-safe fields, plus the three methods."""
 
     label: str
     persona: str
@@ -328,9 +290,6 @@ class SampleSession:
 
     def follow_ups(self) -> list[Job]:
         return []
-
-    def retryable(self, error: Exception) -> bool:
-        return False
 
 
 async def test_a_job_survives_a_json_round_trip_and_runs(tmp_path: Path) -> None:

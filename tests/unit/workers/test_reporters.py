@@ -67,6 +67,20 @@ def test_in_job_events_show_only_when_verbose() -> None:
     assert verbose.format(tokens) is None
 
 
+def test_a_call_retrying_is_shown_even_when_not_verbose() -> None:
+    retry = job_event(
+        events.CALL_RETRYING,
+        attempt=2,
+        max_attempts=4,
+        error="RateLimitError: slow down",
+    )
+
+    assert PlainLineReporter(io.StringIO()).format(retry) == (
+        "19:44:06 session     retry  gpt-5.2 Brian   "
+        "call attempt 2/4 failed: RateLimitError: slow down"
+    )
+
+
 def test_plain_lines_are_written_and_ascii() -> None:
     stream = io.StringIO()
     reporter = PlainLineReporter(stream)

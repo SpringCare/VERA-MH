@@ -15,9 +15,9 @@ from pathlib import Path
 from typing import TextIO
 
 from vera_mh.workers.events import (
+    CALL_RETRYING,
     JOB_FAILED,
     JOB_FINISHED,
-    JOB_RETRYING,
     JOB_SKIPPED,
     JOB_STARTED,
     QUESTION_ASKED,
@@ -53,16 +53,17 @@ class EventsFileReporter:
             f.write("\n")
 
 
-# The word each job event shows as, padded so the labels line up.
-JOB_WORDS = {
+# The word each event shows as, padded so the labels line up. A call retrying
+# is always shown, since it's how a slow or failing provider shows up; turns
+# and questions only with `verbose`, as a run has many of them.
+WORDS = {
     JOB_STARTED: "start",
     JOB_FINISHED: "done",
     JOB_FAILED: "FAIL",
-    JOB_RETRYING: "retry",
     JOB_SKIPPED: "skip",
+    CALL_RETRYING: "retry",
 }
-# In-job events are shown only with `verbose`: a run has many of them.
-IN_JOB_WORDS = {TURN_STARTED: "turn", QUESTION_ASKED: "ask"}
+VERBOSE_WORDS = {TURN_STARTED: "turn", QUESTION_ASKED: "ask"}
 
 
 class PlainLineReporter:
@@ -90,10 +91,10 @@ class PlainLineReporter:
                 f"{clock} {counts['stage']} finished: {counts['done']} done, "
                 f"{counts['failed']} failed, {counts['skipped']} skipped"
             )
-        if event.type in JOB_WORDS:
-            word = JOB_WORDS[event.type]
-        elif self.verbose and event.type in IN_JOB_WORDS:
-            word = IN_JOB_WORDS[event.type]
+        if event.type in WORDS:
+            word = WORDS[event.type]
+        elif self.verbose and event.type in VERBOSE_WORDS:
+            word = VERBOSE_WORDS[event.type]
         else:
             return None
         detail = _detail(event)
@@ -107,8 +108,9 @@ def _detail(event: Event) -> str:
         return duration(data["seconds"])
     if event.type == JOB_FAILED:
         return data["error"]
-    if event.type == JOB_RETRYING:
-        return f"attempt {data['attempt']} failed: {data['error']}"
+    if event.type == CALL_RETRYING:
+        attempt = f"{data['attempt']}/{data['max_attempts']}"
+        return f"call attempt {attempt} failed: {data['error']}"
     if event.type == TURN_STARTED:
         return f"turn {data['turn']} {data['speaker']} responding"
     if event.type == QUESTION_ASKED:
