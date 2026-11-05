@@ -12,7 +12,8 @@ import pytest
 
 from vera_mh.workers import events
 from vera_mh.workers.events import Event
-from vera_mh.workers.loop import Job, JobLoop, Outcome
+from vera_mh.workers.job import Job, Outcome
+from vera_mh.workers.loop import JobLoop
 
 UNLIMITED: dict[str, int | None] = {"session": None, "evaluation": None}
 

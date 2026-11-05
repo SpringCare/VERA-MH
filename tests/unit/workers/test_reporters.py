@@ -25,7 +25,7 @@ def test_plain_lines_show_each_job_event() -> None:
     reporter = PlainLineReporter(io.StringIO())
 
     started = reporter.format(job_event(events.JOB_STARTED))
-    finished = reporter.format(job_event(events.JOB_FINISHED, seconds=161))
+    finished = reporter.format(job_event(events.JOB_FINISHED, elapsed=161))
     failed = reporter.format(
         job_event(events.JOB_FAILED, error="RateLimitError: slow down")
     )
@@ -85,7 +85,7 @@ def test_plain_lines_are_written_and_ascii() -> None:
 
     reporter.emit(job_event(events.JOB_STARTED))
     reporter.emit(job_event(events.TURN_STARTED, turn=1, speaker="user"))
-    reporter.emit(job_event(events.JOB_FINISHED, seconds=45))
+    reporter.emit(job_event(events.JOB_FINISHED, elapsed=45))
 
     lines = stream.getvalue().splitlines()
     assert len(lines) == 2

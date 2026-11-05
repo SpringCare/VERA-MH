@@ -1,6 +1,7 @@
 """The job loop: all the concurrency code for generation and judging, in one place.
 
-A job is plain data (paths, model names, indices) plus three methods; see `Job`.
+A job is plain data (paths, model names, indices) plus three methods; see
+`workers/job.py`.
 A stage creates a `JobLoop`, hands it its first jobs with `submit`, and awaits
 `run`. Each job kind (`session`, `evaluation`) has its own concurrency cap. A
 finished job's follow-ups (the next session of a conversation, or a finished
@@ -20,8 +21,7 @@ import asyncio
 import contextlib
 import time
 from collections import Counter
-from dataclasses import dataclass
-from typing import Literal, Mapping, Protocol, Sequence
+from typing import Mapping, Sequence
 
 from vera_mh.workers.events import (
     JOB_FAILED,
@@ -33,43 +33,7 @@ from vera_mh.workers.events import (
     Reporter,
     reporting_for,
 )
-
-
-class Job(Protocol):
-    """One unit of work: one session of a conversation, or one evaluation.
-
-    Keep jobs plain data, with JSON-safe fields, so they could be sent to an
-    external queue one day (job-loop.md, decision 7).
-    """
-
-    kind: str  # "session" or "evaluation": picks the concurrency cap
-    label: str  # how the job is shown, such as "gpt-5.2 Brian"
-
-    def done(self) -> bool:
-        """Is this job's output already on disk?"""
-        ...
-
-    async def run(self) -> None:
-        """Do the work and write the output."""
-        ...
-
-    def follow_ups(self) -> list[Job]:
-        """The jobs waiting on this one, worked out from its fields and disk
-        alone, so a job skipped as done hands them on too."""
-        ...
-
-
-Status = Literal["finished", "failed", "skipped"]
-
-
-@dataclass
-class Outcome:
-    """What happened to one job."""
-
-    job: Job
-    status: Status
-    error: BaseException | None = None
-    seconds: float = 0.0
+from vera_mh.workers.job import Job, Outcome, Status
 
 
 class JobLoop:
@@ -98,7 +62,9 @@ class JobLoop:
             stage: The name the final `STAGE_FINISHED` event gives this run,
                 such as "generate".
         """
-        # A semaphore per capped kind: a job waits for a free slot of its kind.
+        # Each job runs inside `async with self.limits[job.kind]:`. A semaphore
+        # lets in up to `cap` jobs of its kind at once and makes the rest wait
+        # their turn; `nullcontext()` lets everything in, for a kind with no cap.
         self.limits = {
             kind: asyncio.Semaphore(cap) if cap else contextlib.nullcontext()
             for kind, cap in max_concurrent.items()
@@ -139,7 +105,7 @@ class JobLoop:
     async def _run_one(self, job: Job) -> None:
         # Any error, from `done()`, `run()` or `follow_ups()`, becomes this
         # job's outcome: one job failing never stops the others.
-        seconds = 0.0
+        elapsed = 0.0
         try:
             if job.done():
                 status: Status = "skipped"
@@ -149,13 +115,13 @@ class JobLoop:
                     start = time.monotonic()
                     with reporting_for(self.emit, job.label, job.kind):
                         await job.run()
-                    seconds = time.monotonic() - start
+                    elapsed = time.monotonic() - start
                 status = "finished"
             follow_ups = job.follow_ups()
         except Exception as error:
-            self._record(Outcome(job, "failed", error=error, seconds=seconds))
+            self._record(Outcome(job, "failed", error=error, elapsed=elapsed))
             return
-        self._record(Outcome(job, status, seconds=seconds))
+        self._record(Outcome(job, status, elapsed=elapsed))
         for follow_up in follow_ups:
             self.submit(follow_up)
 
@@ -165,7 +131,7 @@ class JobLoop:
         if outcome.status == "skipped":
             self.emit(Event(JOB_SKIPPED, job=job.label, kind=job.kind))
         elif outcome.status == "finished":
-            data = {"seconds": round(outcome.seconds, 3)}
+            data = {"elapsed": round(outcome.elapsed, 3)}
             self.emit(Event(JOB_FINISHED, job=job.label, kind=job.kind, data=data))
         else:
             data = {"error": f"{type(outcome.error).__name__}: {outcome.error}"}

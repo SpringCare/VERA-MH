@@ -20,11 +20,11 @@ from vera_mh.workers.events import (
     CALL_RETRYING,
     JOB_FAILED,
     JOB_FINISHED,
-    JOB_SKIPPED,
-    JOB_STARTED,
     QUESTION_ASKED,
     STAGE_FINISHED,
     TURN_STARTED,
+    VERBOSE_WORDS,
+    WORDS,
     Event,
 )
 
@@ -43,19 +43,6 @@ class EventsFileReporter:
             f.write("\n")
 
 
-# The word each event shows as, padded so the labels line up. A call retrying
-# is always shown, since it's how a slow or failing provider shows up; turns
-# and questions only with `verbose`, as a run has many of them.
-WORDS = {
-    JOB_STARTED: "start",
-    JOB_FINISHED: "done",
-    JOB_FAILED: "FAIL",
-    JOB_SKIPPED: "skip",
-    CALL_RETRYING: "retry",
-}
-VERBOSE_WORDS = {TURN_STARTED: "turn", QUESTION_ASKED: "ask"}
-
-
 class PlainLineReporter:
     """Prints one line per event, flushed at once:
 
@@ -64,6 +51,8 @@ class PlainLineReporter:
     """
 
     def __init__(self, stream: TextIO | None = None, verbose: bool = False):
+        # Looked up when the reporter is made, not when Python reads this file,
+        # so a test (or anything else) that swaps sys.stdout still gets the lines.
         self.stream = stream or sys.stdout
         self.verbose = verbose
 
@@ -95,7 +84,7 @@ class PlainLineReporter:
 def _detail(event: Event) -> str:
     data = event.data
     if event.type == JOB_FINISHED:
-        return str(timedelta(seconds=round(data["seconds"])))
+        return str(timedelta(seconds=round(data["elapsed"])))
     if event.type == JOB_FAILED:
         return data["error"]
     if event.type == CALL_RETRYING:

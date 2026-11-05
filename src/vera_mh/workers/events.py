@@ -32,8 +32,23 @@ QUESTION_ASKED = "question_asked"  # data: question_id
 CALL_RETRYING = "call_retrying"  # data: attempt, max_attempts, error
 CALL_FINISHED = "call_finished"  # data: model, input_tokens, output_tokens
 
+# The word each event shows as on the terminal (`PlainLineReporter`). A call
+# retrying is always shown, since it's how a slow or failing provider shows up;
+# turns and questions only with `verbose`, as a run has many of them. Token
+# usage only goes to `events.jsonl`.
+WORDS = {
+    JOB_STARTED: "start",
+    JOB_FINISHED: "done",
+    JOB_FAILED: "FAIL",
+    JOB_SKIPPED: "skip",
+    CALL_RETRYING: "retry",
+}
+VERBOSE_WORDS = {TURN_STARTED: "turn", QUESTION_ASKED: "ask"}
+
 
 def _now() -> datetime:
+    # A named function, not a lambda, so test_run_root's clock rule can allow
+    # this one `datetime.now()` call by name.
     return datetime.now().astimezone()
 
 
@@ -86,6 +101,8 @@ class Reporter(Protocol):
 # running at once each see their own job, never another's.
 
 
+# Many jobs run at once, but each in its own asyncio task, and a `ContextVar`
+# holds one value per task: inside any one task there is exactly one current job.
 @dataclass(frozen=True)
 class _CurrentJob:
     emit: Callable[[Event], None]
@@ -100,7 +117,13 @@ _current_job: ContextVar[_CurrentJob | None] = ContextVar("current_job", default
 def reporting_for(
     emit: Callable[[Event], None], label: str, kind: str
 ) -> Iterator[None]:
-    """Inside this block, `report()` sends events to `emit`, as this job's."""
+    """Inside this block, `report()` sends events to `emit`, as this job's.
+
+    As with any `@contextmanager`, `with reporting_for(...):` runs the code
+    before `yield` when the block starts (set the current job), then the
+    block's body at `yield`, then the `finally` when the block ends, even if it
+    raised (put back whatever was current before).
+    """
     token = _current_job.set(_CurrentJob(emit, label, kind))
     try:
         yield
