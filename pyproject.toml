@@ -88,6 +88,19 @@ type = "forbidden"
 source_modules = ["vera_mh.score"]
 forbidden_modules = ["vera_mh.llm_clients"]
 
+# docs/architecture.md, Layer model: the domain hands its jobs to the loop,
+# never the reverse.
+[[tool.importlinter.contracts]]
+name = "workers does not import the domain"
+type = "forbidden"
+source_modules = ["vera_mh.workers"]
+forbidden_modules = [
+    "vera_mh.generate",
+    "vera_mh.judge",
+    "vera_mh.score",
+    "vera_mh.vera_cli",
+]
+
 [tool.pyright]
 typeCheckingMode = "basic"
 
