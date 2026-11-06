@@ -20,11 +20,11 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import time
-from collections import Counter
+from collections import Counter, deque
 from typing import Mapping, Sequence
 
-from vera_mh.workers.events import Event, EventType, Reporter, set_current_job
-from vera_mh.workers.job import Job, Outcome, Status
+from vera_mh.workers.events import Event, EventType, Reporter
+from vera_mh.workers.job import Job, Outcome, Status, set_current_job
 
 
 class JobLoop:
@@ -62,34 +62,42 @@ class JobLoop:
         }
         self.reporters = reporters
         self.stage = stage
-        self.tasks: set[asyncio.Task[None]] = set()
+        self.waiting: deque[Job] = deque()
+        self.running: set[asyncio.Task[None]] = set()
         self.outcomes: list[Outcome] = []
 
     def submit(self, job: Job) -> None:
-        """Start a job in the background; it waits for a free slot of its kind.
-        Never waits itself. Call it from inside a running event loop."""
-        self.tasks.add(asyncio.create_task(self._run_one(job)))
+        """Add a job; `run()` starts it. Never waits."""
+        self.waiting.append(job)
 
     async def run(self) -> list[Outcome]:
-        """Wait until every job has finished, follow-ups included; return every
-        job's outcome, skipped ones included."""
-        while self.tasks:
-            # Waits for all the jobs started so far. Their follow-ups add new
-            # tasks while it waits, so go round until no task is left.
-            finished, _ = await asyncio.wait(self.tasks)
-            self.tasks -= finished
+        """Run every submitted job, and the follow-ups they hand on, until none
+        is left; return every job's outcome, skipped ones included."""
+        while self.waiting or self.running:
+            # Start everything submitted so far. Each job then waits inside its
+            # own task for a free slot of its kind (see `_run_one`).
+            while self.waiting:
+                job = self.waiting.popleft()
+                self.running.add(asyncio.create_task(self._run_one(job)))
+            # Wake up when any job ends: it may have submitted follow-ups.
+            finished, _ = await asyncio.wait(
+                self.running, return_when=asyncio.FIRST_COMPLETED
+            )
+            self.running -= finished
 
         counts = Counter(outcome.status for outcome in self.outcomes)
         totals = {
             "stage": self.stage,
-            "done": counts["finished"],
-            "failed": counts["failed"],
-            "skipped": counts["skipped"],
+            "done": counts[Status.FINISHED],
+            "failed": counts[Status.FAILED],
+            "skipped": counts[Status.SKIPPED],
         }
         self.emit(Event(EventType.STAGE_FINISHED, data=totals))
         return self.outcomes
 
     def emit(self, event: Event) -> None:
+        """Send `event` to every reporter. Jobs' own events come here too,
+        through `report()`."""
         for reporter in self.reporters:
             reporter.emit(event)
 
@@ -99,22 +107,22 @@ class JobLoop:
         elapsed = 0.0
         try:
             if job.done():
-                status: Status = "skipped"
+                status = Status.SKIPPED
             else:
                 async with self.limits[job.kind]:
                     self.emit(
                         Event(EventType.JOB_STARTED, job=job.label, kind=job.kind)
                     )
                     start = time.monotonic()
-                    # This coroutine is the job's own task (see `submit`), so
-                    # this applies to this job only, and ends with it.
-                    set_current_job(self.emit, job.label, job.kind)
+                    # This coroutine is the job's own task (see `run`), so this
+                    # applies to this job only, and ends with it.
+                    set_current_job(job, self.emit)
                     await job.run()
                     elapsed = time.monotonic() - start
-                status = "finished"
+                status = Status.FINISHED
             follow_ups = job.follow_ups()
         except Exception as error:
-            self._record(Outcome(job, "failed", error=error, elapsed=elapsed))
+            self._record(Outcome(job, Status.FAILED, error=error, elapsed=elapsed))
             return
         self._record(Outcome(job, status, elapsed=elapsed))
         for follow_up in follow_ups:
@@ -123,9 +131,9 @@ class JobLoop:
     def _record(self, outcome: Outcome) -> None:
         self.outcomes.append(outcome)
         job = outcome.job
-        if outcome.status == "skipped":
+        if outcome.status == Status.SKIPPED:
             self.emit(Event(EventType.JOB_SKIPPED, job=job.label, kind=job.kind))
-        elif outcome.status == "finished":
+        elif outcome.status == Status.FINISHED:
             data = {"elapsed": round(outcome.elapsed, 3)}
             self.emit(
                 Event(EventType.JOB_FINISHED, job=job.label, kind=job.kind, data=data)

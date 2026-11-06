@@ -10,9 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from vera_mh.workers import events
 from vera_mh.workers.events import Event, EventType
-from vera_mh.workers.job import Job, Outcome
+from vera_mh.workers.job import Job, Outcome, report
 from vera_mh.workers.loop import JobLoop
 
 UNLIMITED: dict[str, int | None] = {"session": None, "evaluation": None}
@@ -246,7 +245,7 @@ async def test_a_job_reports_from_inside_its_run() -> None:
             return False
 
         async def run(self) -> None:
-            events.report(EventType.TURN_STARTED, turn=1, speaker="user")
+            report(EventType.TURN_STARTED, turn=1, speaker="user")
 
         def follow_ups(self) -> list[Job]:
             return []
@@ -270,7 +269,7 @@ async def test_every_event_goes_to_each_reporter() -> None:
 
 
 def test_report_outside_a_job_does_nothing() -> None:
-    events.report(EventType.TURN_STARTED, turn=1, speaker="user")
+    report(EventType.TURN_STARTED, turn=1, speaker="user")
 
 
 # --------------------------------------------------------- jobs stay serializable

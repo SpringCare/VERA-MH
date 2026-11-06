@@ -16,10 +16,10 @@ from datetime import timedelta
 from pathlib import Path
 from typing import TextIO
 
-from vera_mh.workers.events import VERBOSE_WORDS, WORDS, Event, EventType
+from vera_mh.workers.events import VERBOSE_ONLY, WORDS, Event, EventType, Reporter
 
 
-class EventsFileReporter:
+class EventsFileReporter(Reporter):
     """Appends each event to a JSON Lines file, one object per line."""
 
     def __init__(self, path: Path):
@@ -33,7 +33,7 @@ class EventsFileReporter:
             f.write("\n")
 
 
-class PlainLineReporter:
+class PlainLineReporter(Reporter):
     """Prints one line per event, flushed at once:
 
     19:44:06 session     done   gpt-5.2 Brian   0:02:41
@@ -60,11 +60,8 @@ class PlainLineReporter:
                 f"{clock} {counts['stage']} finished: {counts['done']} done, "
                 f"{counts['failed']} failed, {counts['skipped']} skipped"
             )
-        if event.type in WORDS:
-            word = WORDS[event.type]
-        elif self.verbose and event.type in VERBOSE_WORDS:
-            word = VERBOSE_WORDS[event.type]
-        else:
+        word = WORDS.get(event.type)
+        if word is None or (event.type in VERBOSE_ONLY and not self.verbose):
             return None
         detail = _detail(event)
         line = f"{clock} {event.kind or '':<11} {word:<6} {event.job or ''}"
