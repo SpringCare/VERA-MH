@@ -49,7 +49,10 @@ class PlainLineReporter(Reporter):
     def emit(self, event: Event) -> None:
         line = self.format(event)
         if line is not None:
-            print(line, file=self.stream, flush=True)
+            # Job labels and error messages can hold any character ("José"):
+            # escape them, so the line stays ASCII and prints on any terminal.
+            ascii_line = line.encode("ascii", "backslashreplace").decode("ascii")
+            print(ascii_line, file=self.stream, flush=True)
 
     def format(self, event: Event) -> str | None:
         """The line for `event`, or None if it isn't shown."""

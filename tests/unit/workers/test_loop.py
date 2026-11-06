@@ -127,6 +127,32 @@ async def test_a_failure_is_an_outcome_and_the_job_is_not_run_again() -> None:
     assert bad.runs == 1
 
 
+async def test_a_failed_job_reports_how_long_it_ran() -> None:
+    (outcome,) = await run_jobs(
+        [FakeJob("slow", Tracker(), error=ValueError, seconds=0.05)], UNLIMITED
+    )
+
+    assert outcome.status == "failed"
+    assert outcome.elapsed >= 0.05
+
+
+async def test_a_reporter_error_stops_the_run_instead_of_vanishing() -> None:
+    """A job's own errors are outcomes; a broken reporter is a bug, so the
+    run stops and shows it rather than silently losing follow-ups."""
+
+    class Broken:
+        def emit(self, event: Event) -> None:
+            if event.type == EventType.JOB_FINISHED:
+                raise RuntimeError("reporter broke")
+
+    tracker = Tracker()
+    child = FakeJob("child", tracker)
+    parent = FakeJob("parent", tracker, next_jobs=[child])
+
+    with pytest.raises(RuntimeError, match="reporter broke"):
+        await run_jobs([parent], UNLIMITED, reporters=[Broken()])
+
+
 async def test_follow_ups_run_after_their_parent() -> None:
     tracker = Tracker()
     child = FakeJob("child", tracker, kind="evaluation")

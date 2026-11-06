@@ -84,6 +84,11 @@ class JobLoop:
                 self.running, return_when=asyncio.FIRST_COMPLETED
             )
             self.running -= finished
+            for task in finished:
+                # A job's own errors are already its outcome (see `_run_one`),
+                # so anything raised here is a bug in the loop or a reporter:
+                # stop the run and show it, rather than lose it.
+                task.result()
 
         counts = Counter(outcome.status for outcome in self.outcomes)
         totals = {
@@ -113,12 +118,15 @@ class JobLoop:
                     self.emit(
                         Event(EventType.JOB_STARTED, job=job.label, kind=job.kind)
                     )
-                    start = time.monotonic()
                     # This coroutine is the job's own task (see `run`), so this
                     # applies to this job only, and ends with it.
                     set_current_job(job, self.emit)
-                    await job.run()
-                    elapsed = time.monotonic() - start
+                    start = time.monotonic()
+                    try:
+                        await job.run()
+                    finally:
+                        # Also when it fails, after minutes of LLM retries, say.
+                        elapsed = time.monotonic() - start
                 status = Status.FINISHED
             follow_ups = job.follow_ups()
         except Exception as error:

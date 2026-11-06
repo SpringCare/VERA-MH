@@ -91,6 +91,23 @@ def test_plain_lines_are_written_and_ascii() -> None:
     assert all(line.isascii() for line in lines)
 
 
+def test_other_characters_in_labels_and_errors_are_escaped() -> None:
+    stream = io.StringIO()
+    failed = Event(
+        EventType.JOB_FAILED,
+        job="gpt-5.2 José",
+        kind="session",
+        data={"error": "ValueError: “quoted”"},
+        time=AT,
+    )
+
+    PlainLineReporter(stream).emit(failed)
+
+    line = stream.getvalue().rstrip("\n")
+    assert line.isascii()
+    assert "Jos\\xe9" in line
+
+
 def test_events_file_has_one_json_object_per_event(tmp_path: Path) -> None:
     path = tmp_path / "events.jsonl"
     reporter = EventsFileReporter(path)
