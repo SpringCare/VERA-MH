@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from vera_mh.workers import events
-from vera_mh.workers.events import Event
+from vera_mh.workers.events import Event, EventType
 from vera_mh.workers.job import Job, Outcome
 from vera_mh.workers.loop import JobLoop
 
@@ -228,11 +228,11 @@ async def test_the_loop_reports_each_job_and_the_stage() -> None:
 
     await run_jobs(jobs, UNLIMITED, reporters=[reporter], stage="generate")
 
-    assert reporter.types("ok") == [events.JOB_STARTED, events.JOB_FINISHED]
-    assert reporter.types("bad") == [events.JOB_STARTED, events.JOB_FAILED]
-    assert reporter.types("done") == [events.JOB_SKIPPED]
+    assert reporter.types("ok") == [EventType.JOB_STARTED, EventType.JOB_FINISHED]
+    assert reporter.types("bad") == [EventType.JOB_STARTED, EventType.JOB_FAILED]
+    assert reporter.types("done") == [EventType.JOB_SKIPPED]
     stage = reporter.events[-1]
-    assert stage.type == events.STAGE_FINISHED
+    assert stage.type == EventType.STAGE_FINISHED
     assert stage.data == {"stage": "generate", "done": 1, "failed": 1, "skipped": 1}
 
 
@@ -246,7 +246,7 @@ async def test_a_job_reports_from_inside_its_run() -> None:
             return False
 
         async def run(self) -> None:
-            events.report(events.TURN_STARTED, turn=1, speaker="user")
+            events.report(EventType.TURN_STARTED, turn=1, speaker="user")
 
         def follow_ups(self) -> list[Job]:
             return []
@@ -255,7 +255,7 @@ async def test_a_job_reports_from_inside_its_run() -> None:
 
     await run_jobs([Talker("a"), Talker("b")], UNLIMITED, reporters=[reporter])
 
-    turns = [event for event in reporter.events if event.type == events.TURN_STARTED]
+    turns = [event for event in reporter.events if event.type == EventType.TURN_STARTED]
     assert {event.job for event in turns} == {"a", "b"}
     assert all(event.kind == "session" for event in turns)
     assert turns[0].data == {"turn": 1, "speaker": "user"}
@@ -270,7 +270,7 @@ async def test_every_event_goes_to_each_reporter() -> None:
 
 
 def test_report_outside_a_job_does_nothing() -> None:
-    events.report(events.TURN_STARTED, turn=1, speaker="user")
+    events.report(EventType.TURN_STARTED, turn=1, speaker="user")
 
 
 # --------------------------------------------------------- jobs stay serializable

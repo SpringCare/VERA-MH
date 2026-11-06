@@ -23,16 +23,7 @@ import time
 from collections import Counter
 from typing import Mapping, Sequence
 
-from vera_mh.workers.events import (
-    JOB_FAILED,
-    JOB_FINISHED,
-    JOB_SKIPPED,
-    JOB_STARTED,
-    STAGE_FINISHED,
-    Event,
-    Reporter,
-    reporting_for,
-)
+from vera_mh.workers.events import Event, EventType, Reporter, set_current_job
 from vera_mh.workers.job import Job, Outcome, Status
 
 
@@ -95,7 +86,7 @@ class JobLoop:
             "failed": counts["failed"],
             "skipped": counts["skipped"],
         }
-        self.emit(Event(STAGE_FINISHED, data=totals))
+        self.emit(Event(EventType.STAGE_FINISHED, data=totals))
         return self.outcomes
 
     def emit(self, event: Event) -> None:
@@ -111,10 +102,14 @@ class JobLoop:
                 status: Status = "skipped"
             else:
                 async with self.limits[job.kind]:
-                    self.emit(Event(JOB_STARTED, job=job.label, kind=job.kind))
+                    self.emit(
+                        Event(EventType.JOB_STARTED, job=job.label, kind=job.kind)
+                    )
                     start = time.monotonic()
-                    with reporting_for(self.emit, job.label, job.kind):
-                        await job.run()
+                    # This coroutine is the job's own task (see `submit`), so
+                    # this applies to this job only, and ends with it.
+                    set_current_job(self.emit, job.label, job.kind)
+                    await job.run()
                     elapsed = time.monotonic() - start
                 status = "finished"
             follow_ups = job.follow_ups()
@@ -129,10 +124,14 @@ class JobLoop:
         self.outcomes.append(outcome)
         job = outcome.job
         if outcome.status == "skipped":
-            self.emit(Event(JOB_SKIPPED, job=job.label, kind=job.kind))
+            self.emit(Event(EventType.JOB_SKIPPED, job=job.label, kind=job.kind))
         elif outcome.status == "finished":
             data = {"elapsed": round(outcome.elapsed, 3)}
-            self.emit(Event(JOB_FINISHED, job=job.label, kind=job.kind, data=data))
+            self.emit(
+                Event(EventType.JOB_FINISHED, job=job.label, kind=job.kind, data=data)
+            )
         else:
             data = {"error": f"{type(outcome.error).__name__}: {outcome.error}"}
-            self.emit(Event(JOB_FAILED, job=job.label, kind=job.kind, data=data))
+            self.emit(
+                Event(EventType.JOB_FAILED, job=job.label, kind=job.kind, data=data)
+            )

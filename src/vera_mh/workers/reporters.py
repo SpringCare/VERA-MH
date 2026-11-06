@@ -16,17 +16,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import TextIO
 
-from vera_mh.workers.events import (
-    CALL_RETRYING,
-    JOB_FAILED,
-    JOB_FINISHED,
-    QUESTION_ASKED,
-    STAGE_FINISHED,
-    TURN_STARTED,
-    VERBOSE_WORDS,
-    WORDS,
-    Event,
-)
+from vera_mh.workers.events import VERBOSE_WORDS, WORDS, Event, EventType
 
 
 class EventsFileReporter:
@@ -64,7 +54,7 @@ class PlainLineReporter:
     def format(self, event: Event) -> str | None:
         """The line for `event`, or None if it isn't shown."""
         clock = event.time.strftime("%H:%M:%S")
-        if event.type == STAGE_FINISHED:
+        if event.type == EventType.STAGE_FINISHED:
             counts = event.data
             return (
                 f"{clock} {counts['stage']} finished: {counts['done']} done, "
@@ -83,15 +73,15 @@ class PlainLineReporter:
 
 def _detail(event: Event) -> str:
     data = event.data
-    if event.type == JOB_FINISHED:
+    if event.type == EventType.JOB_FINISHED:
         return str(timedelta(seconds=round(data["elapsed"])))
-    if event.type == JOB_FAILED:
+    if event.type == EventType.JOB_FAILED:
         return data["error"]
-    if event.type == CALL_RETRYING:
+    if event.type == EventType.CALL_RETRYING:
         attempt = f"{data['attempt']}/{data['max_attempts']}"
         return f"call attempt {attempt} failed: {data['error']}"
-    if event.type == TURN_STARTED:
+    if event.type == EventType.TURN_STARTED:
         return f"turn {data['turn']} {data['speaker']} responding"
-    if event.type == QUESTION_ASKED:
+    if event.type == EventType.QUESTION_ASKED:
         return f"question {data['question_id']}"
     return ""

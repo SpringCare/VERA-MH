@@ -12,38 +12,45 @@ or written to `events.jsonl`.
 
 from __future__ import annotations
 
-import contextlib
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Iterator, Protocol
+from enum import StrEnum
+from typing import Any, Callable, Protocol
 
-# Emitted by the loop.
-JOB_STARTED = "job_started"
-JOB_FINISHED = "job_finished"
-JOB_FAILED = "job_failed"
-JOB_SKIPPED = "job_skipped"
-STAGE_FINISHED = "stage_finished"
 
-# Emitted from inside a job, with `report()`.
-TURN_STARTED = "turn_started"  # data: turn, speaker ("user" or "chatbot")
-QUESTION_ASKED = "question_asked"  # data: question_id
-# LLM calls retry themselves (llm_clients/); the loop never retries a job.
-CALL_RETRYING = "call_retrying"  # data: attempt, max_attempts, error
-CALL_FINISHED = "call_finished"  # data: model, input_tokens, output_tokens
+class EventType(StrEnum):
+    """Every kind of event. A `StrEnum`, so each one is also its plain string
+    value ("job_started"), which is what `events.jsonl` records."""
+
+    # Emitted by the loop, about one job.
+    JOB_STARTED = "job_started"
+    JOB_FINISHED = "job_finished"  # data: elapsed
+    JOB_FAILED = "job_failed"  # data: error
+    JOB_SKIPPED = "job_skipped"
+    # Emitted by the loop once, when `JobLoop.run()` ends: about the whole run.
+    STAGE_FINISHED = "stage_finished"  # data: stage, done, failed, skipped
+
+    # Emitted from inside a job, with `report()`.
+    TURN_STARTED = "turn_started"  # data: turn, speaker ("user" or "chatbot")
+    QUESTION_ASKED = "question_asked"  # data: question_id
+    # LLM calls retry themselves (llm_clients/); the loop never retries a job.
+    CALL_RETRYING = "call_retrying"  # data: attempt, max_attempts, error
+    CALL_FINISHED = "call_finished"  # data: model, input_tokens, output_tokens
+
 
 # The word each event shows as on the terminal (`PlainLineReporter`). A call
 # retrying is always shown, since it's how a slow or failing provider shows up;
 # turns and questions only with `verbose`, as a run has many of them. Token
 # usage only goes to `events.jsonl`.
 WORDS = {
-    JOB_STARTED: "start",
-    JOB_FINISHED: "done",
-    JOB_FAILED: "FAIL",
-    JOB_SKIPPED: "skip",
-    CALL_RETRYING: "retry",
+    EventType.JOB_STARTED: "start",
+    EventType.JOB_FINISHED: "done",
+    EventType.JOB_FAILED: "FAIL",
+    EventType.JOB_SKIPPED: "skip",
+    EventType.CALL_RETRYING: "retry",
 }
-VERBOSE_WORDS = {TURN_STARTED: "turn", QUESTION_ASKED: "ask"}
+VERBOSE_WORDS = {EventType.TURN_STARTED: "turn", EventType.QUESTION_ASKED: "ask"}
 
 
 def _now() -> datetime:
@@ -54,9 +61,14 @@ def _now() -> datetime:
 
 @dataclass(frozen=True)
 class Event:
-    """One thing that happened. `job` and `kind` are empty for a stage event."""
+    """One thing that happened.
 
-    type: str
+    `job` and `kind` name the job it's about. `STAGE_FINISHED` is the one event
+    that isn't about a job but about the whole run (its counts are in `data`),
+    so it has neither.
+    """
+
+    type: EventType
     job: str | None = None
     kind: str | None = None
     data: dict[str, Any] = field(default_factory=dict)
@@ -67,7 +79,7 @@ class Event:
         return {
             **self.data,
             "time": self.time.isoformat(timespec="seconds"),
-            "type": self.type,
+            "type": self.type.value,
             "kind": self.kind,
             "job": self.job,
         }
@@ -83,26 +95,27 @@ class Reporter(Protocol):
 #
 # Code deep inside a job, such as an LLM client retrying a call, has no handle
 # on the loop, and passing one down through the simulator, the judge, and every
-# client would touch all of them. Instead the loop records which job the
-# current asyncio task is running, and `report()` reads it back:
+# client would touch all of them. So the loop writes down, at the start of each
+# job, which job is running and where its events go, and `report()` reads that
+# back:
 #
-#     # in the loop, around each job (each job runs in its own task)
-#     with reporting_for(loop.emit, "gpt-5.2 Brian", "session"):
-#         await job.run()
+#     # in the loop, at the start of each job
+#     set_current_job(loop.emit, "gpt-5.2 Brian", "session")
+#     await job.run()
 #
 #     # anywhere inside that job, however deep
-#     report(CALL_RETRYING, attempt=2, max_attempts=4, error="RateLimitError")
+#     report(EventType.CALL_RETRYING, attempt=2, max_attempts=4, error="...")
 #
 #     # every reporter then receives
 #     Event(type="call_retrying", job="gpt-5.2 Brian", kind="session",
-#           data={"attempt": 2, "max_attempts": 4, "error": "RateLimitError"})
+#           data={"attempt": 2, "max_attempts": 4, "error": "..."})
 #
-# A `ContextVar` is a variable whose value is per asyncio task, so ten jobs
-# running at once each see their own job, never another's.
+# Where it's written down is a `ContextVar`: a variable with a separate value in
+# each asyncio task. The loop runs every job in its own task, so ten jobs
+# running at once each set and read their own value, never another job's, and a
+# job's value disappears with its task when the job ends.
 
 
-# Many jobs run at once, but each in its own asyncio task, and a `ContextVar`
-# holds one value per task: inside any one task there is exactly one current job.
 @dataclass(frozen=True)
 class _CurrentJob:
     emit: Callable[[Event], None]
@@ -110,28 +123,17 @@ class _CurrentJob:
     kind: str
 
 
+# The running job's `_CurrentJob`, one per asyncio task; None outside a job.
 _current_job: ContextVar[_CurrentJob | None] = ContextVar("current_job", default=None)
 
 
-@contextlib.contextmanager
-def reporting_for(
-    emit: Callable[[Event], None], label: str, kind: str
-) -> Iterator[None]:
-    """Inside this block, `report()` sends events to `emit`, as this job's.
-
-    As with any `@contextmanager`, `with reporting_for(...):` runs the code
-    before `yield` when the block starts (set the current job), then the
-    block's body at `yield`, then the `finally` when the block ends, even if it
-    raised (put back whatever was current before).
-    """
-    token = _current_job.set(_CurrentJob(emit, label, kind))
-    try:
-        yield
-    finally:
-        _current_job.reset(token)
+def set_current_job(emit: Callable[[Event], None], label: str, kind: str) -> None:
+    """From now on in this asyncio task, `report()` sends events to `emit` as
+    this job's. The loop calls it at the start of each job's task."""
+    _current_job.set(_CurrentJob(emit, label, kind))
 
 
-def report(event_type: str, **data: Any) -> None:
+def report(event_type: EventType, **data: Any) -> None:
     """Emit an event from inside a running job, such as `CALL_RETRYING`.
 
     Outside a job (a unit test calling the code directly, say) it does nothing.
