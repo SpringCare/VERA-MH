@@ -77,6 +77,8 @@ class ConversationSimulator:
             max_turns=max_turns, first_speaker=first_speaker
         )
 
+        # TODO: rename `agent` (and `persona`) to `chatbot` and `user`, the
+        # language Role and the rest of the code use.
         if first_speaker == Role.USER:
             current_speaker = self.persona
             next_speaker = self.agent
