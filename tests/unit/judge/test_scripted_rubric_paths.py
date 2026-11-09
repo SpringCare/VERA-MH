@@ -175,7 +175,7 @@ async def _judge_with_script(answers: dict[str, str], tmp_path: Path):
     )
     asked: list[str] = []
 
-    async def scripted_answer(question_id, question_data, verbose):
+    async def scripted_answer(question_id, question_data):
         asked.append(question_id)
         if question_id not in answers:
             raise AssertionError(

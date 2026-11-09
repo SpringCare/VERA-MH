@@ -1,129 +1,278 @@
-"""Resolved-input entry point for judging conversations.
+"""The judging domain's entry point: `run_judging(config)`.
 
-This is the judging domain's application function: it receives fully resolved
-values, loads what those values point at, and runs the evaluation. It is the
-counterpart of `generate.run_generation` on the generation
-side, and it is what `vera judge` calls.
+It receives a resolved `JudgingConfig`, loads what it points at, evaluates every
+conversation with every judge instance, and writes the run's results. It is the
+counterpart of `generate.run_generation` on the generation side, and it is what
+`vera judge` and `vera pipeline` call.
 
 It deliberately does none of the CLI's work. It does not parse arguments, read
-a target manifest, apply defaults, choose an output location, or configure
-debug logging — every one of those is resolved by the caller. That boundary is
-what keeps the CLI's conventions out of the domain.
-
-Unlike the generation side, this module already sits in the permanent package,
-so no temporary root-level boundary function is needed.
+a target manifest, apply defaults, or choose an output location: the config
+already states every one of those. That boundary is what keeps the CLI's
+conventions out of the domain.
 """
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+import os
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, cast
 
+import pandas as pd
+
+from vera_mh.utils.config_schema import JudgingConfig
+from vera_mh.utils.conversation_layout import resolve_conversation_input
+from vera_mh.utils.judge_results import build_dataframe_from_tsv_files
+from vera_mh.utils.run_record import require_run_record, with_start_time
+from vera_mh.utils.run_root import create_run_root, run_started_at
+
+from .answers import conversation_answers_dir, write_answers_tsv
 from .rubric_config import RubricConfig, load_conversations
-from .runner import judge_conversations
+from .runner import (
+    _create_evaluation_jobs,
+    _list_existing_evaluation_tsv_basenames,
+    _run_workers_with_queue,
+)
+from .utils import add_persona_columns_to_dataframe, build_evaluation_run_folder_path
+
+# The identifying columns that lead each results.csv row.
+RESULT_ID_COLUMNS = ["filename", "run_id", "judge_model", "judge_instance", "judge_id"]
 
 
 async def run_judging(
+    config: JudgingConfig,
     *,
-    judge_models: Dict[str, int],
-    rubric_file: str,
-    rubric_prompt_beginning_file: str,
-    question_prompt_file: str,
-    transcripts_dir: str,
-    conversation_folder_name: Optional[str],
-    limit: Optional[int],
-    output_dir: str,
-    is_existing_run: bool,
-    judge_model_extra_params: Dict[str, Any],
-    max_concurrent: Optional[int],
-    per_judge: bool,
-    verbose_workers: bool,
-    verbose: bool,
-    resume: bool,
-    personas: Optional[List[str]] = None,
-    persona_annotation_columns: Optional[List[str]] = None,
+    into: Optional[str] = None,
+    sample: Optional[int] = None,
     run_record: Optional[Dict[str, Any]] = None,
 ) -> tuple[List[Dict[str, Any]], str]:
-    """Evaluate a folder of conversations from fully resolved inputs.
+    """Judge the conversations `config` names, and write the run's results.
 
     Args:
-        judge_models: Judge model name to instance count, already parsed from
-            whatever shorthand the caller accepts
-        rubric_file: Resolved path to the rubric TSV
-        rubric_prompt_beginning_file: Resolved path to the system prompt template
-        question_prompt_file: Resolved path to the question prompt template
-        transcripts_dir: Resolved directory holding the conversation `.txt`
-            files. The caller has already decided whether this is a nested
-            `conversations/` directory or a legacy flat folder.
-        conversation_folder_name: Basename recorded in output paths, or None
-        limit: Cap on conversations loaded, or None for all
-        output_dir: Where evaluations go. The caller has already decided this;
-            `is_existing_run` says which of the two things it is.
-        is_existing_run: False (the normal case, and the only one `vera judge`
-            uses) means `output_dir` is a parent to mint a new `j_*` run folder
-            under. True means it is an exact existing run folder to write into,
-            bypassing run naming -- how `judge.py --resume` lands back in the
-            same folder.
-        judge_model_extra_params: Provider parameters for the judge model
-        max_concurrent: Worker ceiling, or None for unlimited
-        per_judge: Whether `max_concurrent` applies per judge model or in total
-        verbose_workers: Whether workers log concurrency behavior
-        verbose: Whether to print progress
-        resume: Whether to skip evaluation TSVs that already exist
-        personas: Resolved personas TSV paths supplying annotation values, or
-            None when the caller selected only a rubric component
-        persona_annotation_columns: Persona columns to copy into results.csv,
-            named by the target manifest. Empty or None annotates nothing.
-        run_record: Written to the new evaluation folder as `config.json`;
-            see `utils/run_record.py`. Unused when `is_existing_run`.
+        config: What to judge, with which judge models and rubric, and where
+            a new run folder goes (`config.output`)
+        into: An existing evaluation run folder to continue (`--into`).
+            Evaluations already in it are skipped and new ones land beside
+            them. Without it, a new run folder is created under `config.output`.
+        sample: Judge only the first N conversations, or None for all
+        run_record: Written to a new run folder as `config.json` (see
+            `utils/run_record.py`). A continued run keeps the record it
+            started with, so this is unused with `into`.
 
     Returns:
-        Tuple of (results, output_folder) where output_folder is where the
-        evaluations were written.
+        Tuple of (results, output_folder): one result row per conversation,
+        judge model, and instance evaluated in this call, and the folder the
+        evaluations were written to.
 
     Raises:
         FileNotFoundError: If a rubric file or the transcripts directory is
             missing.
     """
-    if verbose:
-        models_str = ", ".join(
-            f"{model}x{count}" for model, count in judge_models.items()
-        )
-        print(f"🎯 LLM Judge | Models: {models_str}")
-        print("📚 Loading rubric configuration...")
+    judge_models = {model.name: model.repeats for model in config.models}
+    # Every judge model shares one parameter dict (`JudgingSpec.__post_init__`
+    # rejects anything else), so the first model's stands for all of them.
+    extra_params = dict(config.models[0].extra_params)
+    # Exactly one of each, enforced by `JudgingConfig.__post_init__`; the
+    # unpacking fails loudly rather than judging only the first if that changes.
+    (conversations_folder,) = config.conversations
+    (rubric,) = config.rubrics
 
+    models_str = ", ".join(f"{model}x{count}" for model, count in judge_models.items())
+    print(f"🎯 LLM Judge | Models: {models_str}")
+    print("📚 Loading rubric configuration...")
     rubric_config = await RubricConfig.from_paths(
-        rubric_file=rubric_file,
-        rubric_prompt_beginning_file=rubric_prompt_beginning_file,
-        question_prompt_file=question_prompt_file,
+        rubric_file=rubric.rubric_file,
+        rubric_prompt_beginning_file=rubric.rubric_prompt_beginning_file,
+        question_prompt_file=rubric.question_prompt_file,
     )
 
-    if verbose:
-        print(f"📂 Loading conversations from {transcripts_dir}...")
-    conversations = await load_conversations(transcripts_dir, limit=limit)
-    if verbose:
-        print(f"✅ Loaded {len(conversations)} conversations")
+    # The config names the folder the user gave; the transcripts may be in its
+    # `conversations/` subfolder. Finding them is idempotent.
+    transcripts_dir, _, folder_name = resolve_conversation_input(conversations_folder)
+    print(f"📂 Loading conversations from {transcripts_dir}...")
+    conversations = await load_conversations(transcripts_dir, limit=sample)
+    print(f"✅ Loaded {len(conversations)} conversations")
 
-    # `judge_conversations` still distinguishes the two output modes by which
-    # keyword it receives; translating the caller's flag is this layer's job.
-    output_target: Dict[str, Any] = (
-        {"output_folder": output_dir}
-        if is_existing_run
-        else {"output_root": output_dir}
+    if into is None:
+        output_folder = _create_run_folder(
+            config.output, judge_models, extra_params, folder_name, run_record
+        )
+        already_judged = None
+    else:
+        # An existing run being continued, not a new run root.
+        output_folder = into
+        os.makedirs(output_folder, exist_ok=True)
+        already_judged = _list_existing_evaluation_tsv_basenames(output_folder)
+
+    jobs = _create_evaluation_jobs(
+        conversations,
+        judge_models,
+        output_folder,
+        rubric_config,
+        extra_params,
+        already_judged,
+    )
+    total_instances = sum(judge_models.values())
+    total_evaluations = len(conversations) * total_instances
+    skipped_existing = total_evaluations - len(jobs)
+    _print_plan(
+        len(conversations),
+        len(judge_models),
+        total_instances,
+        len(jobs),
+        continuing=into is not None,
+    )
+    print(
+        f"Concurrency: {config.max_concurrent} workers "
+        f"({'per judge model' if config.per_judge else 'total'})"
     )
 
-    return await judge_conversations(
-        judge_models=judge_models,
-        conversations=conversations,
-        rubric_config=rubric_config,
-        conversation_folder_name=conversation_folder_name,
-        verbose=verbose,
-        judge_model_extra_params=judge_model_extra_params,
-        max_concurrent=max_concurrent,
-        per_judge=per_judge,
-        verbose_workers=verbose_workers,
-        resume=resume,
-        personas=personas,
-        persona_annotation_columns=persona_annotation_columns,
-        run_record=run_record,
-        **output_target,
+    batch_start = datetime.now()
+    results = await _run_workers_with_queue(
+        jobs, config.max_concurrent, config.per_judge
     )
+
+    _write_results(
+        output_folder,
+        results,
+        rubric_config,
+        list(config.personas),
+        list(config.persona_annotation_columns),
+    )
+
+    elapsed_s = (datetime.now() - batch_start).total_seconds()
+    skipped_error = total_evaluations - skipped_existing - len(results)
+    print(
+        f"\n✅ Completed {len(results)} / {total_evaluations} evaluations "
+        f"→ {output_folder}/"
+    )
+    print(f"  Wall time: {elapsed_s:.2f} seconds")
+    if skipped_existing:
+        print(f"  ({skipped_existing} skipped: evaluation already exists)")
+    if skipped_error:
+        print(f"  ({skipped_error} skipped due to errors)")
+
+    return results, output_folder
+
+
+def _create_run_folder(
+    output_root: str,
+    judge_models: Dict[str, int],
+    extra_params: Dict[str, Any],
+    conversation_folder_name: str,
+    run_record: Optional[Dict[str, Any]],
+) -> str:
+    """Create a new evaluation run folder under `output_root`, named after the
+    judges, their parameters, the start time, and the conversations judged."""
+    started_at = run_started_at()
+    timestamp = started_at.strftime("%Y%m%d_%H%M%S_%f")[:-3]
+    judge_info = "_".join(f"{model}x{count}" for model, count in judge_models.items())
+    if "temperature" in extra_params:
+        judge_info += f"_temp{extra_params['temperature']}"
+    if "max_tokens" in extra_params:
+        judge_info += f"_maxtok{extra_params['max_tokens']}"
+    for key, value in extra_params.items():
+        if key not in ["temperature", "max_tokens"]:
+            judge_info += f"_{key}{value}"
+
+    new_folder = build_evaluation_run_folder_path(
+        output_root, judge_info, timestamp, conversation_folder_name or "conversations"
+    )
+    record = with_start_time(require_run_record(run_record), started_at)
+    return str(create_run_root(output_root, Path(new_folder).name, record))
+
+
+def _print_plan(
+    conversations: int,
+    judge_models: int,
+    total_instances: int,
+    pending: int,
+    continuing: bool,
+) -> None:
+    """Say how many evaluations will run, and how many a continued run skips."""
+    total = conversations * total_instances
+    if not continuing:
+        print(f"🔍 Judging {conversations} conversations")
+        print(
+            f"Evaluating {conversations} conversations with {judge_models} judge "
+            f"models ({total_instances} total instances)..."
+        )
+        print(f"Total evaluations to run: {total}")
+        return
+
+    skipped = total - pending
+    if total_instances == 1:
+        print(
+            f"🔍 Judging {pending} conversation(s) "
+            f"(skipping {skipped} already judged; "
+            f"{conversations} loaded from folder)."
+        )
+    else:
+        print(
+            f"🔍 {pending} evaluation job(s) to run "
+            f"({skipped} skipped: TSV already on disk; "
+            f"{conversations} conversations loaded)."
+        )
+    print(
+        f"Queued {pending} evaluation job(s); "
+        f"{skipped} skipped (evaluation TSV already in output folder)."
+    )
+    print(
+        f"Folder scale: {conversations} conversation file(s) × "
+        f"{total_instances} judge instance slot(s) = {total} total slot(s)."
+    )
+
+
+def _write_results(
+    output_folder: str,
+    results: List[Dict[str, Any]],
+    rubric_config: RubricConfig,
+    personas: List[str],
+    persona_annotation_columns: List[str],
+) -> None:
+    """Write the run's `results.csv` and `answers.tsv`.
+
+    Both are rebuilt from the per-evaluation files in the run folder, not from
+    this call's results, so a continued run includes the evaluations it skipped.
+    """
+    out_csv = os.path.join(output_folder, "results.csv")
+    if _list_existing_evaluation_tsv_basenames(output_folder):
+        df = build_dataframe_from_tsv_files(Path(output_folder))
+        df = _annotate_with_personas(df, personas, persona_annotation_columns)
+        df.to_csv(out_csv, index=False)
+    elif results:
+        # No TSVs yet (e.g. mocked batch in tests).
+        columns = RESULT_ID_COLUMNS + [
+            key for key in results[0] if key not in RESULT_ID_COLUMNS
+        ]
+        pd.DataFrame(results, columns=cast(Any, columns)).to_csv(out_csv, index=False)
+
+    if conversation_answers_dir(output_folder).is_dir():
+        answers_path = write_answers_tsv(output_folder, rubric_config.question_order)
+        print(f"📝 Per-question answers written to: {answers_path}")
+
+
+def _annotate_with_personas(
+    df: "pd.DataFrame",
+    personas: Optional[List[str]],
+    columns: Optional[List[str]],
+) -> "pd.DataFrame":
+    """Copy persona annotation columns into the aggregated results frame.
+
+    Annotation is a reporting convenience, not part of the evaluation, so a
+    problem here must not lose a judging run that already cost model calls: a
+    missing column or unreadable personas file warns and returns the frame
+    unannotated rather than raising.
+
+    Only the first personas file is consulted. `judging.personas` is list-shaped
+    to mirror the manifest, and every current target names exactly one file; a
+    multi-file target would need a documented precedence rule before this reads
+    past the first.
+    """
+    if not columns or not personas:
+        return df
+    try:
+        return add_persona_columns_to_dataframe(df, Path(personas[0]), columns)
+    except (KeyError, OSError, ValueError) as error:
+        print(f"⚠️  Skipping persona annotation: {error}")
+        return df

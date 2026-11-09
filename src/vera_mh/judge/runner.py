@@ -1,30 +1,18 @@
-"""
-Judge Runner - High-level functions for batch conversation evaluation.
-Contains the main logic extracted from main_judge.py to reduce code duplication.
+"""The evaluation jobs of a judging run, and the worker pool that runs them.
+
+`judge.run.run_judging` lists the jobs (one per conversation, judge model, and
+instance) and hands them to the pool here. The job loop (docs/design/job-loop.md)
+replaces this module with one `Evaluation` job.
 """
 
 import asyncio
 import os
 from asyncio import Queue
-from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-import pandas as pd
-
-from vera_mh.utils.judge_results import build_dataframe_from_tsv_files
-from vera_mh.utils.run_record import require_run_record, with_start_time
-from vera_mh.utils.run_root import create_run_root, run_started_at
-
-from .answers import conversation_answers_dir, write_answers_tsv
 from .llm_judge import LLMJudge
 from .rubric_config import ConversationData, RubricConfig
-from .utils import (
-    add_persona_columns_to_dataframe,
-    build_evaluation_run_folder_path,
-    build_judge_task_log_path,
-    judge_evaluation_tsv_filename,
-)
+from .utils import build_judge_task_log_path, judge_evaluation_tsv_filename
 
 # In case this needs to be synced in the meta prompt for the judge
 EVALUATION_SEPARATOR = ":"
@@ -95,7 +83,6 @@ async def _evaluate_single_conversation_with_judge(
         conversation,
         output_folder=output_folder,
         auto_save=True,
-        verbose=False,
         judge_instance=judge_instance,
     )
 
@@ -189,7 +176,6 @@ async def _worker(
     queue: Queue,
     results: List[Dict[str, Any]],
     total_jobs: int,
-    verbose_workers: bool = False,
 ):
     """
     Worker that processes evaluation jobs from the queue.
@@ -199,24 +185,12 @@ async def _worker(
         queue: Queue containing job tuples
         results: Shared list to append results to
         total_jobs: Total number of jobs for progress tracking
-        verbose_workers: Enable verbose logging for worker lifecycle
     """
-    import time
-    from datetime import datetime
-
-    job_count = 0
-
-    if verbose_workers:
-        start_time = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-        print(f"[Worker {worker_id}] Started at {start_time}")
-
     while True:
         try:
             job = queue.get_nowait()
         except asyncio.QueueEmpty:
             break
-
-        job_count += 1
 
         (
             conversation,
@@ -231,18 +205,11 @@ async def _worker(
         completed = len(results)
         conversation_filename = conversation.metadata.get("filename", "unknown.txt")
 
-        if verbose_workers:
-            print(
-                f"[Worker {worker_id}] Processing: {conversation_filename} "
-                f"for {judge_model} (judge {instance})"
-            )
-            job_start = time.time()
-        else:
-            print(
-                f"[Worker {worker_id}] ({completed + 1}/{total_jobs}) "
-                f"{conversation_filename} | {judge_model} "
-                f"(instance {instance}, id {judge_id})"
-            )
+        print(
+            f"[Worker {worker_id}] ({completed + 1}/{total_jobs}) "
+            f"{conversation_filename} | {judge_model} "
+            f"(instance {instance}, id {judge_id})"
+        )
 
         try:
             result = await _evaluate_single_conversation_with_judge(
@@ -255,13 +222,6 @@ async def _worker(
                 extra_params,
             )
             results.append(result)
-
-            if verbose_workers:
-                duration = time.time() - job_start
-                print(
-                    f"[Worker {worker_id}] Completed: {conversation_filename} "
-                    f"({duration:.1f}s)"
-                )
         except Exception as e:
             print(
                 f"[Worker {worker_id}] Failed to evaluate "
@@ -269,9 +229,6 @@ async def _worker(
             )
 
         queue.task_done()
-
-    if verbose_workers:
-        print(f"[Worker {worker_id}] Finished. Processed {job_count} jobs.")
 
 
 async def _run_workers_with_queue(
@@ -288,7 +245,6 @@ async def _run_workers_with_queue(
     ],
     max_concurrent: Optional[int],
     per_judge: bool = False,
-    verbose_workers: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     Run evaluation jobs using a worker queue with concurrency control.
@@ -343,30 +299,11 @@ async def _run_workers_with_queue(
             # Create workers for this judge model
             workers = [
                 asyncio.create_task(
-                    _worker(
-                        f"{judge_model[:10]}-{i}",
-                        queue,
-                        results,
-                        total_jobs,
-                        verbose_workers,
-                    )
+                    _worker(f"{judge_model[:10]}-{i}", queue, results, total_jobs)
                 )
                 for i in range(num_workers)
             ]
             all_workers.extend(workers)
-
-        # Print worker pool summary
-        if verbose_workers:
-            from datetime import datetime
-
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-            print("\n[VERBOSE] Worker pool created:")
-            print(f"  - Total workers: {len(all_workers)}")
-            print("  - Mode: per-judge concurrency")
-            print(f"  - Judge models: {', '.join(jobs_by_model.keys())}")
-            max_str = max_concurrent if max_concurrent else "unlimited"
-            print(f"  - Max concurrent per judge: {max_str}")
-            print(f"  - Started at: {timestamp}\n")
 
         # Wait for all workers to complete
         await asyncio.gather(*all_workers)
@@ -390,360 +327,11 @@ async def _run_workers_with_queue(
 
         # Create workers
         workers = [
-            asyncio.create_task(_worker(i, queue, results, total_jobs, verbose_workers))
+            asyncio.create_task(_worker(i, queue, results, total_jobs))
             for i in range(num_workers)
         ]
-
-        # Print worker pool summary
-        if verbose_workers:
-            from datetime import datetime
-
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-            print("\n[VERBOSE] Worker pool created:")
-            print(f"  - Total workers: {num_workers}")
-            print("  - Mode: global concurrency")
-            max_str = max_concurrent if max_concurrent else "unlimited"
-            print(f"  - Max concurrent: {max_str}")
-            print(f"  - Started at: {timestamp}\n")
 
         # Wait for all workers to complete
         await asyncio.gather(*workers)
 
     return results
-
-
-async def batch_evaluate_with_individual_judges(
-    conversations: List[ConversationData],
-    judge_models: Dict[str, int],
-    output_folder: str,
-    rubric_config: RubricConfig,
-    max_concurrent: Optional[int],
-    per_judge: bool,
-    judge_model_extra_params: Optional[Dict[str, Any]] = None,
-    verbose_workers: bool = False,
-    existing_tsv_basenames: Optional[set[str]] = None,
-    jobs: Optional[
-        List[
-            Tuple[
-                ConversationData,
-                str,
-                int,
-                int,
-                str,
-                RubricConfig,
-                Optional[Dict[str, Any]],
-            ]
-        ]
-    ] = None,
-) -> List[Dict[str, Any]]:
-    """
-    Evaluate conversations with multiple judge models using queue workers.
-
-    Each conversation is evaluated by all judge models and their instances.
-    Workers process jobs from a queue with configurable concurrency.
-
-    Args:
-        conversations: List of ConversationData objects
-        judge_models: Dict mapping model names to number of instances
-                     Example: {"claude-sonnet-5": 3, "gpt-5.4": 2}
-        output_folder: Folder to save evaluation results
-        rubric_config: Pre-loaded rubric configuration
-        max_concurrent: Maximum number of concurrent workers
-        per_judge: If True, max_concurrent applies per judge model; if False, total
-        judge_model_extra_params: Extra parameters for the judge model
-        existing_tsv_basenames: If set, skip jobs whose evaluation TSV basename
-            is in this set (resume mode).
-        jobs: If provided, run exactly these jobs instead of calling
-            _create_evaluation_jobs (avoids duplicate work when the caller
-            already built the queue).
-
-    Returns:
-        Flattened list of evaluation results with one row per
-        (conversation, judge_model, judge_instance) tuple
-    """
-    total_files = len(conversations)
-    total_judge_instances = sum(judge_models.values())
-    total_evaluations = total_files * total_judge_instances
-
-    if jobs is None:
-        jobs = _create_evaluation_jobs(
-            conversations,
-            judge_models,
-            output_folder,
-            rubric_config,
-            judge_model_extra_params,
-            existing_tsv_basenames,
-        )
-
-    if existing_tsv_basenames is not None:
-        pending_n = len(jobs)
-        skipped_n = total_evaluations - pending_n
-        print(
-            f"Queued {pending_n} evaluation job(s); "
-            f"{skipped_n} skipped (evaluation TSV already in output folder)."
-        )
-        print(
-            f"Folder scale: {total_files} conversation file(s) × "
-            f"{total_judge_instances} judge instance slot(s) = "
-            f"{total_evaluations} total slot(s)."
-        )
-    else:
-        print(
-            f"Evaluating {total_files} conversations with "
-            f"{len(judge_models)} judge models "
-            f"({total_judge_instances} total instances)..."
-        )
-        print(f"Total evaluations to run: {total_evaluations}")
-    print(
-        f"Concurrency: {max_concurrent} workers "
-        f"({'per judge model' if per_judge else 'total'})"
-    )
-
-    # Run workers with queue
-    results = await _run_workers_with_queue(
-        jobs, max_concurrent, per_judge, verbose_workers
-    )
-
-    return results
-
-
-def _annotate_with_personas(
-    df: "pd.DataFrame",
-    personas: Optional[List[str]],
-    columns: Optional[List[str]],
-    verbose: bool,
-) -> "pd.DataFrame":
-    """Copy persona annotation columns into the aggregated results frame.
-
-    Annotation is a reporting convenience, not part of the evaluation, so a
-    problem here must not lose a judging run that already cost model calls: a
-    missing column or unreadable personas file warns and returns the frame
-    unannotated rather than raising.
-
-    Only the first personas file is consulted. `judging.personas` is list-shaped
-    to mirror the manifest, and every current target names exactly one file; a
-    multi-file target would need a documented precedence rule before this reads
-    past the first.
-    """
-    if not columns or not personas:
-        return df
-    try:
-        return add_persona_columns_to_dataframe(df, Path(personas[0]), columns)
-    except (KeyError, OSError, ValueError) as error:
-        if verbose:
-            print(f"⚠️  Skipping persona annotation: {error}")
-        return df
-
-
-async def judge_conversations(
-    judge_models: Dict[str, int],
-    conversations: List[ConversationData],
-    rubric_config: RubricConfig,
-    output_root: str = "evaluations",
-    conversation_folder_name: Optional[str] = None,
-    verbose: bool = True,
-    output_folder: Optional[str] = None,
-    save_aggregated_results: bool = True,
-    filename: Optional[str] = "results.csv",
-    judge_model_extra_params: Optional[Dict[str, Any]] = None,
-    max_concurrent: Optional[int] = None,
-    per_judge: bool = False,
-    verbose_workers: bool = False,
-    resume: bool = False,
-    personas: Optional[List[str]] = None,
-    persona_annotation_columns: Optional[List[str]] = None,
-    run_record: Optional[Dict[str, Any]] = None,
-) -> tuple[List[Dict[str, Any]], str]:
-    """
-    Judge conversations with multiple judge models.
-
-    Args:
-        judge_models: Dict mapping model names to number of instances
-                     Example: {"claude-sonnet-5": 3, "gpt-5.4": 2}
-        conversations: List of pre-loaded ConversationData objects
-        rubric_config: Pre-loaded rubric configuration
-        output_root: Root folder for evaluation outputs
-        conversation_folder_name: Optional folder name for output path generation
-        verbose: Whether to print status messages
-        output_folder: Custom output folder (auto-generated if None)
-        save_aggregated_results: Whether to save results to CSV
-        filename: Name for aggregated results CSV
-        judge_model_extra_params: Extra parameters for the judge model
-        max_concurrent: Maximum number of concurrent workers
-        per_judge: If True, max_concurrent applies per judge model; if False, total
-        personas: Personas TSV paths supplying persona annotation values
-        persona_annotation_columns: Persona columns to copy into the aggregated
-            CSV, joined on the persona name parsed from each conversation
-            filename. Empty or None annotates nothing.
-        run_record: Written to a new evaluation folder as `config.json` (see
-            `utils/run_record.py`); unused when continuing `output_folder`.
-
-    Returns:
-        Tuple of (results, output_folder) where results is a flattened list of
-        evaluation results with one row per (conversation, judge_model, judge_instance)
-        tuple, and output_folder is the path where evaluations were saved
-    """
-    if output_folder is None:
-        started_at = run_started_at()
-        timestamp = started_at.strftime("%Y%m%d_%H%M%S_%f")[:-3]
-        judges_str = "_".join(
-            f"{model}x{count}" for model, count in judge_models.items()
-        )
-
-        # Build judge info string with extra parameters
-        judge_info = judges_str
-        if judge_model_extra_params:
-            # Add temperature if present
-            if "temperature" in judge_model_extra_params:
-                judge_info += f"_temp{judge_model_extra_params['temperature']}"
-            # Add max_tokens if present
-            if "max_tokens" in judge_model_extra_params:
-                judge_info += f"_maxtok{judge_model_extra_params['max_tokens']}"
-            # Add other extra params
-            for k, v in judge_model_extra_params.items():
-                if k not in ["temperature", "max_tokens"]:
-                    judge_info += f"_{k}{v}"
-
-        folder_name = conversation_folder_name or "conversations"
-        new_folder = build_evaluation_run_folder_path(
-            output_root, judge_info, timestamp, folder_name
-        )
-        record = with_start_time(require_run_record(run_record), started_at)
-        output_folder = str(create_run_root(output_root, Path(new_folder).name, record))
-    else:
-        # An existing run being continued (`--into`), not a new run root.
-        os.makedirs(output_folder, exist_ok=True)
-
-    total_found = len(conversations)
-    total_evaluations = len(conversations) * sum(judge_models.values())
-    total_judge_instances = sum(judge_models.values())
-    existing_tsv_basenames = (
-        _list_existing_evaluation_tsv_basenames(output_folder) if resume else None
-    )
-
-    resume_jobs: Optional[
-        List[
-            Tuple[
-                ConversationData,
-                str,
-                int,
-                int,
-                str,
-                RubricConfig,
-                Optional[Dict[str, Any]],
-            ]
-        ]
-    ] = None
-    if resume:
-        resume_jobs = _create_evaluation_jobs(
-            conversations,
-            judge_models,
-            output_folder,
-            rubric_config,
-            judge_model_extra_params,
-            existing_tsv_basenames,
-        )
-        if verbose:
-            pending_jobs = len(resume_jobs)
-            skipped_jobs = total_evaluations - pending_jobs
-            if total_judge_instances == 1:
-                print(
-                    f"🔍 Judging {pending_jobs} conversation(s) "
-                    f"(skipping {skipped_jobs} already judged; "
-                    f"{total_found} loaded from folder)."
-                )
-            else:
-                print(
-                    f"🔍 {pending_jobs} evaluation job(s) to run "
-                    f"({skipped_jobs} skipped: TSV already on disk; "
-                    f"{total_found} conversations loaded)."
-                )
-    elif verbose:
-        print(f"🔍 Judging {total_found} conversations")
-
-    batch_start = datetime.now()
-    results = await batch_evaluate_with_individual_judges(
-        conversations,
-        judge_models,
-        output_folder,
-        rubric_config,
-        max_concurrent,
-        per_judge,
-        judge_model_extra_params,
-        verbose_workers,
-        existing_tsv_basenames,
-        jobs=resume_jobs,
-    )
-
-    ok_n = len(results)
-    if resume:
-        assert resume_jobs is not None
-        skipped_existing_n = total_evaluations - len(resume_jobs)
-    else:
-        skipped_existing_n = 0
-    skipped_error_n = total_evaluations - skipped_existing_n - ok_n
-
-    if save_aggregated_results:
-        csv_name = filename or "results.csv"
-        out_csv = os.path.join(output_folder, csv_name)
-        # On resume: if the initial scan found any evaluation TSV basenames, at
-        # least one matching file still exists after the batch (this path does
-        # not delete TSVs). If the scan was empty, this run may have written the
-        # first TSVs — listdir again.
-        if resume and existing_tsv_basenames:
-            has_eval_tsvs = True
-        else:
-            has_eval_tsvs = bool(_list_existing_evaluation_tsv_basenames(output_folder))
-        if has_eval_tsvs:
-            # Per-job TSVs are source of truth; includes skipped rows on --resume.
-            df = build_dataframe_from_tsv_files(Path(output_folder))
-            df = _annotate_with_personas(
-                df, personas, persona_annotation_columns, verbose
-            )
-            df.to_csv(out_csv, index=False)
-        elif results:
-            # No TSVs yet (e.g. mocked batch in tests).
-            columns = [
-                "filename",
-                "run_id",
-                "judge_model",
-                "judge_instance",
-                "judge_id",
-            ] + [
-                k
-                for k in results[0].keys()
-                if k
-                not in [
-                    "filename",
-                    "run_id",
-                    "judge_model",
-                    "judge_instance",
-                    "judge_id",
-                ]
-            ]
-            pd.DataFrame(results, columns=cast(Any, columns)).to_csv(
-                out_csv, index=False
-            )
-
-        # Run-level per-question answers, rebuilt from the per-conversation
-        # files the same way results.csv is rebuilt from evaluation TSVs, so
-        # --resume includes conversations this batch skipped.
-        if conversation_answers_dir(output_folder).is_dir():
-            answers_path = write_answers_tsv(
-                output_folder, rubric_config.question_order
-            )
-            if verbose:
-                print(f"📝 Per-question answers written to: {answers_path}")
-    if verbose:
-        elapsed_s = (datetime.now() - batch_start).total_seconds()
-        print(
-            f"\n✅ Completed {ok_n} / {total_evaluations} evaluations "
-            f"→ {output_folder}/"
-        )
-        print(f"  Wall time: {elapsed_s:.2f} seconds")
-        if skipped_existing_n:
-            print(f"  ({skipped_existing_n} skipped: evaluation already exists)")
-        if skipped_error_n:
-            print(f"  ({skipped_error_n} skipped due to errors)")
-
-    return results, output_folder

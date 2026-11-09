@@ -7,13 +7,11 @@ import pandas as pd
 import pytest
 
 from tests.mocks.run_record import minimal_run_record
-from vera_mh.judge.rubric_config import ConversationData
-from vera_mh.judge.runner import (
-    _create_evaluation_jobs,
-    batch_evaluate_with_individual_judges,
-    judge_conversations,
-)
+from vera_mh.judge.rubric_config import ConversationData, RubricConfig
+from vera_mh.judge.run import run_judging
+from vera_mh.judge.runner import _create_evaluation_jobs, _run_workers_with_queue
 from vera_mh.judge.utils import build_judge_task_log_path, judge_evaluation_tsv_filename
+from vera_mh.utils.config_schema import JudgingConfig, ModelSpec, RubricFiles
 
 MOCK_EVALUATION_RESULT = {
     "Safety": {
@@ -47,6 +45,61 @@ def _conversations(tmp_path: Path, count: int) -> list[ConversationData]:
     return [_conversation(tmp_path, i) for i in range(count)]
 
 
+def _conversation_folder(tmp_path: Path) -> Path:
+    """A folder holding one conversation file, for `run_judging` to load."""
+    folder = tmp_path / "conversations"
+    folder.mkdir()
+    (folder / "test_conv.txt").write_text("user: Hello\nchatbot: Hi!", encoding="utf-8")
+    return folder
+
+
+def _judging_config(
+    fixtures_dir: Path,
+    conversations: Path,
+    output: Path,
+    judge_model: str = "claude-sonnet-4-5",
+    extra_params: dict | None = None,
+) -> JudgingConfig:
+    """A judging config using the `rubric_simple.tsv` fixture rubric."""
+    return JudgingConfig(
+        models=[
+            ModelSpec(name=judge_model, repeats=1, extra_params=extra_params or {})
+        ],
+        rubrics=[
+            RubricFiles(
+                rubric_file=str((fixtures_dir / "rubric_simple.tsv").resolve()),
+                rubric_prompt_beginning_file=str(
+                    (fixtures_dir / "rubric_prompt_beginning.txt").resolve()
+                ),
+                question_prompt_file=str(
+                    (fixtures_dir / "question_prompt.txt").resolve()
+                ),
+            )
+        ],
+        max_concurrent=None,
+        per_judge=False,
+        conversations=[str(conversations)],
+        output=str(output),
+    )
+
+
+async def _evaluate_all(
+    conversations: list[ConversationData],
+    output_folder: str,
+    rubric_config: RubricConfig,
+    judge_model_extra_params: dict | None = None,
+) -> list[dict]:
+    """Every evaluation of `conversations` by one judge, through the worker pool."""
+    jobs = _create_evaluation_jobs(
+        conversations,
+        {"claude-sonnet-4-5": 1},
+        output_folder,
+        rubric_config,
+        judge_model_extra_params,
+    )
+    return await _run_workers_with_queue(jobs, max_concurrent=None, per_judge=False)
+
+
 @pytest.fixture
 def mock_llm_judge_class():
     """Patch LLMJudge; return mock with evaluate_conversation_question_flow stubbed."""
@@ -64,21 +117,15 @@ class TestRunnerExtraParams:
     """Test that extra parameters are properly handled in runner functions."""
 
     @pytest.mark.asyncio
-    async def test_batch_evaluate_accepts_extra_params(
+    async def test_pool_passes_extra_params_to_the_judge(
         self, tmp_path: Path, rubric_config_factory, mock_llm_judge_class
     ):
-        """Test that batch_evaluate_with_individual_judges accepts extra params."""
+        """Each evaluation job hands its extra params to LLMJudge."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
         extra_params = {"temperature": 0.7, "max_tokens": 1000}
 
-        results = await batch_evaluate_with_individual_judges(
-            conversations=[_conversation(tmp_path)],
-            judge_models={"claude-sonnet-4-5": 1},
-            output_folder=str(tmp_path),
-            rubric_config=rubric_config,
-            max_concurrent=None,
-            per_judge=False,
-            judge_model_extra_params=extra_params,
+        results = await _evaluate_all(
+            [_conversation(tmp_path)], str(tmp_path), rubric_config, extra_params
         )
 
         mock_llm_judge_class.assert_called_once()
@@ -89,19 +136,14 @@ class TestRunnerExtraParams:
         assert len(results) == 1
 
     @pytest.mark.asyncio
-    async def test_batch_evaluate_extra_params_defaults_to_none(
+    async def test_pool_extra_params_default_to_none(
         self, tmp_path: Path, rubric_config_factory, mock_llm_judge_class
     ):
         """Test that extra params default to None when not provided."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
 
-        results = await batch_evaluate_with_individual_judges(
-            conversations=[_conversation(tmp_path)],
-            judge_models={"claude-sonnet-4-5": 1},
-            output_folder=str(tmp_path),
-            rubric_config=rubric_config,
-            max_concurrent=None,
-            per_judge=False,
+        results = await _evaluate_all(
+            [_conversation(tmp_path)], str(tmp_path), rubric_config
         )
 
         mock_llm_judge_class.assert_called_once()
@@ -111,74 +153,46 @@ class TestRunnerExtraParams:
         assert len(results) == 1
 
     @pytest.mark.asyncio
-    async def test_judge_conversations_accepts_extra_params(
-        self, tmp_path: Path, rubric_config_factory
+    async def test_run_judging_passes_the_models_extra_params(
+        self, tmp_path: Path, fixtures_dir: Path
     ):
-        """Test that judge_conversations accepts and passes extra params."""
-        rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
+        """`run_judging` gives every evaluation job the judge model's params."""
         extra_params = {"temperature": 0.5, "max_tokens": 500}
+        config = _judging_config(
+            fixtures_dir,
+            _conversation_folder(tmp_path),
+            tmp_path / "output",
+            extra_params=extra_params,
+        )
 
-        with patch(
-            "vera_mh.judge.runner.batch_evaluate_with_individual_judges"
-        ) as mock_batch:
-            mock_batch.return_value = [
-                {
-                    "filename": "test_conv.txt",
-                    "Safety": "Best Practice",
-                    "run_id": "test_run",
-                }
-            ]
-            results, _ = await judge_conversations(
-                run_record=minimal_run_record(),
-                judge_models={"claude-sonnet-4-5": 1},
-                conversations=[_conversation(tmp_path)],
-                rubric_config=rubric_config,
-                output_root=str(tmp_path / "output"),
-                judge_model_extra_params=extra_params,
-                save_aggregated_results=False,
-            )
+        with patch("vera_mh.judge.run._run_workers_with_queue") as mock_pool:
+            mock_pool.return_value = []
+            await run_judging(config, run_record=minimal_run_record())
 
-        mock_batch.assert_called_once()
-        # Extra params are the 7th argument (index 6)
-        got = mock_batch.call_args.args[6]
-        assert got == extra_params
-        assert len(results) == 1
+        mock_pool.assert_called_once()
+        (jobs, _, _) = mock_pool.call_args.args
+        # Extra params are each job's 7th element (index 6).
+        assert [job[6] for job in jobs] == [extra_params]
 
     @pytest.mark.asyncio
-    async def test_judge_conversations_extra_params_defaults_to_none(
-        self, tmp_path: Path, rubric_config_factory
+    async def test_run_judging_without_extra_params_passes_an_empty_dict(
+        self, tmp_path: Path, fixtures_dir: Path
     ):
-        """Test that extra params default to None in judge_conversations."""
-        rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
+        """A judge model with no params gives every job an empty dict."""
+        config = _judging_config(
+            fixtures_dir, _conversation_folder(tmp_path), tmp_path / "output"
+        )
 
-        with patch(
-            "vera_mh.judge.runner.batch_evaluate_with_individual_judges"
-        ) as mock_batch:
-            mock_batch.return_value = [
-                {
-                    "filename": "test_conv.txt",
-                    "Safety": "Best Practice",
-                    "run_id": "test_run",
-                }
-            ]
-            results, _ = await judge_conversations(
-                run_record=minimal_run_record(),
-                judge_models={"claude-sonnet-4-5": 1},
-                conversations=[_conversation(tmp_path)],
-                rubric_config=rubric_config,
-                output_root=str(tmp_path / "output"),
-                save_aggregated_results=False,
-            )
+        with patch("vera_mh.judge.run._run_workers_with_queue") as mock_pool:
+            mock_pool.return_value = []
+            await run_judging(config, run_record=minimal_run_record())
 
-        mock_batch.assert_called_once()
-        # Extra params are the 7th argument (index 6)
-        got = mock_batch.call_args.args[6]
-        assert got is None
-        assert len(results) == 1
+        (jobs, _, _) = mock_pool.call_args.args
+        assert [job[6] for job in jobs] == [{}]
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("conversation_count", [3, 5])
-    async def test_batch_evaluate_extra_params_with_multiple_conversations(
+    async def test_pool_extra_params_with_multiple_conversations(
         self,
         tmp_path: Path,
         rubric_config_factory,
@@ -190,14 +204,8 @@ class TestRunnerExtraParams:
         conversations = _conversations(tmp_path, conversation_count)
         extra_params = {"temperature": 0.6, "max_tokens": 2000}
 
-        results = await batch_evaluate_with_individual_judges(
-            conversations=conversations,
-            judge_models={"claude-sonnet-4-5": 1},
-            output_folder=str(tmp_path),
-            rubric_config=rubric_config,
-            max_concurrent=None,
-            per_judge=False,
-            judge_model_extra_params=extra_params,
+        results = await _evaluate_all(
+            conversations, str(tmp_path), rubric_config, extra_params
         )
 
         assert mock_llm_judge_class.call_count == conversation_count
@@ -241,7 +249,7 @@ class TestRunnerResumeSkip:
 
     @pytest.mark.asyncio
     async def test_resume_rebuilds_results_csv_from_all_tsvs_when_batch_empty(
-        self, tmp_path: Path, rubric_config_factory
+        self, tmp_path: Path, fixtures_dir: Path
     ):
         """results.csv reflects every evaluation TSV, not only in-memory batch rows."""
         eval_dir = tmp_path / "eval_resume"
@@ -254,21 +262,16 @@ class TestRunnerResumeSkip:
         ):
             (eval_dir / name).write_text(header + tsv_line, encoding="utf-8")
 
-        rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
+        config = _judging_config(
+            fixtures_dir,
+            _conversation_folder(tmp_path),
+            tmp_path / "unused",
+            judge_model="mock-judge",
+        )
 
-        with patch(
-            "vera_mh.judge.runner.batch_evaluate_with_individual_judges"
-        ) as mock_batch:
-            mock_batch.return_value = []
-            results, _ = await judge_conversations(
-                judge_models={"mock-judge": 1},
-                conversations=[_conversation(tmp_path)],
-                rubric_config=rubric_config,
-                output_folder=str(eval_dir),
-                resume=True,
-                save_aggregated_results=True,
-                verbose=False,
-            )
+        with patch("vera_mh.judge.run._run_workers_with_queue") as mock_pool:
+            mock_pool.return_value = []
+            results, _ = await run_judging(config, into=str(eval_dir))
 
         assert results == []
         df = pd.read_csv(eval_dir / "results.csv")

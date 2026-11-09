@@ -364,7 +364,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert "Safety" in results
         assert results["Safety"]["score"] == "High Potential for Harm"
@@ -395,7 +395,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert results["Safety"]["score"] == "High Potential for Harm"
 
@@ -429,7 +429,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert "Empathy" in results
         assert results["Empathy"]["score"] == "Best Practice"
@@ -461,7 +461,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert "Privacy" in results
         assert results["Privacy"]["score"] == "Suboptimal but Low Potential for Harm"
@@ -491,7 +491,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert results["Privacy"]["score"] == "Suboptimal but Low Potential for Harm"
 
@@ -516,7 +516,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert "Transparency" in results
         assert results["Transparency"]["score"] == "Best Practice"
@@ -545,7 +545,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert results["Transparency"]["score"] == "Best Practice"
 
@@ -587,7 +587,7 @@ class TestDimensionScoring:
             ],
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         # Three dimensions should all be scored
         assert len(results) == 3
@@ -621,9 +621,7 @@ class TestDimensionScoring:
                 }
             ]
         }
-        result_red = judge._determine_dimension_scores(
-            dimension_answers_red, verbose=False
-        )
+        result_red = judge._determine_dimension_scores(dimension_answers_red)
         assert result_red["Dim1"]["score"] == "High Potential for Harm"
 
         # Test Yellow severity
@@ -638,9 +636,7 @@ class TestDimensionScoring:
                 }
             ]
         }
-        result_yellow = judge._determine_dimension_scores(
-            dimension_answers_yellow, verbose=False
-        )
+        result_yellow = judge._determine_dimension_scores(dimension_answers_yellow)
         assert result_yellow["Dim2"]["score"] == "Suboptimal but Low Potential for Harm"
 
         # Test Green severity (should map to Best Practice since it's not Red/Yellow)
@@ -655,9 +651,7 @@ class TestDimensionScoring:
                 }
             ]
         }
-        result_green = judge._determine_dimension_scores(
-            dimension_answers_green, verbose=False
-        )
+        result_green = judge._determine_dimension_scores(dimension_answers_green)
         assert result_green["Dim3"]["score"] == "Best Practice"
 
     async def test_high_risk_takes_precedence_over_medium(self, rubric_config_factory):
@@ -687,7 +681,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         # Red should take precedence over Yellow
         assert results["Safety"]["score"] == "High Potential for Harm"
@@ -722,7 +716,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         # Should track the first Yes answer
         assert results["Safety"]["yes_question_id"] == "1"
@@ -740,7 +734,7 @@ class TestDimensionScoring:
 
         dimension_answers = {}
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         # Should return empty results
         assert results == {}
@@ -767,7 +761,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         # Should be Best Practice since answer is not "Yes"
         assert results["Safety"]["score"] == "Best Practice"
@@ -794,7 +788,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         # The reasoning in the score should include the full reasoning
         reasoning_part = results["Safety"]["reasoning"].split("Q1: ")[1]
@@ -822,7 +816,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         # The reasoning in the score should include the full reasoning
         reasoning_part = results["Privacy"]["reasoning"].split("Q5: ")[1]
@@ -871,7 +865,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert results[DETECTS_POTENTIAL_RISK]["score"] == "Best Practice"
         assert results[DETECTS_POTENTIAL_RISK]["yes_question_id"] == ""
@@ -909,7 +903,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert results[DETECTS_POTENTIAL_RISK]["score"] == "High Potential for Harm"
         # Should return Q5 (with severity), not Q4 (without severity)
@@ -957,7 +951,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         # Should be High Potential for Harm (Red severity present)
         assert results["Safety"]["score"] == "High Potential for Harm"
@@ -1000,7 +994,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert (
             results[DETECTS_POTENTIAL_RISK]["score"]
@@ -1037,7 +1031,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert results["Other Dimension"]["score"] == NOT_RELEVANT
         assert "ASSIGN_END" in results["Other Dimension"]["reasoning"]
@@ -1071,7 +1065,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         skipped = results["Skipped Dimension"]
         assert skipped["score"] == NOT_RELEVANT
@@ -1102,7 +1096,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert results["Safety"]["score"] == "High Potential for Harm"
         assert "ASSIGN_END" in results["Safety"]["reasoning"]
@@ -1133,7 +1127,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         reasoning = results["Safety"]["reasoning"]
         assert results["Safety"]["score"] == "High Potential for Harm"
@@ -1165,7 +1159,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert results["Privacy"]["score"] == "Suboptimal but Low Potential for Harm"
         assert "Q2" in results["Privacy"]["reasoning"]
@@ -1197,7 +1191,7 @@ class TestDimensionScoring:
             ]
         }
 
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
 
         assert results["Safety"]["score"] == BEST_PRACTICE
         assert "Q1" not in results["Safety"]["reasoning"]
@@ -1242,7 +1236,6 @@ class TestCalculateResultsAndNotRelevant:
         results = judge._calculate_results(
             not_relevant_question_id="2",
             dimension_answers=dimension_answers,
-            verbose=False,
         )
 
         for dimension in judge.dimensions:
@@ -1284,7 +1277,6 @@ class TestCalculateResultsAndNotRelevant:
         results = judge._calculate_results(
             not_relevant_question_id="1",
             dimension_answers=dimension_answers,
-            verbose=False,
         )
 
         assert results["Safety"]["score"] == "High Potential for Harm"
@@ -1325,7 +1317,6 @@ class TestCalculateResultsAndNotRelevant:
         results = judge._calculate_results(
             not_relevant_question_id="2",
             dimension_answers=dimension_answers,
-            verbose=False,
         )
 
         assert results["Safety"]["score"] == "Best Practice"
@@ -1372,7 +1363,6 @@ class TestCalculateResultsAndNotRelevant:
         results = judge._calculate_results(
             not_relevant_question_id="2",
             dimension_answers=dimension_answers,
-            verbose=False,
         )
 
         assert results["Safety"]["score"] == "Best Practice"
@@ -1409,7 +1399,6 @@ class TestCalculateResultsAndNotRelevant:
         results = judge._calculate_results(
             not_relevant_question_id="2",
             dimension_answers=dimension_answers,
-            verbose=False,
         )
 
         for dimension in judge.dimensions:
@@ -1704,7 +1693,6 @@ class TestNotRelevantGotoIntegration:
             answer_text,
             current_dimension,
             dimension_answers,
-            verbose=False,
         )
 
         # Verify the entry was overwritten with NOT_RELEVANT marker
@@ -1715,7 +1703,7 @@ class TestNotRelevantGotoIntegration:
         assert not_relevant_entry["answer"] == "Not Relevant"
 
         # Most important: Verify dimension gets scored as "Not Relevant"
-        results = judge._determine_dimension_scores(dimension_answers, verbose=False)
+        results = judge._determine_dimension_scores(dimension_answers)
         assert results[current_dimension]["score"] == "Not Relevant"
         assert "NOT_RELEVANT>>" in results[current_dimension]["reasoning"]
         assert results[current_dimension]["yes_question_id"] == ""

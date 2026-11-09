@@ -240,7 +240,7 @@ class TestVisitLogSurvivesNotRelevantGoto:
         }
 
         judge._handle_not_relevant_goto(
-            "9", "No suicidal thoughts present", dimension, dimension_answers, False
+            "9", "No suicidal thoughts present", dimension, dimension_answers
         )
 
         surviving = dimension_answers[dimension]
