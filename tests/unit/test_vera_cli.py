@@ -12,6 +12,7 @@ import pytest
 import vera_mh.generate.run as generation_domain
 from vera_mh import cli as vera
 from vera_mh.utils.config_schema import InvocationConfig, ModelSpec
+from vera_mh.utils.role import Role
 from vera_mh.vera_cli import (
     config as cli_config,
 )
@@ -222,11 +223,11 @@ def test_cli_defaults_resolve_before_print(capsys: pytest.CaptureFixture) -> Non
     assert "data/SI/personas.tsv" in rendered
 
 
-def test_generation_delegates_every_value_to_generate_main() -> None:
+def test_generation_hands_the_resolved_config_to_the_domain() -> None:
     with patch.object(
-        generation_domain, "run_generation", new_callable=AsyncMock
-    ) as generate_main:
-        generate_main.return_value = ([], "output/generated")
+        generate, "run_generation", new_callable=AsyncMock
+    ) as run_generation:
+        run_generation.return_value = []
         result = vera.main(
             [
                 "generate",
@@ -252,33 +253,33 @@ def test_generation_delegates_every_value_to_generate_main() -> None:
         )
 
     assert result == 0
-    assert generate_main.await_count == 1
-    assert generate_main.await_args is not None
-    kwargs = generate_main.await_args.kwargs
-    assert kwargs["persona_model_config"] == {"model": "claude-sonnet-5"}
-    assert kwargs["agent_model_config"] == {"model": "gpt-5", "name": "gpt-5"}
-    assert kwargs["runs_per_prompt"] == 3
-    assert kwargs["max_turns"] == 4
-    assert kwargs["max_concurrent"] == 2
-    assert kwargs["max_total_words"] == 100
-    assert kwargs["max_personas"] == 2
-    assert kwargs["persona_speaks_first"] is False
-    assert kwargs["session_types"] == ["intake", "coaching"]
-    assert kwargs["resume"] is False
-    assert kwargs["persona_files"] == [
+    assert run_generation.await_count == 1
+    assert run_generation.await_args is not None
+    (generation,) = run_generation.await_args.args
+    assert generation.chatbot == ModelSpec("gpt-5", 1, {})
+    assert generation.user == [ModelSpec("claude-sonnet-5", 3, {})]
+    assert generation.turns == 4
+    assert generation.max_concurrent == 2
+    assert generation.max_total_words == 100
+    assert generation.first_speaker == "chatbot"
+    assert generation.sessions == ["intake", "coaching"]
+    assert generation.personas == [
         str((cli_config.ROOT / "data/SI/personas.tsv").resolve())
     ]
-    assert kwargs["persona_context_template_path"] == str(
+    assert generation.persona_context_template == str(
         (cli_config.ROOT / "data/SI/persona_context_template.txt").resolve()
     )
+    assert run_generation.await_args.kwargs["max_personas"] == 2
+    assert run_generation.await_args.kwargs["into"] is None
 
 
-def test_each_user_model_gets_one_generate_main_call(tmp_path: Path) -> None:
+def test_each_user_model_gets_one_conversation_runner(tmp_path: Path) -> None:
     manifest = _write_target(tmp_path, persona_count=2)
+    runner = AsyncMock()
+    runner.run_conversations.return_value = []
     with patch.object(
-        generation_domain, "run_generation", new_callable=AsyncMock
-    ) as generate_main:
-        generate_main.return_value = ([], "output/generated")
+        generation_domain, "ConversationRunner", return_value=runner
+    ) as runner_class:
         vera.main(
             [
                 "generate",
@@ -289,14 +290,30 @@ def test_each_user_model_gets_one_generate_main_call(tmp_path: Path) -> None:
                 "gpt-4o:3",
                 "--personas",
                 str(manifest),
+                "--first-speaker",
+                "chatbot",
+                "--sessions",
+                "intake,coaching",
+                "--sample",
+                "1",
+                "-o",
+                str(tmp_path / "output"),
             ]
         )
 
-    assert generate_main.await_count == 2
-    repeats = [call.kwargs["runs_per_prompt"] for call in generate_main.await_args_list]
-    assert repeats == [2, 3]
-    assert all(
-        len(call.kwargs["persona_files"]) == 2 for call in generate_main.await_args_list
+    assert runner_class.call_count == 2
+    first, second = (call.kwargs for call in runner_class.call_args_list)
+    assert [first["runs_per_prompt"], second["runs_per_prompt"]] == [2, 3]
+    assert first["persona_model_config"] == {"model": "claude-sonnet-5"}
+    assert second["persona_model_config"] == {"model": "gpt-4o"}
+    assert first["agent_model_config"] == {"model": "gpt-5", "name": "gpt-5"}
+    assert first["first_speaker"] == Role.CHATBOT
+    assert first["session_types"] == ["intake", "coaching"]
+    assert first["max_personas"] == 1
+    assert first["resume"] is False
+    # Only the first persona file is used; see `run_generation`.
+    assert first["persona_prompt_path"] == str(
+        (manifest.parent / "personas_0.tsv").resolve()
     )
 
 
@@ -493,9 +510,7 @@ def test_incomplete_target_fails_before_dispatch(tmp_path: Path) -> None:
     manifest.write_text(json.dumps({"personas": ["personas.tsv"]}), encoding="utf-8")
 
     with (
-        patch.object(
-            generation_domain, "run_generation", new_callable=AsyncMock
-        ) as runner,
+        patch.object(generate, "run_generation", new_callable=AsyncMock) as runner,
         pytest.raises(SystemExit) as error,
     ):
         vera.main(
@@ -577,9 +592,9 @@ def test_into_continues_an_existing_run_folder(tmp_path: Path) -> None:
     run_folder = tmp_path / "p_user__a_bot__t5__r1"
     run_folder.mkdir()
     with patch.object(
-        generation_domain, "run_generation", new_callable=AsyncMock
-    ) as generate_main:
-        generate_main.return_value = ([], "output/generated")
+        generate, "run_generation", new_callable=AsyncMock
+    ) as run_generation:
+        run_generation.return_value = []
         result = vera.main(
             [
                 "generate",
@@ -595,9 +610,7 @@ def test_into_continues_an_existing_run_folder(tmp_path: Path) -> None:
         )
 
     assert result == 0
-    kwargs = generate_main.await_args.kwargs
-    assert kwargs["resume"] is True
-    assert kwargs["output_folder"] == str(run_folder.resolve())
+    assert run_generation.await_args.kwargs["into"] == str(run_folder.resolve())
 
 
 def test_into_and_output_are_mutually_exclusive(tmp_path: Path) -> None:
@@ -653,15 +666,15 @@ def test_into_is_invocation_only_so_it_may_accompany_config(tmp_path: Path) -> N
     run_folder.mkdir()
     config = _write_config(tmp_path, _generation_config())
     with patch.object(
-        generation_domain, "run_generation", new_callable=AsyncMock
-    ) as generate_main:
-        generate_main.return_value = ([], "output/generated")
+        generate, "run_generation", new_callable=AsyncMock
+    ) as run_generation:
+        run_generation.return_value = []
         result = vera.main(
             ["generate", "--config", str(config), "--into", str(run_folder)]
         )
 
     assert result == 0
-    assert generate_main.await_args.kwargs["resume"] is True
+    assert run_generation.await_args.kwargs["into"] == str(run_folder.resolve())
 
 
 def test_configs_without_into_still_resolve(tmp_path: Path) -> None:

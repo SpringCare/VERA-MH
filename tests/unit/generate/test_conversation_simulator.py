@@ -47,7 +47,7 @@ class TestConversationSimulator:
         agent = MockLLM(name="agent", role=Role.CHATBOT, responses=["reply"] * 10)
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
-        # Use even max_turns so no normalization (persona_speaks_first=True)
+        # Use even max_turns so no normalization (the user speaks first)
         history = await simulator.generate_conversation(max_turns=6)
 
         assert len(history) == 6
@@ -55,7 +55,7 @@ class TestConversationSimulator:
         assert history[-1]["speaker"] == "chatbot"
 
     async def test_provider_speaks_first(self):
-        """persona_speaks_first=False: provider speaks first & last (odd max_turns)."""
+        """The chatbot speaks first & last (odd max_turns)."""
         persona = MockLLM(
             name="persona",
             role=Role.USER,
@@ -70,7 +70,7 @@ class TestConversationSimulator:
 
         history = await simulator.generate_conversation(
             max_turns=5,
-            persona_speaks_first=False,
+            first_speaker=Role.CHATBOT,
         )
 
         assert len(history) == 5
@@ -275,7 +275,7 @@ class TestConversationSimulator:
         simulator = ConversationSimulator(persona=persona, agent=agent)
 
         history1 = await simulator.generate_conversation(max_turns=2)
-        # Use even max_turns so no normalization (persona_speaks_first=True)
+        # Use even max_turns so no normalization (the user speaks first)
         history2 = await simulator.generate_conversation(max_turns=4)
 
         assert len(history1) == 2
@@ -401,7 +401,7 @@ class TestConversationSimulator:
 @pytest.mark.unit
 @pytest.mark.asyncio
 class TestFirstSpeakerAndFirstMessageCombinations:
-    """Tests for persona_speaks_first x start_prompt vs first_message."""
+    """Tests for first_speaker x start_prompt vs first_message."""
 
     async def test_persona_first_start_prompt(self):
         """Persona first + start_prompt:
@@ -467,7 +467,7 @@ class TestFirstSpeakerAndFirstMessageCombinations:
 
         history = await simulator.generate_conversation(
             max_turns=2,
-            persona_speaks_first=False,
+            first_speaker=Role.CHATBOT,
         )
 
         assert len(history) == 3  # assert max_turns + 1 because provider speaks first
@@ -497,7 +497,7 @@ class TestFirstSpeakerAndFirstMessageCombinations:
 
         history = await simulator.generate_conversation(
             max_turns=2,
-            persona_speaks_first=False,
+            first_speaker=Role.CHATBOT,
         )
 
         assert len(history) == 3  # assert max_turns + 1 because provider speaks first

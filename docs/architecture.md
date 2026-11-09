@@ -123,20 +123,13 @@ namespaces, input config files, or target manifests. They define no CLI behavior
 defaults. Pooling likewise delegates to the function owned by the scoring domain
 rather than to a script entry point.
 
-For generation, the flow is
-`vera_cli.generate` → `generate.run_for_user_models` →
-`generate.run_generation`.
-
-`run_for_user_models` and its `_legacy_model_config` helper are explicit
-stopgaps. They put the expansion of a run's user models, and the flattening of
-`ModelSpec` into the legacy dict signature, on the domain side of the boundary
-rather than in the CLI. Both are deleted when the generation domain accepts
-`ModelSpec` directly, which is also what lets `generate` and `judge` describe
-models identically.
+For generation, the flow is `vera_cli.generate` → `generate.run_generation`,
+which takes the resolved `GenerationConfig` and expands its user models into one
+run each, on the domain side of the boundary rather than in the CLI.
 
 | Subcommand | Delegates to | Purpose |
 |------------|--------------|---------|
-| `vera generate` | generation application function (temporarily `generate.run_for_user_models`) | Simulate conversations → `<target>/c_<chatbot>/u_*/conversations/` |
+| `vera generate` | `generate.run_generation` | Simulate conversations → `<target>/c_<chatbot>/u_*/conversations/` |
 | `vera judge` | `judge.runner` | Evaluate transcripts → `<target>/c_<chatbot>/u_*/evaluations/j_*` |
 | `vera score` | `score.run_scoring` | Aggregate `results.csv` → scores and visualizations |
 | `vera pool` | `score.pool` | Concatenate multiple evaluation folders into one pooled result → `<target>/c_<chatbot>/pooled/u_<a>+<b>_*` |

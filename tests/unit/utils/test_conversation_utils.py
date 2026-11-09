@@ -20,20 +20,28 @@ class TestEnsureProviderHasLastTurn:
     """Test ensure_provider_has_last_turn."""
 
     def test_persona_first_even_unchanged(self) -> None:
-        assert ensure_provider_has_last_turn(4, persona_speaks_first=True) == 4
-        assert ensure_provider_has_last_turn(6, persona_speaks_first=True) == 6
+        assert ensure_provider_has_last_turn(max_turns=4, first_speaker=Role.USER) == 4
+        assert ensure_provider_has_last_turn(max_turns=6, first_speaker=Role.USER) == 6
 
     def test_persona_first_odd_bumped(self) -> None:
-        assert ensure_provider_has_last_turn(3, persona_speaks_first=True) == 4
-        assert ensure_provider_has_last_turn(5, persona_speaks_first=True) == 6
+        assert ensure_provider_has_last_turn(max_turns=3, first_speaker=Role.USER) == 4
+        assert ensure_provider_has_last_turn(max_turns=5, first_speaker=Role.USER) == 6
 
     def test_agent_first_odd_unchanged(self) -> None:
-        assert ensure_provider_has_last_turn(3, persona_speaks_first=False) == 3
-        assert ensure_provider_has_last_turn(5, persona_speaks_first=False) == 5
+        assert (
+            ensure_provider_has_last_turn(max_turns=3, first_speaker=Role.CHATBOT) == 3
+        )
+        assert (
+            ensure_provider_has_last_turn(max_turns=5, first_speaker=Role.CHATBOT) == 5
+        )
 
     def test_agent_first_even_bumped(self) -> None:
-        assert ensure_provider_has_last_turn(2, persona_speaks_first=False) == 3
-        assert ensure_provider_has_last_turn(4, persona_speaks_first=False) == 5
+        assert (
+            ensure_provider_has_last_turn(max_turns=2, first_speaker=Role.CHATBOT) == 3
+        )
+        assert (
+            ensure_provider_has_last_turn(max_turns=4, first_speaker=Role.CHATBOT) == 5
+        )
 
 
 class TestFormatConversationSummary:
