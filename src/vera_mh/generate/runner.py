@@ -42,6 +42,7 @@ class ConversationRunner:
 
     def __init__(
         self,
+        *,
         persona_model_config: Dict[str, Any],
         agent_model_config: Dict[str, Any],
         max_turns: int = 6,

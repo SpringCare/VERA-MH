@@ -55,6 +55,7 @@ class ConversationSimulator:
 
     async def generate_conversation(
         self,
+        *,
         max_turns: int,
         max_total_words: Optional[int] = None,
         first_speaker: Role = Role.USER,
@@ -72,7 +73,9 @@ class ConversationSimulator:
         """
         self.conversation_history = []
         self.last_active_speaker = None
-        max_turns = ensure_provider_has_last_turn(max_turns, first_speaker)
+        max_turns = ensure_provider_has_last_turn(
+            max_turns=max_turns, first_speaker=first_speaker
+        )
 
         if first_speaker == Role.USER:
             current_speaker = self.persona

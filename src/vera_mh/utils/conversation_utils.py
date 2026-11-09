@@ -12,7 +12,7 @@ from vera_mh.utils.role import Role
 from .debug import debug_print
 
 
-def ensure_provider_has_last_turn(max_turns: int, first_speaker: Role) -> int:
+def ensure_provider_has_last_turn(*, max_turns: int, first_speaker: Role) -> int:
     """
     Return max_turns adjusted so the chatbot always has the last turn.
 
