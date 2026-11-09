@@ -25,8 +25,8 @@ class LLMJudge:
 
     def __init__(
         self,
-        judge_model: str,
         *,
+        judge_model: str,
         rubric_config: RubricConfig,
         judge_model_extra_params: Optional[Dict[str, Any]] = None,
         log_file: Optional[str] = None,
