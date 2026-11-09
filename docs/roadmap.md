@@ -164,6 +164,7 @@ Smaller items that belong to no phase. Each can ship as its own PR whenever it's
 ### Other
 
 - A better logging system.
+- **One run-folder helper.** `generate/run.py` and `judge/run.py` each have a `_create_run_folder` that builds the folder name and then calls `utils/run_root.create_run_root`, which creates the folder, runs the collision check, and writes the run record. The folder stays created by the component, not the CLI, so `vera pipeline`, the Python API, and the job loop get it without repeating it. When steps 4–5 delete the runners, merge the two into one helper in `run_root.py` that takes the folder name, and update AD-24 in `docs/ARCHITECTURE-SPINE.md`, which still says the folder is created in `generate/runner.py` / `judge/runner.py`.
 - Find out why async judges don't run concurrently.
 
 ## Deferred
