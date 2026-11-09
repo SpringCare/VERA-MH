@@ -27,6 +27,11 @@ from vera_mh.workers.events import Event, EventType, JobKind, Reporter
 from vera_mh.workers.job import Job, Outcome, Status, set_current_job
 
 
+class ReporterError(Exception):
+    """A reporter raised. That's a bug, not the job's failure, so it stops the
+    run instead of becoming the outcome of whichever job was reporting."""
+
+
 class JobLoop:
     """Runs jobs with one concurrency cap per job kind.
 
@@ -97,7 +102,13 @@ class JobLoop:
         """Send `event` to every reporter. Jobs' own events come here too,
         through `report()`."""
         for reporter in self.reporters:
-            reporter.emit(event)
+            try:
+                reporter.emit(event)
+            except Exception as error:
+                name = type(reporter).__name__
+                raise ReporterError(
+                    f"{name} failed on {event.type}: {error}"
+                ) from error
 
     async def _run_one(self, job: Job) -> None:
         # Any error, from `done()`, `run()` or `follow_ups()`, becomes this
@@ -122,6 +133,8 @@ class JobLoop:
                         elapsed = time.monotonic() - start
                 status = Status.FINISHED
             follow_ups = job.follow_ups()
+        except ReporterError:
+            raise  # not this job's failure: it stops the run (see `run`)
         except Exception as error:
             self._record(Outcome(job, Status.FAILED, error=error, elapsed=elapsed))
             return

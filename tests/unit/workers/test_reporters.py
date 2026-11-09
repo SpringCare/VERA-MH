@@ -110,6 +110,22 @@ def test_other_characters_in_labels_and_errors_are_escaped() -> None:
     assert "Jos\\xe9" in line
 
 
+def test_a_multi_line_error_stays_on_one_line() -> None:
+    stream = io.StringIO()
+    failed = Event(
+        EventType.JOB_FAILED,
+        job="gpt-5.2 Brian",
+        kind=JobKind.SESSION,
+        data={"error": "ValidationError: 2 errors\r\nfield a\nfield b"},
+        time=AT,
+    )
+
+    PlainLineReporter(stream).emit(failed)
+
+    assert stream.getvalue().count("\n") == 1
+    assert "2 errors\\r\\nfield a\\nfield b" in stream.getvalue()
+
+
 def test_events_file_has_one_json_object_per_event(tmp_path: Path) -> None:
     path = tmp_path / "events.jsonl"
     reporter = EventsFileReporter(path)

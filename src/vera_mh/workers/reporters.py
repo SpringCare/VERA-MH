@@ -51,6 +51,8 @@ class PlainLineReporter(Reporter):
         if line is not None:
             # Job labels and error messages can hold any character ("José"):
             # escape them, so the line stays ASCII and prints on any terminal.
+            # Newlines too (multi-line error messages), so one event is one line.
+            line = line.replace("\r", "\\r").replace("\n", "\\n")
             ascii_line = line.encode("ascii", "backslashreplace").decode("ascii")
             print(ascii_line, file=self.stream, flush=True)
 

@@ -12,7 +12,7 @@ import pytest
 
 from vera_mh.workers.events import Event, EventType, JobKind
 from vera_mh.workers.job import Job, Outcome, report
-from vera_mh.workers.loop import JobLoop
+from vera_mh.workers.loop import JobLoop, ReporterError
 
 UNLIMITED: dict[JobKind, int | None] = {JobKind.SESSION: None, JobKind.EVALUATION: None}
 
@@ -137,23 +137,40 @@ async def test_a_failed_job_reports_how_long_it_ran() -> None:
     assert outcome.elapsed >= 0.05
 
 
-async def test_a_reporter_error_stops_the_run_instead_of_vanishing() -> None:
+@pytest.mark.parametrize(
+    "broken_on",
+    [EventType.JOB_STARTED, EventType.TURN_STARTED, EventType.JOB_FINISHED],
+)
+async def test_a_reporter_error_stops_the_run_instead_of_vanishing(
+    broken_on: EventType,
+) -> None:
     """A job's own errors are outcomes; a broken reporter is a bug, so the
-    run stops and shows it rather than silently losing follow-ups."""
+    run stops and shows it, whichever event it broke on, rather than record a
+    failed job and silently lose its follow-ups."""
 
     class Broken:
         def emit(self, event: Event) -> None:
-            if event.type == EventType.JOB_FINISHED:
+            if event.type == broken_on:
                 raise RuntimeError("reporter broke")
 
-    tracker = Tracker()
-    child = FakeJob("child", tracker)
-    parent = FakeJob("parent", tracker, next_jobs=[child])
+    @dataclass
+    class Talker:
+        label: str
+        kind: JobKind = JobKind.SESSION
+
+        def done(self) -> bool:
+            return False
+
+        async def run(self) -> None:
+            report(EventType.TURN_STARTED, turn=1, speaker="user")
+
+        def follow_ups(self) -> list[Job]:
+            return [FakeJob("child", Tracker())]
 
     # The TaskGroup in `run()` raises the error inside an ExceptionGroup.
     with pytest.raises(ExceptionGroup) as raised:
-        await run_jobs([parent], UNLIMITED, reporters=[Broken()])
-    assert raised.group_contains(RuntimeError, match="reporter broke")
+        await run_jobs([Talker("parent")], UNLIMITED, reporters=[Broken()])
+    assert raised.group_contains(ReporterError, match="reporter broke")
 
 
 async def test_follow_ups_run_after_their_parent() -> None:
