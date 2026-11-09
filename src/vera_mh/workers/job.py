@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Callable, Protocol
 
-from vera_mh.workers.events import Event, EventType
+from vera_mh.workers.events import Event, EventType, JobKind
 
 
 class Status(StrEnum):
@@ -29,7 +29,7 @@ class Job(Protocol):
     external queue one day (job-loop.md, decision 7).
     """
 
-    kind: str  # "session" or "evaluation": picks the concurrency cap
+    kind: JobKind  # picks the concurrency cap
     label: str  # how the job is shown, such as "gpt-5.2 Brian"
 
     def done(self) -> bool:

@@ -23,7 +23,7 @@ import time
 from collections import Counter, deque
 from typing import Mapping, Sequence
 
-from vera_mh.workers.events import Event, EventType, Reporter
+from vera_mh.workers.events import Event, EventType, JobKind, Reporter
 from vera_mh.workers.job import Job, Outcome, Status, set_current_job
 
 
@@ -37,7 +37,7 @@ class JobLoop:
 
     def __init__(
         self,
-        max_concurrent: Mapping[str, int | None],
+        max_concurrent: Mapping[JobKind, int | None],
         *,
         reporters: Sequence[Reporter] = (),
         stage: str = "jobs",
@@ -45,8 +45,8 @@ class JobLoop:
         """
         Args:
             max_concurrent: How many jobs of each kind may run at once, such as
-                `{"session": 10, "evaluation": 20}`. None or 0 means no limit.
-                Every kind a job can have needs an entry.
+                `{JobKind.SESSION: 10, JobKind.EVALUATION: 20}`. None or 0 means
+                no limit. Every kind a job can have needs an entry.
             reporters: Where events go, such as a `PlainLineReporter` for the
                 terminal and an `EventsFileReporter` for `events.jsonl`. Every
                 event goes to each of them.

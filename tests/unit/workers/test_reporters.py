@@ -7,7 +7,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from vera_mh.workers.events import Event, EventType
+from vera_mh.workers.events import Event, EventType, JobKind
 from vera_mh.workers.reporters import (
     EventsFileReporter,
     PlainLineReporter,
@@ -17,7 +17,9 @@ AT = datetime(2026, 10, 30, 19, 44, 6, tzinfo=timezone.utc)
 
 
 def job_event(event_type: EventType, **data) -> Event:
-    return Event(event_type, job="gpt-5.2 Brian", kind="session", data=data, time=AT)
+    return Event(
+        event_type, job="gpt-5.2 Brian", kind=JobKind.SESSION, data=data, time=AT
+    )
 
 
 def test_plain_lines_show_each_job_event() -> None:
@@ -96,7 +98,7 @@ def test_other_characters_in_labels_and_errors_are_escaped() -> None:
     failed = Event(
         EventType.JOB_FAILED,
         job="gpt-5.2 José",
-        kind="session",
+        kind=JobKind.SESSION,
         data={"error": "ValueError: “quoted”"},
         time=AT,
     )

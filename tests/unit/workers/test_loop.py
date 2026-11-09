@@ -10,11 +10,11 @@ from pathlib import Path
 
 import pytest
 
-from vera_mh.workers.events import Event, EventType
+from vera_mh.workers.events import Event, EventType, JobKind
 from vera_mh.workers.job import Job, Outcome, report
 from vera_mh.workers.loop import JobLoop
 
-UNLIMITED: dict[str, int | None] = {"session": None, "evaluation": None}
+UNLIMITED: dict[JobKind, int | None] = {JobKind.SESSION: None, JobKind.EVALUATION: None}
 
 
 async def run_jobs(jobs, max_concurrent, **settings) -> list[Outcome]:
@@ -39,7 +39,7 @@ class Tracker:
 class FakeJob:
     label: str
     tracker: Tracker
-    kind: str = "session"
+    kind: JobKind = JobKind.SESSION
     is_done: bool = False
     # run() raises this when set.
     error: type[Exception] | None = None
@@ -101,11 +101,12 @@ async def test_each_kind_has_its_own_cap() -> None:
     tracker = Tracker()
     sessions = [FakeJob(f"s{i}", tracker, seconds=0.02) for i in range(6)]
     evaluations = [
-        FakeJob(f"e{i}", tracker, kind="evaluation", seconds=0.02) for i in range(6)
+        FakeJob(f"e{i}", tracker, kind=JobKind.EVALUATION, seconds=0.02)
+        for i in range(6)
     ]
 
     outcomes = await run_jobs(
-        [*sessions, *evaluations], {"session": 2, "evaluation": 3}
+        [*sessions, *evaluations], {JobKind.SESSION: 2, JobKind.EVALUATION: 3}
     )
 
     assert all(outcome.status == "finished" for outcome in outcomes)
@@ -155,7 +156,7 @@ async def test_a_reporter_error_stops_the_run_instead_of_vanishing() -> None:
 
 async def test_follow_ups_run_after_their_parent() -> None:
     tracker = Tracker()
-    child = FakeJob("child", tracker, kind="evaluation")
+    child = FakeJob("child", tracker, kind=JobKind.EVALUATION)
     parent = FakeJob("parent", tracker, next_jobs=[child])
 
     outcomes = await run_jobs([parent], UNLIMITED)
@@ -179,7 +180,7 @@ async def test_a_skipped_job_hands_on_its_follow_ups_each_checked_for_done() -> 
     """Resume: sessions 1 and 2 are on disk, session 3 isn't, and after the
     last session come the evaluations. Only the missing work runs."""
     tracker = Tracker()
-    evaluation = FakeJob("evaluation", tracker, kind="evaluation")
+    evaluation = FakeJob("evaluation", tracker, kind=JobKind.EVALUATION)
     session_3 = FakeJob("session 3", tracker, next_jobs=[evaluation])
     session_2 = FakeJob("session 2", tracker, is_done=True, next_jobs=[session_3])
     session_1 = FakeJob("session 1", tracker, is_done=True, next_jobs=[session_2])
@@ -201,11 +202,14 @@ async def test_follow_ups_of_an_unlimited_kind_all_run_at_once(unlimited) -> Non
     once, even though the stage loaded a single job."""
     tracker = Tracker()
     evaluations = [
-        FakeJob(f"e{i}", tracker, kind="evaluation", seconds=0.05) for i in range(5)
+        FakeJob(f"e{i}", tracker, kind=JobKind.EVALUATION, seconds=0.05)
+        for i in range(5)
     ]
     session = FakeJob("session", tracker, next_jobs=evaluations)
 
-    await run_jobs([session], {"session": unlimited, "evaluation": unlimited})
+    await run_jobs(
+        [session], {JobKind.SESSION: unlimited, JobKind.EVALUATION: unlimited}
+    )
 
     assert tracker.peak["evaluation"] == 5
 
@@ -215,7 +219,7 @@ async def test_none_and_zero_both_mean_no_limit(unlimited) -> None:
     tracker = Tracker()
     jobs = [FakeJob(f"s{i}", tracker, seconds=0.05) for i in range(4)]
 
-    await run_jobs(jobs, {"session": unlimited})
+    await run_jobs(jobs, {JobKind.SESSION: unlimited})
 
     assert tracker.peak["session"] == 4
 
@@ -265,7 +269,7 @@ async def test_a_job_reports_from_inside_its_run() -> None:
     @dataclass
     class Talker:
         label: str
-        kind: str = "session"
+        kind: JobKind = JobKind.SESSION
 
         def done(self) -> bool:
             return False
@@ -310,7 +314,7 @@ class SampleSession:
     repeat: int
     session: int
     run_dir: str
-    kind: str = "session"
+    kind: JobKind = JobKind.SESSION
 
     def output(self) -> Path:
         name = f"{self.persona}_run{self.repeat}_session{self.session}.txt"

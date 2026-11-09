@@ -17,6 +17,14 @@ from enum import StrEnum
 from typing import Any, Protocol
 
 
+class JobKind(StrEnum):
+    """What a job does, which picks its concurrency cap. A `StrEnum`, so each
+    one is also its plain string value ("session"), as `events.jsonl` records."""
+
+    SESSION = "session"  # one session of a conversation (generation)
+    EVALUATION = "evaluation"  # one conversation judged (judging)
+
+
 class EventType(StrEnum):
     """Every kind of event. A `StrEnum`, so each one is also its plain string
     value ("job_started"), which is what `events.jsonl` records."""
@@ -70,7 +78,7 @@ class Event:
 
     type: EventType
     job: str | None = None
-    kind: str | None = None
+    kind: JobKind | None = None
     data: dict[str, Any] = field(default_factory=dict)
     time: datetime = field(default_factory=_now)
 
