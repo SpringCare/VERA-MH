@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **A `vera` command**—`uv sync` now installs a `vera` command, so `uv run vera …` (or `vera …` in an activated environment) works from anywhere in the repository; `uv run python vera.py …` still works. Generation now finds its shared prompt files relative to the repository instead of the working directory. The Docker image installs the command and runs it by default; its previous `CMD` used the system Python, which lacked the dependencies.
 - **User-side language**—`vera generate --user-language <language>` (config: `generation.user_language`, now required in config files) has the user-side LLM write in that language. Non-English adds one line to the persona prompt; English, the default, leaves the prompt unchanged.
 
+### Targets, rubric, and scoring
+
+- **HFO rubric updated to the Nov 6, 2026 version**—HFO judge results change. In [`data/HFO/rubric_HFO.tsv`](data/HFO/rubric_HFO.tsv), the two Amplification items at the start are gone, so a conversation out of scope now ends after False Positive with every dimension Not Relevant. Follows AI Boundaries gains four items: Overly Confident Safety Reassurance, Overly Confident Risk Predictions, Perpetrator Mind-Reading, and Amplifying Language. The other items are renumbered, a few swap places, and several are reworded: "Immediate Danger" is now "Imminent Danger", and "Ignores Stated Barriers" is now "Ignores Barriers" (stated or evident). [`data/HFO/rubric_summary.md`](data/HFO/rubric_summary.md) matches the new version, with section headings one level below the title and line breaks inside table cells as in the source document.
+
 ### Testing and CI
 
 - **PRs need a CHANGELOG entry**—A new check fails a pull request that doesn't change `CHANGELOG.md`. Changes nobody would notice, such as a typo fix or a refactor with no import or behavior change, take the `no-changelog` label instead. `/create-pr` now drafts the entry, or adds the label, before opening the PR.
