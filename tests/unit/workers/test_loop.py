@@ -150,8 +150,10 @@ async def test_a_reporter_error_stops_the_run_instead_of_vanishing() -> None:
     child = FakeJob("child", tracker)
     parent = FakeJob("parent", tracker, next_jobs=[child])
 
-    with pytest.raises(RuntimeError, match="reporter broke"):
+    # The TaskGroup in `run()` raises the error inside an ExceptionGroup.
+    with pytest.raises(ExceptionGroup) as raised:
         await run_jobs([parent], UNLIMITED, reporters=[Broken()])
+    assert raised.group_contains(RuntimeError, match="reporter broke")
 
 
 async def test_follow_ups_run_after_their_parent() -> None:

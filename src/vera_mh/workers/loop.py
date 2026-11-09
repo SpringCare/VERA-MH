@@ -2,10 +2,10 @@
 
 A job is plain data (paths, model names, indices) plus three methods; see
 `workers/job.py`.
-A stage creates a `JobLoop`, hands it its first jobs with `submit`, and awaits
-`run`. Each job kind (`session`, `evaluation`) has its own concurrency cap. A
-finished job's follow-ups (the next session of a conversation, or a finished
-conversation's evaluations) are submitted the same way, as soon as it finishes.
+A stage creates a `JobLoop`, adds its jobs with `submit`, and awaits `run`.
+Each job kind (`session`, `evaluation`) has its own concurrency cap. `run`
+also starts each finished job's follow-ups (the next session of a
+conversation, or a finished conversation's evaluations) as soon as it finishes.
 
 A job whose output is already on disk is skipped, but still hands on its
 follow-ups, so resuming a run reaches every missing job however far down the
@@ -20,7 +20,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import time
-from collections import Counter, deque
+from collections import Counter
 from typing import Mapping, Sequence
 
 from vera_mh.workers.events import Event, EventType, JobKind, Reporter
@@ -30,9 +30,9 @@ from vera_mh.workers.job import Job, Outcome, Status, set_current_job
 class JobLoop:
     """Runs jobs with one concurrency cap per job kind.
 
-    A class rather than a function because `submit` is called both by the stage
-    and by finished jobs handing on their follow-ups, and both need the same
-    caps and the same set of running jobs.
+    A class rather than a function because the jobs the stage submits and the
+    follow-ups that finished jobs hand on share the same caps, the same running
+    tasks, and the same outcomes.
     """
 
     def __init__(
@@ -62,33 +62,26 @@ class JobLoop:
         }
         self.reporters = reporters
         self.stage = stage
-        self.waiting: deque[Job] = deque()
-        self.running: set[asyncio.Task[None]] = set()
+        self.jobs: list[Job] = []
         self.outcomes: list[Outcome] = []
 
     def submit(self, job: Job) -> None:
-        """Add a job; `run()` starts it. Never waits."""
-        self.waiting.append(job)
+        """Add a job for `run()` to run."""
+        self.jobs.append(job)
 
     async def run(self) -> list[Outcome]:
         """Run every submitted job, and the follow-ups they hand on, until none
         is left; return every job's outcome, skipped ones included."""
-        while self.waiting or self.running:
-            # Start everything submitted so far. Each job then waits inside its
-            # own task for a free slot of its kind (see `_run_one`).
-            while self.waiting:
-                job = self.waiting.popleft()
-                self.running.add(asyncio.create_task(self._run_one(job)))
-            # Wake up when any job ends: it may have submitted follow-ups.
-            finished, _ = await asyncio.wait(
-                self.running, return_when=asyncio.FIRST_COMPLETED
-            )
-            self.running -= finished
-            for task in finished:
-                # A job's own errors are already its outcome (see `_run_one`),
-                # so anything raised here is a bug in the loop or a reporter:
-                # stop the run and show it, rather than lose it.
-                task.result()
+        # A TaskGroup waits for all its tasks, including those added while it
+        # waits: the follow-ups each job adds as it ends (see `_run_one`). Each
+        # job waits inside its own task for a free slot of its kind.
+        # A job's own errors are its outcome, so an error that escapes a task is
+        # a bug in the loop or a reporter: the group then cancels the other
+        # jobs and `run()` raises it, rather than lose it.
+        async with asyncio.TaskGroup() as tasks:
+            self.tasks = tasks
+            for job in self.jobs:
+                tasks.create_task(self._run_one(job))
 
         counts = Counter(outcome.status for outcome in self.outcomes)
         totals = {
@@ -134,7 +127,7 @@ class JobLoop:
             return
         self._record(Outcome(job, status, elapsed=elapsed))
         for follow_up in follow_ups:
-            self.submit(follow_up)
+            self.tasks.create_task(self._run_one(follow_up))
 
     def _record(self, outcome: Outcome) -> None:
         self.outcomes.append(outcome)
