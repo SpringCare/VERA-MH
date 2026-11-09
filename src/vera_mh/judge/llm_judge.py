@@ -26,6 +26,7 @@ class LLMJudge:
     def __init__(
         self,
         judge_model: str,
+        *,
         rubric_config: RubricConfig,
         judge_model_extra_params: Optional[Dict[str, Any]] = None,
         log_file: Optional[str] = None,
@@ -174,6 +175,7 @@ class LLMJudge:
     async def evaluate_conversation_question_flow(
         self,
         conversation: ConversationData,
+        *,
         output_folder: str,
         auto_save: bool = True,
         start_question_id: Optional[str] = None,
