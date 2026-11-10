@@ -25,13 +25,24 @@ from vera_mh.workers.reporters import EventsFileReporter, PlainLineReporter
 
 class Stage(Protocol):
     """One stage of a run, such as judging: its jobs, and what it does once
-    they're all done."""
+    they're all done.
 
-    name: str  # such as "judge"; names the run's final event
-    kind: JobKind  # the kind of job the stage runs, whose cap it sets
-    max_concurrent: int | None  # that cap; None or 0 is no limit
-    cap_per_group: bool  # the cap applies to each job group (`--per-judge`)
-    folder: str  # where the stage writes; its `events.jsonl` goes here
+    Judging, for example, with `-j gpt-5.4:2 --max-concurrent 10 --per-judge`
+    over 100 conversations:
+
+        name            "judge"
+        kind            JobKind.EVALUATION
+        max_concurrent  10, applied to each judge model (cap_per_group=True)
+        folder          ".../evaluations/j_gpt-5.4x2_..."
+        jobs()          200 LLMJudge jobs: 100 conversations x 2 instances
+        finish()        writes results.csv and answers.tsv from the TSVs
+    """
+
+    name: str  # names the run's final event: "judge", "generate"
+    kind: JobKind  # whose cap it sets: JobKind.EVALUATION, JobKind.SESSION
+    max_concurrent: int | None  # that cap, such as 10; None or 0 is no limit
+    cap_per_group: bool  # True: the cap applies to each judge model on its own
+    folder: str  # where the stage writes, and its `events.jsonl`
 
     def jobs(self) -> list[Job]:
         """The stage's first jobs. Their follow-ups come from the jobs."""
