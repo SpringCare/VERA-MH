@@ -2,12 +2,13 @@
 evaluations already on disk."""
 
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
 
 from tests.mocks.run_record import minimal_run_record
+from vera_mh.judge.llm_judge import LLMJudge
 from vera_mh.judge.run import run_judging
 from vera_mh.judge.utils import build_judge_task_log_path, judge_evaluation_tsv_filename
 from vera_mh.utils.config_schema import JudgingConfig, ModelSpec, RubricFiles
@@ -59,12 +60,15 @@ def _judging_config(
 
 
 @pytest.fixture
-def mock_llm_judge_class():
-    """Patch the `LLMJudge` the `Evaluation` job builds; its evaluation does
-    nothing, so no TSV is written."""
-    with patch("vera_mh.judge.evaluation.LLMJudge") as mock_class:
-        mock_class.return_value.evaluate_conversation_question_flow = AsyncMock()
-        yield mock_class
+def judged():
+    """Patch `LLMJudge.run`: each job that runs is recorded (as the call's
+    first argument) and judges nothing, so no TSV is written."""
+    with patch.object(LLMJudge, "run", autospec=True) as run:
+        yield run
+
+
+def _jobs(run) -> list[LLMJudge]:
+    return [call.args[0] for call in run.call_args_list]
 
 
 @pytest.mark.unit
@@ -73,7 +77,7 @@ class TestRunnerExtraParams:
 
     @pytest.mark.asyncio
     async def test_run_judging_passes_the_models_extra_params(
-        self, tmp_path: Path, fixtures_dir: Path, mock_llm_judge_class
+        self, tmp_path: Path, fixtures_dir: Path, judged
     ):
         extra_params = {"temperature": 0.5, "max_tokens": 500}
         config = _judging_config(
@@ -85,14 +89,12 @@ class TestRunnerExtraParams:
 
         await run_judging(config, run_record=minimal_run_record())
 
-        mock_llm_judge_class.assert_called_once()
-        call_kw = mock_llm_judge_class.call_args.kwargs
-        assert call_kw["judge_model_extra_params"] == extra_params
-        assert call_kw["log_file"].endswith(".log")
+        (job,) = _jobs(judged)
+        assert job.extra_params == extra_params
 
     @pytest.mark.asyncio
-    async def test_run_judging_without_extra_params_passes_an_empty_dict(
-        self, tmp_path: Path, fixtures_dir: Path, mock_llm_judge_class
+    async def test_run_judging_without_extra_params_sets_temperature_zero(
+        self, tmp_path: Path, fixtures_dir: Path, judged
     ):
         config = _judging_config(
             fixtures_dir, _conversation_folder(tmp_path), tmp_path / "output"
@@ -100,8 +102,8 @@ class TestRunnerExtraParams:
 
         await run_judging(config, run_record=minimal_run_record())
 
-        call_kw = mock_llm_judge_class.call_args.kwargs
-        assert call_kw["judge_model_extra_params"] == {}
+        (job,) = _jobs(judged)
+        assert job.extra_params == {"temperature": 0}
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("conversation_count", [3, 5])
@@ -109,7 +111,7 @@ class TestRunnerExtraParams:
         self,
         tmp_path: Path,
         fixtures_dir: Path,
-        mock_llm_judge_class,
+        judged,
         conversation_count: int,
     ):
         extra_params = {"temperature": 0.6, "max_tokens": 2000}
@@ -122,9 +124,9 @@ class TestRunnerExtraParams:
 
         await run_judging(config, run_record=minimal_run_record())
 
-        assert mock_llm_judge_class.call_count == conversation_count
-        for call in mock_llm_judge_class.call_args_list:
-            assert call.kwargs["judge_model_extra_params"] == extra_params
+        jobs = _jobs(judged)
+        assert len(jobs) == conversation_count
+        assert all(job.extra_params == extra_params for job in jobs)
 
 
 @pytest.mark.unit
@@ -133,7 +135,7 @@ class TestRunnerResumeSkip:
 
     @pytest.mark.asyncio
     async def test_into_skips_evaluations_whose_tsv_exists(
-        self, tmp_path: Path, fixtures_dir: Path, mock_llm_judge_class
+        self, tmp_path: Path, fixtures_dir: Path, judged
     ):
         eval_dir = tmp_path / "eval_resume"
         eval_dir.mkdir()
@@ -151,17 +153,16 @@ class TestRunnerResumeSkip:
 
         await run_judging(config, into=str(eval_dir))
 
-        judge = mock_llm_judge_class.return_value
-        judged = {
-            (call.args[0].metadata["filename"], call.kwargs["judge_instance"])
-            for call in judge.evaluate_conversation_question_flow.call_args_list
+        ran = {
+            (Path(job.conversation_path).name, job.judge_instance)
+            for job in _jobs(judged)
         }
         # 2 conversations x 2 instances = 4; the 2 on disk are skipped.
-        assert judged == {("test_conv.txt", 2), ("conv_1.txt", 1)}
+        assert ran == {("test_conv.txt", 2), ("conv_1.txt", 1)}
 
     @pytest.mark.asyncio
     async def test_resume_rebuilds_results_csv_from_all_tsvs(
-        self, tmp_path: Path, fixtures_dir: Path, mock_llm_judge_class
+        self, tmp_path: Path, fixtures_dir: Path, judged
     ):
         """results.csv holds every evaluation TSV in the folder, including the
         ones this call skipped."""

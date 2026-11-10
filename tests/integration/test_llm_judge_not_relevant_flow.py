@@ -6,7 +6,7 @@ and production-like data, rather than mocked fixtures.
 
 import pytest
 
-from vera_mh.judge.llm_judge import LLMJudge
+from tests.mocks.judge import make_judge
 from vera_mh.utils.ratings import NOT_RELEVANT
 
 
@@ -31,10 +31,7 @@ class TestNotRelevantGotoIntegrationAdvanced:
         With the fix: dimension gets scored as "Not Relevant"
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Simulate the problematic state: dimension_answers already has an entry
         # (this is what _store_answer creates before _handle_not_relevant_goto runs)

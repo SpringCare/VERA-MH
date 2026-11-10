@@ -32,7 +32,7 @@ from vera_mh.workers.loop import JobLoop
 from vera_mh.workers.reporters import EventsFileReporter, PlainLineReporter
 
 from .answers import conversation_answers_dir, write_answers_tsv
-from .evaluation import Evaluation
+from .llm_judge import LLMJudge
 from .rubric_config import RubricConfig, load_conversations
 from .utils import add_persona_columns_to_dataframe, build_evaluation_run_folder_path
 
@@ -95,14 +95,14 @@ async def run_judging(
         )
     else:
         # An existing run being continued, not a new run root. Evaluations
-        # already in it are skipped by the loop (`Evaluation.done()`).
+        # already in it are skipped by the loop (`LLMJudge.done()`).
         output_folder = into
         os.makedirs(output_folder, exist_ok=True)
 
-    def evaluations(models: Dict[str, int]) -> List[Evaluation]:
+    def evaluations(models: Dict[str, int]) -> List[LLMJudge]:
         """One per conversation, judge model, and instance, in that order."""
         return [
-            Evaluation(
+            LLMJudge(
                 conversation_path=conversation.metadata["source_path"],
                 judge_model=model,
                 judge_instance=instance,

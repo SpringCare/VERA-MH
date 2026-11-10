@@ -1,4 +1,4 @@
-"""The `Evaluation` job: when it's done, what it writes, and that it stays data."""
+"""`LLMJudge` as a job: when it's done, what it writes, and that it stays data."""
 
 import json
 from dataclasses import asdict
@@ -7,19 +7,18 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from vera_mh.judge.evaluation import Evaluation
 from vera_mh.judge.llm_judge import LLMJudge
 from vera_mh.judge.utils import judge_evaluation_tsv_filename
 from vera_mh.workers.events import Event, EventType, JobKind
 from vera_mh.workers.loop import JobLoop
 
 
-def _evaluation(fixtures_dir: Path, tmp_path: Path, instance: int = 1) -> Evaluation:
+def _job(fixtures_dir: Path, tmp_path: Path, instance: int = 1) -> LLMJudge:
     conversation = tmp_path / "Abigail_run1.txt"
     conversation.write_text("user: hello\nchatbot: hi", encoding="utf-8")
     output = tmp_path / "evaluations"
     output.mkdir(exist_ok=True)
-    return Evaluation(
+    return LLMJudge(
         conversation_path=str(conversation),
         judge_model="gpt-5.4",
         judge_instance=instance,
@@ -31,7 +30,7 @@ def _evaluation(fixtures_dir: Path, tmp_path: Path, instance: int = 1) -> Evalua
     )
 
 
-def _tsv(job: Evaluation) -> Path:
+def _tsv(job: LLMJudge) -> Path:
     name = judge_evaluation_tsv_filename(
         "Abigail_run1.txt", job.judge_model, job.judge_instance
     )
@@ -66,7 +65,7 @@ class ListReporter:
 def test_an_evaluation_is_done_when_its_tsv_exists(
     fixtures_dir: Path, tmp_path: Path
 ) -> None:
-    job = _evaluation(fixtures_dir, tmp_path)
+    job = _job(fixtures_dir, tmp_path)
     assert not job.done()
 
     _tsv(job).write_text("Dimension\tScore\tReasoning\n", encoding="utf-8")
@@ -76,8 +75,8 @@ def test_an_evaluation_is_done_when_its_tsv_exists(
 
 @pytest.mark.unit
 def test_each_instance_has_its_own_tsv(fixtures_dir: Path, tmp_path: Path) -> None:
-    first = _evaluation(fixtures_dir, tmp_path, instance=1)
-    second = _evaluation(fixtures_dir, tmp_path, instance=2)
+    first = _job(fixtures_dir, tmp_path, instance=1)
+    second = _job(fixtures_dir, tmp_path, instance=2)
     _tsv(first).write_text("Dimension\tScore\tReasoning\n", encoding="utf-8")
 
     assert first.done()
@@ -88,15 +87,15 @@ def test_each_instance_has_its_own_tsv(fixtures_dir: Path, tmp_path: Path) -> No
 def test_label_names_the_judge_and_the_conversation(
     fixtures_dir: Path, tmp_path: Path
 ) -> None:
-    assert _evaluation(fixtures_dir, tmp_path).label == "gpt-5.4 Abigail_run1"
-    assert _evaluation(fixtures_dir, tmp_path, 2).label == "gpt-5.4 Abigail_run1 i2"
+    assert _job(fixtures_dir, tmp_path).label == "gpt-5.4 Abigail_run1"
+    assert _job(fixtures_dir, tmp_path, 2).label == "gpt-5.4 Abigail_run1 i2"
 
 
 @pytest.mark.unit
 def test_an_evaluation_is_an_evaluation_job_with_no_follow_ups(
     fixtures_dir: Path, tmp_path: Path
 ) -> None:
-    job = _evaluation(fixtures_dir, tmp_path)
+    job = _job(fixtures_dir, tmp_path)
 
     assert job.kind == JobKind.EVALUATION
     assert job.follow_ups() == []
@@ -106,7 +105,7 @@ def test_an_evaluation_is_an_evaluation_job_with_no_follow_ups(
 async def test_run_writes_the_tsv_and_the_answers(
     fixtures_dir: Path, tmp_path: Path, scripted_judge
 ) -> None:
-    job = _evaluation(fixtures_dir, tmp_path)
+    job = _job(fixtures_dir, tmp_path)
 
     await job.run()
 
@@ -116,30 +115,36 @@ async def test_run_writes_the_tsv_and_the_answers(
 
 
 @pytest.mark.unit
-async def test_run_passes_the_extra_params_and_a_log_file(
-    fixtures_dir: Path, tmp_path: Path
+async def test_run_logs_beside_the_scores_tsv(
+    fixtures_dir: Path, tmp_path: Path, scripted_judge
 ) -> None:
-    job = _evaluation(fixtures_dir, tmp_path)
+    job = _job(fixtures_dir, tmp_path)
 
-    with patch("vera_mh.judge.evaluation.LLMJudge") as judge_class:
-        judge_class.return_value.evaluate_conversation_question_flow = AsyncMock()
-        await job.run()
+    await job.run()
 
-    kwargs = judge_class.call_args.kwargs
-    assert kwargs["judge_model"] == "gpt-5.4"
-    assert kwargs["judge_model_extra_params"] == {"temperature": 0}
-    assert kwargs["log_file"] == str(
+    assert job.log_file == str(
         Path(job.output_folder) / "logs" / f"{_tsv(job).stem}.log"
     )
+
+
+@pytest.mark.unit
+def test_default_temperature_does_not_change_the_callers_dict(
+    fixtures_dir: Path, tmp_path: Path
+) -> None:
+    params = {"max_tokens": 10}
+    job = LLMJudge(**{**asdict(_job(fixtures_dir, tmp_path)), "extra_params": params})
+
+    assert job.extra_params == {"temperature": 0, "max_tokens": 10}
+    assert params == {"max_tokens": 10}
 
 
 @pytest.mark.unit
 async def test_an_evaluation_survives_a_json_round_trip_and_runs(
     fixtures_dir: Path, tmp_path: Path, scripted_judge
 ) -> None:
-    job = _evaluation(fixtures_dir, tmp_path)
+    job = _job(fixtures_dir, tmp_path)
 
-    copy = Evaluation(**json.loads(json.dumps(asdict(job))))
+    copy = LLMJudge(**json.loads(json.dumps(asdict(job))))
 
     assert copy == job
     loop = JobLoop({JobKind.EVALUATION: None})
@@ -153,7 +158,7 @@ async def test_an_evaluation_survives_a_json_round_trip_and_runs(
 async def test_each_question_asked_is_reported(
     fixtures_dir: Path, tmp_path: Path, scripted_judge
 ) -> None:
-    job = _evaluation(fixtures_dir, tmp_path)
+    job = _job(fixtures_dir, tmp_path)
     reporter = ListReporter()
 
     loop = JobLoop({JobKind.EVALUATION: None}, reporters=[reporter])

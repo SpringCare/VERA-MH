@@ -1,5 +1,5 @@
 """Integration tests for judging: judge/run.py (`run_judging`), which runs one
-`Evaluation` job per conversation, judge model, and instance on the job loop.
+`LLMJudge` job per conversation, judge model, and instance on the job loop.
 
 Tests the full workflow of evaluating conversations including:
 - Conversation file loading and parsing
@@ -29,6 +29,7 @@ from vera_mh.judge.answers import (
     conversation_answers_dir,
     explanation_column,
 )
+from vera_mh.judge.llm_judge import LLMJudge
 from vera_mh.judge.rubric_config import (
     RubricConfig,
     load_conversations,
@@ -1405,7 +1406,7 @@ class TestWorkerQueueSystem:
         """Test the job loop runs every evaluation successfully.
 
         Arrange: Create multiple conversations with multiple judges
-        Act: Run batch evaluation (Evaluation jobs on the job loop)
+        Act: Run batch evaluation (LLMJudge jobs on the job loop)
         Assert: All jobs completed, no missing results
         """
         output_folder = str(tmp_path / "worker_queue_test")
@@ -1545,25 +1546,20 @@ class TestErrorHandlingAndCoverage:
         )
 
 
-def recording_judge(running: Counter, peaks: Counter):
-    """A stand-in for `LLMJudge` that records how many evaluations run at once,
-    per judge model (`running[model]`) and in total (`running["total"]`), and
-    the most of each seen at once in `peaks`. It writes no TSV."""
+def recording_run(running: Counter, peaks: Counter):
+    """A stand-in for `LLMJudge.run` that records how many evaluations run at
+    once, per judge model (`running[model]`) and in total (`running["total"]`),
+    and the most of each seen at once in `peaks`. It writes no TSV."""
 
-    class RecordingJudge:
-        def __init__(self, judge_model: str, **kwargs: Any):
-            self.judge_model = judge_model
+    async def run(self: LLMJudge) -> None:
+        for key in (self.judge_model, "total"):
+            running[key] += 1
+            peaks[key] = max(peaks[key], running[key])
+        await asyncio.sleep(0.02)
+        for key in (self.judge_model, "total"):
+            running[key] -= 1
 
-        async def evaluate_conversation_question_flow(self, *args, **kwargs):
-            for key in (self.judge_model, "total"):
-                running[key] += 1
-                peaks[key] = max(peaks[key], running[key])
-            await asyncio.sleep(0.02)
-            for key in (self.judge_model, "total"):
-                running[key] -= 1
-            return {}
-
-    return RecordingJudge
+    return run
 
 
 @pytest.mark.integration
@@ -1585,9 +1581,7 @@ class TestJobLoopConcurrency:
         """
         running: Counter = Counter()
         peaks: Counter = Counter()
-        with patch(
-            "vera_mh.judge.evaluation.LLMJudge", recording_judge(running, peaks)
-        ):
+        with patch.object(LLMJudge, "run", recording_run(running, peaks)):
             await run_judging(
                 judging_config(
                     str(tmp_path),
@@ -1615,9 +1609,7 @@ class TestJobLoopConcurrency:
         """
         running: Counter = Counter()
         peaks: Counter = Counter()
-        with patch(
-            "vera_mh.judge.evaluation.LLMJudge", recording_judge(running, peaks)
-        ):
+        with patch.object(LLMJudge, "run", recording_run(running, peaks)):
             await run_judging(
                 judging_config(
                     str(tmp_path),

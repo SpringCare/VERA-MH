@@ -23,7 +23,7 @@ FOLDER_CREATION_ALLOWED = {
     ("generate/runner.py", "run_single_conversation"): "conversations/ and logs/",
     ("judge/answers.py", "write_conversation_answers"): "answers/ per conversation",
     ("judge/answers.py", "write_answers_tsv"): "the run's answers.tsv folder",
-    ("judge/llm_judge.py", "__init__"): "the judge's log folder",
+    ("judge/llm_judge.py", "_prepare"): "the judge's log folder",
     ("judge/llm_judge.py", "_save_iterative_evaluation"): "one evaluation TSV",
     ("judge/run.py", "run_judging"): "an existing run under --into",
     ("score/aggregate.py", "scores_output_dir"): "scores/ inside a judge run",

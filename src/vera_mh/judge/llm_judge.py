@@ -1,7 +1,15 @@
-"""LLM Judge for evaluating conversations based on rubrics."""
+"""The LLM judge: one conversation judged by one judge model instance, with a rubric.
+
+`LLMJudge` is also the job that does it on the job loop (`workers/loop.py`):
+`judge.run.run_judging` submits one per conversation, judge model, and instance.
+As a job it is plain data (docs/design/job-loop.md, decision 7): paths, a model
+name, numbers, and params. It loads the conversation and the rubric, and creates
+its LLM client, only when it runs.
+"""
 
 import logging
 import uuid
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -10,6 +18,7 @@ from vera_mh.judge.question_navigator import QuestionNavigator
 from vera_mh.judge.response_models import QuestionResponse
 from vera_mh.judge.rubric_config import ConversationData, RubricConfig
 from vera_mh.judge.utils import (
+    build_judge_task_log_path,
     default_adhoc_parent,
     judge_evaluation_tsv_filename,
     log_llm_failure_metadata,
@@ -18,38 +27,97 @@ from vera_mh.judge.utils import (
 from vera_mh.llm_clients import LLMFactory
 from vera_mh.llm_clients.llm_interface import JudgeLLM, LLMGenerationFailed
 from vera_mh.utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL
-from vera_mh.workers.events import EventType
-from vera_mh.workers.job import report
+from vera_mh.workers.events import EventType, JobKind
+from vera_mh.workers.job import Job, report
 
 
-class LLMJudge:
-    """Evaluates conversations using LLM-based scoring with rubrics."""
+@dataclass
+class LLMJudge(Job):
+    """Judges one conversation with one instance of one judge model.
 
-    def __init__(
-        self,
-        *,
-        judge_model: str,
-        rubric_config: RubricConfig,
-        judge_model_extra_params: Optional[Dict[str, Any]] = None,
-        log_file: Optional[str] = None,
-    ):
+    `Job` is a protocol, so subclassing it is optional; doing so states the
+    intent, and the type checker checks this class against it.
+    """
+
+    conversation_path: str
+    judge_model: str
+    judge_instance: int  # 1, 2, ... for each judge model
+    output_folder: str
+    rubric_file: str
+    rubric_prompt_beginning_file: str
+    question_prompt_file: str
+    extra_params: Dict[str, Any] = field(default_factory=dict)
+    kind: JobKind = JobKind.EVALUATION  # picks the judging cap
+
+    def __post_init__(self) -> None:
+        # Temperature 0 unless the caller set one, for a more deterministic
+        # judge. A new dict, so the caller's is never changed.
+        self.extra_params = {"temperature": 0, **(self.extra_params or {})}
+
+    # ----------------------------------------------------------------- the job
+
+    @property
+    def label(self) -> str:
+        """How events name it, such as "gpt-5.4 Abigail_run1" (with " i2" for a
+        second instance of the same judge)."""
+        label = f"{self.judge_model} {Path(self.conversation_path).stem}"
+        return label if self.judge_instance == 1 else f"{label} i{self.judge_instance}"
+
+    def _scores_path(self) -> Path:
+        """The TSV this evaluation's dimension scores go in, one row per
+        dimension (`_save_results`). `results.csv` is built from these."""
+        name = judge_evaluation_tsv_filename(
+            Path(self.conversation_path).name, self.judge_model, self.judge_instance
+        )
+        return Path(self.output_folder) / name
+
+    def done(self) -> bool:
+        """Is this evaluation's scores TSV on disk? It's written last, once
+        every question needed has an answer, so a judging stopped partway
+        leaves none and is redone."""
+        return self._scores_path().is_file()
+
+    async def run(self) -> None:
+        """Judge the conversation and write its scores TSV and answers."""
+        conversation = await ConversationData.load(self.conversation_path)
+        rubric_config = await RubricConfig.from_paths(
+            rubric_file=self.rubric_file,
+            rubric_prompt_beginning_file=self.rubric_prompt_beginning_file,
+            question_prompt_file=self.question_prompt_file,
+        )
+        self._prepare(
+            rubric_config,
+            log_file=build_judge_task_log_path(
+                conversation.metadata["filename"],
+                self.judge_model,
+                self.judge_instance,
+                output_folder=self.output_folder,
+            ),
+        )
+        await self.evaluate_conversation_question_flow(
+            conversation,
+            output_folder=self.output_folder,
+            auto_save=True,
+            judge_instance=self.judge_instance,
+        )
+
+    def follow_ups(self) -> list[Job]:
+        """Nothing waits on an evaluation: `results.csv` is written once the
+        whole loop is done."""
+        return []
+
+    # ------------------------------------------------------------- the judging
+
+    def _prepare(self, rubric_config: RubricConfig, log_file: Optional[str]) -> None:
+        """Load the rubric's questions and open the log, before judging.
+
+        `run()` calls it with the job's own rubric and log path. Tests call it
+        directly with a loaded rubric (see `tests/mocks/judge.py`). Without a
+        `log_file`, the log goes under <adhoc>/judge_unscoped/ (see
+        default_adhoc_parent() / VERA_ADHOC_PARENT), with a UUID name so
+        concurrent judges don't overwrite each other.
         """
-        Initialize the LLM Judge with pre-loaded rubric configuration.
-
-        Args:
-            judge_model: Model to use for judging
-            rubric_config: Pre-loaded rubric configuration data
-            judge_model_extra_params: Extra parameters for the judge model
-            log_file: Path to log file (default under <adhoc>/judge_unscoped/; see
-                default_adhoc_parent() / VERA_ADHOC_PARENT)
-        """
-
-        # Setup logger: batch judging passes an explicit path from
-        # build_judge_task_log_path (scoped to the run). Omitted log_file is only
-        # for direct construction, tests, etc.—then judge_unscoped/ under
-        # default_adhoc_parent(); UUID stem avoids concurrent overwrites.
-        scoped = log_file is not None
-        if not scoped:
+        if log_file is None:
             log_file = str(
                 Path(default_adhoc_parent())
                 / "judge_unscoped"
@@ -62,11 +130,10 @@ class LLMJudge:
         self.logger.setLevel(logging.INFO)
         self.logger.handlers.clear()
 
-        # One log path per batch job: stem matches the evaluation TSV (see
-        # build_judge_task_log_path). Different evaluation runs use different
-        # output folders, so logs do not collide across runs.
-        # mode="w" truncates on each job start; re-running the same job in the
-        # same folder replaces the log (and TSV), which is intentional.
+        # One log path per evaluation: its stem matches the evaluation TSV (see
+        # build_judge_task_log_path). mode="w" truncates on each start; rerunning
+        # the same evaluation in the same folder replaces the log (and TSV),
+        # which is intentional.
         file_handler = logging.FileHandler(log_file, mode="w", encoding="utf-8")
         file_handler.setLevel(logging.INFO)
         formatter = logging.Formatter(
@@ -74,15 +141,7 @@ class LLMJudge:
         )
         file_handler.setFormatter(formatter)
         self.logger.addHandler(file_handler)
-
         self.log_file = log_file
-        self.judge_model = judge_model
-        self.judge_model_extra_params = judge_model_extra_params or {}
-
-        # Set default temperature to 0 for more deterministic judge behavior
-        # Users can override this by passing temperature in judge_model_extra_params
-        if "temperature" not in self.judge_model_extra_params:
-            self.judge_model_extra_params["temperature"] = 0
 
         # Store rubric data from config
         self.rubric_prompt_beginning = rubric_config.rubric_prompt_beginning
@@ -97,12 +156,12 @@ class LLMJudge:
             question_order=rubric_config.question_order,
         )
 
-        # Initialize evaluator (created per conversation evaluation)
+        # The LLM client, created per evaluation with the conversation in its
+        # system prompt
         self.evaluator: Optional[JudgeLLM] = None
 
-        # Log initialization info
         self.logger.info("=== Initializing LLM Judge ===")
-        self.logger.info(f"Judge model: {judge_model}")
+        self.logger.info(f"Judge model: {self.judge_model}")
         self.logger.info(f"Log file: {log_file}")
         self.logger.info(
             f"Loaded question-flow rubric with {len(self.question_flow_data)} questions"
@@ -149,7 +208,7 @@ class LLMJudge:
             name="Question Flow Evaluator",
             role=None,
             system_prompt=conversation_context_prompt,
-            **self.judge_model_extra_params,
+            **self.extra_params,
         )
 
         # Validate that the LLM supports structured output

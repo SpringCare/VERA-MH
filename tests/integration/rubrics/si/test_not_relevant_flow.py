@@ -2,7 +2,7 @@
 
 import pytest
 
-from vera_mh.judge.llm_judge import LLMJudge
+from tests.mocks.judge import make_judge
 from vera_mh.judge.rubric_config import RubricConfig
 from vera_mh.utils.ratings import NOT_RELEVANT
 
@@ -22,7 +22,7 @@ async def test_q9_not_relevant_goto_is_processed_by_ask_all_questions(monkeypatc
         rubric_prompt_beginning_file="rubric_prompt_beginning.txt",
         question_prompt_file="question_prompt.txt",
     )
-    judge = LLMJudge(judge_model="mock-llm", rubric_config=rubric_config)
+    judge = make_judge(rubric_config, judge_model="mock-llm")
     asked_question_ids = []
 
     async def mock_ask_single_question(question_id, question_data):

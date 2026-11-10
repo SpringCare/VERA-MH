@@ -1,11 +1,12 @@
 """`max_concurrent=0` means no limit when judging, as it does for generation."""
 
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from tests.mocks.run_record import minimal_run_record
+from vera_mh.judge.llm_judge import LLMJudge
 from vera_mh.judge.run import run_judging
 from vera_mh.utils.config_schema import JudgingConfig, ModelSpec, RubricFiles
 
@@ -40,9 +41,7 @@ class TestMaxConcurrentZero:
             output=str(tmp_path / "output"),
         )
 
-        with patch("vera_mh.judge.evaluation.LLMJudge") as judge_class:
-            evaluate = AsyncMock()
-            judge_class.return_value.evaluate_conversation_question_flow = evaluate
+        with patch.object(LLMJudge, "run", autospec=True) as run:
             await run_judging(config, run_record=minimal_run_record())
 
-        assert evaluate.await_count == 3
+        assert run.await_count == 3
