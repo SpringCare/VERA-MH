@@ -130,7 +130,7 @@ run each, on the domain side of the boundary rather than in the CLI.
 | Subcommand | Delegates to | Purpose |
 |------------|--------------|---------|
 | `vera generate` | `generate.run_generation` | Simulate conversations → `<target>/c_<chatbot>/u_*/conversations/` |
-| `vera judge` | `judge.runner` | Evaluate transcripts → `<target>/c_<chatbot>/u_*/evaluations/j_*` |
+| `vera judge` | `judge.run` | Evaluate transcripts → `<target>/c_<chatbot>/u_*/evaluations/j_*` |
 | `vera score` | `score.run_scoring` | Aggregate `results.csv` → scores and visualizations |
 | `vera pool` | `score.pool` | Concatenate multiple evaluation folders into one pooled result → `<target>/c_<chatbot>/pooled/u_<a>+<b>_*` |
 | `vera pipeline` | orchestration layer | Full workflow for one chatbot; passes paths between steps and pools the per-user-model evaluations |
@@ -292,7 +292,7 @@ orthogonal.
 
 ## Package responsibilities
 
-The Python packages live in one package, `src/vera_mh/`; import them as `vera_mh.judge`, `vera_mh.utils`, and so on. Package paths in the docs (`judge/runner.py`) are relative to `src/vera_mh/`. `uv sync` installs the `vera` command, which runs `src/vera_mh/cli.py`.
+The Python packages live in one package, `src/vera_mh/`; import them as `vera_mh.judge`, `vera_mh.utils`, and so on. Package paths in the docs (`judge/run.py`) are relative to `src/vera_mh/`. `uv sync` installs the `vera` command, which runs `src/vera_mh/cli.py`.
 
 | Package / path | Owns | Key modules |
 |----------------|------|-------------|

@@ -123,7 +123,7 @@ def _judge_slug_from_dataframe(df: Any) -> str:
     """
     Build a judge segment like ``gpt-5.4x1`` or ``gpt-5.4x2+claude-sonnet-5x1``.
 
-    Matches ``judge.py`` / ``judge.runner`` folder naming (``modelx<count>`` per
+    Matches ``judge/run.py``'s folder naming (``modelx<count>`` per
     judge). Multiple judges are joined with ``+`` (stable sorted order).
     """
 

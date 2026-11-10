@@ -147,7 +147,7 @@ uv run vera judge \
 | `--target` | Target name or manifest path supplying the rubric | — |
 | `--rubric` | Use only this target's rubric and judge prompts (mutually exclusive with `--target`) | — |
 | `-o`, `--output` | Parent directory for the new evaluation folder | `<generation run>/evaluations/` |
-| `--max-concurrent` | Maximum concurrent judge workers | unlimited |
+| `--max-concurrent` | Maximum evaluations running at once | unlimited |
 | `--per-judge` | Apply `--max-concurrent` per judge model instead of in total | total |
 | `--judge-params` | `k=v,...` provider parameters for every `-j` model | none |
 | `--into` | Continue an existing evaluation folder instead of creating one | — |
