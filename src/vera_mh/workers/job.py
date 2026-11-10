@@ -30,7 +30,12 @@ class Job(Protocol):
     """
 
     kind: JobKind  # picks the concurrency cap
-    label: str  # how the job is shown, such as "gpt-5.2 Brian"
+
+    # Read-only, so a job can store its label or work it out from its fields.
+    @property
+    def label(self) -> str:
+        """How the job is shown, such as "gpt-5.2 Brian"."""
+        ...
 
     def done(self) -> bool:
         """Is this job's output already on disk?"""
