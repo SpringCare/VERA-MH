@@ -1,6 +1,6 @@
 # One job loop for generation and judging
 
-**Status:** draft for discussion. Lands with the first PR that builds it.
+**Status:** accepted; the loop is built in `workers/` ([#308](https://github.com/SpringCare/VERA-MH/pull/308)). Judging and generation move onto it next (roadmap, "Steps 4 and 5, PR by PR"). The sketches below show the shape; the code is the reference.
 
 ## Problem
 
@@ -22,7 +22,7 @@ On top of that, each stage has 4–5 layers that mostly forward arguments: `vera
 vera_cli/generate.py     resolve and validate settings → RunConfig        (no jobs, no I/O beyond reading inputs)
         │
         ▼
-generate/run.py          run_generation(config): submit the first jobs, run the loop, report
+generate/run.py          run_generation(config): submit the first jobs, run the loop
 generate/conversation.py the Session job: what generating one session means
         │
         ▼
@@ -35,54 +35,60 @@ Judging is the same shape: `vera_cli/judge.py` → `judge/run.py` (`run_judging`
 
 ### The loop
 
-All the concurrency code in the repo, in one class. It's a class rather than a function because `submit` is called from two places (the stage, and a finished job handing on its follow-ups) and both need the same caps and the same set of running jobs; it also gives an external queue one thing to replace, anything with `submit` and `run` (decision 7). Each job kind (`session`, `evaluation`) has its own cap, an `asyncio.Semaphore`. Everything that adds work goes through `submit`, which never waits: it starts the job as a task, and the task waits for a free slot of its kind. The tasks waiting on a kind's semaphore are that kind's queue, served in order. The loop never retries a job: retries happen per call, inside it (decision 2).
+All the concurrency code in the repo, in one class. It's a class rather than a function because the jobs the stage submits and the follow-ups that finished jobs hand on share the same caps, the same running tasks, and the same outcomes; it also gives an external queue one thing to replace, anything with `submit` and `run` (decision 7). Each job kind (`JobKind.SESSION`, `JobKind.EVALUATION`) has its own cap, an `asyncio.Semaphore`. `submit` only adds a job to a list; `run` starts every job in its own task inside an `asyncio.TaskGroup`, and each task waits for a free slot of its kind. The tasks waiting on a kind's semaphore are that kind's queue. The loop never retries a job: retries happen per call, inside it (decision 2).
 
 ```python
-# workers/loop.py
+# workers/loop.py (simplified: events and timing left out)
 class JobLoop:
-    def __init__(self, max_concurrent: dict[str, int | None], reporters=()):
+    def __init__(self, max_concurrent: Mapping[JobKind, int | None], *, reporters=(), stage="jobs"):
         self.limits = {kind: asyncio.Semaphore(cap) if cap else contextlib.nullcontext()
                        for kind, cap in max_concurrent.items()}  # None or 0: no limit
-        self.tasks: set[asyncio.Task] = set()
+        self.jobs: list[Job] = []
         self.outcomes: list[Outcome] = []
 
     def submit(self, job: Job) -> None:
-        """Start a job; it waits for a free slot of its kind. Never waits itself."""
-        self.tasks.add(asyncio.create_task(self.run_one(job)))
+        """Add a job for `run()` to run."""
+        self.jobs.append(job)
 
     async def run(self) -> list[Outcome]:
-        """Wait until every job has finished, follow-ups included."""
-        while self.tasks:                                     # follow-ups add tasks while we wait
-            finished, _ = await asyncio.wait(self.tasks)
-            self.tasks -= finished
+        """Run every submitted job and the follow-ups they hand on; return every outcome."""
+        async with asyncio.TaskGroup() as self.tasks:        # also waits for tasks added while it waits
+            for job in self.jobs:
+                self.tasks.create_task(self._run_one(job))
+        self.emit(Event(EventType.STAGE_FINISHED, data=counts_by_status))
         return self.outcomes
 
-    async def run_one(self, job: Job) -> None:
+    async def _run_one(self, job: Job) -> None:
         try:                                                  # any error is this job's outcome
             if job.done():                                    # resume: its output is already on disk,
-                status = "skipped"
+                status = Status.SKIPPED
             else:
                 async with self.limits[job.kind]:
+                    set_current_job(job, self.emit)           # where report() sends this job's events
                     await job.run()
-                status = "finished"
+                status = Status.FINISHED
             follow_ups = job.follow_ups()                     # but the jobs after it may not be
+        except ReporterError:
+            raise                                             # a reporter bug stops the run (below)
         except Exception as error:
-            self.outcomes.append(Outcome(job, "failed", error))   # rerun later with --into
+            self._record(Outcome(job, Status.FAILED, error=error))   # rerun later with --into
             return
-        self.outcomes.append(Outcome(job, status))
+        self._record(Outcome(job, status))
         for next_job in follow_ups:
-            self.submit(next_job)
+            self.tasks.create_task(self._run_one(next_job))
 ```
+
+The loop emits an event when each job starts, finishes, fails, or is skipped, and one `STAGE_FINISHED` event with the counts when `run` ends, named by `stage` (decision 4). A failed job's outcome also records how long it ran. A job's own errors are its outcome, so an error that escapes a task is a bug in the loop or a reporter: a reporter that raises becomes a `ReporterError`, the `TaskGroup` cancels the other jobs, and `run` raises it, rather than recording it as the failure of whichever job happened to be reporting.
 
 A done job is skipped but still hands on its follow-ups, and each of those is checked in turn, so resume reaches every missing job however far down the chain it is, and redoes nothing. Because a job takes a slot when it starts, follow-ups are never throttled by how few jobs the stage loaded.
 
-A job is plain data plus three methods:
+A job is plain data plus three methods (`workers/job.py`):
 
 ```python
 class Job(Protocol):
-    kind: str                                         # "session" or "evaluation": picks the cap
+    kind: JobKind                                     # SESSION or EVALUATION: picks the cap
                                                       # (and the code a remote worker would run)
-    label: str
+    label: str                                        # how events name it, such as "gpt-5.2 Brian"
     def done(self) -> bool: ...                       # is my output already on disk?
     async def run(self) -> None: ...                  # do the work
     def follow_ups(self) -> list["Job"]: ...          # the jobs waiting on me, from my fields and disk alone,
@@ -95,20 +101,20 @@ A stage only submits its first jobs and runs the loop:
 
 ```python
 # generate/run.py
-loop = JobLoop(max_concurrent)
+loop = JobLoop({JobKind.SESSION: max_concurrent}, reporters=reporters, stage="generate")
 for persona in personas:
     for repeat in repeats:
         loop.submit(Session(persona, repeat, session_types=config.sessions, position=0,
                             run_dir=run_dir))
-report(await loop.run())
+outcomes = await loop.run()          # the reporters have already shown each job and the totals
 
 # judge/run.py
-loop = JobLoop(max_concurrent)
+loop = JobLoop({JobKind.EVALUATION: max_concurrent}, reporters=reporters, stage="judge")
 for conversation in conversations:
     for judge in judges:
         for instance in judge.instances:
             loop.submit(Evaluation(conversation, judge, instance, run_dir))
-report(await loop.run())
+outcomes = await loop.run()
 write_results_csv(run_dir)
 ```
 
@@ -120,13 +126,14 @@ Sessions are named, not numbered: `session_types` is the configured list (`--ses
 
 ```python
 # vera_cli/pipeline.py, after creating every run root up front (run-lifecycle.md, step 5)
-loop = JobLoop(max_concurrent)
+loop = JobLoop({JobKind.SESSION: generation_cap, JobKind.EVALUATION: judging_cap},
+               reporters=reporters, stage="pipeline")
 for user_model in user_models:
     for persona in personas:
         for repeat in repeats:
             loop.submit(Session(persona, repeat, session_types=config.sessions, position=0,
                                 run_dir=run_dir_for(user_model), judges=judges))
-report(await loop.run())
+outcomes = await loop.run()
 for run_dir in run_dirs:
     write_results_csv(evaluation_dir_for(run_dir))
     score(evaluation_dir_for(run_dir))
@@ -147,8 +154,8 @@ It also gives the pipeline the resume that `generate` and `judge` have. `vera pi
    - **Why not retry the job as well.** A job fails only after one of its calls has used up its retries, so the cause is persistent (quota, auth, a model that keeps failing) and an immediate rerun rarely helps. Retrying per call also retries the smallest unit: a rate limit on turn 15 re-sends that one call, where rerunning the job would redo the whole session from turn 1.
    - **The cost.** While a call backs off, its job keeps its slot, so one fewer job of that kind runs meanwhile. The waits are short and capped (`retry_max_delay_seconds`).
    - **The clients still tell the loop.** Each per-call retry emits a `call_retrying` event through the same `report()` jobs use (decision 4), so the display can show "rate limited, retrying 2/4" against the right conversation. That's the only link: no retry logic is shared.
-3. **Concurrency per judge model, later.** Today's `per_judge` keeps one cap per judge model. That stays the intended behavior but isn't pressing; the first version has one cap per job kind (decision 6), and a per-model (or per-provider) cap comes with the Shared engine phase.
-4. **Progress display is a separate PR** ([terminal-interface.md](./terminal-interface.md), #271). The loop emits events (job started, job finished, and from inside a job: user responding, chatbot responding, judge on question *n*, a call retrying) to a reporter. The first reporter prints one flushed line per event, which fixes the "looks hung under redirection" backlog item. A later PR adds a live display: a progress bar per stage and a box per model saying what it's doing.
+3. **Concurrency per judge model, later.** Today's `per_judge` keeps one cap per judge model. That stays the intended behavior but isn't pressing; the loop has one cap per job kind (decision 6), and a per-model (or per-provider) cap comes with the Shared engine phase. Until then `vera judge --per-judge` keeps working by running one loop per judge model, side by side, each with its own cap. The pipeline's single job list (one loop for every run) needs the real per-model cap before it can honor `per_judge`.
+4. **Events and the plain-line reporter come with the loop; the live display is a later PR** ([terminal-interface.md](./terminal-interface.md), #271). The loop emits events to its reporters (`workers/events.py`): job started, finished, failed, or skipped, and the stage finished with its counts. Code inside a job emits the rest through `report()` (`workers/job.py`): a turn started, a judge question asked, a call retrying, a call's token usage. `report()` finds the running job through a context variable the loop sets in each job's task, so nothing is threaded through the simulator, the judge, or the clients; `workers/job.py` has a worked example. Two reporters shipped with the loop (#308): `PlainLineReporter` prints one flushed, timestamped, ASCII line per event, which fixes the "looks hung under redirection" backlog item, and `EventsFileReporter` writes `events.jsonl`. A later PR adds the live display: a progress bar per stage and a box per model saying what it's doing.
 5. **Missing work is re-done, not fatal.** The run's `config.json` (see [run-lifecycle.md](./run-lifecycle.md)) fixes the job list, so `done()` over that list is the manifest: rerunning with `--into` does exactly the missing jobs. A stage still stops the pipeline when it produced nothing (nothing to judge), with a message naming the run folder and the failure count; partial failures warn and continue.
    - **Unfinished judging works the same way.** An `Evaluation` is done when its TSV exists, and the TSV is written only after the judge has answered every question it needed. A judging stopped partway through a conversation leaves no TSV, so rerunning with `--into` judges that conversation again from its first question; conversations already judged are skipped. `results.csv` and the scores are rebuilt from the TSVs after the loop, so they always reflect exactly the finished evaluations. Saving progress question by question isn't worth it: one conversation is a few dozen short judge calls.
 6. **One cap per job kind.** The config already sets two: `generation.max_concurrent` caps `Session` jobs and `judging.max_concurrent` caps `Evaluation` jobs, so in the pipeline a burst of short judge calls can't crowd out the long generation calls. The loop keeps one cap per job kind instead of one in total. The per-judge-model cap (`per_judge`) still comes later (decision 3).
@@ -159,9 +166,9 @@ It also gives the pipeline the resume that `generate` and `judge` have. `vera pi
 `legacy/` is already gone on `release/2.1` (#287), with its parity tests, `test_pipeline.py`, and the leftovers that had no callers (`judge_single_conversation`, `_create_conversation_jobs`; #303). The forwarding layers go in the two PRs before the loop (roadmap, Release 2.1 plan, step 4): `run_for_user_models`, `_legacy_model_config`, and the always-constant parameters with generation taking `GenerationConfig` (#309), and the `verbose_workers` branches with judging taking `JudgingConfig`. What the loop itself removes:
 
 - `_run_workers_with_queue` and both `_worker`s
-- The three judge summaries, replaced by one `report(outcomes)`
+- The three judge summaries, replaced by the loop's one `STAGE_FINISHED` event
 - Failures worked out by subtraction afterwards: every job ends as exactly one outcome
 
 ## Testing
 
-The roadmap's four engine-testing tiers apply (structural parity with the mock harness, live smoke, semantic similarity, manual spot-check). `JobLoop` itself gets plain unit tests: skip-on-done, each kind's concurrency cap holds, failures recorded and not raised and never resubmitted, follow-ups run after their parent and not when it fails, a skipped job still hands on its follow-ups and each is checked for done in turn, follow-ups aren't throttled when their kind has no cap, `max_concurrent` of `None` and `0` both unlimited, and every job type survives a JSON round trip (decision 7).
+The roadmap's four engine-testing tiers apply (structural parity with the mock harness, live smoke, semantic similarity, manual spot-check). `JobLoop` itself gets plain unit tests (`tests/unit/workers/`): skip-on-done, each kind's concurrency cap holds, failures recorded and not raised and never resubmitted, a failed job's outcome records how long it ran, follow-ups run after their parent and not when it fails, a skipped job still hands on its follow-ups and each is checked for done in turn, follow-ups aren't throttled when their kind has no cap, `max_concurrent` of `None` and `0` both unlimited, a reporter error stops the run instead of vanishing, events from inside a job reach every reporter, and every job type survives a JSON round trip (decision 7).
