@@ -41,7 +41,6 @@ FOLDER_CREATION_ALLOWED = {
 # stamp log lines; none names a run.
 CLOCK_ALLOWED = {
     ("generate/runner.py", "run_conversations"): "run duration",
-    ("judge/run.py", "run_judging"): "batch duration",
     ("llm_clients/llm_interface.py", "_set_response_metadata"): "response time",
     ("utils/naming.py", "add_timestamp_to_path"): "comparison chart file names",
     ("utils/run_root.py", "run_started_at"): "the run's one clock read",

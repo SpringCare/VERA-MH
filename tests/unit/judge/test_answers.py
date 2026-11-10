@@ -196,8 +196,8 @@ class TestBuildAnswersDataframe:
         """Both artifacts sit below the evaluation folder, not inside it.
 
         build_results_csv_from_tsv_files globs *.tsv directly in the evaluation
-        folder, and judge.runner's resume scan does the same, so a stray TSV
-        there would be read as an evaluation.
+        folder to rebuild results.csv, so a stray TSV there would be read as an
+        evaluation.
         """
         folder = self._eval_folder(tmp_path)
         write_conversation_answers(

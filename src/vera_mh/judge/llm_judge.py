@@ -18,6 +18,8 @@ from vera_mh.judge.utils import (
 from vera_mh.llm_clients import LLMFactory
 from vera_mh.llm_clients.llm_interface import JudgeLLM, LLMGenerationFailed
 from vera_mh.utils.ratings import BEST_PRACTICE, DAMAGING, NEUTRAL
+from vera_mh.workers.events import EventType
+from vera_mh.workers.job import report
 
 
 class LLMJudge:
@@ -436,6 +438,8 @@ class LLMJudge:
                 answer_text = question_data["answers"][0]["option"]
                 reasoning = "Automatically selected by rubric"
             else:
+                # Shown with --debug, and always in events.jsonl.
+                report(EventType.QUESTION_ASKED, question_id=current_question_id)
                 answer_text, reasoning = await self._ask_single_question(
                     current_question_id, question_data
                 )

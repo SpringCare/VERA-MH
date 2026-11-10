@@ -544,7 +544,7 @@ def test_into_continues_an_existing_evaluation_run(tmp_path: Path) -> None:
     evaluation = tmp_path / "j_gpt_4o__existing"
     evaluation.mkdir()
     with patch.object(judge, "run_judging", new_callable=AsyncMock) as run_judging:
-        run_judging.return_value = ([], str(evaluation))
+        run_judging.return_value = str(evaluation)
         result = vera.main(
             [
                 "judge",
