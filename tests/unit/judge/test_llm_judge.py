@@ -7,7 +7,7 @@ verify that data as exposed by LLMJudge and the judge's scoring/matching logic.
 
 import pytest
 
-from vera_mh.judge.llm_judge import LLMJudge
+from tests.mocks.judge import make_judge
 from vera_mh.judge.rubric_config import (
     DETECTS_POTENTIAL_RISK,
     RubricConfig,
@@ -27,10 +27,7 @@ class TestParseQuestionFlowRubric:
         """Test parsing a simple single-row question with two answers."""
         # Initialize judge
         rubric_config = await rubric_config_factory(rubric_file="rubric_single_row.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Verify the question was parsed
         assert "1" in judge.question_flow_data
@@ -52,10 +49,7 @@ class TestParseQuestionFlowRubric:
     async def test_parse_multi_row_question(self, rubric_config_factory):
         """Test parsing a question that spans multiple rows with multiple options."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_multi_row.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Verify multi-row question parsing
         assert "1" in judge.question_flow_data
@@ -77,10 +71,7 @@ class TestParseQuestionFlowRubric:
     async def test_parse_goto_logic(self, rubric_config_factory):
         """Test parsing GOTO navigation logic including numeric and END values."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_goto_logic.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Check question 1 with numeric GOTO
         q1 = judge.question_flow_data["1"]
@@ -97,10 +88,7 @@ class TestParseQuestionFlowRubric:
     async def test_parse_goto_numeric_as_string(self, rubric_config_factory):
         """Test that numeric GOTO values are converted to strings correctly."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_goto_logic.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Verify that numeric GOTOs are stored as strings (not floats)
         q1 = judge.question_flow_data["1"]
@@ -113,10 +101,7 @@ class TestParseQuestionFlowRubric:
         rubric_config = await rubric_config_factory(
             rubric_file="rubric_severity_values.tsv"
         )
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Check Red severity
         assert judge.question_flow_data["1"]["severity"] == "Red"
@@ -135,10 +120,7 @@ class TestParseQuestionFlowRubric:
         rubric_config = await rubric_config_factory(
             rubric_file="rubric_severity_values.tsv"
         )
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Check different dimensions
         assert judge.question_flow_data["1"]["dimension"] == "Dimension A"
@@ -151,10 +133,7 @@ class TestParseQuestionFlowRubric:
         rubric_config = await rubric_config_factory(
             rubric_file="rubric_empty_dimensions.tsv"
         )
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Question 1 has dimension
         assert judge.question_flow_data["1"]["dimension"] == "Dimension A"
@@ -170,10 +149,7 @@ class TestParseQuestionFlowRubric:
         rubric_config = await rubric_config_factory(
             rubric_file="rubric_with_examples.tsv"
         )
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Question with examples
         q1 = judge.question_flow_data["1"]
@@ -187,10 +163,7 @@ class TestParseQuestionFlowRubric:
     async def test_parse_question_order(self, rubric_config_factory):
         """Test that question_order list maintains the correct sequence."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_goto_logic.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Verify order matches appearance in file
         assert judge.question_order == ["1", "2", "3", "5"]
@@ -204,10 +177,7 @@ class TestParseQuestionFlowRubric:
     ):
         """Test that questions without explicit answers get default Yes/No."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_no_answers.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Both questions should have default Yes/No answers
         q1 = judge.question_flow_data["1"]
@@ -225,10 +195,7 @@ class TestParseQuestionFlowRubric:
     async def test_parse_risk_type_field(self, rubric_config_factory):
         """Test that risk_type field is parsed correctly."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_single_row.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Risk type should be empty string if not specified
         q1 = judge.question_flow_data["1"]
@@ -238,10 +205,7 @@ class TestParseQuestionFlowRubric:
     async def test_parse_question_id_as_string(self, rubric_config_factory):
         """Test that question IDs are stored as strings, not floats."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_goto_logic.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # All question IDs should be strings
         for qid in judge.question_order:
@@ -258,10 +222,7 @@ class TestParseQuestionFlowRubric:
         rubric_config = await rubric_config_factory(
             rubric_file="rubric_empty_dimensions.tsv"
         )
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Questions 1 and 2 explicitly declare the same dimension
         assert judge.question_flow_data["1"]["dimension"] == "Dimension A"
@@ -273,10 +234,7 @@ class TestParseQuestionFlowRubric:
     async def test_parse_answer_structure(self, rubric_config_factory):
         """Test that answer dictionaries have correct structure."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_multi_row.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         q1 = judge.question_flow_data["1"]
 
@@ -290,10 +248,7 @@ class TestParseQuestionFlowRubric:
     async def test_parse_complete_question_structure(self, rubric_config_factory):
         """Test that parsed questions have all expected fields."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_single_row.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         q1 = judge.question_flow_data["1"]
 
@@ -320,10 +275,7 @@ class TestParseQuestionFlowRubric:
     async def test_parse_nan_handling(self, rubric_config_factory):
         """Test NaN values handled correctly (empty strings or None)."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_no_answers.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Questions with no Answer/GOTO columns should not have "nan" strings
         q1 = judge.question_flow_data["1"]
@@ -346,10 +298,7 @@ class TestDimensionScoring:
     async def test_determine_dimension_scores_high_risk(self, rubric_config_factory):
         """Test high risk scoring - Severity A/B (Red/High) mapping."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Dimension with Red severity Yes answer
         dimension_answers = {
@@ -378,10 +327,7 @@ class TestDimensionScoring:
     ):
         """Test 'high' keyword in severity triggers high risk score."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             "Safety": [
@@ -404,10 +350,7 @@ class TestDimensionScoring:
     ):
         """Test best practice scoring - Severity D mapping to 'Best Practice'."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Dimension with only No answers or no severity issues
         dimension_answers = {
@@ -443,10 +386,7 @@ class TestDimensionScoring:
     async def test_determine_dimension_scores_neutral(self, rubric_config_factory):
         """Test neutral scoring - Severity C (Yellow/Medium) mapping."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Dimension with Yellow severity Yes answer
         dimension_answers = {
@@ -474,10 +414,7 @@ class TestDimensionScoring:
     ):
         """Test 'medium' keyword in severity triggers medium risk score."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             "Privacy": [
@@ -498,10 +435,7 @@ class TestDimensionScoring:
     async def test_dimension_scores_with_missing_severity(self, rubric_config_factory):
         """Test handling of None/missing severity values."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Yes answer but no severity - should be treated as Best Practice
         dimension_answers = {
@@ -528,10 +462,7 @@ class TestDimensionScoring:
     async def test_dimension_scores_with_empty_severity(self, rubric_config_factory):
         """Test handling of empty string severity values."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             "Transparency": [
@@ -552,10 +483,7 @@ class TestDimensionScoring:
     async def test_multiple_dimensions_scoring(self, rubric_config_factory):
         """Test scoring multiple dimensions with different severity levels."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             "Safety": [
@@ -604,10 +532,7 @@ class TestDimensionScoring:
     async def test_severity_to_category_mapping_all_types(self, rubric_config_factory):
         """Test all severity type mappings comprehensively."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Test Red severity
         dimension_answers_red = {
@@ -657,10 +582,7 @@ class TestDimensionScoring:
     async def test_high_risk_takes_precedence_over_medium(self, rubric_config_factory):
         """Test high risk severity takes precedence over medium."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             "Safety": [
@@ -692,10 +614,7 @@ class TestDimensionScoring:
     async def test_multiple_yes_answers_tracks_first_yes(self, rubric_config_factory):
         """Test that when multiple Yes answers exist, only the first one is tracked."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             "Safety": [
@@ -727,10 +646,7 @@ class TestDimensionScoring:
     ):
         """Test handling of empty dimension answers dictionary."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {}
 
@@ -744,10 +660,7 @@ class TestDimensionScoring:
     ):
         """Test that severity is only considered when answer is 'Yes'."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             "Safety": [
@@ -769,10 +682,7 @@ class TestDimensionScoring:
     async def test_reasoning_truncation_in_high_risk(self, rubric_config_factory):
         """Test that reasoning is included in full in high risk scoring."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         long_reasoning = "A" * 200  # 200 character reasoning
 
@@ -797,10 +707,7 @@ class TestDimensionScoring:
     async def test_reasoning_truncation_in_medium_risk(self, rubric_config_factory):
         """Test that reasoning is included in full in medium risk scoring."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         long_reasoning = "B" * 200  # 200 character reasoning
 
@@ -830,10 +737,7 @@ class TestDimensionScoring:
         Best Practice and yes_question_id should be empty (not Q4 or any other).
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # User indicated risk (Q4: Yes, no severity)
         # Chatbot handled it correctly (Q5: No)
@@ -879,10 +783,7 @@ class TestDimensionScoring:
         risk, Red severity) is also "Yes", yes_question_id should be Q5 (not Q4).
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             DETECTS_POTENTIAL_RISK: [
@@ -920,10 +821,7 @@ class TestDimensionScoring:
         Test that when multiple Yes answers have severity, the first one is returned.
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             "Safety": [
@@ -968,10 +866,7 @@ class TestDimensionScoring:
         Test yes_question_id when only Yellow severity (false positives) exists.
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Q4: No risk indicated
         # Q6: False positive (Yellow severity)
@@ -1011,10 +906,7 @@ class TestDimensionScoring:
     ):
         """Single answer with ASSIGN_END marker all scores Not Relevant."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             "Other Dimension": [
@@ -1043,10 +935,7 @@ class TestDimensionScoring:
     ):
         """Single answer with NOT_RELEVANT>> marker scores Not Relevant."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             "Skipped Dimension": [
@@ -1078,10 +967,7 @@ class TestDimensionScoring:
     ):
         """Last answer ASSIGN_END uses question severity for scoring."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_assign_end.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Safety: Q1 Yes -> ASSIGN_END (Red). Dimension gets severity from question.
         dimension_answers = {
@@ -1108,10 +994,7 @@ class TestDimensionScoring:
     ):
         """An answer that is both a severity "Yes" and ASSIGN_END is listed once."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_assign_end.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Safety: Q1 Yes -> ASSIGN_END (Red). Both the regular "Yes with
         # severity" rule and the ASSIGN_END rule match this single answer.
@@ -1144,7 +1027,7 @@ class TestDimensionScoring:
         not quietly truncate the ordinary path.
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_assign_end.tsv")
-        judge = LLMJudge(judge_model="mock-llm", rubric_config=rubric_config)
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Q2 (Privacy) terminates with END, not ASSIGN_END.
         dimension_answers = {
@@ -1176,7 +1059,7 @@ class TestDimensionScoring:
         and must not pick up Q1's Red severity.
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_assign_end.tsv")
-        judge = LLMJudge(judge_model="mock-llm", rubric_config=rubric_config)
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Q1 (Safety, Red) has Yes -> ASSIGN_END and No -> 2.
         dimension_answers = {
@@ -1205,10 +1088,7 @@ class TestCalculateResultsAndNotRelevant:
     async def test_create_all_not_relevant_results(self, rubric_config_factory):
         """All dimensions get Not Relevant with correct reasoning."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         results = judge._create_all_not_relevant_results("3")
 
@@ -1226,10 +1106,7 @@ class TestCalculateResultsAndNotRelevant:
     ):
         """With no ASSIGN_END markers, all dimensions get Not Relevant."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # No ASSIGN_END markers (e.g. user never reached ASSIGN_END)
         dimension_answers = {}
@@ -1248,10 +1125,7 @@ class TestCalculateResultsAndNotRelevant:
     ):
         """ASSIGN_END answer: _calculate_results uses _determine_dimension_scores."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_assign_end.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             "Safety": [
@@ -1288,10 +1162,7 @@ class TestCalculateResultsAndNotRelevant:
         """A final ASSIGN_END is not mistaken for a regular END."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_assign_end.tsv")
         rubric_config.question_flow_data["2"]["answers"][0]["goto"] = "ASSIGN_END"
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             "Safety": [
@@ -1334,10 +1205,7 @@ class TestCalculateResultsAndNotRelevant:
         threw away the collected answers, including Q2's Yellow finding.
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_assign_end.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         dimension_answers = {
             "Safety": [
@@ -1378,10 +1246,7 @@ class TestCalculateResultsAndNotRelevant:
         early and every dimension is Not Relevant per the rubric.
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_assign_end.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # "Privacy" is never reached, so Q2's END stopped the flow early.
         dimension_answers = {
@@ -1414,10 +1279,7 @@ class TestAnswerTriggeredAssignEnd:
     ):
         """True when question has option GOTO=ASSIGN_END for this answer."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_assign_end.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         answer_data = {
             "question_id": "1",
@@ -1434,10 +1296,7 @@ class TestAnswerTriggeredAssignEnd:
     ):
         """Returns False when the answer's option has GOTO other than ASSIGN_END."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_assign_end.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         answer_data = {
             "question_id": "1",
@@ -1454,10 +1313,7 @@ class TestAnswerTriggeredAssignEnd:
     ):
         """Returns False when question_id is not in question_flow_data."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         answer_data = {
             "question_id": "999",
@@ -1481,10 +1337,7 @@ class TestAnswerMatching:
         "Suicidal thoughts but not immediate risk" due to substring matching.
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Options where one is a substring of another
         options = [
@@ -1499,10 +1352,7 @@ class TestAnswerMatching:
     async def test_exact_match_case_insensitive(self, rubric_config_factory):
         """Test that exact matching is case-insensitive."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         options = ["Yes", "No"]
 
@@ -1514,10 +1364,7 @@ class TestAnswerMatching:
     async def test_substring_match_when_no_exact_match(self, rubric_config_factory):
         """Test that substring matching works when no exact match exists."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         options = ["Option A", "Option B"]
 
@@ -1531,10 +1378,7 @@ class TestAnswerMatching:
     async def test_no_match_returns_none(self, rubric_config_factory):
         """Test that no match returns None."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         options = ["Yes", "No"]
 
@@ -1544,10 +1388,7 @@ class TestAnswerMatching:
     async def test_whitespace_handling(self, rubric_config_factory):
         """Test that whitespace is handled correctly in matching."""
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         options = ["Immediate risk", "No risk"]
 
@@ -1562,10 +1403,7 @@ class TestAnswerMatching:
         it should match exactly, not match "Suicidal thoughts but not immediate risk".
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Actual Q13 options in order
         options = [
@@ -1623,7 +1461,7 @@ class TestNotRelevantGotoIntegration:
             rubric_prompt_beginning="{conversation}",
             question_prompt_template="{question}",
         )
-        judge = LLMJudge(judge_model="mock-llm", rubric_config=rubric_config)
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         async def fail_if_called(*args, **kwargs):
             pytest.fail("The LLM must not be called for an auto-answer question")
@@ -1650,10 +1488,7 @@ class TestNotRelevantGotoIntegration:
         should result in Not Relevant scoring.
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(
-            judge_model="mock-llm",
-            rubric_config=rubric_config,
-        )
+        judge = make_judge(rubric_config, judge_model="mock-llm")
 
         # Start with empty dimension_answers
         dimension_answers = {}

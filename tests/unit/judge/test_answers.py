@@ -11,6 +11,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from tests.mocks.judge import make_judge
 from vera_mh.judge.answers import (
     ANSWERS_TSV_NAME,
     answer_column,
@@ -21,7 +22,6 @@ from vera_mh.judge.answers import (
     write_answers_tsv,
     write_conversation_answers,
 )
-from vera_mh.judge.llm_judge import LLMJudge
 
 # Opaque, non-lexical IDs: sorting these as strings gives 1, 10, 2 — the
 # aggregate must follow rubric order instead.
@@ -196,8 +196,8 @@ class TestBuildAnswersDataframe:
         """Both artifacts sit below the evaluation folder, not inside it.
 
         build_results_csv_from_tsv_files globs *.tsv directly in the evaluation
-        folder, and judge.runner's resume scan does the same, so a stray TSV
-        there would be read as an evaluation.
+        folder to rebuild results.csv, so a stray TSV there would be read as an
+        evaluation.
         """
         folder = self._eval_folder(tmp_path)
         write_conversation_answers(
@@ -222,7 +222,7 @@ class TestVisitLogSurvivesNotRelevantGoto:
         needs to keep.
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(judge_model="mock-llm", rubric_config=rubric_config)
+        judge = make_judge(rubric_config, judge_model="mock-llm")
         dimension = rubric_config.question_flow_data[rubric_config.question_order[0]][
             "dimension"
         ]

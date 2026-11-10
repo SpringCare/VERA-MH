@@ -406,7 +406,7 @@ async def _judge_and_score(pipeline_run: PipelineRun, run_folder: str) -> str:
         # default `vera judge` applies when `--output` is omitted.
         output=str(Path(run_folder) / "evaluations"),
     )
-    _, evaluation_folder = await run_judging(
+    evaluation_folder = await run_judging(
         judging,
         sample=pipeline_run.generation.invocation.sample,
         run_record=build_run_record(

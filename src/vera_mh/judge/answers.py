@@ -19,8 +19,8 @@ This module persists those answers as data, in two artifacts under an
     which branch the conversation took.
 
 Both live in a subfolder because the evaluation folder's own ``*.tsv`` glob
-(``build_results_csv_from_tsv_files``, and the resume scan in
-``judge.runner``) treats every TSV directly inside it as an evaluation.
+(``build_results_csv_from_tsv_files``, which ``judge.run`` uses to rebuild
+``results.csv``) treats every TSV directly inside it as an evaluation.
 """
 
 from pathlib import Path

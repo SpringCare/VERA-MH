@@ -23,7 +23,7 @@ FOLDER_CREATION_ALLOWED = {
     ("generate/runner.py", "run_single_conversation"): "conversations/ and logs/",
     ("judge/answers.py", "write_conversation_answers"): "answers/ per conversation",
     ("judge/answers.py", "write_answers_tsv"): "the run's answers.tsv folder",
-    ("judge/llm_judge.py", "__init__"): "the judge's log folder",
+    ("judge/llm_judge.py", "_prepare"): "the judge's log folder",
     ("judge/llm_judge.py", "_save_iterative_evaluation"): "one evaluation TSV",
     ("judge/run.py", "run_judging"): "an existing run under --into",
     ("score/aggregate.py", "scores_output_dir"): "scores/ inside a judge run",
@@ -41,7 +41,6 @@ FOLDER_CREATION_ALLOWED = {
 # stamp log lines; none names a run.
 CLOCK_ALLOWED = {
     ("generate/runner.py", "run_conversations"): "run duration",
-    ("judge/run.py", "run_judging"): "batch duration",
     ("llm_clients/llm_interface.py", "_set_response_metadata"): "response time",
     ("utils/naming.py", "add_timestamp_to_path"): "comparison chart file names",
     ("utils/run_root.py", "run_started_at"): "the run's one clock read",

@@ -17,6 +17,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from tests.mocks.judge import make_judge
 from vera_mh.judge.llm_judge import LLMJudge
 from vera_mh.judge.rubric_config import ConversationData, RubricConfig
 
@@ -168,10 +169,8 @@ async def _judge_with_script(answers: dict[str, str], tmp_path: Path):
         rubric_prompt_beginning_file=str(SI / "rubric_prompt_beginning.txt"),
         question_prompt_file=str(SI / "question_prompt.txt"),
     )
-    judge = LLMJudge(
-        judge_model="scripted",
-        rubric_config=rubric,
-        log_file=str(tmp_path / "judge.log"),
+    judge = make_judge(
+        rubric, judge_model="scripted", log_file=str(tmp_path / "judge.log")
     )
     asked: list[str] = []
 

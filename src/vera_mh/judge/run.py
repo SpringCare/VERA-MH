@@ -13,30 +13,28 @@ conventions out of the domain.
 
 from __future__ import annotations
 
+import asyncio
 import os
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
 from vera_mh.utils.config_schema import JudgingConfig
 from vera_mh.utils.conversation_layout import resolve_conversation_input
+from vera_mh.utils.debug import is_debug
 from vera_mh.utils.judge_results import build_dataframe_from_tsv_files
 from vera_mh.utils.run_record import require_run_record, with_start_time
 from vera_mh.utils.run_root import create_run_root, run_started_at
+from vera_mh.workers.events import JobKind, Reporter
+from vera_mh.workers.job import Outcome, Status
+from vera_mh.workers.loop import JobLoop
+from vera_mh.workers.reporters import EventsFileReporter, PlainLineReporter
 
 from .answers import conversation_answers_dir, write_answers_tsv
+from .llm_judge import LLMJudge
 from .rubric_config import RubricConfig, load_conversations
-from .runner import (
-    _create_evaluation_jobs,
-    _list_existing_evaluation_tsv_basenames,
-    _run_workers_with_queue,
-)
 from .utils import add_persona_columns_to_dataframe, build_evaluation_run_folder_path
-
-# The identifying columns that lead each results.csv row.
-RESULT_ID_COLUMNS = ["filename", "run_id", "judge_model", "judge_instance", "judge_id"]
 
 
 async def run_judging(
@@ -45,7 +43,7 @@ async def run_judging(
     into: Optional[str] = None,
     sample: Optional[int] = None,
     run_record: Optional[Dict[str, Any]] = None,
-) -> tuple[List[Dict[str, Any]], str]:
+) -> str:
     """Judge the conversations `config` names, and write the run's results.
 
     Args:
@@ -60,9 +58,7 @@ async def run_judging(
             started with, so this is unused with `into`.
 
     Returns:
-        Tuple of (results, output_folder): one result row per conversation,
-        judge model, and instance evaluated in this call, and the folder the
-        evaluations were written to.
+        The folder the evaluations were written to.
 
     Raises:
         FileNotFoundError: If a rubric file or the transcripts directory is
@@ -97,62 +93,70 @@ async def run_judging(
         output_folder = _create_run_folder(
             config.output, judge_models, extra_params, folder_name, run_record
         )
-        already_judged = None
     else:
-        # An existing run being continued, not a new run root.
+        # An existing run being continued, not a new run root. Evaluations
+        # already in it are skipped by the loop (`LLMJudge.done()`).
         output_folder = into
         os.makedirs(output_folder, exist_ok=True)
-        already_judged = _list_existing_evaluation_tsv_basenames(output_folder)
 
-    jobs = _create_evaluation_jobs(
-        conversations,
-        judge_models,
-        output_folder,
-        rubric_config,
-        extra_params,
-        already_judged,
-    )
-    total_instances = sum(judge_models.values())
-    total_evaluations = len(conversations) * total_instances
-    skipped_existing = total_evaluations - len(jobs)
-    _print_plan(
-        len(conversations),
-        len(judge_models),
-        total_instances,
-        len(jobs),
-        continuing=into is not None,
-    )
-    print(
-        f"Concurrency: {config.max_concurrent} workers "
-        f"({'per judge model' if config.per_judge else 'total'})"
-    )
+    def evaluations(models: Dict[str, int]) -> List[LLMJudge]:
+        """One per conversation, judge model, and instance, in that order."""
+        return [
+            LLMJudge(
+                conversation_path=conversation.metadata["source_path"],
+                judge_model=model,
+                judge_instance=instance,
+                output_folder=output_folder,
+                rubric_file=rubric.rubric_file,
+                rubric_prompt_beginning_file=rubric.rubric_prompt_beginning_file,
+                question_prompt_file=rubric.question_prompt_file,
+                extra_params=extra_params,
+            )
+            for conversation in conversations
+            for model, instances in models.items()
+            for instance in range(1, instances + 1)
+        ]
 
-    batch_start = datetime.now()
-    results = await _run_workers_with_queue(
-        jobs, config.max_concurrent, config.per_judge
-    )
+    reporters: List[Reporter] = [
+        PlainLineReporter(verbose=is_debug()),
+        EventsFileReporter(Path(output_folder) / "events.jsonl"),
+    ]
+    cap = {JobKind.EVALUATION: config.max_concurrent}
+    if config.per_judge:
+        # `max_concurrent` applies to each judge model: one loop per model, side
+        # by side, until the loop has a per-model cap (job-loop.md, decision 3).
+        loops = []
+        for model, instances in judge_models.items():
+            loop = JobLoop(cap, reporters=reporters, stage=f"judge {model}")
+            for job in evaluations({model: instances}):
+                loop.submit(job)
+            loops.append(loop)
+    else:
+        loop = JobLoop(cap, reporters=reporters, stage="judge")
+        for job in evaluations(judge_models):
+            loop.submit(job)
+        loops = [loop]
+
+    async with asyncio.TaskGroup() as tasks:
+        runs = [tasks.create_task(loop.run()) for loop in loops]
+    outcomes: List[Outcome] = [outcome for run in runs for outcome in run.result()]
 
     _write_results(
         output_folder,
-        results,
         rubric_config,
         list(config.personas),
         list(config.persona_annotation_columns),
     )
 
-    elapsed_s = (datetime.now() - batch_start).total_seconds()
-    skipped_error = total_evaluations - skipped_existing - len(results)
-    print(
-        f"\n✅ Completed {len(results)} / {total_evaluations} evaluations "
-        f"→ {output_folder}/"
-    )
-    print(f"  Wall time: {elapsed_s:.2f} seconds")
-    if skipped_existing:
-        print(f"  ({skipped_existing} skipped: evaluation already exists)")
-    if skipped_error:
-        print(f"  ({skipped_error} skipped due to errors)")
+    print(f"Evaluations in {output_folder}/")
+    failed = sum(outcome.status == Status.FAILED for outcome in outcomes)
+    if failed:
+        print(
+            f"{failed} evaluation(s) failed; rerun with `--into {output_folder}` "
+            "to judge just those."
+        )
 
-    return results, output_folder
+    return output_folder
 
 
 def _create_run_folder(
@@ -182,70 +186,22 @@ def _create_run_folder(
     return str(create_run_root(output_root, Path(new_folder).name, record))
 
 
-def _print_plan(
-    conversations: int,
-    judge_models: int,
-    total_instances: int,
-    pending: int,
-    continuing: bool,
-) -> None:
-    """Say how many evaluations will run, and how many a continued run skips."""
-    total = conversations * total_instances
-    if not continuing:
-        print(f"🔍 Judging {conversations} conversations")
-        print(
-            f"Evaluating {conversations} conversations with {judge_models} judge "
-            f"models ({total_instances} total instances)..."
-        )
-        print(f"Total evaluations to run: {total}")
-        return
-
-    skipped = total - pending
-    if total_instances == 1:
-        print(
-            f"🔍 Judging {pending} conversation(s) "
-            f"(skipping {skipped} already judged; "
-            f"{conversations} loaded from folder)."
-        )
-    else:
-        print(
-            f"🔍 {pending} evaluation job(s) to run "
-            f"({skipped} skipped: TSV already on disk; "
-            f"{conversations} conversations loaded)."
-        )
-    print(
-        f"Queued {pending} evaluation job(s); "
-        f"{skipped} skipped (evaluation TSV already in output folder)."
-    )
-    print(
-        f"Folder scale: {conversations} conversation file(s) × "
-        f"{total_instances} judge instance slot(s) = {total} total slot(s)."
-    )
-
-
 def _write_results(
     output_folder: str,
-    results: List[Dict[str, Any]],
     rubric_config: RubricConfig,
     personas: List[str],
     persona_annotation_columns: List[str],
 ) -> None:
     """Write the run's `results.csv` and `answers.tsv`.
 
-    Both are rebuilt from the per-evaluation files in the run folder, not from
-    this call's results, so a continued run includes the evaluations it skipped.
+    Both are rebuilt from the per-evaluation files in the run folder, so a
+    continued run includes the evaluations it skipped. With no evaluation in the
+    folder (every one failed), neither is written.
     """
-    out_csv = os.path.join(output_folder, "results.csv")
-    if _list_existing_evaluation_tsv_basenames(output_folder):
+    if any(Path(output_folder).glob("*.tsv")):
         df = build_dataframe_from_tsv_files(Path(output_folder))
         df = _annotate_with_personas(df, personas, persona_annotation_columns)
-        df.to_csv(out_csv, index=False)
-    elif results:
-        # No TSVs yet (e.g. mocked batch in tests).
-        columns = RESULT_ID_COLUMNS + [
-            key for key in results[0] if key not in RESULT_ID_COLUMNS
-        ]
-        pd.DataFrame(results, columns=cast(Any, columns)).to_csv(out_csv, index=False)
+        df.to_csv(os.path.join(output_folder, "results.csv"), index=False)
 
     if conversation_answers_dir(output_folder).is_dir():
         answers_path = write_answers_tsv(output_folder, rubric_config.question_order)

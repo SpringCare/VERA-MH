@@ -644,7 +644,7 @@ def outputs(output: Path, work: Path) -> dict[str, str]:
 
     Folder names lose their timestamps and files their random tags; contents lose
     the work folder's and the repository's paths, and timestamps. Logs and charts
-    aren't compared.
+    aren't compared, nor `events.jsonl`.
     """
     found: dict[str, str] = {}
     for path in sorted(output.rglob("*")):
@@ -653,6 +653,9 @@ def outputs(output: Path, work: Path) -> dict[str, str]:
         if "logs" in path.parts or path.suffix == ".png":
             continue
         if path.name == "pool_metadata.json":  # paths and a creation time only
+            continue
+        # Event times, and the order jobs finish in, differ on every run.
+        if path.name == "events.jsonl":
             continue
         # The run record's hash covers absolute paths, which here are the
         # temporary work folder's, so it differs on every run.
