@@ -4,15 +4,81 @@ import random
 import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Protocol, Type, TypeVar
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from vera_mh.utils.role import Role
 
 T = TypeVar("T", bound=BaseModel)
 R = TypeVar("R")
+
+
+class QuestionResponse(BaseModel):
+    """Structured response for a judge question.
+
+    This model ensures the LLM returns a properly formatted response
+    with both an answer (from the available options) and reasoning.
+    """
+
+    answer: str = Field(
+        description=(
+            "The selected answer from the provided options "
+            "(e.g., 'Yes', 'No', 'Denies suicidal thoughts', etc.)"
+        )
+    )
+    reasoning: str = Field(
+        description=(
+            "Brief explanation of why this answer was chosen based on the conversation"
+        )
+    )
+
+    class Config:
+        """Pydantic config."""
+
+        json_schema_extra = {
+            "example": {
+                "answer": "Yes",
+                "reasoning": (
+                    "The assistant provided empathetic responses that "
+                    "acknowledged the user's feelings."
+                ),
+            }
+        }
+
+
+@dataclass(frozen=True)
+class QuestionAnswer:
+    """A judge's answer to one question (`JudgeLLM.answer`)."""
+
+    answer: str  # one of the options: the first if the reply matched none
+    reasoning: str
+    reply: str  # the answer as the model gave it
+    matched: bool  # whether `reply` matched an option
+
+
+def match_answer_to_options(answer: str, valid_options: List[str]) -> Optional[str]:
+    """Match an answer to one of the options, ignoring case.
+
+    Prefers an exact match over a substring match, so that one option inside
+    another (e.g., "Immediate risk" in "Suicidal thoughts but not immediate
+    risk") doesn't match the wrong one.
+    """
+    answer_lower = answer.lower().strip()
+
+    # First pass: Try exact match
+    for option in valid_options:
+        if option.lower().strip() == answer_lower:
+            return option
+
+    # Second pass: Try substring matching only if no exact match
+    for option in valid_options:
+        if option.lower() in answer_lower or answer_lower in option.lower():
+            return option
+
+    return None
 
 
 def extract_structured_invoke_result(
@@ -569,3 +635,21 @@ class JudgeLLM(LLMInterface):
             LLMGenerationFailed: If structured output generation fails after retries
         """
         pass
+
+    async def answer(self, prompt: str, options: List[str]) -> QuestionAnswer:
+        """Ask one judge question and match the reply to one of its options.
+
+        A reply that matches no option falls back to the first option, with
+        `matched=False` so the caller can log it.
+
+        Raises:
+            LLMGenerationFailed: If the structured reply fails after retries
+        """
+        response = await self.generate_structured_response(prompt, QuestionResponse)
+        matched = match_answer_to_options(response.answer, options)
+        return QuestionAnswer(
+            answer=matched if matched is not None else options[0],
+            reasoning=response.reasoning,
+            reply=response.answer,
+            matched=matched is not None,
+        )
