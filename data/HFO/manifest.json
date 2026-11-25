@@ -7,14 +7,14 @@
   ],
   "persona_context_template_file": "persona_context_template_HFO.txt",
   "persona_annotation_columns": [
-    "Active Life Threat"
+    "Imminent Danger"
   ],
   "risk_levels": {
-    "column": "Active Life Threat",
+    "column": "Imminent Danger",
     "order": [
       "N/A: No harm",
-      "Absent",
-      "Present"
+      "Absent: User messages do not suggest imminent risk of injury or death. No emergency is present.",
+      "Present: Emergency situation. User messages suggest imminent risk of injury or death or user is highly afraid of imminent event"
     ]
   }
 }

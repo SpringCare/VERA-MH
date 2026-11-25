@@ -19,7 +19,7 @@ from utils.judge_results import load_persona_column
 # Two targets with deliberately different persona schemas: the point of the
 # generic loader is that neither column name is privileged in code.
 HFO_PERSONAS = (
-    "Name\tAge\tActive Life Threat\tBackground\n"
+    "Name\tAge\tImminent Danger\tBackground\n"
     "AAA1111\t34\tPresent\tlives with partner\n"
     "BBB2222\t27\tAbsent\tstaying with a friend\n"
 )
@@ -54,7 +54,7 @@ def results_df():
 
 class TestLoadPersonaColumn:
     def test_reads_named_column(self, hfo_personas):
-        assert load_persona_column(hfo_personas, "Active Life Threat") == {
+        assert load_persona_column(hfo_personas, "Imminent Danger") == {
             "AAA1111": "Present",
             "BBB2222": "Absent",
         }
@@ -97,27 +97,27 @@ class TestLoadPersonaColumn:
 class TestAddPersonaColumns:
     def test_adds_persona_name_and_requested_column(self, results_df, hfo_personas):
         out = add_persona_columns_to_dataframe(
-            results_df, hfo_personas, ["Active Life Threat"]
+            results_df, hfo_personas, ["Imminent Danger"]
         )
         assert list(out["persona_name"]) == ["AAA1111", "BBB2222"]
-        assert list(out["Active Life Threat"]) == ["Present", "Absent"]
+        assert list(out["Imminent Danger"]) == ["Present", "Absent"]
 
     def test_annotation_sits_beside_the_identifying_columns(
         self, results_df, hfo_personas
     ):
         out = add_persona_columns_to_dataframe(
-            results_df, hfo_personas, ["Active Life Threat"]
+            results_df, hfo_personas, ["Imminent Danger"]
         )
         assert list(out.columns)[:4] == [
             "filename",
             "run_id",
             "persona_name",
-            "Active Life Threat",
+            "Imminent Danger",
         ]
 
     def test_evaluation_columns_are_preserved(self, results_df, hfo_personas):
         out = add_persona_columns_to_dataframe(
-            results_df, hfo_personas, ["Active Life Threat"]
+            results_df, hfo_personas, ["Imminent Danger"]
         )
         assert list(out["Safety"]) == [1, 0]
         assert len(out) == len(results_df)
@@ -128,10 +128,10 @@ class TestAddPersonaColumns:
 
     def test_reannotating_is_idempotent(self, results_df, hfo_personas):
         once = add_persona_columns_to_dataframe(
-            results_df, hfo_personas, ["Active Life Threat"]
+            results_df, hfo_personas, ["Imminent Danger"]
         )
         twice = add_persona_columns_to_dataframe(
-            once, hfo_personas, ["Active Life Threat"]
+            once, hfo_personas, ["Imminent Danger"]
         )
         pd.testing.assert_frame_equal(once, twice)
 
@@ -145,17 +145,17 @@ class TestAddPersonaColumns:
                 "Safety": [1],
             }
         )
-        out = add_persona_columns_to_dataframe(df, hfo_personas, ["Active Life Threat"])
-        assert list(out["Active Life Threat"]) == ["Unknown"]
+        out = add_persona_columns_to_dataframe(df, hfo_personas, ["Imminent Danger"])
+        assert list(out["Imminent Danger"]) == ["Unknown"]
         assert len(out) == 1
 
     def test_multiple_columns_keep_requested_order(self, results_df, hfo_personas):
         out = add_persona_columns_to_dataframe(
-            results_df, hfo_personas, ["Active Life Threat", "Age"]
+            results_df, hfo_personas, ["Imminent Danger", "Age"]
         )
         assert list(out.columns)[2:5] == [
             "persona_name",
-            "Active Life Threat",
+            "Imminent Danger",
             "Age",
         ]
 
@@ -165,9 +165,9 @@ class TestRunnerAnnotationIsNonFatal:
 
     def test_annotates_when_configured(self, results_df, hfo_personas):
         out = _annotate_with_personas(
-            results_df, [str(hfo_personas)], ["Active Life Threat"], verbose=False
+            results_df, [str(hfo_personas)], ["Imminent Danger"], verbose=False
         )
-        assert list(out["Active Life Threat"]) == ["Present", "Absent"]
+        assert list(out["Imminent Danger"]) == ["Present", "Absent"]
 
     def test_missing_column_warns_and_returns_unannotated(
         self, results_df, hfo_personas, capsys
@@ -182,7 +182,7 @@ class TestRunnerAnnotationIsNonFatal:
         out = _annotate_with_personas(
             results_df,
             [str(tmp_path / "gone.tsv")],
-            ["Active Life Threat"],
+            ["Imminent Danger"],
             verbose=False,
         )
         assert list(out.columns) == list(results_df.columns)
