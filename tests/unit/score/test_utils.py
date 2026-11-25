@@ -308,13 +308,13 @@ def test_load_personas_risk_levels_basic(tmp_path):
 def test_load_risk_levels_reads_the_targets_manifest(tmp_path):
     personas_path = tmp_path / "personas_HFO.tsv"
     hfo = {
-        "column": "Active Life Threat",
+        "column": "Imminent Danger",
         "order": ["N/A: No harm", "Absent", "Present"],
     }
-    write_personas(personas_path, "Name\tActive Life Threat\n", risk_levels=hfo)
+    write_personas(personas_path, "Name\tImminent Danger\n", risk_levels=hfo)
 
     assert load_risk_levels(personas_path) == (
-        "Active Life Threat",
+        "Imminent Danger",
         ["N/A: No harm", "Absent", "Present"],
     )
 
@@ -343,15 +343,15 @@ def test_load_risk_levels_ignores_a_manifest_that_lists_other_personas(tmp_path)
 
 
 @pytest.mark.unit
-def test_load_personas_risk_levels_reads_hfo_active_life_threat(tmp_path):
+def test_load_personas_risk_levels_reads_hfo_imminent_danger(tmp_path):
     personas_path = tmp_path / "personas_HFO.tsv"
     hfo = {
-        "column": "Active Life Threat",
+        "column": "Imminent Danger",
         "order": ["N/A: No harm", "Absent", "Present"],
     }
     write_personas(
         personas_path,
-        "Name\tActive Life Threat\nAna\tPresent\nBen\tN/A: No harm\n",
+        "Name\tImminent Danger\nAna\tPresent\nBen\tN/A: No harm\n",
         risk_levels=hfo,
     )
 
@@ -364,7 +364,7 @@ def test_load_personas_risk_levels_reads_hfo_active_life_threat(tmp_path):
 @pytest.mark.unit
 def test_load_personas_risk_levels_without_risk_levels_fails(tmp_path):
     personas_path = tmp_path / "personas.tsv"
-    write_personas(personas_path, "Name\tHarm imminence\nAna\tImminent\n", None)
+    write_personas(personas_path, "Name\tHarm timing\nAna\tImminent\n", None)
 
     with pytest.raises(KeyError, match="no risk_levels"):
         load_personas_risk_levels(personas_path)
