@@ -228,8 +228,8 @@ def load_risk_levels(personas_tsv_path: Path) -> Optional[Tuple[str, List[str]]]
     They come from the optional `risk_levels` section of the target's
     `manifest.json`, beside the personas file and listing it:
 
-        "risk_levels": {"column": "Active Life Threat",
-                        "order": ["N/A: No harm", "Absent", "Present"]}
+        "risk_levels": {"column": "Short Current Suicide Risk Level",
+                        "order": ["None", "Low", "High", "Immediate"]}
 
     Returns None when there is no such manifest or section: that target has no
     risk breakdown.

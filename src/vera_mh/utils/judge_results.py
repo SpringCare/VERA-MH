@@ -366,7 +366,7 @@ def load_persona_column(personas_tsv_path: Path, column: str) -> Dict[str, str]:
 
     The generic form behind `load_personas_risk_levels`. Targets do not share a
     persona schema: SI carries `Short Current Suicide Risk Level` while HFO
-    carries `Active Life Threat`, so the column to join on is a parameter rather
+    carries `Imminent Danger`, so the column to join on is a parameter rather
     than a constant.
 
     Args:

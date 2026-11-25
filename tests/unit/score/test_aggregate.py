@@ -868,16 +868,14 @@ def _eval_tsv(
 
 
 @pytest.mark.unit
-def test_score_results_by_risk_groups_hfo_by_active_life_threat(tmp_path):
+def test_score_results_by_risk_groups_hfo_by_imminent_danger(tmp_path):
     """HFO personas have no suicide risk level; they group by Active Life
     Threat, in its own order."""
     eval_dir = tmp_path / "eval_run"
     eval_dir.mkdir()
     personas = tmp_path / "personas_HFO.tsv"
-    personas.write_text("Name\tActive Life Threat\nBrian\tPresent\nSarah\tAbsent\n")
-    _write_manifest(
-        personas, "Active Life Threat", ["N/A: No harm", "Absent", "Present"]
-    )
+    personas.write_text("Name\tImminent Danger\nBrian\tPresent\nSarah\tAbsent\n")
+    _write_manifest(personas, "Imminent Danger", ["N/A: No harm", "Absent", "Present"])
     (eval_dir / "a_Brian_m_run1.tsv").write_text(_eval_tsv(confirms=NEUTRAL))
     (eval_dir / "b_Sarah_m_run2.tsv").write_text(_eval_tsv())
     csv_path = eval_dir / "results.csv"
