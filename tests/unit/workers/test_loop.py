@@ -34,6 +34,10 @@ class Tracker:
         self.running: Counter[str] = Counter()
         self.peak: Counter[str] = Counter()
 
+    def started(self, key: str) -> None:
+        self.running[key] += 1
+        self.peak[key] = max(self.peak[key], self.running[key])
+
 
 @dataclass
 class FakeJob:
@@ -47,6 +51,8 @@ class FakeJob:
     # How long run() takes, so jobs overlap.
     seconds: float = 0.0
     runs: int = 0
+    # Which group's cap the job takes, for a kind in `cap_per_group`.
+    group: str = ""
 
     def done(self) -> bool:
         return self.is_done
@@ -54,16 +60,16 @@ class FakeJob:
     async def run(self) -> None:
         self.runs += 1
         self.tracker.log.append(f"start {self.label}")
-        self.tracker.running[self.kind] += 1
-        self.tracker.peak[self.kind] = max(
-            self.tracker.peak[self.kind], self.tracker.running[self.kind]
-        )
+        keys = [self.kind, f"{self.kind} {self.group}"] if self.group else [self.kind]
+        for key in keys:
+            self.tracker.started(key)
         try:
             await asyncio.sleep(self.seconds)
             if self.error is not None:
                 raise self.error(f"{self.label} failed")
         finally:
-            self.tracker.running[self.kind] -= 1
+            for key in keys:
+                self.tracker.running[key] -= 1
             self.tracker.log.append(f"end {self.label}")
 
     def follow_ups(self) -> list[Job]:
@@ -111,6 +117,59 @@ async def test_each_kind_has_its_own_cap() -> None:
 
     assert all(outcome.status == "finished" for outcome in outcomes)
     assert tracker.peak == Counter({"session": 2, "evaluation": 3})
+
+
+async def test_a_cap_per_group_holds_for_each_group_and_groups_run_together() -> None:
+    """With `cap_per_group`, each judge model gets the whole cap (`--per-judge`)."""
+    tracker = Tracker()
+    jobs = [
+        FakeJob(
+            f"{model}{i}", tracker, kind=JobKind.EVALUATION, group=model, seconds=0.02
+        )
+        for model in ("a", "b")
+        for i in range(4)
+    ]
+
+    await run_jobs(jobs, {JobKind.EVALUATION: 2}, cap_per_group={JobKind.EVALUATION})
+
+    assert tracker.peak["evaluation a"] == 2
+    assert tracker.peak["evaluation b"] == 2
+    assert tracker.peak["evaluation"] == 4
+
+
+async def test_without_cap_per_group_groups_share_the_cap() -> None:
+    tracker = Tracker()
+    jobs = [
+        FakeJob(
+            f"{model}{i}", tracker, kind=JobKind.EVALUATION, group=model, seconds=0.02
+        )
+        for model in ("a", "b")
+        for i in range(4)
+    ]
+
+    await run_jobs(jobs, {JobKind.EVALUATION: 2})
+
+    assert tracker.peak["evaluation"] == 2
+
+
+async def test_a_cap_per_group_leaves_other_kinds_capped_in_total() -> None:
+    tracker = Tracker()
+    sessions = [FakeJob(f"s{i}", tracker, seconds=0.02) for i in range(4)]
+    evaluations = [
+        FakeJob(
+            f"e{i}", tracker, kind=JobKind.EVALUATION, group=str(i % 2), seconds=0.02
+        )
+        for i in range(4)
+    ]
+
+    await run_jobs(
+        [*sessions, *evaluations],
+        {JobKind.SESSION: 1, JobKind.EVALUATION: 1},
+        cap_per_group={JobKind.EVALUATION},
+    )
+
+    assert tracker.peak["session"] == 1
+    assert tracker.peak["evaluation"] == 2
 
 
 async def test_a_failure_is_an_outcome_and_the_job_is_not_run_again() -> None:

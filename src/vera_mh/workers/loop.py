@@ -21,7 +21,7 @@ import asyncio
 import contextlib
 import time
 from collections import Counter
-from typing import Mapping, Sequence
+from typing import AbstractSet, Any, Mapping, Sequence
 
 from vera_mh.workers.events import Event, EventType, JobKind, Reporter
 from vera_mh.workers.job import Job, Outcome, Status, set_current_job
@@ -44,6 +44,7 @@ class JobLoop:
         self,
         max_concurrent: Mapping[JobKind, int | None],
         *,
+        cap_per_group: AbstractSet[JobKind] = frozenset(),
         reporters: Sequence[Reporter] = (),
         stage: str = "jobs",
     ):
@@ -52,19 +53,21 @@ class JobLoop:
             max_concurrent: How many jobs of each kind may run at once, such as
                 `{JobKind.SESSION: 10, JobKind.EVALUATION: 20}`. None or 0 means
                 no limit. Every kind a job can have needs an entry.
+            cap_per_group: Kinds whose cap applies to each group of jobs on its
+                own instead of to all of them, such as `{JobKind.EVALUATION}`
+                for `--per-judge`. A job of such a kind names its group with a
+                `group` attribute (a judge's model).
             reporters: Where events go, such as a `PlainLineReporter` for the
                 terminal and an `EventsFileReporter` for `events.jsonl`. Every
                 event goes to each of them.
             stage: The name the final `STAGE_FINISHED` event gives this run,
                 such as "generate".
         """
-        # Each job runs inside `async with self.limits[job.kind]:`. A semaphore
-        # lets in up to `cap` jobs of its kind at once and makes the rest wait
-        # their turn; `nullcontext()` lets everything in, for a kind with no cap.
-        self.limits = {
-            kind: asyncio.Semaphore(cap) if cap else contextlib.nullcontext()
-            for kind, cap in max_concurrent.items()
-        }
+        self.max_concurrent = dict(max_concurrent)
+        self.cap_per_group = frozenset(cap_per_group)
+        # One limit per kind, or per (kind, group) for `cap_per_group` kinds,
+        # made when its first job starts. See `_limit`.
+        self.limits: dict[Any, Any] = {}
         self.reporters = reporters
         self.stage = stage
         self.jobs: list[Job] = []
@@ -118,7 +121,7 @@ class JobLoop:
             if job.done():
                 status = Status.SKIPPED
             else:
-                async with self.limits[job.kind]:
+                async with self._limit(job):
                     self.emit(
                         Event(EventType.JOB_STARTED, job=job.label, kind=job.kind)
                     )
@@ -141,6 +144,20 @@ class JobLoop:
         self._record(Outcome(job, status, elapsed=elapsed))
         for follow_up in follow_ups:
             self.tasks.create_task(self._run_one(follow_up))
+
+    def _limit(self, job: Job) -> Any:
+        """What a job waits on for a free slot. A semaphore lets in up to `cap`
+        jobs at once and makes the rest wait their turn; `nullcontext()` lets
+        everything in, for a kind with no cap."""
+        key: Any = job.kind
+        if job.kind in self.cap_per_group:
+            key = (job.kind, getattr(job, "group"))
+        if key not in self.limits:
+            cap = self.max_concurrent[job.kind]
+            self.limits[key] = (
+                asyncio.Semaphore(cap) if cap else contextlib.nullcontext()
+            )
+        return self.limits[key]
 
     def _record(self, outcome: Outcome) -> None:
         self.outcomes.append(outcome)
