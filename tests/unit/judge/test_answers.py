@@ -21,7 +21,7 @@ from vera_mh.judge.answers import (
     write_answers_tsv,
     write_conversation_answers,
 )
-from vera_mh.judge.llm_judge import LLMJudge
+from vera_mh.judge.rubric_config import mark_not_relevant
 
 # Opaque, non-lexical IDs: sorting these as strings gives 1, 10, 2 — the
 # aggregate must follow rubric order instead.
@@ -215,14 +215,13 @@ class TestVisitLogSurvivesNotRelevantGoto:
     async def test_not_relevant_goto_clobbers_dimension_answers(
         self, rubric_config_factory
     ):
-        """_handle_not_relevant_goto replaces a dimension's whole answer list.
+        """mark_not_relevant replaces a dimension's whole answer list.
 
         A question whose GOTO is NOT_RELEVANT>> therefore erases its own
         recorded answer, which is exactly the answer an per-question artifact
         needs to keep.
         """
         rubric_config = await rubric_config_factory(rubric_file="rubric_simple.tsv")
-        judge = LLMJudge(judge_model="mock-llm", rubric_config=rubric_config)
         dimension = rubric_config.question_flow_data[rubric_config.question_order[0]][
             "dimension"
         ]
@@ -239,7 +238,7 @@ class TestVisitLogSurvivesNotRelevantGoto:
             ]
         }
 
-        judge._handle_not_relevant_goto(
+        mark_not_relevant(
             "9", "No suicidal thoughts present", dimension, dimension_answers
         )
 

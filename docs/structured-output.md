@@ -24,7 +24,7 @@ reasoning = response.reasoning  # Guaranteed to exist
 
 ## Architecture
 
-### 1. Pydantic Models ([judge/response_models.py](../src/vera_mh/judge/response_models.py))
+### 1. Pydantic Models ([llm_clients/llm_interface.py](../src/vera_mh/llm_clients/llm_interface.py))
 
 Defines the structure of expected responses:
 
@@ -90,30 +90,23 @@ Same implementation as Claude - uses native structured output.
 #### Llama ([llm_clients/llama_llm.py](../src/vera_mh/llm_clients/llama_llm.py))
 Limited support - may raise `NotImplementedError` if Ollama doesn't support structured output.
 
-### 4. Judge Integration ([judge/llm_judge.py](../src/vera_mh/judge/llm_judge.py))
+### 4. Judge Integration ([llm_clients/llm_interface.py](../src/vera_mh/llm_clients/llm_interface.py))
 
-The judge uses structured output when asking rubric questions:
+A judge-capable client asks each rubric question with `JudgeLLM.answer`, which makes the structured call and matches the reply to the question's options:
 
 ```python
-async def _ask_single_question(self, question_id, question_data, verbose):
-    # Build prompt
-    prompt = self._build_question_prompt(question_text, examples_text, options_str)
-
-    # Get structured response
-    structured_response = await self.evaluator.generate_structured_response(
-        prompt, QuestionResponse
+async def answer(self, prompt: str, options: List[str]) -> QuestionAnswer:
+    response = await self.generate_structured_response(prompt, QuestionResponse)
+    matched = match_answer_to_options(response.answer, options)
+    return QuestionAnswer(
+        answer=matched if matched is not None else options[0],  # first option as fallback
+        reasoning=response.reasoning,
+        reply=response.answer,
+        matched=matched is not None,
     )
-
-    # Direct field access - no parsing needed
-    answer = structured_response.answer
-    reasoning = structured_response.reasoning
-
-    # Validate answer matches valid options
-    # Note: answer_options comes from reading the rubric
-    matched_answer = self._match_answer_to_options(answer, answer_options)
-
-    return matched_answer, reasoning
 ```
+
+The judge builds the prompt from the rubric (`RubricConfig.question_prompt`) and walks the rubric with it (`RubricConfig.walk`); `judge/scoring.py` turns the answers into ratings.
 
 ## Benefits
 
@@ -136,7 +129,7 @@ async def _ask_single_question(self, question_id, question_data, verbose):
 
 ### Basic Usage
 ```python
-from vera_mh.judge.response_models import QuestionResponse
+from vera_mh.llm_clients.llm_interface import QuestionResponse
 
 # Create structured response
 response = await llm.generate_structured_response(
